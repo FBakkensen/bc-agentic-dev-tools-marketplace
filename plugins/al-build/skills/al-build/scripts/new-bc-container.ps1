@@ -169,7 +169,7 @@ try {
 Write-BuildHeader 'Installing AL-Go Dependencies'
 
 Write-BuildMessage -Type Step -Message "Checking for AL-Go dependencies..."
-$workspaceRoot = Resolve-Path (Join-Path $PSScriptRoot '../../../..')
+$workspaceRoot = (Get-Location).Path
 $installedCount = Install-AlGoDependencies -ContainerName $containerName -Credential $credential -WorkspaceRoot $workspaceRoot
 if ($installedCount -gt 0) {
     Write-BuildMessage -Type Success -Message "Installed $installedCount dependency app(s)"

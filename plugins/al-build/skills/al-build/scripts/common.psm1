@@ -1860,19 +1860,19 @@ function Get-AlGoDependencyProbingPaths {
 
     $settingsPath = Get-AlGoSettingsPath -WorkspaceRoot $WorkspaceRoot
     if (-not $settingsPath) {
-        return @()
+        return ,@()
     }
 
     try {
         $settings = Get-Content $settingsPath -Raw | ConvertFrom-Json
         if ($settings.PSObject.Properties.Match('appDependencyProbingPaths').Count -gt 0 -and $settings.appDependencyProbingPaths) {
-            return @($settings.appDependencyProbingPaths)
+            return ,@($settings.appDependencyProbingPaths)
         }
     } catch {
         Write-BuildMessage -Type Warning -Message "Failed to parse .AL-Go/settings.json: $_"
     }
 
-    return @()
+    return ,@()
 }
 
 function Install-AlGoDependencies {
@@ -1903,7 +1903,7 @@ function Install-AlGoDependencies {
     )
 
     $probingPaths = Get-AlGoDependencyProbingPaths -WorkspaceRoot $WorkspaceRoot
-    if ($probingPaths.Count -eq 0) {
+    if (-not $probingPaths -or $probingPaths.Count -eq 0) {
         Write-BuildMessage -Type Detail -Message "No dependency probing paths configured"
         return 0
     }
