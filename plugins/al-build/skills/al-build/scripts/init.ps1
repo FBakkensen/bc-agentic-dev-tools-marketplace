@@ -45,9 +45,8 @@ if (Test-Path -LiteralPath $projectConfigPath) {
     exit 0
 }
 
-# Copy template
-$pluginRoot = $env:CLAUDE_PLUGIN_ROOT
-$templatePath = Join-Path $pluginRoot 'skills' 'al-build' 'config' 'al-build.json'
+# Copy template - resolve path relative to script location
+$templatePath = Join-Path $PSScriptRoot '..' 'config' 'al-build.json' | Resolve-Path -ErrorAction Stop
 
 if (-not (Test-Path -LiteralPath $templatePath)) {
     Write-Error "Template config not found: $templatePath"
