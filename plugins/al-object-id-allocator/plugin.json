@@ -1,6 +1,0 @@
-{
-  "name": "al-object-id-allocator",
-  "description": "Allocate the next available Business Central AL object ID/number by scanning .al files and idRanges in app.json using the bundled PowerShell script. Use when creating new tables/pages/codeunits/extensions and you need a free object number.",
-  "version": "1.0.0",
-  "keywords": ["al", "business-central", "object-id", "allocation"]
-}

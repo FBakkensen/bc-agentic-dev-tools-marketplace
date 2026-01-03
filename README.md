@@ -32,6 +32,23 @@ These skills are agent-agnostic and work with Claude Code, GitHub Copilot, Curso
 /plugin install al-agentic-guidelines@bc-agentic-dev-tools
 ```
 
+## Slash Commands
+
+After installing plugins, these slash commands become available:
+
+| Command | Description |
+|---------|-------------|
+| `/al-build:test` | Run AL build gate (compile, publish, test) |
+| `/al-build:provision` | One-time setup for AL build (compiler + symbols) |
+| `/al-build:clean` | Clean AL build artifacts |
+| `/al-object-id-allocator:next-id` | Get next available AL object ID |
+| `/bc-w1-reference:setup` | Clone BC W1 source mirror |
+| `/bc-w1-reference:update` | Update BC W1 source mirror |
+| `/al-agentic-guidelines:setup` | Clone AL Guidelines mirror |
+| `/al-agentic-guidelines:update` | Update AL Guidelines mirror |
+
+The **tdd** plugin provides context via SKILL.md (no slash commands).
+
 ## Auto-enable for BC projects
 
 Add to your project's `.claude/settings.json`:

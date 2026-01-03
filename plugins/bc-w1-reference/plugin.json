@@ -1,6 +1,0 @@
-{
-  "name": "bc-w1-reference",
-  "description": "Local mirror of standard Business Central W1 source code (fbakkensen/bc-w1) for searching events, APIs, tables, fields, tests, and implementation patterns.",
-  "version": "1.0.0",
-  "keywords": ["al", "business-central", "reference", "w1", "events", "apis"]
-}

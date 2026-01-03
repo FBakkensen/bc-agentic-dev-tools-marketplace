@@ -1,6 +1,0 @@
-{
-  "name": "tdd",
-  "description": "Red-Green-Refactor test workflow with telemetry verification. MANDATORY for ALL AL test work. Adds temporary DEBUG-TEST-START markers during Red phase, verifies execution in telemetry.jsonl during Green phase, removes all DEBUG-* during Refactor.",
-  "version": "1.0.0",
-  "keywords": ["al", "business-central", "tdd", "testing", "red-green-refactor"]
-}

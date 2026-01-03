@@ -1,0 +1,11 @@
+{
+  "hooks": {
+    "SessionStart": [{
+      "matcher": "*",
+      "hooks": [{
+        "type": "command",
+        "command": "pwsh -NoProfile -ExecutionPolicy Bypass -File \"skills/al-build/scripts/session-start.ps1\""
+      }]
+    }]
+  }
+}
