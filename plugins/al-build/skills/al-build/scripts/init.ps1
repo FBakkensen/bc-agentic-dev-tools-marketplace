@@ -73,10 +73,11 @@ foreach ($appJsonFile in $appJsonFiles) {
                      $relativeDir -match 'test' -or
                      ($appJson.dependencies | Where-Object { $_.name -match 'test' })
 
-        if ($isTestApp) {
+        # First match wins - don't overwrite if already found
+        if ($isTestApp -and -not $detectedTestDir) {
             $detectedTestDir = $relativeDir
             $detectedTestAppName = $appJson.name
-        } else {
+        } elseif (-not $isTestApp -and -not $detectedAppDir) {
             $detectedAppDir = $relativeDir
         }
     } catch {
@@ -86,23 +87,28 @@ foreach ($appJsonFile in $appJsonFiles) {
 
 # Update config with detected values
 $configUpdated = $false
-if ($detectedAppDir -or $detectedTestDir -or $detectedTestAppName) {
-    $config = Get-Content -LiteralPath $projectConfigPath -Raw | ConvertFrom-Json
+try {
+    if ($detectedAppDir -or $detectedTestDir -or $detectedTestAppName) {
+        $config = Get-Content -LiteralPath $projectConfigPath -Raw | ConvertFrom-Json
 
-    if ($detectedAppDir) {
-        $config.appDir = $detectedAppDir
-        $configUpdated = $true
-    }
-    if ($detectedTestDir) {
-        $config.testDir = $detectedTestDir
-        $configUpdated = $true
-    }
-    if ($detectedTestAppName) {
-        $config.testAppName = $detectedTestAppName
-        $configUpdated = $true
-    }
+        if ($detectedAppDir) {
+            $config.appDir = $detectedAppDir
+            $configUpdated = $true
+        }
+        if ($detectedTestDir) {
+            $config.testDir = $detectedTestDir
+            $configUpdated = $true
+        }
+        if ($detectedTestAppName) {
+            $config.testAppName = $detectedTestAppName
+            $configUpdated = $true
+        }
 
-    $config | ConvertTo-Json -Depth 10 | Set-Content -LiteralPath $projectConfigPath -Force
+        $config | ConvertTo-Json -Depth 10 | Set-Content -LiteralPath $projectConfigPath -Force
+    }
+} catch {
+    Write-Warning "Failed to auto-update config: $_"
+    $configUpdated = $false
 }
 
 # Output results
