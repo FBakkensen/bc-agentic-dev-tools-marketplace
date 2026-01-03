@@ -9,14 +9,10 @@ Self-contained build system for AL/Business Central development. No external tas
 
 ## Project Setup (First Time)
 
-**Automatic**: When you first use al-build in an AL project, a config file (`al-build.json`) is created in your repo root.
-
 **Required Steps**:
-1. **Customize config** (especially `testAppName` to match your test app)
-2. **Run provision** (one-time):
-   ```powershell
-   pwsh "<skill-folder>/scripts/provision.ps1"
-   ```
+1. **Initialize config**: Run `/al-build:init` to create `al-build.json`
+2. **Customize config** (especially `testAppName` to match your test app)
+3. **Run provision** (one-time): Run `/al-build:provision`
 
 **Config Priority** (highest to lowest):
 1. Script parameters (e.g., `-AppDir "custom"`)
@@ -47,10 +43,18 @@ pwsh "<skill-folder>/scripts/test.ps1"
 
 ## Troubleshooting
 
+### Build fails and no config exists
+
+If `/al-build:test` fails and `al-build.json` doesn't exist in repo root:
+1. Run `/al-build:init` to create config
+2. Customize settings as needed
+3. Run `/al-build:provision` once
+4. Re-run `/al-build:test`
+
 ### Config Issues
 
 1. **Config not loading**: Ensure `al-build.json` is in git repo root (same level as `.git/`)
-2. **Provision not found**: Run `pwsh "<skill-folder>/scripts/provision.ps1"` (one-time)
+2. **Provision not found**: Run `/al-build:provision` (one-time)
 3. **Wrong test app**: Update `testAppName` in `al-build.json` to match your test app
 
 ### Build Failures
