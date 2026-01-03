@@ -83,8 +83,8 @@ function Get-BuildConfig {
     }
 
     # Resolve all configuration values
-    $appDir = Resolve-Value 'AppDir' 'ALBT_APP_DIR' 'app'
-    $testDir = Resolve-Value 'TestDir' 'ALBT_TEST_DIR' 'test'
+    $appDir = Resolve-Value 'appDir' 'ALBT_APP_DIR' 'app'
+    $testDir = Resolve-Value 'testDir' 'ALBT_TEST_DIR' 'test'
 
     # Resolve to absolute paths if relative
     $workspaceRoot = (Get-Location).Path
@@ -102,24 +102,37 @@ function Get-BuildConfig {
         $containerName = 'bctest'
     }
 
+    # Helper for nested container config values
+    function Resolve-ContainerValue {
+        param([string]$Key, [string]$EnvVar, $Default)
+        if ($Overrides.ContainsKey($Key) -and $Overrides[$Key]) { return $Overrides[$Key] }
+        $envVal = [Environment]::GetEnvironmentVariable($EnvVar)
+        if ($envVal) { return $envVal }
+        if ($defaults.ContainsKey('container') -and $defaults['container'] -is [hashtable]) {
+            $container = $defaults['container']
+            if ($container.ContainsKey($Key) -and $container[$Key]) { return $container[$Key] }
+        }
+        return $Default
+    }
+
     $config = [PSCustomObject]@{
         AppDir                              = $appDir
         TestDir                             = $testDir
-        TestAppName                         = Resolve-Value 'TestAppName' 'ALBT_TEST_APP_NAME' '9A Advanced Manufacturing - Item Configurator.Test'
-        WarnAsError                         = Resolve-Value 'WarnAsError' 'WARN_AS_ERROR' '1'
-        RulesetPath                         = Resolve-Value 'RulesetPath' 'RULESET_PATH' 'al.ruleset.json'
-        ServerInstance                      = Resolve-Value 'ServerInstance' 'ALBT_BC_SERVER_INSTANCE' 'BC'
+        TestAppName                         = Resolve-Value 'testAppName' 'ALBT_TEST_APP_NAME' '9A Advanced Manufacturing - Item Configurator.Test'
+        WarnAsError                         = Resolve-Value 'warnAsError' 'WARN_AS_ERROR' '1'
+        RulesetPath                         = Resolve-Value 'rulesetPath' 'RULESET_PATH' 'al.ruleset.json'
+        ServerInstance                      = Resolve-Value 'serverInstance' 'ALBT_BC_SERVER_INSTANCE' 'BC'
         ContainerName                       = $containerName
         ServerUrl                           = "http://$containerName"
-        ContainerUsername                   = Resolve-Value 'ContainerUsername' 'ALBT_BC_CONTAINER_USERNAME' 'admin'
-        ContainerPassword                   = Resolve-Value 'ContainerPassword' 'ALBT_BC_CONTAINER_PASSWORD' 'P@ssw0rd'
-        ContainerAuth                       = Resolve-Value 'ContainerAuth' 'ALBT_BC_CONTAINER_AUTH' 'UserPassword'
-        ArtifactCountry                     = Resolve-Value 'ArtifactCountry' 'ALBT_BC_ARTIFACT_COUNTRY' 'w1'
-        ArtifactSelect                      = Resolve-Value 'ArtifactSelect' 'ALBT_BC_ARTIFACT_SELECT' 'Latest'
-        Tenant                              = Resolve-Value 'Tenant' 'ALBT_BC_TENANT' 'default'
-        ValidateCurrent                     = Resolve-Value 'ValidateCurrent' 'ALBT_VALIDATE_CURRENT' '1'
-        ApplicationInsightsConnectionString = Resolve-Value 'ApplicationInsightsConnectionString' 'ALBT_APPLICATION_INSIGHTS_CONNECTION_STRING' ''
-        TestRunnerCodeunitId                = Resolve-Value 'TestRunnerCodeunitId' 'ALBT_TEST_RUNNER_CODEUNIT_ID' ''
+        ContainerUsername                   = Resolve-ContainerValue 'username' 'ALBT_BC_CONTAINER_USERNAME' 'admin'
+        ContainerPassword                   = Resolve-ContainerValue 'password' 'ALBT_BC_CONTAINER_PASSWORD' 'P@ssw0rd'
+        ContainerAuth                       = Resolve-ContainerValue 'auth' 'ALBT_BC_CONTAINER_AUTH' 'UserPassword'
+        ArtifactCountry                     = Resolve-ContainerValue 'artifactCountry' 'ALBT_BC_ARTIFACT_COUNTRY' 'w1'
+        ArtifactSelect                      = Resolve-ContainerValue 'artifactSelect' 'ALBT_BC_ARTIFACT_SELECT' 'Latest'
+        Tenant                              = Resolve-Value 'tenant' 'ALBT_BC_TENANT' 'default'
+        ValidateCurrent                     = Resolve-Value 'validateCurrent' 'ALBT_VALIDATE_CURRENT' '1'
+        ApplicationInsightsConnectionString = Resolve-Value 'applicationInsightsConnectionString' 'ALBT_APPLICATION_INSIGHTS_CONNECTION_STRING' ''
+        TestRunnerCodeunitId                = Resolve-Value 'testRunnerCodeunitId' 'ALBT_TEST_RUNNER_CODEUNIT_ID' ''
     }
 
     return $config
