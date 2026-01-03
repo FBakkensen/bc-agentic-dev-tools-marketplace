@@ -39,18 +39,37 @@ function Get-BuildConfig {
         [hashtable]$Overrides = @{}
     )
 
-    # Find skill root (parent of scripts folder)
-    $skillRoot = Split-Path -Parent $PSScriptRoot
+    # Find git repo root
+    function Get-GitRepoRoot {
+        try {
+            $root = & git rev-parse --show-toplevel 2>$null
+            if ($LASTEXITCODE -eq 0 -and $root) {
+                if ($IsWindows -or $env:OS -match 'Windows') {
+                    $root = $root -replace '/', '\'
+                }
+                return $root
+            }
+        } catch { }
+        return $null
+    }
 
-    # Load defaults from config file
-    $configPath = Join-Path $skillRoot 'config' 'al-build.json'
+    # Load config ONLY from project root (plugin config is template only)
+    $repoRoot = Get-GitRepoRoot
+    $configPath = if ($repoRoot) { Join-Path $repoRoot 'al-build.json' } else { $null }
+
     $defaults = @{}
-    if (Test-Path -LiteralPath $configPath) {
+    if ($configPath -and (Test-Path -LiteralPath $configPath)) {
         try {
             $defaults = Get-Content -LiteralPath $configPath -Raw | ConvertFrom-Json -AsHashtable
+            Write-BuildMessage -Type Detail -Message "Loaded config: $configPath"
         } catch {
-            Write-BuildMessage -Type Warning -Message "Failed to load config: $($_.Exception.Message)"
+            Write-BuildMessage -Type Error -Message "Failed to load al-build.json: $($_.Exception.Message)"
+            throw
         }
+    } else {
+        $configLocation = if ($configPath) { $configPath } else { 'repo root (not in git repo)' }
+        Write-BuildMessage -Type Error -Message "al-build.json not found at: $configLocation. Run SessionStart or copy from plugin template."
+        throw "Config file required. Expected at: $configLocation"
     }
 
     # Helper function for three-tier resolution

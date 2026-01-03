@@ -4,7 +4,7 @@
 
   "appDir": "app",
   "testDir": "test",
-  "testAppName": "9A Advanced Manufacturing - Item Configurator.Test",
+  "testAppName": "Your Test App Name Here",
 
   "warnAsError": true,
   "rulesetPath": "al.ruleset.json",

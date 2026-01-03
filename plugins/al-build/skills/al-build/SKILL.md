@@ -7,6 +7,22 @@ description: Build and test AL/Business Central projects. Use after modifying AL
 
 Self-contained build system for AL/Business Central development. No external task runners required.
 
+## Project Setup (First Time)
+
+**Automatic**: When you first use al-build in an AL project, a config file (`al-build.json`) is created in your repo root.
+
+**Required Steps**:
+1. **Customize config** (especially `testAppName` to match your test app)
+2. **Run provision** (one-time):
+   ```powershell
+   pwsh "<skill-folder>/scripts/provision.ps1"
+   ```
+
+**Config Priority** (highest to lowest):
+1. Script parameters (e.g., `-AppDir "custom"`)
+2. Environment variables (e.g., `ALBT_APP_DIR`)
+3. Project config (`al-build.json` in repo root)
+
 ## Canonical Gate
 
 After modifying AL code or tests, run:
@@ -15,16 +31,27 @@ After modifying AL code or tests, run:
 pwsh "<skill-folder>/scripts/test.ps1"
 ```
 
+**Prerequisites:**
+- Project config exists and customized (`al-build.json`)
+- Provision completed (run `provision.ps1` once)
+- Docker container healthy
+
 **Requirements:**
 - Zero warnings, zero errors
-- For faster iteration: `pwsh "<skill-folder>/scripts/test.ps1" -TestCodeunit <id>`
-- Force republish (after container recreation): `pwsh "<skill-folder>/scripts/test.ps1" -Force`
+- Faster iteration: `pwsh "<skill-folder>/scripts/test.ps1" -TestCodeunit <id>`
+- Force republish: `pwsh "<skill-folder>/scripts/test.ps1" -Force`
 
 **Outputs:**
 - `test/TestResults/last.xml` — JUnit test results
 - `test/TestResults/telemetry.jsonl` — merged telemetry
 
 ## Troubleshooting
+
+### Config Issues
+
+1. **Config not loading**: Ensure `al-build.json` is in git repo root (same level as `.git/`)
+2. **Provision not found**: Run `pwsh "<skill-folder>/scripts/provision.ps1"` (one-time)
+3. **Wrong test app**: Update `testAppName` in `al-build.json` to match your test app
 
 ### Build Failures
 

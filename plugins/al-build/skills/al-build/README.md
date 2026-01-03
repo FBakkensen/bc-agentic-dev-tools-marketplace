@@ -52,6 +52,16 @@ pwsh scripts/provision.ps1
 
 ### Daily Development
 
+**First time**:
+1. Copy template config to repo root:
+   ```powershell
+   Copy-Item "<plugin-path>/config/al-build.json" -Destination "<repo-root>/al-build.json"
+   ```
+2. Customize `al-build.json` (especially `testAppName`)
+3. Run provision: `pwsh scripts/provision.ps1`
+
+**Every change**:
+
 ```powershell
 # Build and test (full gate)
 pwsh scripts/test.ps1
@@ -107,17 +117,42 @@ Configuration values are resolved in order:
 | `ALBT_BC_ARTIFACT_COUNTRY` | BC artifact country | `w1` |
 | `ALBT_BC_ARTIFACT_SELECT` | BC version selection | `Latest` |
 
-### Overriding Defaults
+### Project-Level Configuration
 
-Create `al-build.json` in the repo root to override skill defaults:
+**Manual Setup**: Copy the template config to your repo root:
+
+```powershell
+Copy-Item "<plugin-path>/config/al-build.json" -Destination "<repo-root>/al-build.json"
+```
+
+**Note**: Claude Code users get this automatically via session-start hook.
+
+**Customize for your project**:
 
 ```json
 {
-  "AppDir": "src/app",
-  "TestDir": "src/test",
-  "WarnAsError": "0"
+  "appDir": "app",
+  "testDir": "test",
+  "testAppName": "Your Test App Name Here",
+
+  "warnAsError": true,
+  "rulesetPath": "al.ruleset.json",
+
+  "container": {
+    "username": "admin",
+    "password": "P@ssw0rd",
+    "artifactCountry": "w1",
+    "artifactSelect": "Latest"
+  }
 }
 ```
+
+**Config Resolution Priority**:
+1. Script parameters (`-AppDir "src"`)
+2. Environment variables (`ALBT_APP_DIR`)
+3. **Project config** (`al-build.json` in repo root) ← **Required**
+
+**Note**: Plugin config is only a template - not loaded during build. Project config is required.
 
 ## Architecture
 
