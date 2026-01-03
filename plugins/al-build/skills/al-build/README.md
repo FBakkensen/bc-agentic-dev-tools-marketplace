@@ -53,8 +53,12 @@ pwsh scripts/provision.ps1
 ### Daily Development
 
 **First time**:
-1. Customize `al-build.json` (created automatically in repo root)
-2. Run provision: `pwsh scripts/provision.ps1`
+1. Copy template config to repo root:
+   ```powershell
+   Copy-Item "<plugin-path>/config/al-build.json" -Destination "<repo-root>/al-build.json"
+   ```
+2. Customize `al-build.json` (especially `testAppName`)
+3. Run provision: `pwsh scripts/provision.ps1`
 
 **Every change**:
 
@@ -115,7 +119,13 @@ Configuration values are resolved in order:
 
 ### Project-Level Configuration
 
-**Automatic Setup**: When first used in an AL project, `al-build.json` is created in your repo root.
+**Manual Setup**: Copy the template config to your repo root:
+
+```powershell
+Copy-Item "<plugin-path>/config/al-build.json" -Destination "<repo-root>/al-build.json"
+```
+
+**Note**: Claude Code users get this automatically via session-start hook.
 
 **Customize for your project**:
 
