@@ -1,0 +1,39 @@
+# Logs
+*.log
+
+# Dependencies
+node_modules/
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Temporary files
+*.tmp
+*.temp
+
+# OS generated files
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# IDE/Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# PowerShell
+*.ps1xml
+
+# Build artifacts
+/out/
+/bin/
+/obj/
+
+# Test results (keep structure but ignore generated files)
+**/TestResults/*.xml
+**/TestResults/*.jsonl

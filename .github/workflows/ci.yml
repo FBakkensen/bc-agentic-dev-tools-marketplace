@@ -1,0 +1,71 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  validate:
+    runs-on: windows-latest
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate JSON files
+        shell: pwsh
+        run: |
+          $errors = @()
+          Get-ChildItem -Recurse -Filter "*.json" | ForEach-Object {
+            try {
+              $null = Get-Content $_.FullName -Raw | ConvertFrom-Json
+              Write-Host "OK: $($_.FullName)" -ForegroundColor Green
+            } catch {
+              $errors += "FAIL: $($_.FullName) - $($_.Exception.Message)"
+              Write-Host "FAIL: $($_.FullName)" -ForegroundColor Red
+            }
+          }
+          if ($errors.Count -gt 0) {
+            $errors | ForEach-Object { Write-Error $_ }
+            exit 1
+          }
+
+      - name: Validate PowerShell syntax
+        shell: pwsh
+        run: |
+          $errors = @()
+          Get-ChildItem -Recurse -Filter "*.ps1" | ForEach-Object {
+            $tokens = $null
+            $parseErrors = $null
+            $null = [System.Management.Automation.Language.Parser]::ParseFile(
+              $_.FullName, 
+              [ref]$tokens, 
+              [ref]$parseErrors
+            )
+            if ($parseErrors.Count -gt 0) {
+              $errors += "FAIL: $($_.FullName)"
+              $parseErrors | ForEach-Object { $errors += "  - $($_.Message)" }
+              Write-Host "FAIL: $($_.FullName)" -ForegroundColor Red
+            } else {
+              Write-Host "OK: $($_.FullName)" -ForegroundColor Green
+            }
+          }
+          if ($errors.Count -gt 0) {
+            $errors | ForEach-Object { Write-Error $_ }
+            exit 1
+          }
+
+      - name: Check plugin structure
+        shell: pwsh
+        run: |
+          $plugins = Get-ChildItem -Path "plugins" -Directory
+          foreach ($plugin in $plugins) {
+            $pluginJson = Join-Path $plugin.FullName "plugin.json"
+            if (-not (Test-Path $pluginJson)) {
+              Write-Error "Missing plugin.json in $($plugin.Name)"
+              exit 1
+            }
+            Write-Host "OK: $($plugin.Name)/plugin.json exists" -ForegroundColor Green
+          }

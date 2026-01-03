@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$comment": "AL Build System configuration defaults. Override by placing al-build.json in repo root.",
+
+  "appDir": "app",
+  "testDir": "test",
+  "testAppName": "9A Advanced Manufacturing - Item Configurator.Test",
+
+  "warnAsError": true,
+  "rulesetPath": "al.ruleset.json",
+
+  "serverInstance": "BC",
+
+  "container": {
+    "username": "admin",
+    "password": "P@ssw0rd",
+    "auth": "UserPassword",
+    "artifactCountry": "w1",
+    "artifactSelect": "Latest",
+    "imageName": "bctest:snapshot",
+    "memoryLimit": "8g"
+  },
+
+  "tenant": "default",
+  "validateCurrent": true,
+
+  "testRunnerCodeunitId": ""
+}

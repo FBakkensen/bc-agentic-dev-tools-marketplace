@@ -1,0 +1,6 @@
+{
+  "name": "al-agentic-guidelines",
+  "description": "Local mirror of Microsoft AL Guidelines (alguidelines.dev) for searching agentic coding rules, vibe-coding standards, AL best practices, and community resources.",
+  "version": "1.0.0",
+  "keywords": ["al", "business-central", "guidelines", "best-practices", "agentic", "vibe-coding"]
+}

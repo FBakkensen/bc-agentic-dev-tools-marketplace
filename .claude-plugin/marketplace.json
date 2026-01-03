@@ -1,0 +1,41 @@
+{
+  "name": "bc-agentic-dev-tools",
+  "owner": {
+    "name": "9Altitudes"
+  },
+  "metadata": {
+    "description": "Business Central agentic development tools - skills for AI-assisted AL development"
+  },
+  "plugins": [
+    {
+      "name": "al-build",
+      "source": "./plugins/al-build",
+      "description": "Build and test AL/Business Central projects. Runs compilation, publishing, and test execution in a single command.",
+      "version": "1.0.0"
+    },
+    {
+      "name": "bc-w1-reference",
+      "source": "./plugins/bc-w1-reference",
+      "description": "Local mirror of standard Business Central W1 source code for searching events, APIs, tables, fields, tests, and implementation patterns.",
+      "version": "1.0.0"
+    },
+    {
+      "name": "al-object-id-allocator",
+      "source": "./plugins/al-object-id-allocator",
+      "description": "Allocate the next available Business Central AL object ID/number by scanning .al files and idRanges in app.json.",
+      "version": "1.0.0"
+    },
+    {
+      "name": "tdd",
+      "source": "./plugins/tdd",
+      "description": "Red-Green-Refactor test workflow with telemetry verification for AL development.",
+      "version": "1.0.0"
+    },
+    {
+      "name": "al-agentic-guidelines",
+      "source": "./plugins/al-agentic-guidelines",
+      "description": "Local mirror of Microsoft AL Guidelines (alguidelines.dev) for searching agentic coding rules, vibe-coding standards, and AL best practices.",
+      "version": "1.0.0"
+    }
+  ]
+}
