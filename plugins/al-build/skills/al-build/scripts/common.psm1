@@ -2252,7 +2252,7 @@ function Save-BuildTimingEntry {
     .PARAMETER TotalSeconds
         Optional total elapsed seconds (if not provided, calculated from steps)
     .PARAMETER LogPath
-        Path to the timing log file (default: logs/build-timing.jsonl)
+        Path to the timing log file (default: .output/logs/build-timing.jsonl)
     #>
     [CmdletBinding()]
     param(
@@ -2264,7 +2264,7 @@ function Save-BuildTimingEntry {
 
         [double]$TotalSeconds = 0,
 
-        [string]$LogPath = "logs/build-timing.jsonl"
+        [string]$LogPath = ".output/logs/build-timing.jsonl"
     )
 
     # Ensure logs directory exists
@@ -2306,13 +2306,13 @@ function Show-BuildTimingHistory {
     .PARAMETER Count
         Number of recent entries to display (default: 5)
     .PARAMETER LogPath
-        Path to the timing log file (default: logs/build-timing.jsonl)
+        Path to the timing log file (default: .output/logs/build-timing.jsonl)
     #>
     [CmdletBinding()]
     param(
         [int]$Count = 5,
 
-        [string]$LogPath = "logs/build-timing.jsonl"
+        [string]$LogPath = ".output/logs/build-timing.jsonl"
     )
 
     if (-not (Test-Path $LogPath)) {
