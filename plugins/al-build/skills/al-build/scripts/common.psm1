@@ -1233,6 +1233,7 @@ function Register-AgentContainer {
 
     $registry[$ContainerName] = @{
         branch      = $Branch
+        repoPath    = Get-GitRepoIdentifier
         createdAt   = $now
         lastUsedAt  = $now
     }
@@ -1265,6 +1266,12 @@ function Update-AgentContainerUsage {
     }
 
     $registry[$ContainerName].lastUsedAt = (Get-Date).ToString('o')
+
+    # Migrate legacy entries that don't have repoPath
+    if (-not $registry[$ContainerName].repoPath) {
+        $registry[$ContainerName].repoPath = Get-GitRepoIdentifier
+    }
+
     $registry | ConvertTo-Json -Depth 3 | Set-Content -LiteralPath $registryPath -Encoding UTF8
     Write-BuildMessage -Type Detail -Message "Updated usage timestamp for container '$ContainerName'"
 }
@@ -1293,6 +1300,27 @@ function Unregister-AgentContainer {
         $registry | ConvertTo-Json -Depth 3 | Set-Content -LiteralPath $registryPath -Encoding UTF8
         Write-BuildMessage -Type Detail -Message "Unregistered container '$ContainerName'"
     }
+}
+
+function Get-GitRepoIdentifier {
+    <#
+    .SYNOPSIS
+        Get a unique identifier for the current git repository
+    .DESCRIPTION
+        Returns the absolute path to the repository root, which serves as a unique
+        identifier for the repo. This is used to track which repo a container belongs to.
+    .OUTPUTS
+        Absolute path to the git repository root, or $null if not in a git repo
+    #>
+    [CmdletBinding()]
+    param()
+
+    $repoRoot = git rev-parse --show-toplevel 2>$null
+    if ($LASTEXITCODE -eq 0 -and $repoRoot) {
+        # Normalize path separators for consistent comparison
+        return $repoRoot.Replace('\', '/')
+    }
+    return $null
 }
 
 function Test-GitBranchExists {
@@ -1335,10 +1363,21 @@ function Get-OrphanedAgentContainers {
     $registry = Get-RegisteredAgentContainers
     $orphaned = @()
     $staleThreshold = (Get-Date).AddDays(-$StaleThresholdDays)
+    $currentRepoPath = Get-GitRepoIdentifier
 
     foreach ($containerName in $registry.Keys) {
         $entry = $registry[$containerName]
         $branch = $entry.branch
+
+        # Skip containers from other repos (only process containers belonging to current repo)
+        # Also skip legacy entries without repoPath - they'll get updated on next use
+        if ($entry.repoPath -and $entry.repoPath -ne $currentRepoPath) {
+            continue
+        }
+        if (-not $entry.repoPath) {
+            # Legacy entry without repoPath - skip to avoid deleting containers from other repos
+            continue
+        }
 
         if (-not (Test-GitBranchExists -BranchName $branch)) {
             $orphaned += [PSCustomObject]@{
