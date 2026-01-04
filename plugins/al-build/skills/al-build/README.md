@@ -233,5 +233,5 @@ State files are stored per-container in the symbol cache directory.
 |------|----------|-------------|
 | Test results | `.output/TestResults/last.xml` | JUnit XML format |
 | Telemetry | `.output/TestResults/telemetry.jsonl` | Feature telemetry logs |
-| Build timing | `logs/build-timing.jsonl` | Historical timing data |
+| Build timing | `.output/logs/build-timing.jsonl` | Historical timing data |
 | Publish state | `~/.bc-symbol-cache/.../publish-state.*.json` | Incremental publish tracking |
