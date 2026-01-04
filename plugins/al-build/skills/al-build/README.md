@@ -208,7 +208,7 @@ State files are stored per-container in the symbol cache directory.
 
 ### Test Failures
 
-1. Check `test/TestResults/last.xml` for assertion failures
+1. Check `.output/TestResults/last.xml` for assertion failures
 2. Use telemetry for debugging: see `telemetry-first-test-debugging` skill
 3. Run specific codeunit: `pwsh scripts/test.ps1 -TestCodeunit <id>`
 
@@ -231,7 +231,7 @@ State files are stored per-container in the symbol cache directory.
 
 | File | Location | Description |
 |------|----------|-------------|
-| Test results | `test/TestResults/last.xml` | JUnit XML format |
-| Telemetry | `test/TestResults/telemetry.jsonl` | Feature telemetry logs |
+| Test results | `.output/TestResults/last.xml` | JUnit XML format |
+| Telemetry | `.output/TestResults/telemetry.jsonl` | Feature telemetry logs |
 | Build timing | `logs/build-timing.jsonl` | Historical timing data |
 | Publish state | `~/.bc-symbol-cache/.../publish-state.*.json` | Incremental publish tracking |

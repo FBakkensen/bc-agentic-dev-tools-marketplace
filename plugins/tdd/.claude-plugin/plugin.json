@@ -1,5 +1,5 @@
 {
   "name": "tdd",
   "description": "Red-Green-Refactor test workflow with telemetry verification. MANDATORY for ALL AL test work.",
-  "version": "0.0.1"
+  "version": "0.0.2"
 }

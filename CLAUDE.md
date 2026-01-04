@@ -54,7 +54,7 @@ plugins/<plugin-name>/
 
 ### al-build
 Build gate for AL projects: compilation → publish → test.
-- Output: `test/TestResults/last.xml` (JUnit), `test/TestResults/telemetry.jsonl`
+- Output: `.output/TestResults/last.xml` (JUnit), `.output/TestResults/telemetry.jsonl`
 - Requires: Docker Desktop, BcContainerHelper module
 - Configuration: `plugins/al-build/skills/al-build/config/al-build.json`
 

@@ -21,5 +21,5 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File "${CLAUDE_PLUGIN_ROOT}/skills/al-b
 - `-Force` - Force republish apps
 
 ## Outputs
-- `test/TestResults/last.xml` - JUnit test results
-- `test/TestResults/telemetry.jsonl` - Merged telemetry
+- `.output/TestResults/last.xml` - JUnit test results
+- `.output/TestResults/telemetry.jsonl` - Merged telemetry

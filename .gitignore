@@ -34,6 +34,5 @@ Desktop.ini
 /bin/
 /obj/
 
-# Test results (keep structure but ignore generated files)
-**/TestResults/*.xml
-**/TestResults/*.jsonl
+# Build output (test results, etc.)
+.output/

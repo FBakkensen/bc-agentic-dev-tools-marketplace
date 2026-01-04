@@ -110,6 +110,22 @@ try {
     $configUpdated = $false
 }
 
+# Ensure .output/ is in .gitignore (test results are stored there)
+$gitignorePath = Join-Path $repoRoot '.gitignore'
+$outputEntry = '.output/'
+$gitignoreUpdated = $false
+
+if (Test-Path -LiteralPath $gitignorePath) {
+    $gitignoreContent = Get-Content -LiteralPath $gitignorePath -Raw
+    if ($gitignoreContent -notmatch '(?m)^\.output/?$') {
+        Add-Content -LiteralPath $gitignorePath -Value "`n# AL Build output`n$outputEntry"
+        $gitignoreUpdated = $true
+    }
+} else {
+    Set-Content -LiteralPath $gitignorePath -Value "# AL Build output`n$outputEntry"
+    $gitignoreUpdated = $true
+}
+
 # Output results
 Write-Host "Created: $projectConfigPath" -ForegroundColor Green
 
@@ -118,6 +134,10 @@ if ($configUpdated) {
     if ($detectedAppDir) { Write-Host "  appDir: $detectedAppDir" }
     if ($detectedTestDir) { Write-Host "  testDir: $detectedTestDir" }
     if ($detectedTestAppName) { Write-Host "  testAppName: $detectedTestAppName" }
+}
+
+if ($gitignoreUpdated) {
+    Write-Host "Added .output/ to .gitignore" -ForegroundColor Cyan
 }
 
 Write-Host "`nNext steps:" -ForegroundColor Yellow

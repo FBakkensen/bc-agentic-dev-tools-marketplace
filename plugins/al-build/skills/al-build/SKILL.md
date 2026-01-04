@@ -38,8 +38,8 @@ pwsh "<skill-folder>/scripts/test.ps1"
 - Force republish: `pwsh "<skill-folder>/scripts/test.ps1" -Force`
 
 **Outputs:**
-- `test/TestResults/last.xml` — JUnit test results
-- `test/TestResults/telemetry.jsonl` — merged telemetry
+- `.output/TestResults/last.xml` — JUnit test results
+- `.output/TestResults/telemetry.jsonl` — merged telemetry
 
 ## Troubleshooting
 
@@ -65,7 +65,7 @@ If `/al-build:test` fails and `al-build.json` doesn't exist in repo root:
 
 ### Test Failures
 
-1. Check `test/TestResults/last.xml` for assertion failures
+1. Check `.output/TestResults/last.xml` for assertion failures
 2. Use telemetry for debugging: see `telemetry-first-test-debugging` skill
 3. Run specific codeunit: `pwsh "<skill-folder>/scripts/test.ps1" -TestCodeunit <id>`
 

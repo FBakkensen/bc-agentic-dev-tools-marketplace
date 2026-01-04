@@ -130,8 +130,8 @@ Rules:
 
 ### 2) Green: make it pass and prove the path
 1. Run the full test gate (see skill `al-build`)
-2. Confirm test pass/fail in `test/TestResults/last.xml`
-3. Manually confirm expected branch ran in `test/TestResults/telemetry.jsonl`
+2. Confirm test pass/fail in `.output/TestResults/last.xml`
+3. Manually confirm expected branch ran in `.output/TestResults/telemetry.jsonl`
 
 Useful telemetry fields: `eventId`, `message`, `testCodeunit`, `testProcedure`, `callStack`, `customDimensions`
 
@@ -155,10 +155,10 @@ After running tests, correlate logs to specific tests:
 
 ```powershell
 # Find all logs from a specific test
-Select-String -Path test/TestResults/telemetry.jsonl -Pattern "GivenX_WhenY_ThenZ"
+Select-String -Path .output/TestResults/telemetry.jsonl -Pattern "GivenX_WhenY_ThenZ"
 
 # Find test-start markers to see test execution order
-Select-String -Path test/TestResults/telemetry.jsonl -Pattern "DEBUG-TEST-START"
+Select-String -Path .output/TestResults/telemetry.jsonl -Pattern "DEBUG-TEST-START"
 ```
 
 In `telemetry.jsonl`, logs appear in execution order. After a `DEBUG-TEST-START` entry, all subsequent logs belong to that test until the next `DEBUG-TEST-START`.

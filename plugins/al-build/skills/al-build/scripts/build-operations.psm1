@@ -807,8 +807,15 @@ function Invoke-ALTest {
         Write-BuildMessage -Type Detail -Message "Filter: $TestCodeunit"
     }
 
-    # Setup results paths
-    $localResultsPath = Join-Path $TestDir 'TestResults'
+    # Setup results paths - store outside source to avoid AL1025 compiler errors
+    $repoRoot = & git rev-parse --show-toplevel 2>$null
+    if ($LASTEXITCODE -ne 0 -or -not $repoRoot) {
+        $repoRoot = (Get-Location).Path
+    }
+    if ($IsWindows -or $env:OS -match 'Windows') {
+        $repoRoot = $repoRoot -replace '/', '\'
+    }
+    $localResultsPath = Join-Path $repoRoot '.output' 'TestResults'
     Ensure-Directory -Path $localResultsPath
 
     # Import BcContainerHelper
