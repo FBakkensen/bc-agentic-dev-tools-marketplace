@@ -1806,7 +1806,10 @@ function Import-BCContainerHelper {
     }
 
     if (Get-Module -Name BcContainerHelper -ListAvailable) {
-        Import-Module BcContainerHelper -DisableNameChecking -ErrorAction Stop
+        # Use -ArgumentList $true for silent import to avoid false permission warning
+        # when PowerShell is spawned from bash (Claude Code, WSL, Git Bash)
+        # See: https://github.com/microsoft/navcontainerhelper/issues/4078
+        Import-Module BcContainerHelper -ArgumentList $true -DisableNameChecking -ErrorAction Stop
         Write-BuildMessage -Type Detail -Message "BcContainerHelper module loaded"
     } else {
         Write-BuildMessage -Type Error -Message "BcContainerHelper PowerShell module not found."
