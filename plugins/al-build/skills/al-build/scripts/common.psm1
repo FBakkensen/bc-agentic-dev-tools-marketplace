@@ -1724,13 +1724,13 @@ function Copy-TestTelemetryLogs {
     .SYNOPSIS
         Copy consolidated telemetry logs to local test results folder
     .DESCRIPTION
-        Copies test-telemetry.jsonl from shared folder to local test/TestResults/telemetry.jsonl.
+        Copies test-telemetry.jsonl from shared folder to local .output/TestResults/telemetry.jsonl.
         Cleans up shared file after successful copy.
         Non-fatal operation; warnings logged if file not found or copy fails.
     .PARAMETER SharedFolder
         Path to shared folder containing test-telemetry.jsonl (mandatory).
     .PARAMETER LocalResultsPath
-        Path to local test/TestResults folder where telemetry.jsonl will be saved (mandatory).
+        Path to local .output/TestResults folder where telemetry.jsonl will be saved (mandatory).
     #>
     [CmdletBinding()]
     param(
