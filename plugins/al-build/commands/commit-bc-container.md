@@ -22,5 +22,6 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File "${CLAUDE_PLUGIN_ROOT}/skills/al-b
 
 ## Next Steps
 After committing the snapshot:
-1. Start the golden container if needed: `docker start <container-name>`
-2. Spawn agent containers: `/al-build:new-agent-container`
+1. Spawn agent containers: `/al-build:new-agent-container`
+
+Note: The source container is automatically removed after commit.

@@ -34,6 +34,7 @@ $InformationPreference = 'Continue'
 # Import modules
 Import-Module "$PSScriptRoot/common.psm1" -Force -DisableNameChecking
 Import-Module "$PSScriptRoot/build-operations.psm1" -Force -DisableNameChecking
+Import-BCContainerHelper
 
 # Load configuration and apply defaults if parameters not provided
 $config = Get-BuildConfig
@@ -65,7 +66,6 @@ Write-BuildMessage -Type Success -Message "Container found"
 $running = docker inspect $ContainerName --format '{{.State.Running}}' 2>$null
 if ($running -eq 'true') {
     Write-BuildMessage -Type Warning -Message "Container is running; stopping before commit..."
-    Import-BCContainerHelper
     Stop-BcContainer -containerName $ContainerName
     Write-BuildMessage -Type Success -Message "Container stopped"
 }
@@ -85,8 +85,16 @@ if ($LASTEXITCODE -ne 0) {
 $imageSize = docker images $ImageName --format "{{.Size}}" 2>$null
 Write-BuildMessage -Type Success -Message "Snapshot image created: $ImageName ($imageSize)"
 
+Write-BuildMessage -Type Info -Message "Removing source container '$ContainerName'..."
+try {
+    Remove-BcContainer -containerName $ContainerName -ErrorAction Stop | Out-Null
+    Write-BuildMessage -Type Success -Message "Container '$ContainerName' removed"
+} catch {
+    Write-BuildMessage -Type Warning -Message "Remove-BcContainer failed; using docker rm -f"
+    docker rm -f $ContainerName 2>$null | Out-Null
+}
+
 Write-BuildHeader 'Commit Complete'
 Write-BuildMessage -Type Success -Message "Image '$ImageName' is ready"
 Write-BuildMessage -Type Info -Message "Next steps:"
-Write-BuildMessage -Type Detail -Message "1. Start golden container: docker start $ContainerName"
-Write-BuildMessage -Type Detail -Message "2. Spawn agent containers: pwsh $PSScriptRoot/new-agent-container.ps1"
+Write-BuildMessage -Type Detail -Message "Spawn agent containers: pwsh $PSScriptRoot/new-agent-container.ps1"
