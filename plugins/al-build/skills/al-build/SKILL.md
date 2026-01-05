@@ -41,6 +41,32 @@ pwsh "<skill-folder>/scripts/test.ps1"
 - `.output/TestResults/last.xml` — JUnit test results
 - `.output/TestResults/telemetry.jsonl` — merged telemetry
 
+## Running Tests in Subtask (Recommended)
+
+Use the Task tool with `subagent_type: general-purpose` to run tests. This keeps verbose build output contained and returns only essential results to the main conversation.
+
+**Task tool invocation:**
+```
+subagent_type: general-purpose
+prompt: |
+  Run the AL build gate:
+  pwsh "<skill-folder>/scripts/test.ps1"
+
+  Report back:
+  1. Build result: success or failure
+  2. Test result: pass count, fail count
+  3. If failures: include the relevant error messages and stack traces
+  4. If warnings: list them
+  5. If failures and telemetry is relevant: include key entries from .output/TestResults/telemetry.jsonl
+
+  Do not include full console output - only the summary above.
+```
+
+**Why subtask?**
+- Build/test output is verbose (compilation logs, test runner output)
+- Main task only needs results and actionable error context
+- Keeps conversation focused on the development task
+
 ## Troubleshooting
 
 ### Build fails and no config exists
