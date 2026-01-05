@@ -918,7 +918,8 @@ function Invoke-ALUnpublish {
     # Check if app is installed
     Write-BuildMessage -Type Step -Message "Checking if app is installed: $AppName"
     try {
-        $installedApp = Get-BcContainerAppInfo -containerName $config.ContainerName -Name $AppName
+        $installedApp = Get-BcContainerAppInfo -containerName $config.ContainerName |
+            Where-Object { $_.Name -eq $AppName }
     } catch {
         throw "Failed to check app installation: $_"
     }
