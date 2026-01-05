@@ -29,6 +29,35 @@ Get-ChildItem -Path $PSScriptRoot/.. -Recurse -Filter "*.ps1" | ForEach-Object {
     }
 }
 
+# Validate module exports
+Write-Host "`n--- Module Export Validation ---" -ForegroundColor Cyan
+Get-ChildItem -Path $PSScriptRoot/.. -Recurse -Filter "*.psm1" | ForEach-Object {
+    try {
+        $module = Import-Module $_.FullName -PassThru -Force -DisableNameChecking -ErrorAction Stop
+
+        # Parse for Export-ModuleMember to find expected exports
+        $content = Get-Content -LiteralPath $_.FullName -Raw
+        if ($content -match "Export-ModuleMember\s+-Function\s+@\(([\s\S]*?)\)") {
+            $exportBlock = $matches[1]
+            $expectedFunctions = [regex]::Matches($exportBlock, "'([^']+)'") |
+                ForEach-Object { $_.Groups[1].Value }
+
+            foreach ($func in $expectedFunctions) {
+                if (-not ($module.ExportedCommands.Keys -contains $func)) {
+                    $errors += "FAIL: $($_.FullName) - Function '$func' declared in Export-ModuleMember but not found"
+                    Write-Host "FAIL: $($_.FullName) - Function '$func' not exported" -ForegroundColor Red
+                }
+            }
+        }
+
+        Remove-Module $module -Force -ErrorAction SilentlyContinue
+        Write-Host "OK: $($_.FullName) (module exports validated)" -ForegroundColor Green
+    } catch {
+        $errors += "FAIL: $($_.FullName) - Import failed: $($_.Exception.Message)"
+        Write-Host "FAIL: $($_.FullName) - Import failed" -ForegroundColor Red
+    }
+}
+
 if ($errors.Count -gt 0) {
     $errors | ForEach-Object { Write-Error $_ }
     exit 1

@@ -1018,7 +1018,6 @@ Export-ModuleMember -Function @(
 
     # Publish
     'Invoke-ALPublish'
-    'Invoke-DirectDevEndpointPublish'
     'Invoke-ALUnpublish'
 
     # Test
