@@ -1,5 +1,5 @@
 {
   "name": "al-build",
   "description": "Build and test AL/Business Central projects. Use after modifying AL code or tests to verify the build gate passes.",
-  "version": "0.0.16"
+  "version": "0.0.17"
 }

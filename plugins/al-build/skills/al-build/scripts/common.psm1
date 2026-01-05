@@ -1301,18 +1301,26 @@ function Get-GitRepoIdentifier {
     .SYNOPSIS
         Get a unique identifier for the current git repository
     .DESCRIPTION
-        Returns the absolute path to the repository root, which serves as a unique
-        identifier for the repo. This is used to track which repo a container belongs to.
+        Returns a unique identifier for the repository that is consistent across
+        git worktrees. Uses the remote origin URL when available, falling back to
+        the repository root path (prefixed with 'local:') for local-only repos.
     .OUTPUTS
-        Absolute path to the git repository root, or $null if not in a git repo
+        Remote origin URL, 'local:<repo-path>', or $null if not in a git repo
     #>
     [CmdletBinding()]
     param()
 
+    # Try remote origin URL first (shared across worktrees)
+    $remoteUrl = git config --get remote.origin.url 2>$null
+    if ($LASTEXITCODE -eq 0 -and $remoteUrl) {
+        return $remoteUrl.Trim()
+    }
+
+    # Fallback to repo root for local-only repos (no remote configured)
     $repoRoot = git rev-parse --show-toplevel 2>$null
     if ($LASTEXITCODE -eq 0 -and $repoRoot) {
-        # Normalize path separators for consistent comparison
-        return $repoRoot.Replace('\', '/')
+        # Prefix with 'local:' to distinguish from remote URLs
+        return "local:$($repoRoot.Replace('\', '/'))"
     }
     return $null
 }
