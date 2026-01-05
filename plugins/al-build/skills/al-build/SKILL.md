@@ -57,6 +57,7 @@ prompt: |
   2. Test result: pass count, fail count
   3. If failures: include the relevant error messages and stack traces
   4. If warnings: list them
+  5. If failures and telemetry is relevant: include key entries from .output/TestResults/telemetry.jsonl
 
   Do not include full console output - only the summary above.
 ```
