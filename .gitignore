@@ -36,3 +36,6 @@ Desktop.ini
 
 # Build output (test results, etc.)
 .output/
+
+# Secrets
+**/secret.json

@@ -1,0 +1,5 @@
+{
+  "name": "al-build",
+  "description": "Build and test AL apps for Business Central. Compiles locally, runs tests on remote Azure VM.",
+  "version": "1.0.0"
+}

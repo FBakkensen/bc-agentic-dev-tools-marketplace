@@ -1,0 +1,5 @@
+{
+  "name": "bc-standard-reference",
+  "description": "Locate canonical Business Central Standard behavior (BaseApp, System Application, APIV2, etc.) for events, codeunits, tables, pages, APIs.",
+  "version": "1.0.0"
+}
