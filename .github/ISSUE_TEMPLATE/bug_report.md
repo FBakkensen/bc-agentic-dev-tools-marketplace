@@ -10,17 +10,13 @@ assignees: ''
 A clear description of the bug.
 
 ## Plugin/Skill Affected
-- [ ] al-build
-- [ ] al-object-id-allocator
-- [ ] tdd
-- [ ] bc-w1-reference
-- [ ] al-agentic-guidelines
 - [ ] Other/General
+<!-- Add plugin-specific checkboxes as plugins are added -->
 
 ## Steps to Reproduce
-1. 
-2. 
-3. 
+1.
+2.
+3.
 
 ## Expected Behavior
 What you expected to happen.

@@ -1,5 +1,0 @@
-{
-  "name": "al-object-id-allocator",
-  "description": "Allocate the next available Business Central AL object ID/number by scanning .al files and idRanges in app.json.",
-  "version": "0.0.1"
-}

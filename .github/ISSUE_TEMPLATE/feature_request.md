@@ -20,12 +20,9 @@ Other approaches you have considered.
 
 ## Plugin/Skill
 Which plugin would this affect?
-- [ ] al-build
-- [ ] al-object-id-allocator
-- [ ] tdd
-- [ ] bc-w1-reference
-- [ ] al-agentic-guidelines
 - [ ] New plugin
+- [ ] Core/General
+<!-- Add plugin-specific checkboxes as plugins are added -->
 
 ## Additional Context
 Any other relevant information.

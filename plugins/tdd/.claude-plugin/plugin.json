@@ -1,5 +1,0 @@
-{
-  "name": "tdd",
-  "description": "AL test development patterns. MANDATORY when planning, creating, or modifying tests. Guides Red-Green-Refactor todo structure.",
-  "version": "0.0.4"
-}

@@ -9,12 +9,8 @@ Brief description of the changes.
 - [ ] Other (describe):
 
 ## Plugin(s) Affected
-- [ ] al-build
-- [ ] al-object-id-allocator
-- [ ] tdd
-- [ ] bc-w1-reference
-- [ ] al-agentic-guidelines
 - [ ] Core/General
+<!-- Add plugin-specific checkboxes as plugins are added -->
 
 ## Checklist
 - [ ] I have tested my changes
