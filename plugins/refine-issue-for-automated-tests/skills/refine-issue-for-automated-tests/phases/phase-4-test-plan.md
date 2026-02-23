@@ -19,15 +19,23 @@ Review BC/AL testing patterns (isolation, handlers, error testing, transaction b
 
 Search existing test folders for `[Test]` procedures matching the feature area.
 
-### 4. Apply ZOMBIES Checklist
+### 4. Order Scenarios Using ZOMBIES
 
-- **Z**ero - Empty/null inputs, zero quantities
-- **O**ne - Single item/record cases
-- **M**any - Multiple items/records
-- **B**oundary - Edge cases, limits, max values
-- **I**nterface - API contracts, event interfaces
-- **E**xceptions - Error handling, guard clauses
-- **S**imple - Happy path
+ZOMBIES defines the **order** in which test scenarios are written, not just a coverage checklist. Each letter drives new production code into existence. Design EMERGES from this sequence -- for example, `FindFirst` appears at the "O" (One) step and evolves into `FindSet` + loop at the "M" (Many) step.
+
+Write and order scenarios in this progression:
+
+| Step | Focus | What It Drives Into Existence |
+|------|-------|-------------------------------|
+| **Z** - Zero | Empty/null/zero inputs | Guard clauses, empty checks, default returns |
+| **O** - One | Single happy-path case | Core logic for one record |
+| **M** - Many | Multiple inputs, iteration | Loops, aggregation (`FindSet` + `repeat..until`) |
+| **B** - Boundary | Edge cases, thresholds, limits | Boundary validation, off-by-one protection |
+| **I** - Interface | Public API, events, contracts | IntegrationEvent signatures, IsHandled pattern |
+| **E** - Exception | Error cases, missing setup | `asserterror`, guard `Error()` calls |
+| **S** - Simple | Confirm simplest cases pass | Already covered by Z and O (implicit) |
+
+**Ordering rule:** Scenarios in the Scenario Inventory MUST be ordered Z, O, M, B, I, E. Within each ZOMBIES step, order by ascending risk. This ensures each test forces the minimal next increment of production code.
 
 ### 5. Apply BC-Specific Checklist
 
@@ -67,8 +75,8 @@ Create test plan with this structure:
 **Tags:** `[FEATURE] [Area] [Subarea]`
 
 **Scenario Inventory table:**
-| # | Scenario | Type | Risk | Procedure | TransactionModel | Handlers | Evidence |
-|---|----------|------|------|-----------|------------------|----------|----------|
+| # | ZOMBIES | Scenario | Type | Risk | Procedure | TransactionModel | Handlers | Evidence |
+|---|---------|----------|------|------|-----------|------------------|----------|----------|
 
 **Rule to Scenario Traceability table:**
 | Rule # | Rule | Scenarios | Notes |
@@ -95,6 +103,8 @@ If verification fails, reapply the update once, re-read, and verify again. If it
 
 - Every business rule has at least one scenario
 - ZOMBIES coverage is adequate
+- Scenarios are ordered Z-O-M-B-I-E in the Scenario Inventory
+- Each ZOMBIES step introduces scenarios that force new production code (design-emergence check)
 - BC-specific checklist items addressed
 - Evidence targets are specific and verifiable
 - Test libraries identified for setup

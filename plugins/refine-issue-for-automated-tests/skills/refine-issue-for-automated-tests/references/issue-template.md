@@ -89,12 +89,14 @@ flowchart TD
 
 ### Scenario Inventory
 
-| # | Scenario | Type | Risk | Procedure | TransactionModel | Handlers | Evidence |
-|---|----------|------|------|-----------|------------------|----------|----------|
-| 1 | [Happy path description] | Unit | Low | GivenX_WhenY_ThenZ | Default | — | LogTag: Happy |
-| 2 | [Edge case description] | Unit | Med | GivenEdge_WhenAction_ThenResult | Default | — | LogTag: Edge |
-| 3 | [UI interaction] | Integration | Med | GivenDoc_WhenConfirm_ThenResult | Default | ConfirmHandler | LogTag: UI |
-| 4 | [Posting routine] | Integration | High | GivenDoc_WhenPost_ThenLedger | AutoCommit | MessageHandler | LogTag: Post |
+| # | ZOMBIES | Scenario | Type | Risk | Procedure | TransactionModel | Handlers | Evidence |
+|---|---------|----------|------|------|-----------|------------------|----------|----------|
+| 1 | Z - Zero | [Empty/null case] | Unit | Low | GivenEmpty_WhenAction_ThenDefault | Default | — | LogTag: Zero |
+| 2 | O - One | [Happy path description] | Unit | Low | GivenX_WhenY_ThenZ | Default | — | LogTag: Happy |
+| 3 | M - Many | [Multiple records] | Unit | Med | GivenMultiple_WhenAction_ThenAggregated | Default | — | LogTag: Many |
+| 4 | B - Boundary | [Edge case description] | Unit | Med | GivenEdge_WhenAction_ThenResult | Default | — | LogTag: Edge |
+| 5 | I - Interface | [Event/API contract] | Integration | Med | GivenDoc_WhenConfirm_ThenResult | Default | ConfirmHandler | LogTag: UI |
+| 6 | E - Exception | [Error/missing setup] | Unit | High | GivenInvalid_WhenAction_ThenError | Default | — | LogTag: Error |
 
 ### Rule to Scenario Traceability
 
