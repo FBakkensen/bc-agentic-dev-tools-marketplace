@@ -47,6 +47,15 @@ After **any** PR description or comment update:
 - If verification fails, **reapply the update once**, then re-read and verify again.
 - If it still fails, **stop and report** the formatting mismatch.
 
+## TDD Discipline: Three Laws
+
+Every Red-Green-Refactor cycle in Phase 2 is governed by the Three Laws of TDD (Robert C. Martin):
+1. No production code without a failing test first.
+2. Write only enough test to fail (compile error = failure).
+3. Write only enough production code to pass the current test.
+
+See [Phase 2](./phases/phase-2-implementation.md) for full details and enforcement rules.
+
 ## Do / Don't
 
 **Do**
@@ -61,6 +70,8 @@ After **any** PR description or comment update:
 - Leave `DEBUG-*` telemetry in code after refactor.
 - Skip the RED failing-test verification.
 - Reorder scenarios without documenting why.
+- Implement production code beyond what the current failing test requires (Law 3 violation).
+- Write a complete test when a partial test already fails to compile (Law 2 violation).
 - Mark a PR ready for review without completing the Review Checklist.
 
 ## Invocation

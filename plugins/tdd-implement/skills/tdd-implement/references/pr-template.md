@@ -51,11 +51,13 @@ flowchart TD
 
 ### Scenario Inventory
 
-| # | Scenario | Type | Risk | Procedure | Telemetry Target |
-|---|----------|------|------|-----------|------------------|
-| 1 | [Happy path description] | Unit | Low | Test_HappyPath | DEBUG-BRANCH-HAPPY |
-| 2 | [Edge case description] | Unit | Medium | Test_EdgeCase | DEBUG-BRANCH-EDGE |
-| 3 | [Error case description] | Unit | High | Test_ErrorCase | DEBUG-BRANCH-ERROR |
+| # | ZOMBIES | Scenario | Type | Risk | Procedure | Telemetry Target |
+|---|---------|----------|------|------|-----------|------------------|
+| 1 | Z - Zero | [Empty/null case] | Unit | Low | Test_ZeroCase | DEBUG-BRANCH-ZERO |
+| 2 | O - One | [Happy path description] | Unit | Low | Test_HappyPath | DEBUG-BRANCH-HAPPY |
+| 3 | M - Many | [Multiple records case] | Unit | Medium | Test_MultipleRecords | DEBUG-BRANCH-MANY |
+| 4 | B - Boundary | [Edge case description] | Unit | Medium | Test_EdgeCase | DEBUG-BRANCH-EDGE |
+| 5 | E - Exception | [Error case description] | Unit | High | Test_ErrorCase | DEBUG-BRANCH-ERROR |
 
 ### Rule to Scenario Traceability
 

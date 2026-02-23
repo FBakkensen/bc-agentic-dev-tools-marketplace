@@ -2,10 +2,27 @@
 
 **Goal**: Implement feature using Red-Green-Refactor TDD.
 
+## Three Laws of TDD (Robert C. Martin)
+
+These three laws govern every RED-GREEN-REFACTOR cycle. They enforce strict incrementalism -- each cycle produces the minimum possible change.
+
+| Law | Rule | What This Means for the Agent |
+|-----|------|-------------------------------|
+| **Law 1** | Do not write production code until you have a failing unit test | Never create production AL objects before the test that requires them exists and fails |
+| **Law 2** | Do not write more of a unit test than sufficient to fail (not compiling = failing) | A compilation error IS a failing test. Stop writing the test as soon as it fails to compile or fails an assertion |
+| **Law 3** | Do not write more production code than sufficient to pass the currently failing test | Write the MINIMUM code to make the current test pass. Resist implementing logic for future scenarios |
+
+**Why Law 3 matters for AI agents:** AI agents tend to implement complete solutions in one pass. This produces code that "works" but was never driven by tests. Each ZOMBIES step in the Scenario Inventory is designed to force a specific increment of production code. If you implement more than the minimum, you bypass this design-emergence mechanism.
+
+**Practical enforcement:**
+- Before writing ANY production code, ask: "Which specific failing test am I making pass?"
+- After making a test pass, STOP. Do not add logic for the next scenario.
+- If you realize the next scenario needs a loop but the current one does not, do NOT add the loop yet.
+
 ## Reference the Repository's Test-Writing Guidance
 
 Use the repository's AL test-writing guidance (for example, `/writing-al-tests`) for:
-- DEBUG telemetry patterns
+- Execution Markers (`DEBUG-*` telemetry) -- temporary markers that prove which code path ran
 - Test-start checkpoints
 - Red-Green-Refactor workflow
 - BC event subscriber telemetry pattern
@@ -18,11 +35,23 @@ Use the repository's AL test-writing guidance (for example, `/writing-al-tests`)
 2. Create a **TodoWrite** checklist for Red/Green/Refactor (per the test-guidance skill).
 3. In every test, `DEBUG-TEST-START` must be the **first line after variable declarations**.
 
+### ZOMBIES-Driven Ordering
+
+Process scenarios in the order they appear in the Scenario Inventory (which follows ZOMBIES progression from planning). Each scenario is designed to force the next minimal increment of production code:
+
+- **Z/O scenarios**: Expect simple, straight-line production code (no loops, no complex branching)
+- **M scenarios**: Expect loops and aggregation to emerge (`FindFirst` becomes `FindSet` + `repeat..until`)
+- **B scenarios**: Expect boundary checks and validation to emerge
+- **I scenarios**: Expect event signatures and interface contracts to emerge
+- **E scenarios**: Expect error handling and guard clauses to emerge
+
+Do NOT reorder scenarios unless you document the reason in a PR comment. The ZOMBIES order is intentional -- it ensures design emerges incrementally.
+
 For each scenario (or batch of related scenarios):
 
 ### RED Phase
 
-1. Write failing test with DEBUG telemetry:
+1. Write failing test with DEBUG telemetry **(Law 1: test first. Law 2: stop at first failure -- a compile error counts)**:
    ```al
    [Test]
    procedure ScenarioName()
@@ -46,7 +75,9 @@ For each scenario (or batch of related scenarios):
 
 ### GREEN Phase
 
-1. Implement minimum code to pass
+1. Implement **minimum** code to pass the currently failing test **(Law 3: nothing more)**
+   - If the Scenario Inventory shows this is a Z or O step, the production code should be trivially simple (no loops, no complex branching)
+   - If this is an M step, a loop may now emerge -- this is the expected design progression
 
 2. Execute the repository's standard build/test process using available tooling - test should PASS (GREEN)
 
