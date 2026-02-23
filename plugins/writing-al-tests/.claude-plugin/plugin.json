@@ -1,5 +1,5 @@
 {
   "name": "writing-al-tests",
-  "description": "Write, modify, and verify Business Central AL tests with DEBUG telemetry and Red-Green-Refactor.",
-  "version": "1.0.0"
+  "description": "Write, modify, and verify Business Central AL tests with Execution Markers (DEBUG telemetry) and Red-Green-Refactor.",
+  "version": "1.1.0"
 }

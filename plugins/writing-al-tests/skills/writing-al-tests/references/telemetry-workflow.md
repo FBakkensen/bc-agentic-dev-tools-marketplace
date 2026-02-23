@@ -1,6 +1,8 @@
-# DEBUG Telemetry Workflow
+# Execution Markers Workflow (DEBUG Telemetry)
 
-## Assertions vs DEBUG Telemetry
+Execution Markers are temporary `DEBUG-*` telemetry calls that prove which code path a test exercised. They are the third layer of TDD trust: while the Three Laws ensure tests drive code (process discipline) and ZOMBIES ensures the right scenarios in the right order (coverage direction), Execution Markers provide **execution proof** -- evidence that the intended code path actually ran.
+
+## Assertions vs Execution Markers
 
 **They verify different things:**
 
@@ -17,6 +19,8 @@ Assertions can pass even when test setup is wrong. Example:
 - But test setup was wrong—code actually took the "Config Header branch"
 - That branch also happened to produce Quantity=7 (coincidence)
 - Without production telemetry, you cannot detect this
+
+**Why this matters especially for AI agents:** An AI agent writing tests cannot observe execution in a debugger. It infers correctness from assertion results alone. When assertions pass coincidentally (as above), the AI agent has no way to detect the problem without Execution Markers. This is why Execution Markers are not optional scaffolding -- they are the primary mechanism by which an AI agent verifies its own test setup.
 
 **Solution: Production code telemetry proves which path ran:**
 - `DEBUG-TEST-START` in test → identifies which test is running
@@ -165,3 +169,14 @@ Select-String -Path .output/TestResults/telemetry.jsonl -Pattern "DEBUG-TEST-STA
 ```
 
 In `telemetry.jsonl`, logs appear in execution order. After a `DEBUG-TEST-START` entry, all subsequent logs belong to that test until the next `DEBUG-TEST-START`.
+
+## Same-Publisher Requirement
+
+`FeatureTelemetry.LogUsage` calls are captured by a Telemetry Logger codeunit that subscribes to telemetry events. This subscriber must be in the **same publisher** as the emitting code. If your test extension (`test/app.json`) and app extension (`app/app.json`) have different `publisher` values, Execution Markers will silently fail to appear in `telemetry.jsonl`.
+
+**Diagnostic checklist:**
+- `app/app.json` publisher matches `test/app.json` publisher
+- Telemetry Logger codeunit is present in the test extension
+- `telemetry.jsonl` shows `DEBUG-TEST-START` entries after running tests (smoke test)
+
+If `DEBUG-TEST-START` does not appear in telemetry.jsonl after a test run, the same-publisher requirement is the most common cause.
