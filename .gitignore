@@ -12,6 +12,7 @@ node_modules/
 # Temporary files
 *.tmp
 *.temp
+.temp/
 
 # OS generated files
 .DS_Store
