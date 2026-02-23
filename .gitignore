@@ -39,3 +39,6 @@ Desktop.ini
 
 # Secrets
 **/secret.json
+
+# Local Settings
+.claude/settings.local.json
