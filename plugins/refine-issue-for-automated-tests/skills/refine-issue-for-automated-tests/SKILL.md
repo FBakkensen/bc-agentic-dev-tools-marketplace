@@ -27,13 +27,21 @@ description: "AL/BC issue refinement workflow for GitHub issues. Produce archite
 
 These principles apply across all phases and govern how the agent interacts with the user during the workflow.
 
+### Separate Findings from Questions
+
+Phase outputs, summaries, tables, comparisons, and context **must** be presented in the chat as regular messages. Only actual questions go through the question/interaction mechanism. Never embed phase output, findings, or review summaries inside questions.
+
+The flow is always:
+1. **Present findings in chat** — show what you discovered, including tables, comparisons, and summaries as a regular chat message.
+2. **Then ask questions separately** — only the questions themselves, referencing the findings you just presented.
+
 ### Discovery-Driven Questioning
 
 After any research or exploration step, review what you learned, identify what is ambiguous or uncertain, and surface those items to the user as questions. Prioritize questions derived from actual codebase findings over generic checklists.
 
 ### Batch Questions
 
-Present all questions together in a single interaction, grouped by topic (e.g., events, permissions, test scope). Avoid asking one question at a time in separate exchanges.
+Ask all questions together in one round, grouped by topic (e.g., events, permissions, test scope). Avoid asking one question at a time in separate rounds. Questions must be concise — provide context and background in the chat message before asking, not inside the questions themselves.
 
 ### Present Options with Trade-Offs
 

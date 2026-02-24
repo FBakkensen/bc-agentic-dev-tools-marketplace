@@ -33,11 +33,13 @@ Review findings from Steps 1–3 and ask about:
 - **Architecture testability concerns**: "The architecture from Phase 3 introduces [pattern]. This means [testability implication] — is that acceptable, or should we adjust?"
 - **Existing test conflicts**: "I found existing tests in [codeunit] that cover [area]. Should the new tests extend that codeunit or create a separate one?"
 
-#### 4b. Batching & Presentation
+#### 4b. Presentation & Questioning (Two-Step)
 
-- **Batch all test-related questions** into a single interaction grouped by topic (scope, infrastructure, coverage).
-- **Present options**: When a question has identifiable alternatives, present them as choices with trade-offs.
-- **State defaults**: For each question, state what you would assume if the user does not answer.
+**Step A — Present findings in chat:** Before asking questions, present what you learned from test pattern discovery (Steps 1–3) as a regular chat message — existing test patterns found, test libraries in use, and any testability concerns from the architecture. This is context, not part of the questions.
+
+**Step B — Ask questions separately:** After presenting findings, ask test scope questions in a separate interaction. Questions must be concise and reference the findings already shown in chat. Group by topic (scope, infrastructure, coverage). When a question has identifiable alternatives, present them as choices with trade-offs. For each question, state what you would assume if the user does not answer.
+
+Do **not** embed findings, summaries, or test pattern analysis inside questions.
 
 #### 4c. Resolution Gate (Hard Stop)
 

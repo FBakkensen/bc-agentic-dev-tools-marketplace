@@ -62,11 +62,13 @@ After discovery-driven questions, review this checklist for anything not already
 - Should this support multi-company scenarios?
 - Are there performance concerns requiring SetLoadFields?
 
-#### 5c. Batching & Presentation
+#### 5c. Presentation & Questioning (Two-Step)
 
-- **Batch all questions** into a single interaction, grouped by topic (e.g., business rules, events, permissions, performance).
-- **Present options**: When a question has identifiable alternatives, present them as choices with brief trade-off descriptions. Include a recommended option when you have a basis for one.
-- **State defaults**: For each question, state what you would assume if the user does not answer.
+**Step A — Present findings in chat:** Before asking any questions, present a summary of what you found during exploration (Steps 1–4) as a regular chat message. Include the Business Rules table, patterns discovered, and any context needed to understand the questions. This is chat output, not part of the questions.
+
+**Step B — Ask questions separately:** After presenting findings, ask your questions in a separate interaction. Questions must be concise and reference the findings already shown in chat. Group questions by topic (business rules, events, permissions, performance). When a question has identifiable alternatives, present them as choices with trade-offs. For each question, state what you would assume if the user does not answer.
+
+Do **not** combine findings, summaries, or tables with questions in a single tool interaction.
 
 #### 5d. Question Resolution Gate (Hard Stop)
 

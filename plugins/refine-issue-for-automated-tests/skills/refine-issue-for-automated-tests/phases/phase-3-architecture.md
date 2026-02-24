@@ -64,12 +64,13 @@ Review the design comparison and your codebase exploration. Identify and ask abo
 - **Scope decisions**: "Should this include event coverage for third-party extensibility, or is internal-only sufficient for now?"
 - **Risk trade-offs**: "The clean approach touches N existing objects — are there change-freeze or release constraints to consider?"
 
-#### 7b. Batching & Presentation
+#### 7b. Presentation & Questioning (Two-Step)
 
-- **Batch architecture questions with the approach selection** into a single interaction. Present:
-  1. Architecture uncertainties (with options/trade-offs where applicable)
-  2. Approach selection (Minimal vs Clean/Patterned with the comparison table from Step 6)
-- **State defaults**: For each question, state what you would assume if the user does not answer.
+**Step A — Present analysis in chat:** Before asking questions, present the design comparison table (from Step 6), architecture trade-offs, and any constraints you discovered as a regular chat message. This is context for the user — not part of the questions.
+
+**Step B — Ask questions separately:** After presenting the analysis, ask architecture questions and the approach selection together in a separate interaction. Questions must be concise and reference the comparison already shown in chat. For each question, state what you would assume if the user does not answer.
+
+Do **not** embed comparison tables, summaries, or analysis inside questions.
 
 #### 7c. Approach Selection
 
