@@ -1,54 +1,51 @@
 # Phase 1: Discovery
 
-**Goal**: Understand what needs to be built from the GitHub issue, load project context, and identify affected areas.
+**Goal**: Understand the issue in repository context and identify the affected BC/AL areas.
+
+Apply `GR-1`, `GR-2`, and `GR-3` from `SKILL.md`.
 
 ## Actions
 
-1. **Load project context**: Review repository conventions if available (README, CONTRIBUTING, docs, internal guidelines).
+1. **Load project context**
+   - Review repo conventions (README, CONTRIBUTING, docs, internal guidance).
 
-2. **Retrieve issue details**: Read the GitHub issue to understand requirements.
+2. **Retrieve issue details**
+   - Read title, body, labels, and status.
+   - Warn if issue is closed.
 
-3. **Validate issue state**: Warn if issue is closed.
+3. **Identify impacted scope**
+   - Project areas:
+     - Core domain functionality
+     - BC standard integrations
+     - Extension points/events
+     - UI surfaces
+     - Business rules/validation
+   - BC subsystems:
+     - Sales, Purchase, Inventory, Manufacturing, Finance, Warehouse, Other
+   - Likely AL object types:
+     - Tables/TableExtensions
+     - Codeunits
+     - Pages/PageExtensions
+     - Event subscribers
+     - Interfaces/Enums
+     - Reports/XMLports
 
-4. **Identify project-specific areas affected**:
-   Based on repository context, identify which modules/features are impacted.
+4. **Optional quick file discovery**
+   - Search for files matching issue keywords to prepare Phase 2.
 
-   _Example checklist (adapt to current project):_
-   - [ ] Core domain functionality
-   - [ ] Integration with BC standard areas
-   - [ ] Extension points / Events
-   - [ ] UI components
-   - [ ] Business rules / validation
-
-5. **Identify BC subsystems affected**:
-   - [ ] Sales (Documents, Pricing, Posting)
-   - [ ] Purchase (Documents, Vendors)
-   - [ ] Inventory (Items, Locations, Tracking)
-   - [ ] Manufacturing (Production Orders, BOMs, Routing)
-   - [ ] Finance (G/L, Journals, Posting)
-   - [ ] Warehouse (Picks, Puts, Receipts)
-   - [ ] Other: ___
-
-6. **Identify likely AL object types**:
-   - [ ] New Tables / TableExtensions
-   - [ ] New Codeunits (Business Logic)
-   - [ ] New Pages / PageExtensions
-   - [ ] Event Subscribers
-   - [ ] Interfaces / Enums
-   - [ ] Reports / XMLports
-
-7. **Initial file discovery** (optional): Search for files matching feature keywords or use semantic search.
-
-8. **Present summary**:
-   - Issue title and key requirements
-   - Labels and context
-   - Project areas affected (from project overview)
-   - BC subsystems affected
-   - AL object types likely needed
+5. **Present Phase 1 summary in chat**
+   - Issue title + key requirements
+   - Labels/context
+   - Impacted project areas
+   - BC subsystems
+   - Likely AL object types
    - Current issue body structure (if any)
 
-## User Checkpoint
+## User Checkpoint (Hard Stop)
 
-> "I've analyzed issue #{number} in context of the repository. Here's my understanding: [summary]. Project areas: [list]. BC subsystems: [list]. Ready to proceed with codebase exploration?"
+Ask for confirmation before Phase 2.
 
-Wait for user confirmation before Phase 2.
+Example:
+> "I've analyzed issue #{number} in repository context and summarized affected areas/subsystems. Ready to proceed to codebase exploration?"
+
+Do not proceed to Phase 2 without user confirmation.
