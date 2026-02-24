@@ -19,7 +19,31 @@ Review BC/AL testing patterns (isolation, handlers, error testing, transaction b
 
 Search existing test folders for `[Test]` procedures matching the feature area.
 
-### 4. Order Scenarios Using ZOMBIES
+### 4. Clarify Test Scope & Priorities
+
+Apply the **User Interaction Principles** from SKILL.md. Before writing scenarios, surface what you learned from test pattern discovery and resolve open questions.
+
+#### 4a. Discovery-Driven Test Questions
+
+Review findings from Steps 1–3 and ask about:
+
+- **Undocumented edge cases**: "Are there specific failure modes or edge cases you know about that aren't captured in the business rules?"
+- **Coverage strategy**: "Should test coverage prioritize depth (thorough testing of core flow with many boundary cases) or breadth (covering all rules with basic scenarios)?" _(present trade-offs for the specific feature)_
+- **Test infrastructure constraints**: "I found existing tests use [library X] but not [library Y]. Are there test infrastructure limitations to be aware of (e.g., missing test libraries, no UI test handlers)?"
+- **Architecture testability concerns**: "The architecture from Phase 3 introduces [pattern]. This means [testability implication] — is that acceptable, or should we adjust?"
+- **Existing test conflicts**: "I found existing tests in [codeunit] that cover [area]. Should the new tests extend that codeunit or create a separate one?"
+
+#### 4b. Batching & Presentation
+
+- **Batch all test-related questions** into a single interaction grouped by topic (scope, infrastructure, coverage).
+- **Present options**: When a question has identifiable alternatives, present them as choices with trade-offs.
+- **State defaults**: For each question, state what you would assume if the user does not answer.
+
+#### 4c. Resolution Gate (Hard Stop)
+
+Do not proceed to scenario writing (Step 5) until the user has responded to test scope questions. If answers change the expected scope or coverage approach, factor those into scenario design.
+
+### 5. Order Scenarios Using ZOMBIES
 
 ZOMBIES defines the **order** in which test scenarios are written, not just a coverage checklist. Each letter drives new production code into existence. Design EMERGES from this sequence -- for example, `FindFirst` appears at the "O" (One) step and evolves into `FindSet` + loop at the "M" (Many) step.
 
@@ -37,7 +61,7 @@ Write and order scenarios in this progression:
 
 **Ordering rule:** Scenarios in the Scenario Inventory MUST be ordered Z, O, M, B, I, E. Within each ZOMBIES step, order by ascending risk. This ensures each test forces the minimal next increment of production code.
 
-### 5. Apply BC-Specific Checklist
+### 6. Apply BC-Specific Checklist
 
 **Data & Transactions:**
 - [ ] FlowField/CalcField calculations verified
@@ -63,11 +87,11 @@ Write and order scenarios in this progression:
 - [ ] Ledger entry verification
 - [ ] Document number series
 
-### 6. BC Test Library Reference
+### 7. BC Test Library Reference
 
 See the **BC Test Libraries** reference linked in SKILL.md.
 
-### 7. Write AL Test Plan
+### 8. Write AL Test Plan
 
 Create test plan with this structure:
 
@@ -84,11 +108,36 @@ Create test plan with this structure:
 
 **Scenarios:** Each with Rule(s), Procedure name, GIVEN/WHEN/THEN, Evidence target (if applicable).
 
-### 8. Update Issue Body with Test Plan
+### 9. Build Updated Issue Body Payload (Internal)
 
 Append the Test Plan section to the issue body, preserving existing content. Use the Issue Template (linked in SKILL.md references).
 
-### 9. Post-Update Verification (Required)
+Do not present raw markdown by default; keep it internal unless the user explicitly asks for it.
+
+### 10. Present Phase Outcome Review (Required Before Write)
+
+Present a review-friendly summary (not raw markdown) that includes:
+- Intended write target: issue body update
+- What will change: Test Plan section, scenario inventory, rule traceability, scenario count
+- Coverage summary: business rules covered, Z-O-M-B-I-E coverage, negative/error scenarios
+- What remains unchanged: original issue description and prior approved sections
+- Structure preview: expected heading/table/fence layout after update
+- Risks/assumptions: uncovered rules, weak evidence targets, or pending clarifications
+
+### 11. Approval Gate (Hard Stop)
+
+Ask for explicit approval before updating the issue body.
+- If approved: proceed to write.
+- If not approved or unclear: stop, revise summary/payload, and wait.
+- Do not complete Phase 4 without explicit approval.
+
+### 12. Update Issue Body via Temp File (Required)
+
+- Write payload to unique temp file in `$env:TEMP` (UTF-8).
+- Update with `gh issue edit <number> --body-file <temp-file>`.
+- Do not use inline `--body`.
+
+### 13. Post-Update Verification (Required)
 
 Re-read the updated issue body from GitHub and verify basic structure:
 - `## Test Plan` heading exists and is in the correct position.
@@ -99,7 +148,7 @@ Re-read the updated issue body from GitHub and verify basic structure:
 
 If verification fails, reapply the update once, re-read, and verify again. If it still fails, stop and report the formatting mismatch.
 
-### 10. Quality Gate Self-Review
+### 14. Quality Gate Self-Review
 
 - Every business rule has at least one scenario
 - ZOMBIES coverage is adequate
@@ -109,9 +158,13 @@ If verification fails, reapply the update once, re-read, and verify again. If it
 - Evidence targets are specific and verifiable
 - Test libraries identified for setup
 
+### 15. Cleanup
+
+Delete the temp file (best effort) after verification.
+
 ## User Checkpoint
 
-> "Test plan complete with {N} scenarios covering {M} business rules. BC checklist verified. Planning is complete. To begin implementation, run `/tdd-implement #{number}`."
+> "Test plan draft complete with {N} scenarios covering {M} business rules. Review summary presented. After explicit approval and successful GitHub update, planning is complete. To begin implementation, run `/tdd-implement #{number}`."
 
 ## Next Steps
 
