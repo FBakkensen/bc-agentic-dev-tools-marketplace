@@ -35,27 +35,12 @@ Write-BuildMessage -Type Info -Message "Configuration:"
 Write-BuildMessage -Type Detail -Message "App Directory: $($config.AppDir)"
 Write-BuildMessage -Type Detail -Message "Test Directory: $($config.TestDir)"
 
-# Collect workspace app IDs (apps that are built locally, not downloaded from NuGet)
-$workspaceAppIds = @()
-foreach ($dir in @($config.AppDir, $config.TestDir)) {
-    if ($dir -and (Test-Path $dir)) {
-        $appJsonPath = Join-Path $dir 'app.json'
-        if (Test-Path $appJsonPath) {
-            $appJson = Get-Content -Path $appJsonPath -Raw | ConvertFrom-Json
-            if ($appJson.id) {
-                $workspaceAppIds += $appJson.id
-                Write-BuildMessage -Type Detail -Message "Workspace app: $($appJson.name) ($($appJson.id))"
-            }
-        }
-    }
-}
-
 # Step 1: Install/update compiler
 Install-ALCompiler
 
 # Step 2: Download symbols for main app
 if (Test-Path $config.AppDir) {
-    & "$PSScriptRoot/download-symbols.ps1" -AppDir $config.AppDir -WorkspaceAppIds $workspaceAppIds
+    & "$PSScriptRoot/download-symbols.ps1" -AppDir $config.AppDir
     if ($LASTEXITCODE -ne 0) {
         throw "Symbol download failed for $($config.AppDir)"
     }
@@ -65,7 +50,7 @@ if (Test-Path $config.AppDir) {
 
 # Step 3: Download symbols for test app
 if (Test-Path $config.TestDir) {
-    & "$PSScriptRoot/download-symbols.ps1" -AppDir $config.TestDir -WorkspaceAppIds $workspaceAppIds
+    & "$PSScriptRoot/download-symbols.ps1" -AppDir $config.TestDir
     if ($LASTEXITCODE -ne 0) {
         throw "Symbol download failed for $($config.TestDir)"
     }

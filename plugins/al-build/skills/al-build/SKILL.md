@@ -1,58 +1,103 @@
 ---
 name: al-build
-description: 'Build and test AL apps for Business Central. Compiles locally, runs tests on remote Azure VM. Use for: verifying code changes, running test suites, debugging test failures, checking compilation warnings/errors.'
+description: Build and test AL/Business Central projects. Use after modifying AL code or tests to verify the build gate passes. Runs compilation, publishing, and test execution in a single command. Required gate before committing AL changes.
+excludeAgent: "coding-agent"
 ---
 
-# AL Build - Test Execution
+# AL Build
 
-Compiles AL apps locally and executes tests on a remote Azure VM.
+Self-contained build system for AL/Business Central development. No external task runners required.
 
-## Timeout Requirement
+## Project Setup (First Time)
 
-**CRITICAL: Always use a minimum 20-minute timeout (1200000ms) when calling `run_in_terminal`.**
+**Required Steps**:
+1. **Initialize config**: Run `/al-build:init` to create `al-build.json`
+2. **Customize config** (especially `testAppName` to match your test app)
+3. **Run provision** (one-time): Run `/al-build:provision`
 
-Container creation and test execution on a remote Azure VM can take significant time. Shorter timeouts cause premature termination.
+**Config Priority** (highest to lowest):
+1. Script parameters (e.g., `-AppDir "custom"`)
+2. Environment variables (e.g., `ALBT_APP_DIR`)
+3. Project config (`al-build.json` in repo root)
 
-```
-timeout: 1200000  // 20 minutes minimum
-```
+## Canonical Gate
 
-## Usage
+After modifying AL code or tests, run:
 
-Paths are relative to the skill root.
-If needed, set it with: `Set-Location ".agents/skills/al-build"`
+Ensure you are in the repo root before running scripts:
+`Set-Location (git rev-parse --show-toplevel)`
 
-Run all tests:
 ```powershell
-pwsh "scripts/test.ps1"
+pwsh "<skill-folder>/scripts/test.ps1"
 ```
 
-Run specific codeunit:
-```powershell
-pwsh "scripts/test.ps1" -TestCodeunit 50100
+**Prerequisites:**
+- Project config exists and customized (`al-build.json`)
+- Provision completed (run `provision.ps1` once)
+- Docker container healthy
+
+**Requirements:**
+- Zero warnings, zero errors
+- Faster iteration: `pwsh "<skill-folder>/scripts/test.ps1" -TestCodeunit <id>`
+- Force republish: `pwsh "<skill-folder>/scripts/test.ps1" -Force`
+
+**Outputs:**
+- `.output/TestResults/last.xml` — JUnit test results
+- `.output/TestResults/telemetry.jsonl` — merged telemetry
+**Tip:** Use `jq` to query `last.xml` and `telemetry.jsonl` works much better than native powershell commands.
+
+## Running Tests in Subtask (Recommended)
+
+Use a subagent to run tests. This keeps verbose build output contained and returns only essential results to the main conversation.
+
+**Subagent invocation:** Use `runSubagent` tool if available; otherwise execute directly in the main agent context.
+
+**Subagent prompt:**
+```
+IMPORTANT: This is a READ-ONLY task. Do NOT edit any files.
+
+Run the AL build gate:
+pwsh "<skill-folder>/scripts/test.ps1"
+
+Report back:
+1. Build result: success or failure
+2. Test result: pass count, fail count
+3. If failures: include the relevant error messages and stack traces
+4. If warnings: list them
+5. If failures and telemetry is relevant: include key entries from .output/TestResults/telemetry.jsonl
+
+Do not include full console output - only the summary above.
 ```
 
-Force republish (even if unchanged):
-```powershell
-pwsh "scripts/test.ps1" -Force
-```
-
-## Outputs
-
-- `.output/TestResults/last.xml` - JUnit test results
-- `.output/TestResults/telemetry.jsonl` - Test telemetry (DEBUG-* markers)
-
-## Exit Codes
-
-- `0` - Success (all tests passed)
-- `1` - Build or test failure
+**Why subtask?**
+- Build/test output is verbose (compilation logs, test runner output)
+- Main task only needs results and actionable error context
+- Keeps conversation focused on the development task
 
 ## Troubleshooting
 
-| Error | Action |
-|-------|--------|
-| SSH connection failed | Retry once, then report to user |
-| Compiler not provisioned | Instruct user to run `provision.ps1` |
-| Symbol cache not found | Instruct user to run `provision.ps1` |
+### Build fails and no config exists
 
-See [README.md](./README.md) for prerequisites and manual setup (user-facing).
+If `/al-build:test` fails and `al-build.json` doesn't exist in repo root:
+1. Run `/al-build:init` to create config
+2. Customize settings as needed
+3. Run `/al-build:provision` once
+4. Re-run `/al-build:test`
+
+### Config Issues
+
+1. **Config not loading**: Ensure `al-build.json` is in git repo root (same level as `.git/`)
+2. **Provision not found**: Run `/al-build:provision` (one-time)
+3. **Wrong test app**: Update `testAppName` in `al-build.json` to match your test app
+
+### Build Failures
+
+1. Check compiler output for error messages
+2. Ensure symbols are provisioned (user runs: `pwsh provision.ps1`)
+3. Verify container is healthy: `docker ps`
+
+### Test Failures
+
+1. Check `.output/TestResults/last.xml` for assertion failures
+2. Use telemetry for debugging: see `telemetry-first-test-debugging` skill
+3. Run specific codeunit: `pwsh "<skill-folder>/scripts/test.ps1" -TestCodeunit <id>`

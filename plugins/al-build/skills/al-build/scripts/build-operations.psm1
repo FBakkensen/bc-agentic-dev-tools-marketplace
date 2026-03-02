@@ -181,11 +181,17 @@ function Set-BuildEnvironment {
 function Get-ToolPackageId {
     <#
     .SYNOPSIS
-        Get AL compiler NuGet package ID
-    .DESCRIPTION
-        Returns the base package name. The dotnet tool automatically selects
-        the correct platform-specific variant (Windows/Linux/macOS).
+        Get platform-specific AL compiler NuGet package ID
     #>
+    if ([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform([System.Runtime.InteropServices.OSPlatform]::Windows)) {
+        return 'microsoft.dynamics.businesscentral.development.tools'
+    }
+    if ([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform([System.Runtime.InteropServices.OSPlatform]::Linux)) {
+        return 'microsoft.dynamics.businesscentral.development.tools.linux'
+    }
+    if ([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform([System.Runtime.InteropServices.OSPlatform]::OSX)) {
+        return 'microsoft.dynamics.businesscentral.development.tools.osx'
+    }
     return 'microsoft.dynamics.businesscentral.development.tools'
 }
 
@@ -222,8 +228,6 @@ function Install-ALCompiler {
         $updateOutput = & dotnet @updateArgs 2>&1
 
         if ($LASTEXITCODE -ne 0) {
-            Write-BuildMessage -Type Error -Message "Install output: $installOutput"
-            Write-BuildMessage -Type Error -Message "Update output: $updateOutput"
             throw "dotnet tool install and update both failed with exit code $LASTEXITCODE"
         }
     }
@@ -634,8 +638,6 @@ function Invoke-ALBuild {
 
     if ($filteredAnalyzers.Count -gt 0) {
         Write-BuildMessage -Type Detail -Message "Analyzers: $($filteredAnalyzers.Count) configured"
-        $analyzerList = $filteredAnalyzers -join '; '
-        Write-BuildMessage -Type Detail -Message "Analyzer paths: $analyzerList"
     }
 
     # Build output path

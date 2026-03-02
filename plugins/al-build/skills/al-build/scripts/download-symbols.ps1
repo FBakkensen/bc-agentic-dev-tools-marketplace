@@ -12,18 +12,13 @@
     Directory that contains app.json (defaults to "app" like build.ps1). You can also set
     ALBT_APP_DIR to override when the parameter is omitted.
 
-.PARAMETER WorkspaceAppIds
-    Array of app IDs (GUIDs) that exist in the workspace. Dependencies matching these IDs
-    will be skipped since they are built locally rather than downloaded from NuGet.
-
 .NOTES
     Optional environment variables:
       - ALBT_APP_DIR: override for default app directory when -AppDir omitted.
 #>
 
 param(
-    [string]$AppDir = 'app',
-    [string[]]$WorkspaceAppIds = @()
+    [string]$AppDir = 'app'
 )
 
 if (-not $PSBoundParameters.ContainsKey('AppDir') -and $env:ALBT_APP_DIR) {
@@ -112,10 +107,7 @@ function Compare-Version {
 }
 
 function Build-PackageMap {
-    param(
-        $AppJson,
-        [string[]]$ExcludeAppIds = @()
-    )
+    param($AppJson)
 
     $map = [ordered]@{}
 
@@ -126,14 +118,6 @@ function Build-PackageMap {
     if ((Test-JsonProperty $AppJson 'dependencies') -and $AppJson.dependencies) {
         foreach ($dep in $AppJson.dependencies) {
             if (-not ($dep.publisher) -or -not ($dep.name) -or -not ($dep.id) -or -not ($dep.version)) { continue }
-
-            # Skip dependencies that are workspace apps (built locally)
-            $depId = ($dep.id -replace '\s+', '').ToLowerInvariant()
-            if ($ExcludeAppIds | Where-Object { $_.ToLowerInvariant() -eq $depId }) {
-                Write-BuildMessage -Type Detail -Message "Skipping workspace app: $($dep.name) ($($dep.id))"
-                continue
-            }
-
             $publisher = ($dep.publisher -replace '\s+', '')
             $name = ($dep.name -replace '\s+', '')
             $appId = ($dep.id -replace '\s+', '')
@@ -535,7 +519,7 @@ Ensure-Directory -Path $cacheDir
 
 $manifestPath = Join-Path -Path $cacheDir -ChildPath 'symbols.lock.json'
 $manifest = Load-Manifest -Path $manifestPath
-$packageMap = Build-PackageMap -AppJson $appJson -ExcludeAppIds $WorkspaceAppIds
+$packageMap = Build-PackageMap -AppJson $appJson
 
 Write-BuildHeader 'Package Requirements'
 Write-BuildMessage -Type Info -Message "$($packageMap.Count) packages required"
