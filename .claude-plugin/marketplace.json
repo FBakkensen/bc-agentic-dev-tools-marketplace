@@ -13,6 +13,11 @@
       "description": "Build and test AL apps for Business Central. Compiles locally, runs tests on remote Azure VM."
     },
     {
+      "name": "al-code-review",
+      "source": "./plugins/al-code-review",
+      "description": "Multi-model AL/Business Central code review. Spawns parallel code-review subagents across models and review types (Performance, Bug Hunter, Code Reuse). Use when asked to review a PR, review code, or run a code review."
+    },
+    {
       "name": "al-object-id-allocator",
       "source": "./plugins/al-object-id-allocator",
       "description": "Allocate the next available Business Central AL object ID/number by scanning .al files and idRanges in app.json."
