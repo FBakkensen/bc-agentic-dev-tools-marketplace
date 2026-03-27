@@ -24,11 +24,13 @@ $raw = Get-Content $stateFile -ErrorAction SilentlyContinue
 if ($raw -and -not [int]::TryParse($raw, [ref]$lastCheckedLine)) { $lastCheckedLine = 0 }
 
 # Stream only unprocessed lines, pre-filter by string match before JSON parsing
+# Always count all lines (no early break) so state file reflects full transcript length
 $lineCount = 0
 $codeToolUsed = $false
 foreach ($line in [System.IO.File]::ReadLines($transcriptPath)) {
     $lineCount++
     if ($lineCount -le $lastCheckedLine) { continue }
+    if ($codeToolUsed) { continue }
     if ($line -notmatch '"tool_use"') { continue }
     $parsed = $line | ConvertFrom-Json -ErrorAction SilentlyContinue
     if (-not $parsed.message.content) { continue }
@@ -38,7 +40,6 @@ foreach ($line in [System.IO.File]::ReadLines($transcriptPath)) {
             break
         }
     }
-    if ($codeToolUsed) { break }
 }
 
 $lineCount | Set-Content $stateFile
