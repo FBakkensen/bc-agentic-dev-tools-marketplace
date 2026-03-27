@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "pwsh -NoProfile -File ${CLAUDE_PLUGIN_ROOT}/hooks/quality-gate.ps1",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}

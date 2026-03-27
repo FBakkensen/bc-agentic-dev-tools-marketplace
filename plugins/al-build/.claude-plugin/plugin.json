@@ -1,5 +1,5 @@
 {
   "name": "al-build",
-  "description": "Build and test AL apps for Business Central. Compiles locally, runs tests on remote Azure VM.",
-  "version": "2.0.0"
+  "description": "Build and test AL apps for Business Central. Compiles locally, runs tests on remote Azure VM. Includes quality gate hook.",
+  "version": "2.1.0"
 }
