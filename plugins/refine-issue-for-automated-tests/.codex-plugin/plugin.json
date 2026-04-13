@@ -1,0 +1,13 @@
+{
+  "name": "refine-issue-for-automated-tests",
+  "version": "1.4.0",
+  "description": "AL/BC issue refinement workflow for GitHub issues. Produce architecture + automated test plan.",
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Refine Issue for Automated Tests",
+    "shortDescription": "AL/BC issue refinement workflow for GitHub issues. Produce architecture + automated test plan.",
+    "longDescription": "AL/BC issue refinement workflow for GitHub issues. Produce architecture + automated test plan.",
+    "developerName": "9Altitudes",
+    "category": "Developer Tools"
+  }
+}

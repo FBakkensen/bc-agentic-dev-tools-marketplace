@@ -1,0 +1,13 @@
+{
+  "name": "tdd-implement",
+  "version": "1.1.0",
+  "description": "Implements AL/Business Central features via TDD after planning is complete.",
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "TDD Implement",
+    "shortDescription": "Implements AL/Business Central features via TDD after planning is complete.",
+    "longDescription": "Implements AL/Business Central features via TDD after planning is complete.",
+    "developerName": "9Altitudes",
+    "category": "Developer Tools"
+  }
+}

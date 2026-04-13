@@ -1,0 +1,13 @@
+{
+  "name": "video-to-issue",
+  "version": "1.0.0",
+  "description": "Create GitHub issues from Business Central screen recordings.",
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Video to Issue",
+    "shortDescription": "Create GitHub issues from Business Central screen recordings.",
+    "longDescription": "Create GitHub issues from Business Central screen recordings.",
+    "developerName": "9Altitudes",
+    "category": "Developer Tools"
+  }
+}

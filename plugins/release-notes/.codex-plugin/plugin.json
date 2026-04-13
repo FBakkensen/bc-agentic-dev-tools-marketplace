@@ -1,0 +1,13 @@
+{
+  "name": "release-notes",
+  "version": "1.0.0",
+  "description": "Generate release notes from PR analysis.",
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Release Notes",
+    "shortDescription": "Generate release notes from PR analysis.",
+    "longDescription": "Generate release notes from PR analysis.",
+    "developerName": "9Altitudes",
+    "category": "Developer Tools"
+  }
+}

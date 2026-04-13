@@ -1,0 +1,116 @@
+{
+  "name": "bc-agentic-dev-tools",
+  "interface": {
+    "displayName": "BC Agentic Dev Tools"
+  },
+  "plugins": [
+    {
+      "name": "al-build",
+      "source": {
+        "source": "local",
+        "path": "./plugins/al-build"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Developer Tools"
+    },
+    {
+      "name": "al-code-review",
+      "source": {
+        "source": "local",
+        "path": "./plugins/al-code-review"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Developer Tools"
+    },
+    {
+      "name": "al-object-id-allocator",
+      "source": {
+        "source": "local",
+        "path": "./plugins/al-object-id-allocator"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Developer Tools"
+    },
+    {
+      "name": "bc-standard-reference",
+      "source": {
+        "source": "local",
+        "path": "./plugins/bc-standard-reference"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Developer Tools"
+    },
+    {
+      "name": "refine-issue-for-automated-tests",
+      "source": {
+        "source": "local",
+        "path": "./plugins/refine-issue-for-automated-tests"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Developer Tools"
+    },
+    {
+      "name": "release-notes",
+      "source": {
+        "source": "local",
+        "path": "./plugins/release-notes"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Developer Tools"
+    },
+    {
+      "name": "tdd-implement",
+      "source": {
+        "source": "local",
+        "path": "./plugins/tdd-implement"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Developer Tools"
+    },
+    {
+      "name": "video-to-issue",
+      "source": {
+        "source": "local",
+        "path": "./plugins/video-to-issue"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Developer Tools"
+    },
+    {
+      "name": "writing-al-tests",
+      "source": {
+        "source": "local",
+        "path": "./plugins/writing-al-tests"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Developer Tools"
+    }
+  ]
+}
