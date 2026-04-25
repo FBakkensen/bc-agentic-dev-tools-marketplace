@@ -1,0 +1,5 @@
+{
+  "name": "al-debug-logging",
+  "description": "AL Debug Logging — temporarily add DEBUG-* FeatureTelemetry.LogUsage probes to AL code (production, posting, validation, install/upgrade, event subscribers, tests) to inspect runtime behavior via .output/TestResults/telemetry.jsonl. Use when stuck on AL behavior you cannot see in source alone.",
+  "version": "1.1.0"
+}

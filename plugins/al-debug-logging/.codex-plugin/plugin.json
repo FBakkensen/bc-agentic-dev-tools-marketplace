@@ -1,0 +1,13 @@
+{
+  "name": "al-debug-logging",
+  "version": "1.1.0",
+  "description": "AL Debug Logging — temporarily add DEBUG-* FeatureTelemetry.LogUsage probes to AL code (production, posting, validation, install/upgrade, event subscribers, tests) to inspect runtime behavior via .output/TestResults/telemetry.jsonl. Use when stuck on AL behavior you cannot see in source alone.",
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "AL Debug Logging",
+    "shortDescription": "Temporary DEBUG-* FeatureTelemetry probes for inspecting AL runtime behavior.",
+    "longDescription": "Hypothesis-driven debug logging skill for Business Central AL. Adds temporary DEBUG-* FeatureTelemetry.LogUsage probes to production code, posting routines, validation logic, install/upgrade paths, event subscribers, or tests so an AI agent can inspect runtime behavior in .output/TestResults/telemetry.jsonl. Probes are temporary scaffolding and are removed before final delivery.",
+    "developerName": "9Altitudes",
+    "category": "Developer Tools"
+  }
+}

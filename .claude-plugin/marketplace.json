@@ -28,8 +28,8 @@
       "description": "Generate release notes from PR analysis."
     },
     {
-      "name": "writing-al-tests",
-      "source": "./plugins/writing-al-tests",
+      "name": "al-debug-logging",
+      "source": "./plugins/al-debug-logging",
       "description": "AL Debug Logging — add temporary DEBUG-* FeatureTelemetry probes to AL code to inspect runtime behavior via .output/TestResults/telemetry.jsonl."
     }
   ]

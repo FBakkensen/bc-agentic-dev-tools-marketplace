@@ -27,7 +27,7 @@ scripts/                # Validation scripts (used by CI)
 
 ### Plugins
 
-al-build, al-object-id-allocator, bc-standard-reference, refine-issue-for-automated-tests, release-notes, tdd-implement, video-to-issue, writing-al-tests
+al-build, al-debug-logging, al-object-id-allocator, bc-standard-reference, refine-issue-for-automated-tests, release-notes, tdd-implement, video-to-issue
 
 ### Plugin Structure Pattern
 ```

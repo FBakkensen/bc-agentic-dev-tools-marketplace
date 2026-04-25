@@ -17,22 +17,10 @@
       "category": "Developer Tools"
     },
     {
-      "name": "al-code-review",
+      "name": "grill-me",
       "source": {
         "source": "local",
-        "path": "./plugins/al-code-review"
-      },
-      "policy": {
-        "installation": "AVAILABLE",
-        "authentication": "ON_INSTALL"
-      },
-      "category": "Developer Tools"
-    },
-    {
-      "name": "al-object-id-allocator",
-      "source": {
-        "source": "local",
-        "path": "./plugins/al-object-id-allocator"
+        "path": "./plugins/grill-me"
       },
       "policy": {
         "installation": "AVAILABLE",
@@ -53,18 +41,6 @@
       "category": "Developer Tools"
     },
     {
-      "name": "refine-issue-for-automated-tests",
-      "source": {
-        "source": "local",
-        "path": "./plugins/refine-issue-for-automated-tests"
-      },
-      "policy": {
-        "installation": "AVAILABLE",
-        "authentication": "ON_INSTALL"
-      },
-      "category": "Developer Tools"
-    },
-    {
       "name": "release-notes",
       "source": {
         "source": "local",
@@ -77,34 +53,10 @@
       "category": "Developer Tools"
     },
     {
-      "name": "tdd-implement",
+      "name": "al-debug-logging",
       "source": {
         "source": "local",
-        "path": "./plugins/tdd-implement"
-      },
-      "policy": {
-        "installation": "AVAILABLE",
-        "authentication": "ON_INSTALL"
-      },
-      "category": "Developer Tools"
-    },
-    {
-      "name": "video-to-issue",
-      "source": {
-        "source": "local",
-        "path": "./plugins/video-to-issue"
-      },
-      "policy": {
-        "installation": "AVAILABLE",
-        "authentication": "ON_INSTALL"
-      },
-      "category": "Developer Tools"
-    },
-    {
-      "name": "writing-al-tests",
-      "source": {
-        "source": "local",
-        "path": "./plugins/writing-al-tests"
+        "path": "./plugins/al-debug-logging"
       },
       "policy": {
         "installation": "AVAILABLE",
