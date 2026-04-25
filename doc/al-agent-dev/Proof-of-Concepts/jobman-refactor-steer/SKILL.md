@@ -1,3 +1,4 @@
+<!-- Historical: project-specific PoC. See ../../al-skills-design.md for the current design. -->
 ---
 name: jobman-refactor-steer
 description: Repo-specific JobManager refactor steering workflow. Use when evaluating refactor status, reviewing or synchronizing planning docs, detecting deviations, deciding next steps, generating or splitting Doc/Refactor-Implementation/Tasks.md tasks, assessing whether implementation is ready, or recording planning decisions. Always use grill-me for steering decisions, after inspecting repo state when facts are discoverable locally.

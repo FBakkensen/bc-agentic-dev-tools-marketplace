@@ -1,3 +1,5 @@
+> **Superseded by [`al-skills-design.md`](./al-skills-design.md).** Kept for historical context.
+
 # Full TDD for Business Central AL — Skill & Agent Plan
 
 **Status:** Draft for user review

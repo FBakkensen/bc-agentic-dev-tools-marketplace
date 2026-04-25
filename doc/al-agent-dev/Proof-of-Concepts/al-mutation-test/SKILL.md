@@ -1,3 +1,4 @@
+<!-- Historical: project-specific PoC. See ../../al-skills-design.md for the current design. -->
 ---
 name: al-mutation-test
 description: Empirically audit the quality of an AL (Business Central) test suite by mutation testing — apply small semantic mutations to production code, run the tests, and report which mutations survive (revealing weak or missing tests) vs get killed (genuine coverage). Use whenever the user wants to validate characterization tests before a refactor, audit test effectiveness, check for false positives in a test suite, find coverage gaps, prove tests actually exercise a specific code path, or asks questions like "are these tests any good", "do the tests catch X", "which tests are load-bearing", or "find test gaps". Especially valuable before rewriting a BC codeunit, since a high mutation score on the baseline suite is stronger evidence of parity than line coverage.

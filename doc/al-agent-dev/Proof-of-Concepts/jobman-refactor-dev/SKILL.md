@@ -1,3 +1,4 @@
+<!-- Historical: project-specific PoC. See ../../al-skills-design.md for the current design. -->
 ---
 name: jobman-refactor-dev
 description: Repo-specific JobManager refactor implementation workflow. Use when working on the new calculation implementation, picking or updating Doc/Refactor-Implementation/Tasks.md tasks, enforcing strict Red-Green-Refactor-Mutate development, running AL build gates, validating tests with manual AL mutation testing, updating task status, or deciding when to use grill-me for blockers.

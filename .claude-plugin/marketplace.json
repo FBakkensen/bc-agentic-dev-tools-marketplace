@@ -31,6 +31,11 @@
       "name": "al-debug-logging",
       "source": "./plugins/al-debug-logging",
       "description": "AL Debug Logging — add temporary DEBUG-* FeatureTelemetry probes to AL code to inspect runtime behavior via .output/TestResults/telemetry.jsonl."
+    },
+    {
+      "name": "al-agentic-dev",
+      "source": "./plugins/al-agentic-dev",
+      "description": "Agentic AL/Business Central development — six composable skills (al-steer, al-refine, al-implement, al-refactor, al-mutate, al-research) sharing a single tasks.md."
     }
   ]
 }
