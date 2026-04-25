@@ -13,14 +13,9 @@
       "description": "Build and test AL apps for Business Central. Compiles locally, runs tests on remote Azure VM."
     },
     {
-      "name": "al-code-review",
-      "source": "./plugins/al-code-review",
-      "description": "Multi-model AL/Business Central code review. Spawns parallel code-review subagents across models and review types (Performance, Bug Hunter, Code Reuse). Use when asked to review a PR, review code, or run a code review."
-    },
-    {
-      "name": "al-object-id-allocator",
-      "source": "./plugins/al-object-id-allocator",
-      "description": "Allocate the next available Business Central AL object ID/number by scanning .al files and idRanges in app.json."
+      "name": "grill-me",
+      "source": "./plugins/grill-me",
+      "description": "Interview the user relentlessly about a plan or design until reaching shared understanding, resolving each branch of the decision tree. Use when user wants to stress-test a plan, get grilled on their design, or mentions 'grill me'."
     },
     {
       "name": "bc-standard-reference",
@@ -35,7 +30,7 @@
     {
       "name": "writing-al-tests",
       "source": "./plugins/writing-al-tests",
-      "description": "Write, modify, and verify Business Central AL tests with DEBUG telemetry and Red-Green-Refactor."
+      "description": "AL Debug Logging — add temporary DEBUG-* FeatureTelemetry probes to AL code to inspect runtime behavior via .output/TestResults/telemetry.jsonl."
     }
   ]
 }
