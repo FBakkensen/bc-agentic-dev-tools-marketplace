@@ -1,0 +1,4 @@
+interface:
+  display_name: "JobMan Refactor Steer"
+  short_description: "Steer JobManager refactor planning and task decisions."
+  default_prompt: "Review the JobManager refactor status, use grill-me for decisions, and update planning docs or Tasks.md when requested."
