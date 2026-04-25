@@ -1,5 +1,0 @@
-{
-  "name": "al-code-review",
-  "description": "Multi-model AL/Business Central code review. Spawns parallel code-review subagents across models and review types (Performance, Bug Hunter, Code Reuse). Use when asked to review a PR, review code, or run a code review.",
-  "version": "1.0.0"
-}

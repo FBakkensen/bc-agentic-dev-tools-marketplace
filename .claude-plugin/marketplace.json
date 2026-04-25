@@ -28,24 +28,9 @@
       "description": "Locate canonical Business Central Standard behavior (BaseApp, System Application, APIV2, etc.) for events, codeunits, tables, pages, APIs."
     },
     {
-      "name": "refine-issue-for-automated-tests",
-      "source": "./plugins/refine-issue-for-automated-tests",
-      "description": "AL/BC issue refinement workflow for GitHub issues. Produce architecture + automated test plan."
-    },
-    {
       "name": "release-notes",
       "source": "./plugins/release-notes",
       "description": "Generate release notes from PR analysis."
-    },
-    {
-      "name": "tdd-implement",
-      "source": "./plugins/tdd-implement",
-      "description": "Implements AL/Business Central features via TDD after planning is complete."
-    },
-    {
-      "name": "video-to-issue",
-      "source": "./plugins/video-to-issue",
-      "description": "Create GitHub issues from Business Central screen recordings."
     },
     {
       "name": "writing-al-tests",

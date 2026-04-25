@@ -1,5 +1,0 @@
-{
-  "name": "refine-issue-for-automated-tests",
-  "description": "AL/BC issue refinement workflow for GitHub issues. Produce architecture + automated test plan.",
-  "version": "1.4.0"
-}
