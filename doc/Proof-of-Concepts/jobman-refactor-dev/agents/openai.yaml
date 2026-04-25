@@ -1,4 +1,0 @@
-interface:
-  display_name: "JobMan Refactor Dev"
-  short_description: "Run the JobManager refactor implementation workflow"
-  default_prompt: "Use the JobMan refactor development workflow to pick the next task, implement it with strict TDD, validate with mutation testing, update Tasks.md, and commit."
