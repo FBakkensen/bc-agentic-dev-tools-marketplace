@@ -14,6 +14,7 @@ Turn an idea, issue, or vague task into concrete tasks in `tasks.md`. Use `/gril
 - Both **positive AND negative** cases for every behaviour. Boundaries when ranges, thresholds, or guards exist.
 - Prefer tests against the pure Process layer (Read → Process → Write) over integration tests when the behaviour can be expressed in isolation.
 - **Prefer parallel subagents for independent work.**
+- **Prefer a subagent for output-heavy work.**
 
 ## Tests in tasks.md
 

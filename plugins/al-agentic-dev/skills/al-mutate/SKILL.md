@@ -16,6 +16,8 @@ Inject mutations into production code; verify at least one test fails per mutati
 
 ## Mutation loop (one at a time)
 
+**Prefer a subagent for output-heavy work.**
+
 Apply one mutation → `/al-build` with tests → classify → revert → verify revert restored baseline → record. Then next mutation.
 
 **Classify each result:**

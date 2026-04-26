@@ -10,6 +10,7 @@ Pick the next ready task from `tasks.md`. Run TDD. Update `tasks.md`.
 ## Flow
 
 **Prefer parallel subagents for independent work.**
+**Prefer a subagent for output-heavy work.**
 
 1. **Pick task** from `tasks.md`.
 2. **Codebase exploration**; `/al-research` if non-trivial.

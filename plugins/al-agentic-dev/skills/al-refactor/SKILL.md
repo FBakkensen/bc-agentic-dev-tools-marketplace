@@ -34,6 +34,7 @@ Refactor production and test code while keeping tests green. Use `/al-build` bet
 - May add new tests when refactoring reveals uncovered branches.
 - If refactor reveals a hidden requirement or design flaw → stop, add a Notes line to `tasks.md`, recommend `/al-refine`. **No silent scope expansion.**
 - No comments unless the WHY is non-obvious. No comment churn.
+- **Prefer a subagent for output-heavy work.**
 
 ## Composition
 
