@@ -30,6 +30,7 @@ Apply one mutation → `/al-build` with tests → classify → revert → verify
 - **Condition negation** — remove a `not`, swap `if/else` branches
 - **Arithmetic swaps** — `+` ↔ `-`, `*` ↔ `/`
 - **Guard removal** — delete an early `exit` / `Error`
+- **Validate/error swap** — replace `Error(…)` with `exit` (and vice versa); catches "rejection looks rejected but isn't"
 
 ## BC-specific safety
 

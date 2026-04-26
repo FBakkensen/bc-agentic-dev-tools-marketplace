@@ -30,6 +30,7 @@ Pick the next ready task from `tasks.md`. Run TDD. Update `tasks.md`.
 - **Body comments:** `// [FEATURE]` in `OnRun()`; `// [SCENARIO]` / `// [GIVEN]` / `// [WHEN]` / `// [THEN]` inside each test.
 - Each test calls a local `Initialize()` as its first statement.
 - Both positive AND negative cases. Boundaries when relevant.
+- **Verify the AL `[SCENARIO]/[GIVEN]/[WHEN]/[THEN]` restates the originating Gherkin bullet faithfully.** If they drift, either fix the test or update the bullet — never let them diverge silently.
 
 ## Naming and vocabulary (state explicitly — do not rely on CLAUDE.md)
 

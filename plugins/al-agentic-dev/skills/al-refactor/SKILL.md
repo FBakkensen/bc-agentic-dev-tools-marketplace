@@ -25,6 +25,7 @@ Refactor production and test code while keeping tests green. Use `/al-build` bet
 - Remove dead code, redundant guards, unused variables, dead branches.
 - Collapse equivalent test scenarios via shared setup or parameterised data — without losing the `[SCENARIO]` intent comment.
 - Rename when the name lies. Prefer the BC term over a generic programming term.
+- **When renaming a test or editing `[SCENARIO]/[GIVEN]/[WHEN]/[THEN]` comments, re-verify the comments still match the originating Gherkin bullet in `tasks.md`.** If a rename loses the bullet's intent, update the bullet alongside the test.
 
 ## Discipline
 
