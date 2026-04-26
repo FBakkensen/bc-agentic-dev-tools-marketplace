@@ -54,11 +54,26 @@ Status: `[ ]` ready, `[~]` in progress, `[x]` done.
 - **Goal section:** keep aligned with the tasks; update when drift appears.
 - Keep the file scannable — no empty section stubs, no boilerplate.
 
+## Second opinion (gate)
+
+Before handing off to `/al-implement`, cross-check the whole `tasks.md` with copilot CLI for completeness and correctness. Independent perspective from a different training distribution — not authority.
+
+**Invoke:** `copilot -p "<prompt>" -s --no-ask-user --allow-all-tools --model gpt-5.5 --effort xhigh`
+
+**Prompt meta-shape:** goal paragraph + task list + the question *"what's missing or wrong for completeness and correctness?"*. Ask for a bulleted list of gaps. No predefined out-of-scope rules — trust copilot to identify what matters in context.
+
+**Reconcile each bullet:** accept (update `tasks.md`) or reject with a one-line reason on the relevant task's Notes. **No silent skip.** `/grill-me` when judgement needs the user.
+
+**Trust:** copilot's AL/BC training is also thin — weigh suggestions against this skill's discipline (ZOMBIES, positive AND negative, boundaries) and the goal.
+
+**Failure:** if copilot is unavailable / errors / times out, record `Second opinion skipped: <reason>` as a Notes line on the goal section and proceed.
+
 ## Composition
 
 - `/grill-me` whenever a decision needs the user.
 - `/al-research` for non-trivial BC areas before writing tests against them.
 - `/bc-standard-reference` when grounding a refinement in BaseApp behaviour.
+- copilot CLI — second-opinion gate before handoff to `/al-implement`.
 
 ## Out of scope
 

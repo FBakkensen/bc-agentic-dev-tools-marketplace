@@ -7,6 +7,24 @@ description: Refactor AL/Business Central production and test code while keeping
 
 Refactor production and test code while keeping tests green. Use `/al-build` between meaningful changes. **Stop if a green test goes red.**
 
+## Plan
+
+Before changing code, write a 5–10 bullet refactor checklist for the area, drawing from *Architecture* and *Simplification* below — what to extract, simplify, rename, or reshape under R→P→W and BC vocabulary. Append to the calling task's Notes (or a temporary note if standalone).
+
+## Second opinion (gate)
+
+Cross-check the refactor checklist with copilot CLI for completeness. Independent perspective from a different training distribution — not authority.
+
+**Invoke:** `copilot -p "<prompt>" -s --no-ask-user --allow-all-tools --model gpt-5.5 --effort xhigh`
+
+**Prompt meta-shape:** the area + the checklist + the question *"what's missing for R→P→W, BC vocabulary, simplification?"*. Ask for a bulleted list of gaps. No predefined out-of-scope rules — trust copilot to identify what matters in context.
+
+**Reconcile each bullet:** accept (update checklist) or reject with a one-line reason as a Notes line. **No silent skip.** `/grill-me` when judgement needs the user.
+
+**Trust:** copilot's AL/BC training is also thin — weigh against this skill's discipline and *"standard BC patterns over clever abstractions."*
+
+**Failure:** if copilot is unavailable / errors / times out, record `Second opinion skipped: <reason>` as a Notes line and proceed.
+
 ## Architecture
 
 - **Testable by construction:** extract interfaces for external dependencies (DB I/O, time, HTTP, environment). Inject via overload pattern to preserve back-compat. Use interfaces as the standard tool for clean, testable design.
@@ -42,6 +60,7 @@ Refactor production and test code while keeping tests green. Use `/al-build` bet
 - `/bc-standard-reference` when reaching for a BC pattern, event signature, or BaseApp behaviour.
 - `/al-research` when prior knowledge is uncertain.
 - `/grill-me` when a non-obvious design trade-off needs the user.
+- copilot CLI — second-opinion gate on the refactor checklist before changes start.
 
 ## Out of scope
 
