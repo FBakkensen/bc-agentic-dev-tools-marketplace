@@ -1,52 +1,58 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+Marketplace of AI-assisted AL/Business Central development plugins. Targets Claude Code and Codex; usable from any agent that consumes SKILL.md.
 
-## Project Overview
+Plugin-specific context lives in `plugins/<plugin-name>/CLAUDE.md`. This file covers only what is shared across the marketplace.
 
-BC Agentic Dev Tools is a plugin marketplace for AI-assisted AL/Business Central development. It works with Claude Code, GitHub Copilot, Cursor, and other AI coding assistants.
+## Repo layout
 
-## Commands
+```
+.claude-plugin/marketplace.json   # Claude marketplace manifest
+.agents/plugins/marketplace.json  # Codex marketplace manifest (must stay in sync)
+plugins/<name>/                   # One folder per plugin
+scripts/                          # PowerShell 7.2+ validation scripts (CI gates)
+.github/workflows/                # ci.yml, claude.yml, claude-code-review.yml
+```
 
-### Validation (CI checks)
+## Plugin shape (every plugin must follow this)
+
+```
+plugins/<name>/
+├── .claude-plugin/plugin.json    # Claude manifest (name, version, description)
+├── .codex-plugin/plugin.json     # Codex manifest (same name/version + interface block)
+├── CLAUDE.md                     # Plugin-specific context for AI editors
+└── skills/<name>/
+    ├── SKILL.md                  # Agent-facing instructions (the actual product)
+    ├── scripts/                  # PowerShell 7.2+ (optional)
+    └── references/               # Supporting docs (optional)
+```
+
+Both manifests are required — `Validate-PluginStructure.ps1` fails if either is missing or if the two marketplace.json files list different plugins.
+
+## Validation (run before pushing)
+
 ```powershell
-pwsh scripts/Validate-Json.ps1            # Validate all JSON files
-pwsh scripts/Validate-PowerShell.ps1      # Validate all PowerShell syntax
-pwsh scripts/Validate-PluginStructure.ps1 # Verify plugin.json exists in each plugin
+pwsh scripts/Validate-Json.ps1            # All JSON files parse
+pwsh scripts/Validate-PowerShell.ps1      # All .ps1 files have valid syntax
+pwsh scripts/Validate-PluginStructure.ps1 # Marketplaces in sync; both manifests exist per plugin
 ```
 
-CI runs all three on push/PR to main/master (`.github/workflows/ci.yml`).
+CI (`.github/workflows/ci.yml`) runs all three on push/PR to `main`/`master`.
 
-## Architecture
+## Adding or renaming a plugin (the easy-to-miss steps)
 
-```
-plugins/                # Plugin directory (add new plugins here)
-scripts/                # Validation scripts (used by CI)
-.github/workflows/      # CI (ci.yml), Claude agent (claude.yml), code review (claude-code-review.yml)
-```
+1. Create `plugins/<name>/` with the shape above (both `.claude-plugin/` and `.codex-plugin/` manifests).
+2. Add the plugin to **both** marketplace manifests in the **same order** — `Validate-PluginStructure.ps1` enforces order parity.
+3. Run all three validation scripts locally before pushing.
 
-### Plugins
+## Conventions
 
-al-build, al-debug-logging, al-object-id-allocator, bc-standard-reference, refine-issue-for-automated-tests, release-notes, tdd-implement, video-to-issue
-
-### Plugin Structure Pattern
-```
-plugins/<plugin-name>/
-├── .claude-plugin/
-│   └── plugin.json      # Plugin metadata (name, version)
-└── skills/
-    └── <plugin-name>/
-        ├── SKILL.md     # Agent-facing documentation
-        ├── scripts/     # PowerShell scripts (optional)
-        └── references/  # Supporting docs and templates (optional)
-```
-
-### Key Concepts
-
-**Skills**: Markdown-based instructions (SKILL.md) that AI assistants consume directly. Scripts are PowerShell 7.2+ and self-contained.
+- Scripts: PowerShell 7.2+ (`#Requires -Version 7.2`), self-contained, runnable from repo root.
+- SKILL.md frontmatter must include `name` and `description`; the description is what triggers the skill.
+- Plugin name in `plugin.json`, folder name, and `skills/<name>/` folder name must match.
 
 ## Gotchas
 
-- `.output/` is gitignored — build artifacts and test results go here
-- `**/secret.json` is gitignored — never commit secrets
-- `.claude/settings.local.json` is local-only (gitignored)
+- `.output/` and `**/secret.json` are gitignored — never commit build artifacts or secrets.
+- `.claude/settings.local.json` is local-only.
+- Codex manifest needs an extra `interface` block (`displayName`, `category`, etc.) that the Claude manifest does not.
