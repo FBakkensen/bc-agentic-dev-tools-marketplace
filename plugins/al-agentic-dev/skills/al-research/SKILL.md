@@ -34,6 +34,7 @@ The caller has already explored the current workspace. `/al-research` handles wh
 - **Stop when actionable.** Don't browse.
 - If sources disagree, **surface the conflict** — don't pick silently.
 - **Treat your own prior AL knowledge as untrusted** until corroborated.
+- **Prefer parallel subagents for independent work.**
 
 ## Output
 

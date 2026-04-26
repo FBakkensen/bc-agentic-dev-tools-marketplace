@@ -9,6 +9,8 @@ Pick the next ready task from `tasks.md`. Run TDD. Update `tasks.md`.
 
 ## Flow
 
+**Prefer parallel subagents for independent work.**
+
 1. **Pick task** from `tasks.md`.
 2. **Codebase exploration**; `/al-research` if non-trivial.
 3. **`/grill-me`** to re-refine — may add tests, split the task, or kick to `/al-refine`.
