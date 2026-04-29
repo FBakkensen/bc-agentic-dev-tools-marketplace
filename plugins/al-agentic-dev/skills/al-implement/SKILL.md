@@ -17,23 +17,22 @@ Pick the next ready task from `tasks.md`. Run TDD. Update `tasks.md`.
 3. **Red** — transcribe Gherkin bullet → AL test. Must compile and fail on **behaviour**, not on missing types or syntax.
 4. **Green** — smallest production change that turns the test green. No speculative code.
 5. **`/al-refactor`** — improve shape; may add tests when uncovered branches surface.
-6. **Refine mutation plan** — list mutations based on actual production code written. Append to task's `**Mutations**` section.
-7. **Second opinion (gate)** on the mutation list — mandatory for non-trivial.
-8. **`/al-mutate`** — mandatory if non-trivial.
+6. **Mutation gate** — if changed production lines contain decision logic (see **When to mutate**): list mutations on the changed lines only, one per unique operator site, in `/al-mutate` priority order. Append to `**Mutations**` section. If no decision logic: append `**Mutations:** skipped — no decision logic changed`.
+7. **Second opinion (gate)** on the mutation list — mandatory if decision logic was changed.
+8. **`/al-mutate`** — mandatory if decision logic was changed.
 9. Mark task `[x]`. Stop. **One task, one session.**
 
 ## Escape hatch
 
 If a Gherkin bullet is wrong or a sub-task emerges mid-TDD: stop. Append a Notes line to the task in `tasks.md`. User re-runs `/al-refine <T-NNN>` to fix or split. Do not silently expand.
 
-## Trivial vs non-trivial
+## When to mutate
 
-- **Trivial:** renaming, comments, formatting, obvious one-liners. Mutation testing optional.
-- **Non-trivial:** anything touching BC standard surfaces, posting, events, dimensions, ledger entries, posting setup, transaction isolation, permissions, or AppSource compliance. **Mutation testing mandatory.**
+Mutate if the changed production lines contain decision logic: branching, comparisons, boolean operators, guards (`Error`/`exit`), or arithmetic. Otherwise skip. Metadata edits, pure delegation, and property-only changes have no signal worth mutating.
 
 ## Second opinion gate (pre-`/al-mutate`)
 
-Cross-check the mutation list with copilot CLI. Mandatory for non-trivial.
+Cross-check the mutation list with copilot CLI. Mandatory if decision logic was changed.
 
 **Invoke:** `copilot -p "<prompt>" -s --no-ask-user --allow-all-tools --model gpt-5.5 --effort xhigh`
 
@@ -64,7 +63,7 @@ Cross-check the mutation list with copilot CLI. Mandatory for non-trivial.
 - `/bc-standard-reference` for BC patterns and BaseApp behaviour.
 - `/al-debug-logging` only when execution path is unclear and tests can't reveal it.
 - `/al-refactor` after green.
-- `/al-mutate` after refactor (mandatory if non-trivial).
+- `/al-mutate` after refactor (mandatory if decision logic was changed).
 - copilot CLI — second-opinion gate at step 7 (pre-`/al-mutate`).
 
 ## Out of scope
