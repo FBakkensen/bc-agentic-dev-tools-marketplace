@@ -6,7 +6,7 @@ Seven composable skills for AL/Business Central agentic development sharing a si
 |---|---|
 | `al-steer` | Coach/navigator — reads state, recommends next step, never edits code |
 | `al-scope` | Feature → scoped task list (Goal + bare task entries, /grill-me mandatory) |
-| `al-refine` | One task → Gherkin bullets (per task, not per feature) |
+| `al-refine` | One task → numbered Gherkin scenarios (per task, not per feature) |
 | `al-implement` | Pick a Gherkin-ready task, run TDD (red → green → refactor → mutate) |
 | `al-refactor` | Improve shape while green; no new behaviour |
 | `al-mutate` | Inject mutations to validate test rigor; mandatory for non-trivial work |
