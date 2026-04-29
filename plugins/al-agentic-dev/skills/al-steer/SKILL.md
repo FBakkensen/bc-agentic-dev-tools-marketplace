@@ -1,6 +1,6 @@
 ---
 name: al-steer
-description: Coach and navigator for AL/Business Central agentic dev. Reads tasks.md, the goal, the codebase, and recent commits, then tells the user what's next, what's blocked, and what's drifting. Use when uncertain about the next step, when planning a session, or when asking "where are we?". Recommends a handoff to /al-scope, /al-refine, /al-implement, /al-refactor, /al-mutate, or /al-research — but never forces one.
+description: Coach and navigator for AL/Business Central agentic dev. Reads tasks.md, the goal, the codebase, and recent commits, then tells the user what's next, what's blocked, and what's drifting. Use when uncertain about the next step, when planning a session, or when asking "where are we?". Recommends a handoff to /al-scope, /al-refine, /al-architect, /al-implement, /al-refactor, /al-mutate, or /al-research — but never forces one.
 ---
 
 # /al-steer — Coach / navigator
@@ -30,7 +30,8 @@ Read `tasks.md`, the goal, the codebase, and recent commits. Tell the user what'
 |---|---|
 | No tasks.md yet / new feature | `/al-scope` |
 | Task exists but has no Gherkin yet | `/al-refine <T-NNN>` |
-| Implementable task (Gherkin present) | `/al-implement <T-NNN>` |
+| Gherkin done, no Architecture block | `/al-architect <T-NNN>` |
+| Implementable task (Gherkin + Architecture present) | `/al-implement <T-NNN>` |
 | Code lacks coverage | `/al-mutate <area>` |
 | Code shape is wrong, tests green | `/al-refactor <area>` |
 | "How does X work in BC?" | `/al-research <topic>` |

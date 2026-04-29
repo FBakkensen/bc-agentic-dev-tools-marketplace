@@ -1,12 +1,13 @@
 # al-agentic-dev
 
-Seven composable skills for AL/Business Central agentic development sharing a single living document, `tasks.md`:
+Eight composable skills for AL/Business Central agentic development sharing a single living document, `tasks.md`:
 
 | Skill | Role |
 |---|---|
 | `al-steer` | Coach/navigator — reads state, recommends next step, never edits code |
 | `al-scope` | Feature → scoped task list (Goal + bare task entries, /grill-me mandatory) |
 | `al-refine` | One task → numbered Gherkin scenarios (per task, not per feature) |
+| `al-architect` | Task → testable shape; modules, interfaces, R→P→W boundary, brownfield touchpoints, test-layer per scenario |
 | `al-implement` | Pick a Gherkin-ready task, run TDD (red → green → refactor → mutate) |
 | `al-refactor` | Improve shape while green; no new behaviour |
 | `al-mutate` | Inject mutations to validate test rigor; mandatory for non-trivial work |
@@ -14,7 +15,7 @@ Seven composable skills for AL/Business Central agentic development sharing a si
 
 ## Editing rules
 
-- **Seven is the ceiling.** Do not propose an eighth skill without a strong, repeated case the existing seven cannot cover.
+- **Eight is the ceiling.** Do not propose a ninth skill without a strong, repeated case the existing eight cannot cover.
 - **No enumerated reference checklists.** Adequacy disciplines belong in `/al-mutate`'s loop; refinement disciplines belong in `/al-refine` prose. Static checklists in references rot fast and fight the prose.
 - Each SKILL.md states naming/vocabulary inline rather than relying on CLAUDE.md — keep that pattern (the skills run in projects without this CLAUDE.md present).
 - Skills compose by name (`/al-build`, `/grill-me`, `/bc-standard-reference`, etc.). When changing a skill, scan the others for cross-references.
@@ -24,6 +25,7 @@ Seven composable skills for AL/Business Central agentic development sharing a si
 
 ```
 skills/
+├── al-architect/SKILL.md
 ├── al-implement/SKILL.md
 ├── al-mutate/SKILL.md
 ├── al-refactor/SKILL.md

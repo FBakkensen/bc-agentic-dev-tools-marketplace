@@ -11,7 +11,7 @@ Refactor production and test code while keeping tests green. Use `/al-build` bet
 
 ## Plan
 
-Before changing code, write a 5–10 bullet refactor checklist for the area, drawing from *Architecture* and *Simplification* below — what to extract, simplify, rename, or reshape under R→P→W and BC vocabulary. Append to the calling task's Notes (or a temporary note if standalone).
+Before changing code, write a 5–10 bullet refactor checklist for the area, drawing from *Architecture* and *Simplification* below — what to extract, simplify, rename, or reshape under R→P→W and BC vocabulary. **If the calling task has an `**Architecture**` block, seed the checklist from its brownfield touchpoints.** Append to the calling task's Notes (or a temporary note if standalone).
 
 ## Second opinion (gate)
 
@@ -62,6 +62,7 @@ Cross-check the refactor checklist with copilot CLI for completeness. Independen
 - `/bc-standard-reference` when reaching for a BC pattern, event signature, or BaseApp behaviour.
 - `/al-research` when prior knowledge is uncertain.
 - `/grill-me` when a non-obvious design trade-off needs the user.
+- `/al-architect` for upfront design when refactoring legacy code without a calling task.
 - copilot CLI — second-opinion gate on the refactor checklist before changes start.
 
 ## Out of scope

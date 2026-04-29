@@ -14,11 +14,11 @@ Pick the next ready task from `tasks.md`. Run TDD. Update `tasks.md`.
 **Prefer parallel subagents for independent work.**
 **Prefer a subagent for output-heavy work.**
 
-1. **Pick task** from `tasks.md`. `**Tests**` block must exist — if missing, stop: run `/al-refine <T-NNN>` first.
-2. **Implementation context** — locate the test codeunit and production code (check Notes for file paths left by `/al-refine`; otherwise a quick Glob/Grep). No heavy exploration — `/al-refine` already did that.
+1. **Pick task** from `tasks.md`. `**Tests**` block must exist — if missing, stop: run `/al-refine <T-NNN>` first. `**Architecture**` block must exist — if missing, stop: run `/al-architect <T-NNN>` first.
+2. **Implementation context** — locate the test codeunit and production code (read the `**Architecture**` block; check Notes for file paths left by `/al-refine`; otherwise a quick Glob/Grep). No heavy exploration — `/al-refine` and `/al-architect` already did that.
 3. **Red** — transcribe Gherkin bullet → AL test. Must compile and fail on **behaviour**, not on missing types or syntax.
 4. **Green** — smallest production change that turns the test green. No speculative code.
-5. **`/al-refactor`** — improve shape; may add tests when uncovered branches surface.
+5. **`/al-refactor`** — improve shape; seed the refactor checklist from the task's `**Architecture**` brownfield touchpoints; may add tests when uncovered branches surface.
 6. **Mutation gate** — if changed production lines contain decision logic (see **When to mutate**): list mutations on the changed lines only, one per unique operator site, in `/al-mutate` priority order. Append to `**Mutations**` section. If no decision logic: append `**Mutations:** skipped — no decision logic changed`.
 7. **Second opinion (gate)** on the mutation list — mandatory if decision logic was changed.
 8. **`/al-mutate`** — mandatory if decision logic was changed.
@@ -62,6 +62,7 @@ Cross-check the mutation list with copilot CLI. Mandatory if decision logic was 
 ## Composition
 
 - `/al-build` to compile and run tests.
+- `/al-architect` — required precondition (`**Architecture**` block on the task).
 - `/bc-standard-reference` for BC patterns and BaseApp behaviour.
 - `/al-debug-logging` only when execution path is unclear and tests can't reveal it.
 - `/al-refactor` after green.
@@ -72,4 +73,5 @@ Cross-check the mutation list with copilot CLI. Mandatory if decision logic was 
 
 - No `/grill-me` re-refinement — Gherkin is fixed at input. Use the escape hatch if wrong.
 - No second opinion on Gherkin — that happened in `/al-refine`.
+- No re-architecting — Architecture block is fixed at input. If the design is wrong, stop and re-run `/al-architect`.
 - No restructuring `tasks.md` beyond status updates, appended sub-tasks, and the `**Mutations**` section.

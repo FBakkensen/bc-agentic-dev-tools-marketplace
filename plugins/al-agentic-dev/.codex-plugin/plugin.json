@@ -1,12 +1,12 @@
 {
   "name": "al-agentic-dev",
-  "version": "0.3.1",
-  "description": "Agentic AL/Business Central development — seven composable skills (al-steer, al-scope, al-refine, al-implement, al-refactor, al-mutate, al-research) sharing a single living document (tasks.md). Replaces complex multi-agent workflows with focused single-purpose skills, standard dev terminology, and KISS/YAGNI principles.",
+  "version": "0.4.0",
+  "description": "Agentic AL/Business Central development — eight composable skills (al-steer, al-scope, al-refine, al-architect, al-implement, al-refactor, al-mutate, al-research) sharing a single living document (tasks.md). Replaces complex multi-agent workflows with focused single-purpose skills, standard dev terminology, and KISS/YAGNI principles.",
   "skills": "./skills/",
   "interface": {
     "displayName": "AL Agentic Dev",
-    "shortDescription": "Seven composable skills for agentic AL/Business Central development sharing a single tasks.md.",
-    "longDescription": "Agentic AL/Business Central development — seven composable skills (al-steer, al-scope, al-refine, al-implement, al-refactor, al-mutate, al-research) sharing a single living document (tasks.md). Replaces complex multi-agent workflows with focused single-purpose skills, standard dev terminology, and KISS/YAGNI principles.",
+    "shortDescription": "Eight composable skills for agentic AL/Business Central development sharing a single tasks.md.",
+    "longDescription": "Agentic AL/Business Central development — eight composable skills (al-steer, al-scope, al-refine, al-architect, al-implement, al-refactor, al-mutate, al-research) sharing a single living document (tasks.md). Replaces complex multi-agent workflows with focused single-purpose skills, standard dev terminology, and KISS/YAGNI principles.",
     "developerName": "9Altitudes",
     "category": "Developer Tools"
   }

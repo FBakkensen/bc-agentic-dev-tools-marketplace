@@ -96,3 +96,4 @@ Cross-check the Gherkin bullets with copilot CLI. Mandatory for non-trivial.
 - No mutation lists — mutations are discovered during `/al-implement`.
 - No Resolved Questions or Cross-cutting Notes sections.
 - No fixture mechanics or implementation choices in Notes beyond explicit deferrals.
+- No test-layer decisions (Pure / E2E / Both) — that's `/al-architect`.
