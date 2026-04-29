@@ -7,6 +7,8 @@ description: Fill in Gherkin tests for one task in tasks.md for AL/Business Cent
 
 Fill in the `**Tests**` block for one task from `tasks.md`. Input: a bare task entry from `/al-scope`. Output: Gherkin bullets + Notes (only when non-obvious).
 
+**Resolve `tasks.md`:** Check the current branch name — if it matches `^\d{3}-`, use `specs/<branch>/tasks.md`. Otherwise stop: run `/al-scope` first.
+
 ## Flow
 
 **Prefer parallel subagents for independent work.**

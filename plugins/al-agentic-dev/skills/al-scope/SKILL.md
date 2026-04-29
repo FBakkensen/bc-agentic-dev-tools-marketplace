@@ -15,9 +15,19 @@ Turn a feature, issue, or idea into a scoped task list in `tasks.md`. Use `/gril
 1. **Understand** the request; explore the codebase to identify which behaviors need tasks. Run `/al-research` if non-trivial.
 2. **Draft** a task list: one imperative title + one context line per task.
 3. **`/grill-me`** — confirm scope with the user. Resolve every open branch before writing.
-4. **Write** `tasks.md`: `## Goal` + bare task entries. Stop.
+4. **Branch & folder** — run after `/grill-me` resolves all branches:
+   - If already on a branch matching `^\d{3}-` → stop: `/al-scope` must run from `main`/`master` or an unscoped branch.
+   - Determine next sequence number: scan `specs/` for folders matching `^\d{3}-`, take `max + 1`, zero-pad to 3 digits (`001` if none exist).
+   - Derive a concise kebab-case slug (2–4 words) from the grilled context. Do not ask — name from context.
+   - Announce: "Creating branch `<NNN>-<slug>` and `specs/<NNN>-<slug>/tasks.md`."
+   - If the branch already exists locally or remotely → stop: user must resolve.
+   - Create and switch to branch `<NNN>-<slug>`. Dirty working tree is fine — changes travel with it.
+   - Create folder `specs/<NNN>-<slug>/`.
+5. **Write** `specs/<NNN>-<slug>/tasks.md`: `## Goal` + bare task entries. Stop.
 
 ## tasks.md output
+
+Write to `specs/<NNN>-<slug>/tasks.md`:
 
 ```markdown
 ## Goal

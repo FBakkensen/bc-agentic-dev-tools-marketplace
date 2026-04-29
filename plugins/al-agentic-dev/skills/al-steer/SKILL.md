@@ -7,6 +7,8 @@ description: Coach and navigator for AL/Business Central agentic dev. Reads task
 
 Read `tasks.md`, the goal, the codebase, and recent commits. Tell the user what's next, what's blocked, what's drifting. Run `/grill-me` when intent is unclear. Recommend a handoff — but do not force one.
 
+**Resolve `tasks.md`:** Check the current branch name — if it matches `^\d{3}-`, use `specs/<branch>/tasks.md`. Otherwise stop: run `/al-scope` first.
+
 ## Power model
 
 - Read anything in the workspace and `tasks.md`.

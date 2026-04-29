@@ -7,6 +7,8 @@ description: Pick a ready task from tasks.md and run TDD on it for AL/Business C
 
 Pick the next ready task from `tasks.md`. Run TDD. Update `tasks.md`.
 
+**Resolve `tasks.md`:** Check the current branch name — if it matches `^\d{3}-`, use `specs/<branch>/tasks.md`. Otherwise stop: run `/al-scope` first.
+
 ## Flow
 
 **Prefer parallel subagents for independent work.**

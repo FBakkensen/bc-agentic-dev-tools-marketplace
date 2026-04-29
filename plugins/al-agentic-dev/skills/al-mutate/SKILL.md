@@ -7,6 +7,8 @@ description: Validate that the AL/Business Central test suite catches real behav
 
 Inject mutations into production code; verify at least one test fails per mutation. **Mandatory for non-trivial tasks.** Also runnable standalone on legacy code.
 
+**Resolve `tasks.md`:** Check the current branch name — if it matches `^\d{3}-`, use `specs/<branch>/tasks.md`. Otherwise stop: run `/al-scope` first.
+
 ## Preflight (non-negotiable — abort if any fails)
 
 - Working tree clean.

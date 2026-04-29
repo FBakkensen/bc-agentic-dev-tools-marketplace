@@ -7,6 +7,8 @@ description: Refactor AL/Business Central production and test code while keeping
 
 Refactor production and test code while keeping tests green. Use `/al-build` between meaningful changes. **Stop if a green test goes red.**
 
+**Resolve `tasks.md`:** Check the current branch name — if it matches `^\d{3}-`, use `specs/<branch>/tasks.md`. Otherwise stop: run `/al-scope` first.
+
 ## Plan
 
 Before changing code, write a 5–10 bullet refactor checklist for the area, drawing from *Architecture* and *Simplification* below — what to extract, simplify, rename, or reshape under R→P→W and BC vocabulary. Append to the calling task's Notes (or a temporary note if standalone).

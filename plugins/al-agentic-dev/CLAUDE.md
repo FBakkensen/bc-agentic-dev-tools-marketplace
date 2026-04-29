@@ -18,7 +18,7 @@ Seven composable skills for AL/Business Central agentic development sharing a si
 - **No enumerated reference checklists.** Adequacy disciplines belong in `/al-mutate`'s loop; refinement disciplines belong in `/al-refine` prose. Static checklists in references rot fast and fight the prose.
 - Each SKILL.md states naming/vocabulary inline rather than relying on CLAUDE.md — keep that pattern (the skills run in projects without this CLAUDE.md present).
 - Skills compose by name (`/al-build`, `/grill-me`, `/bc-standard-reference`, etc.). When changing a skill, scan the others for cross-references.
-- `tasks.md` is the shared bus. Status markers: `[ ]` ready, `[~]` in progress, `[x]` done. Task IDs `T-NNN` are monotonic and never reused.
+- `tasks.md` is the shared bus, located at `specs/<NNN-slug>/tasks.md` where `NNN-slug` matches the current git branch. Status markers: `[ ]` ready, `[~]` in progress, `[x]` done. Task IDs `T-NNN` are monotonic and never reused.
 
 ## Layout
 
