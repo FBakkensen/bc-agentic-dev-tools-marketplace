@@ -1,22 +1,23 @@
 ---
 name: al-refine
-description: Turn an idea, issue, or vague task into concrete tasks in tasks.md for AL/Business Central work. Decomposes by ZOMBIES order, writes Gherkin test bullets, runs /grill-me to extract requirements. Use at the start of any new feature, when an existing task is too large or underspecified, or when domain rules need to be pinned down before implementation.
+description: Fill in Gherkin tests for one task in tasks.md for AL/Business Central work. Run after /al-scope places a bare task entry. Explores codebase to specify how one behavior should be tested, runs /grill-me if intent is ambiguous, writes compressed Gherkin bullets. Use per task, not per feature.
 ---
 
-# /al-refine — Idea → tasks.md
+# /al-refine — Task → Gherkin
 
-Turn an idea, issue, or vague task into concrete tasks in `tasks.md`. Use `/grill-me` to extract requirements until each task is implementable. Output goes ONLY to `tasks.md` — no code edits.
+Fill in the `**Tests**` block for one task from `tasks.md`. Input: a bare task entry from `/al-scope`. Output: Gherkin bullets + Notes (only when non-obvious).
 
-## Decomposition
+## Flow
 
-- One task = one demonstrable behaviour. If it can't be stated in one imperative sentence, split it.
-- Apply **ZOMBIES** order: Zero, One, Many, Boundaries, Interfaces, Exceptions, Simple scenarios. Start trivial, walk outward.
-- Both **positive AND negative** cases for every behaviour. Boundaries when ranges, thresholds, or guards exist.
-- Prefer tests against the pure Process layer (Read → Process → Write) over integration tests when the behaviour can be expressed in isolation.
-- **Prefer parallel subagents for independent work.**
-- **Prefer a subagent for output-heavy work.**
+**Prefer parallel subagents for independent work.**
+**Prefer a subagent for output-heavy work.**
 
-## Tests in tasks.md
+1. **Explore** the codebase to specify how the behavior should be tested — test codeunit location, existing helpers, field constraints. Run `/al-research` if non-trivial.
+2. **`/grill-me`** when intent is ambiguous or a domain rule isn't explicit.
+3. **Second opinion (gate)** on the Gherkin bullets — mandatory for non-trivial.
+4. **Write** the `**Tests**` block into the task entry. Stop.
+
+## Tests
 
 Each test is a Gherkin bullet:
 
@@ -24,59 +25,52 @@ Each test is a Gherkin bullet:
 - Given <preconditions>, When <action>, Then <expected outcome>
 ```
 
-Plain English, plain Markdown. **No AL code in `tasks.md`.** The bullet is the contract — `/al-implement` transcribes it into an AL test procedure with `[SCENARIO]/[GIVEN]/[WHEN]/[THEN]` body comments.
+- **BC vocabulary as compression.** Use field names, codeunit names, table names — no explanation needed.
+- **Plain Markdown. No AL code.**
+- Both positive AND negative cases. Boundaries when ranges, thresholds, or guards exist.
+- Apply ZOMBIES order within the bullet list: Zero cases first, walking outward to Many, Boundaries, Exceptions.
+- Prefer tests against the pure Process layer (Read → Process → Write) when the behaviour can be expressed in isolation.
 
-## Grilling
-
-- `/grill-me` when intent is ambiguous, when the goal admits multiple solutions, or when domain rules aren't explicit.
-- **Do not invent business rules.** If grilling can't resolve a question, leave a Notes line flagging it; the task is not ready.
-
-## tasks.md format
+## tasks.md entry format after /al-refine runs
 
 ```markdown
-### [ ] T-001 — Post sales order with blocked customer is rejected
-A blocked customer must not allow posting; the posting routine needs a guard.
+### [ ] T-001 — title
+context line
 
 **Tests**
-- Given Customer.Blocked = All, When posting, Then a clear error is raised
-- Given Customer.Blocked = Invoice, When posting, Then shipment is allowed, invoice is blocked
+- Given ..., When ..., Then ...
 
-**Notes** (only when carries information)
-- Existing OnBeforePostSalesDoc subscriber already checks Blocked for ship-to — reuse pattern
+**Notes**
+- one-line constraint (only if needed)
 ```
 
-Status: `[ ]` ready, `[~]` in progress, `[x]` done.
+## Notes
 
-## tasks.md hygiene
-
-- **Numbering:** `T-001`, `T-002`, … monotonic, **never reused**.
-- **On split:** replace the original task with new tasks at the next available numbers. Update `Depends-on` cross-references in other tasks.
-- **Goal section:** keep aligned with the tasks; update when drift appears.
-- Keep the file scannable — no empty section stubs, no boilerplate.
+- Valid only when stating a non-obvious BC constraint (a hidden invariant, a guard that exists somewhere unexpected, a table missing from an existing routine) OR an explicit deferred decision ("Implementation choice: X vs Y — /al-implement decides").
+- One line max. No fixture mechanics. No implementation choices beyond explicit deferrals.
+- If removing the note wouldn't confuse `/al-implement`, don't write it.
 
 ## Second opinion (gate)
 
-Before handing off to `/al-implement`, cross-check the whole `tasks.md` with copilot CLI for completeness and correctness. Independent perspective from a different training distribution — not authority.
+Cross-check the Gherkin bullets with copilot CLI. Mandatory for non-trivial.
 
 **Invoke:** `copilot -p "<prompt>" -s --no-ask-user --allow-all-tools --model gpt-5.5 --effort xhigh`
 
-**Prompt meta-shape:** goal paragraph + task list + the question *"what's missing or wrong for completeness and correctness?"*. Ask for a bulleted list of gaps. No predefined out-of-scope rules — trust copilot to identify what matters in context.
+**Prompt meta-shape:** task title + context line + Gherkin bullets + *"what scenarios, negatives, or boundaries are missing or wrong? Return a bulleted list."*
 
-**Reconcile each bullet:** accept (update `tasks.md`) or reject with a one-line reason on the relevant task's Notes. **No silent skip.** `/grill-me` when judgement needs the user.
+**Reconcile each bullet:** accept (update bullets) or reject with a one-line reason as a Notes line. No silent skip. `/grill-me` when judgement needs the user.
 
-**Trust:** copilot's AL/BC training is also thin — weigh suggestions against this skill's discipline (ZOMBIES, positive AND negative, boundaries) and the goal.
-
-**Failure:** if copilot is unavailable / errors / times out, record `Second opinion skipped: <reason>` as a Notes line on the goal section and proceed.
+**Failure:** record `Second opinion skipped: <reason>` as a Notes line and proceed.
 
 ## Composition
 
-- `/grill-me` whenever a decision needs the user.
-- `/al-research` for non-trivial BC areas before writing tests against them.
-- `/bc-standard-reference` when grounding a refinement in BaseApp behaviour.
-- copilot CLI — second-opinion gate before handoff to `/al-implement`.
+- `/grill-me` whenever intent is ambiguous.
+- `/al-research` for non-trivial BC areas.
+- `/bc-standard-reference` for BC patterns and BaseApp behaviour.
 
 ## Out of scope
 
 - No code edits.
-- No mutation lists at refine time — mutations are discovered during `/al-implement`.
-- No assignees, dates, estimates, or status states beyond ready / in-progress / done.
+- No mutation lists — mutations are discovered during `/al-implement`.
+- No Resolved Questions or Cross-cutting Notes sections.
+- No fixture mechanics or implementation choices in Notes beyond explicit deferrals.

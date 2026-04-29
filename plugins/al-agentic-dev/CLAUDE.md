@@ -1,19 +1,20 @@
 # al-agentic-dev
 
-Six composable skills for AL/Business Central agentic development sharing a single living document, `tasks.md`:
+Seven composable skills for AL/Business Central agentic development sharing a single living document, `tasks.md`:
 
 | Skill | Role |
 |---|---|
 | `al-steer` | Coach/navigator — reads state, recommends next step, never edits code |
-| `al-refine` | Idea → tasks in `tasks.md` (Gherkin bullets, ZOMBIES order) |
-| `al-implement` | Pick a ready task, run TDD (red → green → refactor → mutate) |
+| `al-scope` | Feature → scoped task list (Goal + bare task entries, /grill-me mandatory) |
+| `al-refine` | One task → Gherkin bullets (per task, not per feature) |
+| `al-implement` | Pick a Gherkin-ready task, run TDD (red → green → refactor → mutate) |
 | `al-refactor` | Improve shape while green; no new behaviour |
 | `al-mutate` | Inject mutations to validate test rigor; mandatory for non-trivial work |
 | `al-research` | Verify BC specifics from authoritative sources |
 
 ## Editing rules
 
-- **Six is a deliberate ceiling.** Do not propose a seventh skill without a strong, repeated case the existing six cannot cover.
+- **Seven is the ceiling.** Do not propose an eighth skill without a strong, repeated case the existing seven cannot cover.
 - **No enumerated reference checklists.** Adequacy disciplines belong in `/al-mutate`'s loop; refinement disciplines belong in `/al-refine` prose. Static checklists in references rot fast and fight the prose.
 - Each SKILL.md states naming/vocabulary inline rather than relying on CLAUDE.md — keep that pattern (the skills run in projects without this CLAUDE.md present).
 - Skills compose by name (`/al-build`, `/grill-me`, `/bc-standard-reference`, etc.). When changing a skill, scan the others for cross-references.
@@ -28,6 +29,7 @@ skills/
 ├── al-refactor/SKILL.md
 ├── al-refine/SKILL.md
 ├── al-research/SKILL.md
+├── al-scope/SKILL.md
 └── al-steer/SKILL.md
 ```
 
