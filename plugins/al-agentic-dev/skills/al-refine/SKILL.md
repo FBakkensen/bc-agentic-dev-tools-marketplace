@@ -7,7 +7,7 @@ description: Fill in Gherkin tests for one task in tasks.md for AL/Business Cent
 
 Fill in the `**Tests**` block for one task from `tasks.md`. Input: a bare task entry from `/al-scope`. Output: Gherkin bullets + Notes (only when non-obvious).
 
-**Resolve `tasks.md`:** Check the current branch name — if it matches `^\d{3}-`, use `specs/<branch>/tasks.md`. Otherwise stop: run `/al-scope` first.
+**Resolve `tasks.md`:** Check the current branch name — if it matches `^\d{3}-`, use `specs/<branch>/tasks.md`. Otherwise stop: run `/al-scope` first. If the task is `[!]`, stop: `T-X is [!] — run /al-steer to clear the replan.`
 
 ## Flow
 
@@ -17,7 +17,8 @@ Fill in the `**Tests**` block for one task from `tasks.md`. Input: a bare task e
 1. **Explore** the codebase to specify how the behavior should be tested — test codeunit location, existing helpers, field constraints. Run `/al-research` if non-trivial.
 2. **`/grill-me`** when intent is ambiguous or a domain rule isn't explicit.
 3. **Second opinion (gate)** on the Gherkin bullets — mandatory for non-trivial.
-4. **Write** the `**Tests**` block into the task entry. Stop.
+4. **Replan check (gate)** — walk triggers #1, #2, #3, #4. Subjective triggers (#2, #4) require a written verdict. On hard-halt set the task `[!]`, append `**Replan** trigger #N: <one-line reason>`, stop. On soft-flag append the same Notes line and continue.
+5. **Write** the `**Tests**` block into the task entry. Stop.
 
 ## Tests
 
@@ -72,13 +73,26 @@ context line
 - One line max. No fixture mechanics. No implementation choices beyond explicit deferrals.
 - If removing the note wouldn't confuse `/al-implement`, don't write it.
 
+## Replan check (gate)
+
+Triggers in scope: #1 task too big (soft), #2 hidden pre-req (hard), #3 wrong order (hard), #4 sibling now wrong (hard).
+
+| # | Detect | Action |
+|---|---|---|
+| 1 | `>5` scenarios after refinement, or scenarios cluster around two distinct subjects | Soft-flag: append `**Replan** trigger #1: <reason>`, continue. |
+| 2 | Gherkin references a table, codeunit, or permission with no covering task | Hard-halt: set `[!]`, append `**Replan** trigger #2: <reason>`, stop. |
+| 3 | A Gherkin bullet references behavior a later task introduces | Hard-halt: set `[!]`, append `**Replan** trigger #3: <reason>`, stop. |
+| 4 | This task's behavior invalidates another task's context line or scenarios | Hard-halt: set `[!]`, append `**Replan** trigger #4: <reason>`, stop. |
+
+Subjective triggers (#2, #4) require a written verdict — one line stating what was checked. **No silent skip.** On hard-halt: stop the skill, recommend `/al-steer` to clear the replan. Halted gates downstream record `Replan halt before <gate>` as a Notes line. Code state untouched — this is a planning halt, not a rollback.
+
 ## Second opinion (gate)
 
 Cross-check the Gherkin bullets with copilot CLI. Mandatory for non-trivial.
 
 **Invoke:** `copilot -p "<prompt>" -s --no-ask-user --allow-all-tools --model gpt-5.5 --effort xhigh`
 
-**Prompt meta-shape:** task title + context line + Gherkin bullets + *"what scenarios, negatives, or boundaries are missing or wrong? Return a bulleted list."*
+**Prompt meta-shape:** task title + context line + Gherkin bullets + *"what scenarios, negatives, or boundaries are missing or wrong? AND does this surface any of the seven replan triggers (#1 task too big, #2 hidden pre-req, #3 wrong order, #4 sibling now wrong)? Return a bulleted list."*
 
 **Reconcile each bullet:** accept (update bullets) or reject with a one-line reason as a Notes line. No silent skip. `/grill-me` when judgement needs the user.
 
@@ -97,3 +111,4 @@ Cross-check the Gherkin bullets with copilot CLI. Mandatory for non-trivial.
 - No Resolved Questions or Cross-cutting Notes sections.
 - No fixture mechanics or implementation choices in Notes beyond explicit deferrals.
 - No test-layer decisions (Pure / E2E / Both) — that's `/al-architect`.
+- No replan mutations — that's `/al-steer`.

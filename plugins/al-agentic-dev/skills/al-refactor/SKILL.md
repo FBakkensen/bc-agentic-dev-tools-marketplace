@@ -7,7 +7,7 @@ description: Refactor AL/Business Central production and test code while keeping
 
 Refactor production and test code while keeping tests green. Use `/al-build` between meaningful changes. **Stop if a green test goes red.**
 
-**Resolve `tasks.md`:** Check the current branch name — if it matches `^\d{3}-`, use `specs/<branch>/tasks.md`. Otherwise stop: run `/al-scope` first.
+**Resolve `tasks.md`:** Check the current branch name — if it matches `^\d{3}-`, use `specs/<branch>/tasks.md`. Otherwise stop: run `/al-scope` first. If the calling task is `[!]`, stop: `T-X is [!] — run /al-steer to clear the replan.`
 
 ## Plan
 
@@ -56,6 +56,18 @@ Cross-check the refactor checklist with copilot CLI for completeness. Independen
 - No comments unless the WHY is non-obvious. No comment churn.
 - **Prefer a subagent for output-heavy work.**
 
+## Replan check (gate)
+
+Run at the end of the refactor, after tests are green. Triggers in scope: #2 hidden pre-req, #4 sibling now wrong, #6 architecture decomposition wrong. **All hard-halt.**
+
+| # | Detect | Action |
+|---|---|---|
+| 2 | Refactor surfaces a table, codeunit, or permission with no covering task | Set the calling task `[!]`, append `**Replan** trigger #2: <reason>`, stop. |
+| 4 | Reshaped code invalidates another task's context line, scenarios, or Architecture | Set `[!]`, append `**Replan** trigger #4: <reason>`, stop. |
+| 6 | The R→P→W boundary now cuts across tasks — extracted module/pattern straddles task boundaries | Set `[!]`, append `**Replan** trigger #6: <reason>`, stop. |
+
+Standalone refactors with no calling task: append the Notes line to a temporary note and recommend `/al-steer`. Code state stays as it lands at green — planning halt, not rollback.
+
 ## Composition
 
 - `/al-build` after every meaningful change.
@@ -68,3 +80,4 @@ Cross-check the refactor checklist with copilot CLI for completeness. Independen
 ## Out of scope
 
 - **No new behaviour.** Anything that changes what the system *does* belongs in `/al-implement` (new task) or `/al-refine` (re-plan).
+- No replan mutations — that's `/al-steer`.

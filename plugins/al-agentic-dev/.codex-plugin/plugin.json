@@ -1,6 +1,6 @@
 {
   "name": "al-agentic-dev",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "Agentic AL/Business Central development — eight composable skills (al-steer, al-scope, al-refine, al-architect, al-implement, al-refactor, al-mutate, al-research) sharing a single living document (tasks.md). Replaces complex multi-agent workflows with focused single-purpose skills, standard dev terminology, and KISS/YAGNI principles.",
   "skills": "./skills/",
   "interface": {

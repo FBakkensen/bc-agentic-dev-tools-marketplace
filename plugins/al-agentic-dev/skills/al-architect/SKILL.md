@@ -7,7 +7,7 @@ description: Design the test-friendly shape for one task in tasks.md before TDD 
 
 Design the testable shape for one task in `tasks.md`. Pick the AL pattern, draw the Read → Process → Write boundary, list brownfield touchpoints, decide the test layer per Gherkin scenario. Output is an `**Architecture**` block on the task entry.
 
-**Resolve `tasks.md`:** Check the current branch name — if it matches `^\d{3}-`, use `specs/<branch>/tasks.md`. Otherwise stop: run `/al-scope` first.
+**Resolve `tasks.md`:** Check the current branch name — if it matches `^\d{3}-`, use `specs/<branch>/tasks.md`. Otherwise stop: run `/al-scope` first. If the task is `[!]`, stop: `T-X is [!] — run /al-steer to clear the replan.`
 
 ## Flow
 
@@ -20,7 +20,8 @@ Design the testable shape for one task in `tasks.md`. Pick the AL pattern, draw 
 4. **`/grill-me`** when a brownfield trade-off needs the user (extract-vs-inline, new module vs extend existing, visibility change).
 5. **Decide test layer per scenario.** **Pure** (Process layer, no DB) by default; **E2E** when the behaviour is composition or side effect that cannot be reproduced at the pure layer; **Both** only when the same intent splits cleanly across layers. **Not every scenario needs E2E.**
 6. **Second opinion (gate)** on the Architecture block — mandatory for non-trivial.
-7. **Write** the `**Architecture**` block into the task entry. Stop.
+7. **Replan check (gate)** — walk triggers #2, #3, #4, #6. All hard-halt. On any trigger: set the task `[!]`, append `**Replan** trigger #N: <one-line reason>`, stop. Recommend `/al-steer`.
+8. **Write** the `**Architecture**` block into the task entry. Stop.
 
 ## tasks.md entry format after /al-architect runs
 
@@ -65,13 +66,26 @@ Cross-check the Architecture block with copilot CLI. Mandatory for non-trivial. 
 
 **Invoke:** `copilot -p "<prompt>" -s --no-ask-user --allow-all-tools --model gpt-5.5 --effort xhigh`
 
-**Prompt meta-shape:** task title + Gherkin bullets + draft Architecture block + *"what's wrong or missing for testable shape under R→P→W in BC? Return a bulleted list."*
+**Prompt meta-shape:** task title + Gherkin bullets + draft Architecture block + *"what's wrong or missing for testable shape under R→P→W in BC? AND does this surface any of the seven replan triggers (#2 hidden pre-req, #3 wrong order, #4 sibling now wrong, #6 architecture decomposition wrong)? Return a bulleted list."*
 
 **Reconcile each bullet:** accept (update the Architecture block) or reject with a one-line reason as a Notes line. **No silent skip.** `/grill-me` when judgement needs the user.
 
 **Trust:** copilot's AL/BC training is also thin — weigh against this skill's discipline and *"standard BC patterns over clever abstractions."*
 
 **Failure:** if copilot is unavailable / errors / times out, record `Second opinion skipped: <reason>` as a Notes line and proceed.
+
+## Replan check (gate)
+
+Triggers in scope: #2 hidden pre-req, #3 wrong order, #4 sibling now wrong, #6 architecture decomposition wrong. **All hard-halt.**
+
+| # | Detect | Action |
+|---|---|---|
+| 2 | Architecture references a table, codeunit, or permission with no covering task | Set `[!]`, append `**Replan** trigger #2: <reason>`, stop. |
+| 3 | Architecture depends on behavior a later task introduces | Set `[!]`, append `**Replan** trigger #3: <reason>`, stop. |
+| 4 | This task's R→P→W shape invalidates another task's context line, scenarios, or Architecture | Set `[!]`, append `**Replan** trigger #4: <reason>`, stop. |
+| 6 | The R→P→W boundary cuts across tasks — same module/pattern split awkwardly between this task and others | Set `[!]`, append `**Replan** trigger #6: <reason>`, stop. |
+
+Triggers #2 and #4 require a written verdict — one line stating what was checked. **No silent skip.** Recommend `/al-steer` to clear the replan. Halted gates downstream record `Replan halt before <gate>` as a Notes line. Code state untouched — planning halt, not rollback.
 
 ## Composition
 
@@ -89,3 +103,4 @@ Cross-check the Architecture block with copilot CLI. Mandatory for non-trivial. 
 - No new Gherkin or scenario tweaks — that's `/al-refine`.
 - No mutations.
 - No enumerated pattern catalogue — name patterns inline; defer to alguidelines.dev/docs/patterns.
+- No replan mutations — that's `/al-steer`.

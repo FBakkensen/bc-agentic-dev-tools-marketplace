@@ -14,7 +14,7 @@ Pick the next ready task from `tasks.md`. Run TDD. Update `tasks.md`.
 **Prefer parallel subagents for independent work.**
 **Prefer a subagent for output-heavy work.**
 
-1. **Pick task** from `tasks.md`. `**Tests**` block must exist — if missing, stop: run `/al-refine <T-NNN>` first. `**Architecture**` block must exist — if missing, stop: run `/al-architect <T-NNN>` first.
+1. **Pick task** from `tasks.md`. If the task is `[!]`, stop: `T-X is [!] — run /al-steer to clear the replan.` `**Tests**` block must exist — if missing, stop: run `/al-refine <T-NNN>` first. `**Architecture**` block must exist — if missing, stop: run `/al-architect <T-NNN>` first.
 2. **Implementation context** — locate the test codeunit and production code (read the `**Architecture**` block; check Notes for file paths left by `/al-refine`; otherwise a quick Glob/Grep). No heavy exploration — `/al-refine` and `/al-architect` already did that.
 3. **Red** — transcribe Gherkin bullet → AL test. Must compile and fail on **behaviour**, not on missing types or syntax.
 4. **Green** — smallest production change that turns the test green. No speculative code.
@@ -22,11 +22,8 @@ Pick the next ready task from `tasks.md`. Run TDD. Update `tasks.md`.
 6. **Mutation gate** — if changed production lines contain decision logic (see **When to mutate**): list mutations on the changed lines only, one per unique operator site, in `/al-mutate` priority order. Append to `**Mutations**` section. If no decision logic: append `**Mutations:** skipped — no decision logic changed`.
 7. **Second opinion (gate)** on the mutation list — mandatory if decision logic was changed.
 8. **`/al-mutate`** — mandatory if decision logic was changed.
-9. Mark task `[x]`. Stop. **One task, one session.**
-
-## Escape hatch
-
-If a Gherkin bullet is wrong or a sub-task emerges mid-TDD: stop. Append a Notes line to the task in `tasks.md`. User re-runs `/al-refine <T-NNN>` to fix or split. Do not silently expand.
+9. **Replan check (gate)** — walk triggers #2 (hard), #4 (hard), #5 (soft). On hard-halt set the task `[!]`, append `**Replan** trigger #N: <one-line reason>`, stop — do not mark `[x]`. On soft-flag append the same Notes line and continue.
+10. Mark task `[x]`. Stop. **One task, one session.**
 
 ## When to mutate
 
@@ -38,11 +35,23 @@ Cross-check the mutation list with copilot CLI. Mandatory if decision logic was 
 
 **Invoke:** `copilot -p "<prompt>" -s --no-ask-user --allow-all-tools --model gpt-5.5 --effort xhigh`
 
-**Prompt meta-shape:** mutation list + production code it targets + operator priority + *"what mutations are missing or misaligned? Return a bulleted list."*
+**Prompt meta-shape:** mutation list + production code it targets + operator priority + *"what mutations are missing or misaligned? AND does this surface any of the seven replan triggers (#2 hidden pre-req, #4 sibling now wrong, #5 new behavior emerges)? Return a bulleted list."*
 
 **Reconcile each bullet:** accept (update mutation list) or reject with a one-line reason as a Notes line. No silent skip. `/grill-me` when judgement needs the user.
 
 **Failure:** record `Second opinion skipped: <reason>` as a Notes line on the task and proceed.
+
+## Replan check (gate)
+
+Triggers in scope: #2 hidden pre-req (hard), #4 sibling now wrong (hard), #5 new behavior emerges (soft). Replaces the old escape hatch — formal halt, not silent expansion.
+
+| # | Detect | Action |
+|---|---|---|
+| 2 | Implementation needs a table, codeunit, or permission with no covering task | Set `[!]`, append `**Replan** trigger #2: <reason>`, stop. Do not mark `[x]`. |
+| 4 | This task's code invalidates another task's context line, scenarios, or Architecture | Set `[!]`, append `**Replan** trigger #4: <reason>`, stop. Do not mark `[x]`. |
+| 5 | A code path needs its own test — not a bullet-extension on an existing scenario | Soft-flag: append `**Replan** trigger #5: <reason>`, continue. Mark `[x]` when TDD completes. |
+
+**No silent expansion.** A new Gherkin bullet is not a fix here — that's `/al-refine` after `/al-steer` clears the replan. Code state stays as it lands at green/refactor/mutate; the gate halts planning, not rollback. Recommend `/al-steer`.
 
 ## Tests (when transcribing Gherkin bullets to AL)
 
@@ -71,7 +80,8 @@ Cross-check the mutation list with copilot CLI. Mandatory if decision logic was 
 
 ## Out of scope
 
-- No `/grill-me` re-refinement — Gherkin is fixed at input. Use the escape hatch if wrong.
+- No `/grill-me` re-refinement — Gherkin is fixed at input. If a bullet is wrong, the Replan check (gate) halts the task; `/al-steer` clears it, then `/al-refine` reworks Gherkin.
 - No second opinion on Gherkin — that happened in `/al-refine`.
-- No re-architecting — Architecture block is fixed at input. If the design is wrong, stop and re-run `/al-architect`.
-- No restructuring `tasks.md` beyond status updates, appended sub-tasks, and the `**Mutations**` section.
+- No re-architecting — Architecture block is fixed at input. If the design is wrong, the Replan check halts the task; `/al-steer` clears it, then `/al-architect` reworks the block.
+- No restructuring `tasks.md` beyond status updates, the `[!]` halt, `**Replan**` Notes lines, and the `**Mutations**` section.
+- No replan mutations — that's `/al-steer`.
