@@ -11,7 +11,7 @@ Composable skills for AL/Business Central agentic development. Two persistent la
 | `al-refine` | One task → numbered Gherkin scenarios (per task, not per feature). |
 | `al-implement` | Pick a Gherkin-ready task, run TDD (red → green → refactor → mutate). |
 | `al-refactor` | Improve shape while green; no new behaviour. |
-| `al-mutate` | Inject mutations to validate test rigor; mandatory for non-trivial work. |
+| `al-mutate` | Inject mutations to validate test rigor; mandatory for non-trivial work. Skill dispatches the `al-agentic-dev:al-mutate` agent (in `agents/al-mutate.md`). |
 | `al-research` | Verify BC specifics from authoritative sources. |
 
 ## Pipeline
@@ -66,6 +66,8 @@ Apply to every file the agent writes into the target repo: `architecture.md`, `t
 ## Layout
 
 ```
+agents/
+└── al-mutate.md            # Plugin agent — invoked by /al-implement step 12
 skills/
 ├── al-design/
 │   ├── SKILL.md
@@ -77,7 +79,7 @@ skills/
 │       └── LANGUAGE.md
 ├── al-grill-adr/SKILL.md
 ├── al-implement/SKILL.md
-├── al-mutate/SKILL.md
+├── al-mutate/SKILL.md      # Thin shim — dispatches agents/al-mutate.md
 ├── al-refactor/
 │   ├── SKILL.md
 │   └── references/
@@ -91,4 +93,14 @@ skills/
         └── out-of-scope.template.md
 ```
 
-No build scripts. Skill bodies + reference templates are the entire product.
+No build scripts. Skill bodies + agent definitions + reference templates are the entire product.
+
+## Skill / agent split (al-mutate pilot)
+
+`/al-mutate` is the pilot of a hybrid pattern: a thin user-facing skill plus a focused plugin agent.
+
+- **Skill `skills/al-mutate/SKILL.md`** — user-invocable entry; dispatches the agent. Documents composition + out-of-scope only.
+- **Agent `agents/al-mutate.md`** — owns preflight, canonical `**Mutations**` block format, flow, mutation classes, survivor classification, BC safety, output. Tool-restricted to `Bash`, `Edit`, `Read`, `Glob`.
+- **Orchestrator dispatch** — `/al-implement` step 12 invokes `Agent(subagent_type: 'al-agentic-dev:al-mutate')` directly. No generic-subagent indirection.
+
+Generalize to other skills only when the case earns it: tight tool needs, output-heavy iteration, focused operational system prompt. Most skills (`/al-design`, `/al-refine`, `/al-grill-adr`, `/al-steer`) need full reasoning — they stay skill-only.

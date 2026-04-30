@@ -23,12 +23,12 @@ Prefer parallel subagents for independent work and output-heavy steps.
 6. **Green.** Smallest production change that turns the test green. No speculative code. Run `/al-build` — confirm green.
 7. **`/al-refactor`.** Improve shape while green; seed the checklist from `architecture.md`'s brownfield touchpoints. May add tests when uncovered branches surface. Run `/al-build` — must stay green.
 8. **Repeat 5–7** for each remaining Gherkin bullet on the task.
-9. **Mutation plan.** If the changed production lines contain decision logic (see *When to mutate*), list mutations on the changed lines only — one per unique operator site, in `/al-mutate` priority order. Append to `**Mutations**` section. Otherwise: `**Mutations:** skipped — no decision logic changed`.
+9. **Mutation plan.** If decision logic changed (see *When to mutate*), append a `**Mutations**` block per `/al-mutate` *Canonical mutation block* — one row per mutation site in `/al-mutate` priority order, with an expected killer named pre-run. Otherwise: `**Mutations:** skipped — no decision logic changed`.
 10. **Second opinion (gate)** on the mutation list — mandatory when decision logic changed.
-11. **`/al-mutate`.** Mandatory when decision logic changed.
-12. **Replan check (gate)** — see below.
-13. **Final build.** Run `/al-build` — green is the precondition for done.
-14. Mark task `[x]`. `Stop.`
+11. **Commit WIP.** Mandatory before `/al-mutate` runs — its preflight requires `git status` empty so revert is `git checkout --` against a known-good baseline. Stage all task work (tests, production, scaffolding, `**Mutations**` block, `[~]`) and commit. Skip if `/al-mutate` is skipped.
+12. **`/al-mutate`.** Mandatory when decision logic changed. Dispatch `Agent(subagent_type: 'al-agentic-dev:al-mutate')` with the calling task ID + `**Mutations**` block.
+13. **Replan check (gate)** — see below.
+14. **Close.** `/al-build` green is the precondition. Mark task `[x]`, commit. `Stop.`
 
 ## When to mutate
 
