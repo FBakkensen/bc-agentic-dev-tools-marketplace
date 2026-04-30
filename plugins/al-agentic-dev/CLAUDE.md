@@ -39,6 +39,30 @@ side-band: /al-research, /al-steer (replan venue + .out-of-scope)
 - **Lazy template materialisation.** Repo-root and spec-folder files are created only when first needed, copied from `${CLAUDE_SKILL_DIR}/references/*.template.md`. `/al-design` owns the canonical templates (`CONTEXT.template.md`, `adr.template.md`, `architecture.template.md`, plus the read-only `LANGUAGE.md`); `/al-steer` owns `out-of-scope.template.md`. Cross-skill paths within this plugin use `${CLAUDE_SKILL_DIR}/../<skill>/references/`.
 - `/al-steer` is the canonical replan venue. Replan-check gates in `/al-refine`, `/al-implement`, `/al-refactor` halt or soft-flag on the seven named triggers (task too big, hidden pre-req, wrong order, sibling now wrong, new behavior emerges, architecture decomposition wrong, goal drift). Hard-halt sets `[!]` and stops; soft-flag appends a Notes line and continues.
 
+## Skill style budget
+
+Hard rules for every SKILL.md, prompt, and template in this plugin.
+
+- **100-line cap per SKILL.md.** Excess goes to `references/`. Splits go by content type, not by length — vocabulary, templates, pattern catalogues. Never an enumerated checklist.
+- **Voice: imperative, hierarchy in one line.** *"Run `/al-research` before naming the pattern, then check it against current BaseApp examples."* One sentence carries the rule and the order. Don't break a single decision across multiple bullets.
+- **Frontmatter description = one capability sentence + one trigger sentence.** Mirror `/grill-me`: *"Use when …"*. The description earns the dispatch.
+- **No Background, Overview, Why-this-matters, Welcome.** State the rule. Don't justify it.
+- **No hedging.** *"You might consider"* → *"Do X"* or delete. Hard stops are literal: when a precondition fails, write `Stop.` and name the prerequisite skill.
+- **Tables for shaped lists** — situation→action menus, priority lists, materialisation maps. Bullets only when shape varies between rows.
+- **Bold lead-ins as inline labels** on bullets — `**Real gap** → write a test...`.
+- **Canonical examples ≤10 lines, one per skill, only when the format is opaque without it** (Gherkin block, `tasks.md` entry). No worked-out before/after.
+
+## Durable artifact rules
+
+Apply to every file the agent writes into the target repo: `architecture.md`, `tasks.md`, `CONTEXT.md`, ADRs, `.out-of-scope/` notes.
+
+- **No inline citations in any durable artifact.** `(see: file.al:120)` is forbidden. Verify before writing; the conversation transcript carries the trail. Names are the citation — `NALICFCopyDocSubscribers.OnAfterInsertToSalesLine` is the address; future readers grep, the IDE gives line numbers for free.
+- **Map, not memoir.** Rationale lives in ADRs (when load-bearing — passes the four ADR gates) or conversation. Never in `architecture.md`. No `Notes` dumping ground.
+- **Diagrams gated, never default.** `architecture.md` only — max 2 (one structural `## Module diagram`, one behavioural `## Flow`). Each must clear its trigger and line cap — see `references/architecture.template.md`. Mermaid only; no ASCII art, no PlantUML, no image references. ADRs and every other durable artifact: text only.
+- **No future-roadmap sketches.** What ships now ships now. The next feature's design is `/al-design`'s next run.
+- **One sentence per slot.** Goal/Problem/Solution lines, Risk lines, ADR leads, brownfield touchpoint notes — bound to one sentence unless the format explicitly grants more.
+- **ADR length: 1–3 sentences.** `Considered Options` and `Consequences` are gated, not free — see `references/adr.template.md`.
+
 ## Layout
 
 ```

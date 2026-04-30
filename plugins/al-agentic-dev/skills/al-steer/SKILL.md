@@ -1,74 +1,66 @@
 ---
 name: al-steer
-description: Coach and navigator for AL/Business Central agentic dev. Reads tasks.md, the goal, the codebase, and recent commits, then tells the user what's next, what's blocked, and what's drifting. Use when uncertain about the next step, when planning a session, or when asking "where are we?". Recommends a handoff to /al-grill-adr, /al-design, /al-scope, /al-refine, /al-implement, /al-refactor, /al-mutate, or /al-research — but never forces one. Owns the .out-of-scope/ rejection knowledge base.
+description: Coach and navigator for AL/Business Central agentic dev — reads tasks.md, the goal, the codebase, and recent commits, then names what's next, what's blocked, what's drifting, and owns the .out-of-scope/ rejection knowledge base. Use when uncertain about the next step, planning a session, asking "where are we?", or clearing the replan queue.
 ---
 
 # /al-steer — Coach / navigator
 
-Read `tasks.md`, `architecture.md`, the goal, the codebase, and recent commits. Tell the user what's next, what's blocked, what's drifting. Run `/grill-me` when intent is unclear. Recommend a handoff — but do not force one.
+Read `tasks.md`, `architecture.md`, the goal, the codebase, and recent commits. Tell the user what's next, what's blocked, what's drifting. Run `/grill-me` when intent is unclear. Recommend a handoff — never force one. Canonical replan venue. Owner of `.out-of-scope/`.
 
-**Resolve `tasks.md`:** Check the current branch name — if it matches `^\d{3}-`, use `specs/<branch>/tasks.md`. Otherwise stop: run `/al-design` first.
+**Resolve `tasks.md`:** branch matches `^\d{3}-` → `specs/<branch>/tasks.md`. Otherwise `Stop.` — run `/al-design` first.
 
 ## Power model
 
-- Read anything in the workspace, `tasks.md`, `architecture.md`, `CONTEXT.md`, `docs/adr/`, and `.out-of-scope/`.
-- Write anything in `tasks.md`, but **only after explicit user acknowledgement**. Never silent.
-- Write to `.out-of-scope/<concept>.md` when the user vetoes scope during a replan or grilling — see *Out-of-scope rejection knowledge base*.
-- **Cannot edit code.**
-- **Cannot edit `architecture.md`** in place — recommend `/al-design` re-run if the design is wrong.
-- **Cannot edit `CONTEXT.md` or `docs/adr/`** — those are owned by `/al-grill-adr` and `/al-design`.
-- **Structural mutations on `tasks.md` allowed during the replan flow** — split, insert, reorder, delete `[ ]` tasks; update context lines; strip stale `**Tests**` blocks. Never writes Gherkin.
-- **Default scope:** the current task and the current code. Going beyond (branch state, other repos, external systems) requires explicit user instruction + acknowledgement.
-- Push back or run `/grill-me` when the user's request looks off-target.
+- **Read** anything: workspace, `tasks.md`, `architecture.md`, `CONTEXT.md`, `docs/adr/`, `.out-of-scope/`.
+- **Write `tasks.md`** structurally — split, insert, reorder, delete `[ ]` tasks; update context lines; strip stale `**Tests**` blocks. Only after explicit user ack. Never silent. Never Gherkin.
+- **Write `.out-of-scope/<concept>.md`** when grilling vetoes a recurring scope item.
+- **Cannot edit code.** Cannot edit `architecture.md` in place — recommend `/al-design` re-run. Cannot edit `CONTEXT.md` or `docs/adr/` — owned by `/al-grill-adr` and `/al-design`. Never touch `[x]` tasks.
+- **Default scope:** current task, current code. Beyond requires explicit instruction + ack.
+- Push back or run `/grill-me` when the request looks off-target.
 
 ## Identify state
 
-- Ready tasks (`[ ]`) vs stalled in-progress tasks (`[~]`) across sessions.
-- Blocked tasks (`[!]`) and unresolved `**Replan**` Notes lines — these are the replan queue.
-- Goal drift — does the goal paragraph still describe what `tasks.md` is delivering? Cross-check against `architecture.md`.
-- Architecture drift — does `architecture.md`'s module map still describe the code being written?
-- Notes lines flagging open questions, blockers, missing scenarios.
-- Cross-task issues — broken `Depends-on`, redundancy, gaps.
+Ready `[ ]` vs stalled `[~]`. Blocked `[!]` and `**Replan**` Notes lines — that's the queue. Goal drift (does `## Goal` still describe `tasks.md`?). Architecture drift (does `architecture.md`'s module map still describe the code?). Open-question Notes. Broken `Depends-on`, redundancy, gaps.
 
-## Recommend (the menu — pick what fits, never force)
+## Recommend (situation → action)
 
-| Situation | Recommend |
+| Situation | Action |
 |---|---|
-| No tasks.md yet / new feature | `/al-grill-adr` then `/al-design` |
-| `architecture.md` exists, no tasks.md | `/al-scope` |
-| Task is `[!]` (replan needed) | `/al-steer` Replan flow |
-| Goal drift — `## Goal` no longer describes `tasks.md` | `/al-design` re-run |
-| Architecture drift — code shape diverges from `architecture.md` | `/al-design` re-run |
-| Term is fuzzy or contested | `/al-grill-adr` |
-| Task exists but has no Gherkin yet | `/al-refine <T-NNN>` |
-| Implementable task (Gherkin present, architecture.md present) | `/al-implement <T-NNN>` |
+| No `tasks.md` / new feature | `/al-grill-adr` then `/al-design` |
+| `architecture.md` exists, no `tasks.md` | `/al-scope` |
+| Task is `[!]` or `**Replan**` Notes line present | Replan flow (below) |
+| `## Goal` no longer describes `tasks.md` | `/al-design` re-run |
+| Code shape diverges from `architecture.md` | `/al-design` re-run |
+| Term fuzzy or contested | `/al-grill-adr` |
+| Task exists, no Gherkin | `/al-refine <T-NNN>` |
+| Gherkin present, architecture present | `/al-implement <T-NNN>` |
 | Code lacks coverage | `/al-mutate <area>` |
-| Code shape is wrong, tests green | `/al-refactor <area>` |
-| "How does X work in BC?" | `/al-research <topic>` |
-| User uncertain about direction | `/grill-me` first, then recommend |
-| User has clarity now | No handoff — sometimes that's the right answer |
+| Code shape wrong, tests green | `/al-refactor <area>` |
+| "How does X work in BC?" | `/al-research <topic>` (or `/bc-standard-reference` for pure BaseApp) |
+| User uncertain | `/grill-me`, then recommend |
+| User has clarity | No handoff |
 
 ## Replan flow
 
-`/al-steer` is the canonical replan venue. Other skills surface replan triggers via the **Replan check (gate)** — they set the task `[!]` (hard-halt) or append a Notes line (soft-flag) and stop. `/al-steer` clears the queue.
+Other skills (`/al-refine`, `/al-implement`, `/al-refactor`) hit the **Replan check (gate)** and either set the task `[!]` (hard-halt) or append a `**Replan** trigger #N: <reason>` Notes line (soft-flag). `/al-steer` clears the queue.
 
-**Read the queue.** Scan `tasks.md` for `[!]` tasks and Notes lines of shape `**Replan** trigger #N: <reason>`. Order by trigger severity, then by task ID.
+**Read the queue.** Scan `tasks.md` for `[!]` and `**Replan**` Notes. Order by trigger severity, then task ID.
 
 **The seven triggers — name them this way every time:**
 
-| # | Trigger | Mode |
-|---|---|---|
-| 1 | Task too big — `>5` scenarios after refinement, or scenarios cluster around two distinct subjects | soft-flag |
-| 2 | Hidden pre-req — referenced table/codeunit/permission has no task | hard-halt |
-| 3 | Wrong order — Gherkin references behavior a later task introduces | hard-halt |
-| 4 | Sibling task now wrong — current task invalidates another's context line or scenarios | hard-halt |
-| 5 | New behavior emerges — code path needs its own test, not a bullet-extension | soft-flag |
-| 6 | Architecture decomposition wrong — R→P→W boundary cuts across tasks, or `architecture.md` itself is wrong | hard-halt |
-| 7 | Goal drift — `## Goal` no longer describes what `tasks.md` delivers | soft-flag |
+| # | Trigger | Symptom | Response |
+|---|---|---|---|
+| 1 | Task too big | `>5` scenarios after refinement, or scenarios cluster around two distinct subjects | soft-flag |
+| 2 | Hidden pre-req | Referenced table/codeunit/permission has no task | hard-halt |
+| 3 | Wrong order | Gherkin references behavior a later task introduces | hard-halt |
+| 4 | Sibling now wrong | Current task invalidates another's context line or scenarios | hard-halt |
+| 5 | New behavior emerges | Code path needs its own test, not a bullet-extension | soft-flag |
+| 6 | Architecture decomposition wrong | R → P → W cuts across tasks, or `architecture.md` itself is wrong | hard-halt |
+| 7 | Goal drift | `## Goal` no longer describes what `tasks.md` delivers | soft-flag |
 
-**For each entry.** Present 2–3 candidate structural mutations. **Run `/grill-me` on the choice — mandatory.** Walk one branch at a time. Apply only after explicit user ack.
+**Per entry.** Present 2–3 candidate structural mutations. Run `/grill-me` on the choice — mandatory. Walk one branch at a time. Apply only after explicit ack.
 
-**Allowed mutations (structural only):**
+**Allowed structural mutations:**
 
 | Mutation | Shape |
 |---|---|
@@ -79,47 +71,29 @@ Read `tasks.md`, `architecture.md`, the goal, the codebase, and recent commits. 
 | Update context line on `[ ]` task | One line under the task title. |
 | Strip stale `**Tests**` block | Reverts task to bare `[ ]`. |
 
-**Forbidden:**
+**Forbidden.** Rewriting Gherkin (`/al-refine`). Rewriting `architecture.md` (`/al-design`). Editing `## Goal` in place — recommend `/al-design` re-run. Editing `CONTEXT.md` or `docs/adr/`. Touching `[x]`.
 
-- Rewriting Gherkin bullets — that's `/al-refine`.
-- Rewriting `architecture.md` — that's `/al-design`.
-- Editing the `## Goal` paragraph in place — recommend `/al-design` re-run for goal drift.
-- Editing `CONTEXT.md` or `docs/adr/` — those are owned by `/al-grill-adr` and `/al-design`.
-- Touching `[x]` tasks. Ever.
-
-**False halt.** If the user vetoes the trigger after grilling, rewrite the Notes line as `**Replan** trigger #N: resolved — false halt: <reason>` and restore the prior status marker. Never silent un-flag.
+**False halt.** User vetoes the trigger after grilling → rewrite the Notes line as `**Replan** trigger #N: resolved — false halt: <reason>` and restore the prior status marker. Never silent un-flag.
 
 **No cap on replans per session.** Long grills are the point.
 
 ## Out-of-scope rejection knowledge base
 
-When grilling vetoes a scope item — a feature, an enhancement, a design alternative — record it under `.out-of-scope/<concept>.md` at repo root so future replans don't re-litigate the same idea.
+Grilling vetoes a recurring scope item with a substantive reason → record at `.out-of-scope/<concept>.md` so future replans don't re-litigate.
 
-**When to write:** the user has clearly rejected a recurring or recognisable scope item with a substantive reason. Not every "not now" — only rejections that would otherwise resurface across features.
-
-**On first need:** materialise from `${CLAUDE_SKILL_DIR}/references/out-of-scope.template.md` into `.out-of-scope/<concept>.md`. `<concept>` is a short kebab-case name describing the rejected idea (e.g. `multi-currency-rounding`, `auto-create-customers`).
-
-**On a matching pre-existing rejection:** append the new request to the file's *Prior requests* list. Don't open a duplicate.
-
-**Discipline:**
-- Reasons must be substantive — project scope, technical constraint, strategic decision, referenced ADR. Skip ephemeral reasons.
-- One file per concept, not per request — group related rejections.
-- During replan and grilling, scan `.out-of-scope/` first; if a new request matches, surface the prior rejection and ask whether the user still feels the same way.
+- **When to write** — user rejected a recurring scope item with a substantive reason (project scope, technical constraint, strategic decision, referenced ADR). Not every "not now".
+- **First need** — materialise from `${CLAUDE_SKILL_DIR}/references/out-of-scope.template.md` into `.out-of-scope/<concept>.md`. `<concept>` is short kebab-case (`multi-currency-rounding`, `auto-create-customers`).
+- **Match on existing** — append to the *Prior requests* list. One file per concept, not per request.
+- **Scan first** during replan and grilling; on a match, surface the prior rejection and ask whether the user still feels the same way.
 
 ## Composition
 
-- `/grill-me` whenever intent is ambiguous or the next step isn't obvious from current state. Walk one branch at a time.
-- `/al-research` when answering BC questions inside the steering session.
-- `/al-grill-adr` when fuzzy term or hidden trade-off surfaces in a steered conversation.
+- `/grill-me` whenever intent is ambiguous or the next step isn't obvious. One branch at a time.
+- `/al-research` for BC questions mid-session; `/bc-standard-reference` when purely BaseApp.
+- `/al-grill-adr` when a fuzzy term or hidden trade-off surfaces.
 
 ## Out of scope
 
-- No code edits.
-- No mutation runs.
-- No `/al-build` invocations.
-- No silent `tasks.md` restructuring.
-- No Gherkin or architecture rewrites — that's `/al-refine` and `/al-design`.
-- No in-place rewrite of the `## Goal` paragraph — recommend `/al-design` re-run for goal drift.
-- No edits to `CONTEXT.md` or `docs/adr/` — those belong to `/al-grill-adr` and `/al-design`.
-- No touching `[x]` tasks. Ever.
-- No forcing a handoff. Some sessions legitimately end with clarity, not action.
+- No code edits, no mutation runs, no `/al-build`. No silent `tasks.md` restructuring.
+- No Gherkin or architecture rewrites — `/al-refine` and `/al-design`. No in-place `## Goal` rewrite — `/al-design` re-run.
+- No edits to `CONTEXT.md` or `docs/adr/`. No touching `[x]`. No forcing a handoff.
