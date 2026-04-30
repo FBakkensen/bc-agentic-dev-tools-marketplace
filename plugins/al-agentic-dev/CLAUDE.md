@@ -15,7 +15,10 @@ Eight composable skills for AL/Business Central agentic development sharing a si
 
 ## Editing rules
 
-- **Eight is the ceiling.** Do not propose a ninth skill without a strong, repeated case the existing eight cannot cover.
+- **New skills need a stated purpose.** Adding a skill is fine when it earns its place. Before proposing one, check:
+  - whether an existing skill can absorb the work,
+  - whether the artifact fits as a `tasks.md` Notes line, an `/al-research` finding, or a side-band reference inside an existing skill, and
+  - only then propose, with one explicit line stating the gap and why no existing skill fits.
 - **No enumerated reference checklists.** Adequacy disciplines belong in `/al-mutate`'s loop; refinement disciplines belong in `/al-refine` prose. Static checklists in references rot fast and fight the prose.
 - Each SKILL.md states naming/vocabulary inline rather than relying on CLAUDE.md — keep that pattern (the skills run in projects without this CLAUDE.md present).
 - Skills compose by name (`/al-build`, `/grill-me`, `/bc-standard-reference`, etc.). When changing a skill, scan the others for cross-references.
