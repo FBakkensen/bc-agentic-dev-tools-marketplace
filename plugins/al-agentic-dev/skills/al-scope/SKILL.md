@@ -1,37 +1,29 @@
 ---
 name: al-scope
-description: Decompose a feature, issue, or idea into a scoped task list in tasks.md for AL/Business Central work. Produces Goal + bare task entries (title + one context line each). Use at the start of any new feature, before /al-refine runs. Requires /grill-me to confirm scope before writing.
+description: Decompose a feature-level architecture.md into a ZOMBIES-ordered task list in tasks.md for AL/Business Central work. Reads specs/<branch>/architecture.md, derives bare task entries (title + one context line each), and writes tasks.md. Run after /al-design, before /al-refine. No grilling, no branch creation — those happen upstream.
 ---
 
-# /al-scope — Feature → task list
+# /al-scope — architecture.md → task list
 
-Turn a feature, issue, or idea into a scoped task list in `tasks.md`. Use `/grill-me` to confirm scope. Output is a `## Goal` + bare task entries — no Gherkin yet.
+Decompose `architecture.md` into bare task entries in `tasks.md`. Output: `## Goal` (copied from architecture.md) + `## Tasks` with `T-NNN` entries — title + one context line each. No Gherkin, no architecture per task.
+
+**Resolve target paths:** Check the current branch — if it matches `^\d{3}-`, use `specs/<branch>/`. Otherwise stop: run `/al-design` first. `architecture.md` must exist in the spec folder — if missing, stop: run `/al-design` first.
 
 ## Flow
 
 **Prefer parallel subagents for independent work.**
 **Prefer a subagent for output-heavy work.**
 
-1. **Understand** the request; explore the codebase to identify which behaviors need tasks. Run `/al-research` if non-trivial.
-2. **Draft** a task list: one imperative title + one context line per task.
-3. **`/grill-me`** — confirm scope with the user. Resolve every open branch before writing.
-4. **Branch & folder** — run after `/grill-me` resolves all branches:
-   - If already on a branch matching `^\d{3}-` → stop: `/al-scope` must run from `main`/`master` or an unscoped branch.
-   - Determine next sequence number: scan `specs/` for folders matching `^\d{3}-`, take `max + 1`, zero-pad to 3 digits (`001` if none exist).
-   - Derive a concise kebab-case slug (2–4 words) from the grilled context. Do not ask — name from context.
-   - Announce: "Creating branch `<NNN>-<slug>` and `specs/<NNN>-<slug>/tasks.md`."
-   - If the branch already exists locally or remotely → stop: user must resolve.
-   - Create and switch to branch `<NNN>-<slug>`. Dirty working tree is fine — changes travel with it.
-   - Create folder `specs/<NNN>-<slug>/`.
-5. **Write** `specs/<NNN>-<slug>/tasks.md`: `## Goal` + bare task entries. Stop.
+1. **Read** `architecture.md`. Take the `## Goal`, the module map, the R→P→W boundary, and the test strategy as inputs.
+2. **Derive task entries** — one imperative title + one context line per task. Each task should map to a coherent slice of behaviour (typically a single scenario family from architecture.md's test strategy).
+3. **Apply ZOMBIES ordering** when sequencing tasks: Zero cases first, walking outward to Many, Boundaries, Exceptions.
+4. **Write** `specs/<branch>/tasks.md`: `## Goal` (verbatim copy from architecture.md) + bare task entries. Stop.
 
 ## tasks.md output
 
-Write to `specs/<NNN>-<slug>/tasks.md`:
-
 ```markdown
 ## Goal
-<one paragraph — what the feature delivers, stated in user-visible terms>
+<one paragraph — copied verbatim from architecture.md ## Goal>
 
 ### [ ] T-001 — <imperative title>
 <one context line: the bug, gap, or constraint in BC vocabulary>
@@ -41,24 +33,26 @@ Write to `specs/<NNN>-<slug>/tasks.md`:
 ```
 
 - **One context line only.** Use BC field names, codeunit names, table names as compression. No prose sections.
-- If two context lines feel necessary, the task likely splits into two — try splitting first. If splitting doesn't make sense, take the second line and flag with `/grill-me`.
+- If two context lines feel necessary, the task likely splits into two — try splitting first. If splitting doesn't make sense, take the second line and flag for `/al-steer`.
 - **No `**Tests**` block.** Gherkin is `/al-refine`'s job.
+- **No `**Architecture**` block.** Feature architecture lives in `architecture.md`; per-task seam decisions land in `/al-implement` step 2.
 - **No Resolved Questions, Cross-cutting Notes, or any other sections.**
 - Task IDs `T-001`, `T-002`, … monotonic, never reused.
-- Apply ZOMBIES order when sequencing tasks: Zero cases first, walking outward to Many, Boundaries, Exceptions.
 
-## Grilling
+## Replan check (gate)
 
-- **`/grill-me` is mandatory** — scope must be confirmed before writing the task list.
-- Do not invent business rules. If a scope question can't be resolved by grilling, leave the task out.
+If decomposition surfaces a gap that architecture.md doesn't cover (a missing module, a pattern conflict, a brownfield touchpoint nobody named), **do not invent**. Stop, recommend `/al-steer`. The replan venue clears the gap; either `/al-grill-adr` re-runs to sharpen or `/al-design` re-runs to reshape.
 
 ## Composition
 
-- `/grill-me` — mandatory scope confirmation.
+- `/al-design` — required precondition (`architecture.md` must exist).
 - `/al-research` for non-trivial BC areas before drafting.
 - `/bc-standard-reference` when grounding scope in BaseApp behaviour.
 
 ## Out of scope
 
+- No grilling — `/al-grill-adr` ran already.
+- No branch creation — `/al-design` did that.
 - No Gherkin. No code edits. No implementation choices.
 - No Resolved Questions or Cross-cutting Notes sections.
+- No replan mutations — `/al-steer`.

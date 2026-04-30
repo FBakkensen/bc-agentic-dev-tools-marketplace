@@ -7,18 +7,21 @@ description: Fill in Gherkin tests for one task in tasks.md for AL/Business Cent
 
 Fill in the `**Tests**` block for one task from `tasks.md`. Input: a bare task entry from `/al-scope`. Output: Gherkin bullets + Notes (only when non-obvious).
 
-**Resolve `tasks.md`:** Check the current branch name — if it matches `^\d{3}-`, use `specs/<branch>/tasks.md`. Otherwise stop: run `/al-scope` first. If the task is `[!]`, stop: `T-X is [!] — run /al-steer to clear the replan.`
+**Resolve `tasks.md`:** Check the current branch name — if it matches `^\d{3}-`, use `specs/<branch>/tasks.md`. Otherwise stop: run `/al-design` first. If the task is `[!]`, stop: `T-X is [!] — run /al-steer to clear the replan.`
+
+`architecture.md` should exist in the same spec folder — read it for module map, R→P→W boundary, and test strategy before writing scenarios.
 
 ## Flow
 
 **Prefer parallel subagents for independent work.**
 **Prefer a subagent for output-heavy work.**
 
-1. **Explore** the codebase to specify how the behavior should be tested — test codeunit location, existing helpers, field constraints. Run `/al-research` if non-trivial.
-2. **`/grill-me`** when intent is ambiguous or a domain rule isn't explicit.
-3. **Second opinion (gate)** on the Gherkin bullets — mandatory for non-trivial.
-4. **Replan check (gate)** — walk triggers #1, #2, #3, #4. Subjective triggers (#2, #4) require a written verdict. On hard-halt set the task `[!]`, append `**Replan** trigger #N: <one-line reason>`, stop. On soft-flag append the same Notes line and continue.
-5. **Write** the `**Tests**` block into the task entry. Stop.
+1. **Read** `architecture.md` for the module map, R→P→W boundary, and likely scenario family for this task.
+2. **Explore** the codebase to specify how the behavior should be tested — test codeunit location, existing helpers, field constraints. Run `/al-research` if non-trivial.
+3. **`/grill-me`** when intent is ambiguous or a domain rule isn't explicit.
+4. **Second opinion (gate)** on the Gherkin bullets — mandatory for non-trivial.
+5. **Replan check (gate)** — walk triggers #1, #2, #3, #4. Subjective triggers (#2, #4) require a written verdict. On hard-halt set the task `[!]`, append `**Replan** trigger #N: <one-line reason>`, stop. On soft-flag append the same Notes line and continue.
+6. **Write** the `**Tests**` block into the task entry. Stop.
 
 ## Tests
 
@@ -43,7 +46,15 @@ Each test is a numbered scenario with **Given / When / Then** on their own bulle
 - **Plain Markdown. No AL code.**
 - Both positive AND negative cases. Boundaries when ranges, thresholds, or guards exist.
 - Apply ZOMBIES order across the numbered scenarios: Zero cases first, walking outward to Many, Boundaries, Exceptions.
-- Prefer tests against the pure Process layer (Read → Process → Write) when the behaviour can be expressed in isolation.
+- Prefer tests against the pure Process layer (Read → Process → Write) when the behaviour can be expressed in isolation. Consult `architecture.md`'s test strategy for the per-scenario-family default.
+
+## Anti-pattern: bulk Gherkin drift
+
+Writing all Gherkin bullets at once can drift into testing *imagined* behaviour rather than *actual* behaviour — bullets become insensitive to real changes (pass when behaviour breaks, fail when behaviour is fine). Mitigations:
+
+- **ZOMBIES order** — Zero cases first force the simplest path through real code; Many/Boundaries/Exceptions then explore against ground truth.
+- **Cross-reference each bullet against the codebase** before writing. If you can't trace the precondition or the expected outcome to existing fields/codeunits/events, halt — either the task is wrong or `/al-research` is needed.
+- **`/al-implement` re-verifies** each bullet against the AL `[SCENARIO]/[GIVEN]/[WHEN]/[THEN]` it transcribes. If they drift during TDD, fix the bullet OR the test — never let them diverge silently.
 
 ## tasks.md entry format after /al-refine runs
 
@@ -110,5 +121,5 @@ Cross-check the Gherkin bullets with copilot CLI. Mandatory for non-trivial.
 - No mutation lists — mutations are discovered during `/al-implement`.
 - No Resolved Questions or Cross-cutting Notes sections.
 - No fixture mechanics or implementation choices in Notes beyond explicit deferrals.
-- No test-layer decisions (Pure / E2E / Both) — that's `/al-architect`.
+- No test-layer decisions (Pure / E2E / Both) — feature-level strategy lives in `architecture.md`; per-task confirmation happens in `/al-implement` step 2.
 - No replan mutations — that's `/al-steer`.

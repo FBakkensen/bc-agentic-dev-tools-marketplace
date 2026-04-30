@@ -35,7 +35,7 @@
     {
       "name": "al-agentic-dev",
       "source": "./plugins/al-agentic-dev",
-      "description": "Agentic AL/Business Central development — six composable skills (al-steer, al-refine, al-implement, al-refactor, al-mutate, al-research) sharing a single tasks.md."
+      "description": "Agentic AL/Business Central development — composable skills (al-steer, al-grill-adr, al-design, al-scope, al-refine, al-implement, al-refactor, al-mutate, al-research) with persistent repo-root memory (CONTEXT.md, docs/adr/, .out-of-scope/) and branch-scoped feature state (architecture.md + tasks.md)."
     }
   ]
 }
