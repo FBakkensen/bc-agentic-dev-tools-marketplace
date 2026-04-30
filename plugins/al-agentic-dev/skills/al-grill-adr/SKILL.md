@@ -1,11 +1,11 @@
 ---
 name: al-grill-adr
-description: Domain-aware grilling for AL/Business Central. Sharpens BC vocabulary against CONTEXT.md, cross-references stated intent with the codebase, and offers ADRs for hard-to-reverse decisions. Run before /al-design to crystallise shared understanding. Also standalone-callable mid-feature when a fuzzy term or hidden trade-off surfaces.
+description: Domain-aware grilling for AL/Business Central. Sharpens BC vocabulary against CONTEXT.md, cross-references stated intent with the codebase, and offers ADRs for hard-to-reverse domain or intent decisions — never design picks. Mechanism, module shape, pattern, seam placement, and test layer belong to /al-design. Run before /al-design to crystallise shared understanding. Also standalone-callable mid-feature when a fuzzy term or hidden trade-off surfaces.
 ---
 
 # /al-grill-adr — Domain-aware grilling
 
-Grill the user about a feature idea or design choice. Cross-reference stated intent with `CONTEXT.md` and the codebase. Sharpen fuzzy BC vocabulary inline. Offer ADRs for decisions that pass all three gates (hard to reverse, surprising without context, real trade-off). Update `CONTEXT.md` and `docs/adr/` lazily as decisions crystallise.
+Grill the user about a feature idea. Cross-reference stated intent with `CONTEXT.md` and the codebase. Sharpen fuzzy BC vocabulary inline. Offer ADRs for **domain or intent** decisions that pass all four gates (hard to reverse, surprising without context, real trade-off, constrains design without picking). Update `CONTEXT.md` and `docs/adr/` lazily as decisions crystallise. Architectural picks defer to `/al-design`.
 
 **Resolve target paths:**
 - **Repo root:** `CONTEXT.md`, `docs/adr/` — durable across features. Created lazily on first need.
@@ -22,27 +22,39 @@ Grill the user about a feature idea or design choice. Cross-reference stated int
 5. **Update `CONTEXT.md` inline** as terms get resolved. Don't batch. **Run `/al-research` before adding any term** — verify whether the term has a canonical Microsoft definition. If yes, prefer the canonical wording and list the project's variant as `_Avoid_`. If no, document as project-specific.
    - If `CONTEXT.md` doesn't exist, materialise from `${CLAUDE_SKILL_DIR}/../al-design/references/CONTEXT.template.md` lazily on first resolved term.
    - **If research fails, do not write the term this session.** Continue grilling ephemerally; the term gets recorded next session when research is available. Don't write unverified terms into a durable doc.
-6. **Offer an ADR** when a decision passes all three gates. See *ADR offer criteria*. **Run `/al-research` before offering** — verify the AL/BC facts cited (event names, codeunit names, AppSource constraints). An ADR that says *"we intercept via `OnBeforePostSalesDoc`"* needs the event verified against current BaseApp before being written.
+6. **Offer an ADR** when a decision passes all four gates. See *ADR offer criteria*. **Run `/al-research` before offering** — verify the BC facts the ADR will cite (regulatory references, AppSource constraints, table/field names underpinning the rule). An ADR claiming *"posting must remain reversible per <jurisdiction>"* needs the rule verified before being written.
    - On accept: materialise from `${CLAUDE_SKILL_DIR}/../al-design/references/adr.template.md` into `docs/adr/NNNN-<slug>.md`. `NNNN` = next free 4-digit number; scan `docs/adr/` for highest existing.
    - **If research fails, do not write the ADR this session.** Same rule as terms.
 7. **Stop.** Hand off to `/al-design` once shared understanding is reached.
 
+## When design surfaces
+
+Design questions surface during grilling — they're tempting because they feel substantive. They're out of scope.
+
+1. **Convert if you can.** Find the domain constraint behind the design question. *"Façade or direct calls?"* usually masks *"why does this module need a stable seam?"*. Grill the constraint; the constraint is the ADR candidate, not the choice.
+2. **Defer otherwise.** Genuinely architectural pick (mechanism, module shape, pattern, seam placement, test layer)? State once: *"That's `/al-design`'s call."* Do not engage further. Do not write it down.
+
+`/al-grill-adr` captures the WHY that constrains design. `/al-design` picks the WHAT.
+
 ## ADR offer criteria
 
-Offer to record an ADR only when **all three** are true:
+Offer to record an ADR only when **all four** are true:
 
 1. **Hard to reverse** — cost of changing later is meaningful.
 2. **Surprising without context** — a future reader will look at the code and wonder *why*.
 3. **Real trade-off** — there were genuine alternatives and you picked one for specific reasons.
+4. **Constrains design, doesn't pick.** The decision restricts the design space (a business rule, customer policy, regulatory choice, hard-to-reverse domain commitment) — it does not select a point inside it. Architectural picks (mechanism, module shape, pattern, seam placement, test layer) belong to `/al-design`.
 
-If any of the three is missing, skip. Easy-to-reverse decisions get reversed; non-surprising ones aren't worth recording; if there was no real alternative, there's nothing to remember.
+If any of the four is missing, skip. Easy-to-reverse decisions get reversed; non-surprising ones aren't worth recording; if there was no real alternative, there's nothing to remember; if it picks a design point, defer to `/al-design`.
 
 **Format**: `# <Short title>` + 1–3 sentences (context, decision, why). Optional: Status / Considered Options / Consequences when they add genuine value. Most ADRs won't need them.
 
-**Examples that qualify in AL/BC:**
-- *"We intercept Sales-Post via OnBeforePostSalesDoc rather than table-extending Sales Header."* (architectural shape, hard-to-reverse, surprising without context)
-- *"Module `<X>` exposes a Façade — even though only one Implementer exists today — because BC partner customisations need a stable seam."* (deliberate deviation from "two adapters = real seam", surprising)
-- *"Setup table is a singleton record; we accept that over an enum because the customer needs runtime config."* (rejected the simpler obvious path for specific reasons)
+**Examples that qualify (domain ADRs):**
+- *"Partial posting is allowed for service items only — inventory items must post in full."* (business rule; constrains how al-design draws the posting flow without naming a mechanism)
+- *"Setup must be runtime-configurable per company — compile-time enums are unacceptable."* (customer policy; constrains data shape al-design picks without naming singleton vs enum)
+- *"This module's public interface is a stable contract for partner customisations."* (commitment; constrains seam policy without naming Façade)
+
+Counter-cases that defer to `/al-design`: mechanism (e.g. *"intercept via `OnBeforePostSalesDoc`"*), pattern (e.g. *"Façade with one Implementer"*), data shape (e.g. *"singleton vs enum"*).
 
 ## `/al-research` discipline
 
@@ -79,6 +91,8 @@ If `CONTEXT.md` doesn't exist when the first term resolves, create it lazily fro
 ## Out of scope
 
 - No code edits.
+- **No design decisions — mechanism, module shape, pattern, seam placement, and test layer all belong to `/al-design`.** When a design question surfaces, convert to its underlying domain constraint or defer; never pick.
+- **No architectural ADRs.** Only domain ADRs that pass all four gates. Architectural ADRs surface in `/al-design`.
 - No architecture writing — `/al-design`.
 - No task breakdown — `/al-scope`.
 - No branch creation — `/al-design` does that, after grilling settles.

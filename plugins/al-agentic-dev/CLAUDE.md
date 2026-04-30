@@ -5,7 +5,7 @@ Composable skills for AL/Business Central agentic development. Two persistent la
 | Skill | Role |
 |---|---|
 | `al-steer` | Coach/navigator — reads state, recommends next step, never edits code. Owns `.out-of-scope/`. |
-| `al-grill-adr` | Domain-aware grilling — sharpens BC vocabulary, updates `CONTEXT.md`, offers ADRs. Standalone-callable. |
+| `al-grill-adr` | Domain-aware grilling — sharpens BC vocabulary, updates `CONTEXT.md`, offers domain ADRs only (no design picks; those defer to `/al-design`). Standalone-callable. |
 | `al-design` | Idea → feature architecture: module map, BC patterns, R→P→W boundary, brownfield touchpoints, test strategy, parallel design-twice. Creates branch + `architecture.md`. |
 | `al-scope` | `architecture.md` → bare task list (Goal + `T-NNN` entries, ZOMBIES order). Reads, no grilling, no branch creation. |
 | `al-refine` | One task → numbered Gherkin scenarios (per task, not per feature). |

@@ -26,7 +26,7 @@ Turn a sharpened feature idea into a feature-level architecture document. Read `
 7. **Test strategy per likely scenario family.** Pure (process layer, no DB) by default; E2E when behaviour is composition or side effect that can't be reproduced at the pure layer; Both only when the same intent splits cleanly across layers. Final ZOMBIES sequencing happens later in `/al-scope` + `/al-refine`.
 8. **Parallel design-twice (gate)** — mandatory for non-trivial. See *Parallel design-twice* below.
 9. **AppSource compliance check** — see *AppSource compliance* below. Reshape before writing if violated.
-10. **ADR offers.** Most ADRs were written in `/al-grill-adr`. If design-twice surfaced a fresh hard-to-reverse decision, offer ADR creation — see *ADR offer criteria*.
+10. **ADR offers.** Domain ADRs came from `/al-grill-adr`. This is where **architectural** ADRs surface — design-twice often exposes a fresh hard-to-reverse pick (mechanism, seam placement, pattern). Offer ADR creation — see *ADR offer criteria*. If a fresh **domain** constraint surfaces during design-twice (a business rule the user hadn't named), pause and recommend re-running `/al-grill-adr` to capture it; do not write a domain ADR inline.
 11. **Branch & folder.**
     - Already on a branch matching `^\d{3}-`? → stop: `/al-design` must run from `main`/`master` or an unscoped branch.
     - Determine next sequence: scan `specs/` for folders matching `^\d{3}-`, take `max + 1`, zero-pad (`001` if none).
@@ -85,10 +85,11 @@ Use these terms exactly. Full discipline in `${CLAUDE_SKILL_DIR}/references/LANG
 
 ## ADR offer criteria
 
-Offer to record an ADR only when **all three** are true:
+Offer to record an ADR only when **all four** are true:
 1. **Hard to reverse** — cost of changing later is meaningful.
 2. **Surprising without context** — a future reader will wonder why.
 3. **Real trade-off** — genuine alternatives, picked one for specific reasons.
+4. **Architectural — picks a point in the design space.** Mechanism, module shape, pattern, seam placement, test layer. Domain rules (business rules, customer policy, regulatory choice) belong to `/al-grill-adr` — pause and recommend re-running it instead of writing inline.
 
 If any is missing, skip. Format: `# <Short title>` + 1–3 sentences (context, decision, why). Template: `${CLAUDE_SKILL_DIR}/references/adr.template.md`.
 
