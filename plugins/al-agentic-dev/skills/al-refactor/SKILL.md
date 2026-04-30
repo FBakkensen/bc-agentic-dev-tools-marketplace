@@ -61,13 +61,13 @@ Full discipline in `${CLAUDE_SKILL_DIR}/../al-design/references/LANGUAGE.md`.
 
 ## Second opinion (gate)
 
-Cross-check the refactor checklist with copilot CLI for completeness — independent perspective, not authority.
+Cross-check the refactor checklist via the `al-agentic-dev:al-second-opinion` agent — independent perspective, not authority.
 
-**Invoke:** `copilot -p "<prompt>" -s --no-ask-user --allow-all-tools --model gpt-5.5 --effort xhigh`
+**Invoke:** `Agent(subagent_type: 'al-agentic-dev:al-second-opinion', prompt: <body>)`.
 
-**Prompt shape:** the area + the checklist + *"what is missing for R→P→W, BC vocabulary, simplification, and AppSource compliance?"*. Ask for a bulleted list of gaps. No predefined out-of-scope.
+**Prompt body shape:** the area + the checklist + *"what is missing for R→P→W, BC vocabulary, simplification, and AppSource compliance?"*. Ask for a bulleted list of gaps. No predefined out-of-scope. The agent prepends the role frame and applies the canonical safety envelope.
 
-**Reconcile each bullet:** accept (update checklist) or reject with a one-line Notes reason. `/grill-me` when judgement needs the user. **No silent skip.** Failure / unavailable / timeout → `Second opinion skipped: <reason>` as a Notes line, proceed.
+**Reconcile each returned bullet:** accept (update checklist) or reject with a one-line Notes reason. `/grill-me` when judgement needs the user. **No silent skip.** If the agent returns `Second opinion skipped: <reason>`, paste it verbatim as a Notes line and proceed.
 
 ## Replan check (gate)
 
@@ -92,7 +92,7 @@ Standalone refactors with no calling task: append the Notes line to a temporary 
 
 ## Composition
 
-`/al-build` after every meaningful change. `/bc-standard-reference` for BC patterns, event signatures, BaseApp behaviour. `/al-research` when prior knowledge is uncertain. `/grill-me` when a non-obvious trade-off needs the user. `/al-design` for upfront architecture when refactoring legacy without a calling task. `/al-steer` is the replan venue. copilot CLI — second-opinion gate.
+`/al-build` after every meaningful change. `/bc-standard-reference` for BC patterns, event signatures, BaseApp behaviour. `/al-research` when prior knowledge is uncertain. `/grill-me` when a non-obvious trade-off needs the user. `/al-design` for upfront architecture when refactoring legacy without a calling task. `/al-steer` is the replan venue. `al-agentic-dev:al-second-opinion` — advisory gate (read-only sandbox; copilot CLI under the hood).
 
 ## Out of scope
 

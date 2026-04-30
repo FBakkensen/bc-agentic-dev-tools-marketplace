@@ -78,13 +78,13 @@ Notes-line format: `**Replan** trigger #N: <one-line reason>`.
 
 ## Second opinion (gate)
 
-Cross-check the Gherkin bullets with copilot CLI. Mandatory for non-trivial.
+Cross-check the Gherkin bullets via the `al-agentic-dev:al-second-opinion` agent. Mandatory for non-trivial.
 
-**Invoke:** `copilot -p "<prompt>" -s --no-ask-user --allow-all-tools --model gpt-5.5 --effort xhigh`
+**Invoke:** `Agent(subagent_type: 'al-agentic-dev:al-second-opinion', prompt: <body>)`.
 
-**Prompt meta-shape:** task title + context line + Gherkin bullets + *"what scenarios, negatives, or boundaries are missing or wrong? AND does this surface any of the seven replan triggers? Return a bulleted list."*
+**Prompt body shape:** task title + context line + Gherkin bullets + *"what scenarios, negatives, or boundaries are missing or wrong? AND does this surface any of the seven replan triggers? Return a bulleted list."* The agent prepends the role frame and applies the canonical safety envelope.
 
-**Reconcile each bullet:** accept (update bullets) or reject with a one-line reason as a Notes line. `/grill-me` when judgement needs the user. **Failure:** record `Second opinion skipped: <reason>` as a Notes line and proceed.
+**Reconcile each returned bullet:** accept (update bullets) or reject with a one-line reason as a Notes line. `/grill-me` when judgement needs the user. If the agent returns `Second opinion skipped: <reason>`, paste it verbatim as a Notes line and proceed.
 
 ## Composition
 

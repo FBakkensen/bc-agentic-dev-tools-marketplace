@@ -36,13 +36,13 @@ Mutate if changed production lines contain branching, comparisons, boolean opera
 
 ## Second opinion (gate)
 
-Cross-check the mutation list with copilot CLI. Mandatory when decision logic changed.
+Cross-check the mutation list via the `al-agentic-dev:al-second-opinion` agent. Mandatory when decision logic changed.
 
-**Invoke:** `copilot -p "<prompt>" -s --no-ask-user --allow-all-tools --model gpt-5.5 --effort xhigh`
+**Invoke:** `Agent(subagent_type: 'al-agentic-dev:al-second-opinion', prompt: <body>)`.
 
-**Prompt shape:** mutation list + production code it targets + operator priority + *"what mutations are missing or misaligned? AND does this surface any of the seven replan triggers? Return a bulleted list."*
+**Prompt body shape:** mutation list + production code it targets + operator priority + *"what mutations are missing or misaligned? AND does this surface any of the seven replan triggers? Return a bulleted list."* The agent prepends the role frame and applies the canonical safety envelope.
 
-Reconcile each bullet — accept (update list) or reject with one-line Notes. No silent skip. `/grill-me` when judgement needs the user. On failure: `Second opinion skipped: <reason>` as a Notes line, proceed.
+Reconcile each returned bullet — accept (update list) or reject with one-line Notes. No silent skip. `/grill-me` when judgement needs the user. If the agent returns `Second opinion skipped: <reason>`, paste it verbatim as a Notes line and proceed.
 
 ## Replan check (gate)
 
@@ -91,7 +91,7 @@ Walk all seven triggers. Hard-halt sets `[!]`, appends `**Replan** trigger #N: <
 - `/al-design` precondition (`architecture.md` exists). `/al-refine` precondition (`**Tests**` block on the task).
 - `/al-research` for AL/BC facts not covered by `architecture.md`. `/bc-standard-reference` for pure BaseApp questions.
 - `/al-refactor` after green. `/al-mutate` after refactor (mandatory when decision logic changed). `/al-debug-logging` only when execution path is unclear and tests can't reveal it.
-- copilot CLI — second-opinion gate before `/al-mutate`. `/grill-me` when judgement needs the user. `/al-steer` is the replan venue.
+- `al-agentic-dev:al-second-opinion` — advisory gate before `/al-mutate` (read-only sandbox; copilot CLI under the hood). `/grill-me` when judgement needs the user. `/al-steer` is the replan venue.
 
 ## Out of scope
 

@@ -67,7 +67,8 @@ Apply to every file the agent writes into the target repo: `architecture.md`, `t
 
 ```
 agents/
-└── al-mutate.md            # Plugin agent — invoked by /al-implement step 12
+├── al-mutate.md            # Plugin agent — invoked by /al-implement step 12
+└── al-second-opinion.md    # Plugin agent — advisory copilot CLI gate; invoked by /al-implement, /al-refine, /al-refactor
 skills/
 ├── al-design/
 │   ├── SKILL.md
@@ -95,12 +96,11 @@ skills/
 
 No build scripts. Skill bodies + agent definitions + reference templates are the entire product.
 
-## Skill / agent split (al-mutate pilot)
+## Skill / agent split
 
-`/al-mutate` is the pilot of a hybrid pattern: a thin user-facing skill plus a focused plugin agent.
+Two plugin agents live alongside skills, each earning the pattern via tight tool needs + focused operational system prompt.
 
-- **Skill `skills/al-mutate/SKILL.md`** — user-invocable entry; dispatches the agent. Documents composition + out-of-scope only.
-- **Agent `agents/al-mutate.md`** — owns preflight, canonical `**Mutations**` block format, flow, mutation classes, survivor classification, BC safety, output. Tool-restricted to `Bash`, `Edit`, `Read`, `Glob`.
-- **Orchestrator dispatch** — `/al-implement` step 12 invokes `Agent(subagent_type: 'al-agentic-dev:al-mutate')` directly. No generic-subagent indirection.
+- **`agents/al-mutate.md`** — preflight, canonical `**Mutations**` block, flow, mutation classes, survivor classification, BC safety, output. Tools: `Bash, Edit, Read, Glob`. Dispatched by `/al-implement` step 12.
+- **`agents/al-second-opinion.md`** — read-only advisory call against copilot CLI. Owns canonical invocation, tool allowlist (`view,rg,glob,show_file,lsp`), role frame, 90s timeout, failure formatting. Tools: `Bash` only. Dispatched by `/al-implement`, `/al-refine`, `/al-refactor` at their respective Second-opinion gates.
 
 Generalize to other skills only when the case earns it: tight tool needs, output-heavy iteration, focused operational system prompt. Most skills (`/al-design`, `/al-refine`, `/al-grill-adr`, `/al-steer`) need full reasoning — they stay skill-only.
