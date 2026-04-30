@@ -79,6 +79,8 @@ Run after tests are green. Triggers in scope: #2 hidden pre-req, #4 sibling now 
 | 4 | Reshape invalidates another task's context line or scenarios | Set `[!]`, append `**Replan** trigger #4: <reason>`, stop. |
 | 6 | R→P→W boundary cuts across tasks, or `architecture.md` is wrong | Set `[!]`, append `**Replan** trigger #6: <reason>`, stop. |
 
+**Trivia exception** (precedes hard-halt). Missing scaffolding — permission set entry, object ID assignment, caption for a new object, BC-vocabulary rename — is not a replan trigger. Apply inline (≤3 lines), append `**Absorbed**: <one line>` to Notes, re-run `/al-build`, continue. Cap: one absorption per task. Never absorbs schema changes, new event publishers, new codeunits, or test-outcome changes.
+
 Standalone refactors with no calling task: append the Notes line to a temporary note and recommend `/al-steer`. Code stays at green — planning halt, not rollback. Replan venue is `/al-steer`.
 
 ## Discipline

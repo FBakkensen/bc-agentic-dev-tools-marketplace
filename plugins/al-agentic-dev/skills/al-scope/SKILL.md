@@ -40,6 +40,7 @@ Prefer parallel subagents for independent work and output-heavy steps.
 - **Status markers:** `[ ]` ready, `[~]` in progress, `[x]` done, `[!]` blocked. Scope writes only `[ ]`.
 - **Task IDs `T-NNN` monotonic, never reused.** Start at `T-001`.
 - **No `**Tests**`, no `**Architecture**`, no Resolved Questions, no Cross-cutting Notes, no Notes dumping ground.**
+- **Scaffolding rides with its object.** Permission set entries, object ID assignment, captions/translations belong to the task that introduces the new codeunit/table/page they grant access to. Never their own task. `<App>All.PermissionSet.al` updates bundle into whichever task introduces the granted object.
 
 ## Composition
 

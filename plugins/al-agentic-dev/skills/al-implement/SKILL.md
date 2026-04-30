@@ -58,6 +58,8 @@ Walk all seven triggers. Hard-halt sets `[!]`, appends `**Replan** trigger #N: <
 | 6 | Architecture decomposition wrong | hard | R → P → W boundary or module split surfaces as wrong |
 | 7 | Goal drift | soft | What's landing no longer matches the feature `Goal` |
 
+**Trivia exception** (precedes hard-halt). Missing scaffolding — permission set entry, object ID assignment, caption for a new object, BC-vocabulary rename — is not a replan trigger. Apply inline (≤3 lines), append `**Absorbed**: <one line>` to Notes, re-run `/al-build`, continue. Cap: one absorption per task. Never absorbs schema changes, new event publishers, new codeunits, or test-outcome changes.
+
 **No silent expansion.** A new Gherkin bullet is not a fix here — that's `/al-refine` after `/al-steer` clears the replan. A reshape of feature architecture isn't either — that's `/al-design` after `/al-steer`. Code stays as it lands; the gate halts planning, not rollback. Recommend `/al-steer`.
 
 ## Tests (when transcribing Gherkin → AL)
@@ -93,7 +95,6 @@ Walk all seven triggers. Hard-halt sets `[!]`, appends `**Replan** trigger #N: <
 
 ## Out of scope
 
-- No re-refinement — Gherkin is fixed at input. If a bullet is wrong, the Replan check halts; `/al-steer` clears it, then `/al-refine` reworks.
-- No re-architecting — `architecture.md` is fixed at input. If wrong, the Replan check halts; `/al-steer` clears it, then `/al-design` reworks.
+- No re-refinement (Gherkin fixed) or re-architecting (`architecture.md` fixed) — when wrong, the Replan check halts; `/al-steer` clears, then `/al-refine` or `/al-design` reworks.
 - No restructuring `tasks.md` beyond status updates, the `[!]` halt, `**Replan**` Notes lines, and the `**Mutations**` section.
 - No replan mutations — that's `/al-steer`.
