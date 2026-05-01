@@ -4,100 +4,56 @@ description: Build and test AL/Business Central projects. Use after modifying AL
 excludeAgent: "coding-agent"
 ---
 
-# AL Build
+# /al-build — Build and test gate
 
-Self-contained build system for AL/Business Central development. No external task runners required.
+Run after every AL change. Zero warnings, zero errors is the only passing state.
 
-## Project Setup (First Time)
+## First time
 
-**Required Steps**:
-1. **Initialize config**: Run `/al-build:init` to create `al-build.json`
-2. **Customize config** (especially `testAppName` to match your test app)
-3. **Run provision** (one-time): Run `/al-build:provision`
+1. Run `/al-build:init` → creates `al-build.json` in repo root.
+2. Set `testAppName` to match your test app.
+3. Run `/al-build:provision` once.
 
-**Config Priority** (highest to lowest):
-1. Script parameters (e.g., `-AppDir "custom"`)
-2. Environment variables (e.g., `ALBT_APP_DIR`)
-3. Project config (`al-build.json` in repo root)
+## Canonical gate
 
-## Canonical Gate
-
-After modifying AL code or tests, run:
-
-Ensure you are in the repo root before running scripts:
-`Set-Location (git rev-parse --show-toplevel)`
+Set location to repo root, then:
 
 ```powershell
 pwsh "<skill-folder>/scripts/test.ps1"
 ```
 
-**Prerequisites:**
-- Project config exists and customized (`al-build.json`)
-- Provision completed (run `provision.ps1` once)
-- Docker container healthy
+Faster iteration: `pwsh "<skill-folder>/scripts/test.ps1" -TestCodeunit <id>`
+Force republish: `pwsh "<skill-folder>/scripts/test.ps1" -Force`
 
-**Requirements:**
-- Zero warnings, zero errors
-- Faster iteration: `pwsh "<skill-folder>/scripts/test.ps1" -TestCodeunit <id>`
-- Force republish: `pwsh "<skill-folder>/scripts/test.ps1" -Force`
+**Outputs:** `.output/TestResults/last.xml` and `telemetry.jsonl`. Use `jq` to query both. For test failures, use `/al-debug-logging`.
 
-**Outputs:**
-- `.output/TestResults/last.xml` — JUnit test results
-- `.output/TestResults/telemetry.jsonl` — merged telemetry
-**Tip:** Use `jq` to query `last.xml` and `telemetry.jsonl` works much better than native powershell commands.
+## Run as subagent (recommended)
 
-## Running Tests in Subtask (Recommended)
+Build output is verbose. Contain it in a subagent.
 
-Use a subagent to run tests. This keeps verbose build output contained and returns only essential results to the main conversation.
-
-**Subagent invocation:** Use `runSubagent` tool if available; otherwise execute directly in the main agent context.
-
-**Subagent prompt:**
 ```
-IMPORTANT: This is a READ-ONLY task. Do NOT edit any files.
+IMPORTANT: READ-ONLY. Do not edit files.
 
-Run the AL build gate:
-pwsh "<skill-folder>/scripts/test.ps1"
+Run: pwsh "<skill-folder>/scripts/test.ps1"
 
-Report back:
+Report:
 1. Build result: success or failure
-2. Test result: pass count, fail count
-3. If failures: include the relevant error messages and stack traces
-4. If warnings: list them
-5. If failures and telemetry is relevant: include key entries from .output/TestResults/telemetry.jsonl
-
-Do not include full console output - only the summary above.
+2. Test result: pass / fail counts
+3. Failures: error messages and stack traces
+4. Warnings: list them
+5. If telemetry relevant: key entries from .output/TestResults/telemetry.jsonl
 ```
 
-**Why subtask?**
-- Build/test output is verbose (compilation logs, test runner output)
-- Main task only needs results and actionable error context
-- Keeps conversation focused on the development task
+## Container recovery
 
-## Troubleshooting
+If `test.ps1` fails due to a container infrastructure problem:
 
-### Build fails and no config exists
+1. **Restart** — `docker restart <container-name>`. Re-run `test.ps1`.
+2. **Delete** — `docker rm -f <container-name>`. Re-run `test.ps1`. The script recreates the container automatically.
 
-If `/al-build:test` fails and `al-build.json` doesn't exist in repo root:
-1. Run `/al-build:init` to create config
-2. Customize settings as needed
-3. Run `/al-build:provision` once
-4. Re-run `/al-build:test`
+Never fix the container manually.
 
-### Config Issues
+## Out of scope
 
-1. **Config not loading**: Ensure `al-build.json` is in git repo root (same level as `.git/`)
-2. **Provision not found**: Run `/al-build:provision` (one-time)
-3. **Wrong test app**: Update `testAppName` in `al-build.json` to match your test app
-
-### Build Failures
-
-1. Check compiler output for error messages
-2. Ensure symbols are provisioned (user runs: `pwsh provision.ps1`)
-3. Verify container is healthy: `docker ps`
-
-### Test Failures
-
-1. Check `.output/TestResults/last.xml` for assertion failures
-2. Use telemetry for debugging: see `telemetry-first-test-debugging` skill
-3. Run specific codeunit: `pwsh "<skill-folder>/scripts/test.ps1" -TestCodeunit <id>`
+- Provisioning symbols or installing the compiler — use `/al-build:provision`.
+- Debugging test failures — use `/al-debug-logging`.
