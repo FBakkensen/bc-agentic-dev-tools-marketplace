@@ -7,6 +7,8 @@ description: Idea → feature architecture for AL/Business Central. Names module
 
 Turn a sharpened idea into a feature-level architecture. Name modules, pick a BC pattern per module, draw R → P → W, list brownfield touchpoints, decide the test layer. Run design-twice for non-trivial calls. Create the branch + spec folder. Write `architecture.md` as a map, not a memoir. Stop — `/al-scope` consumes it next.
 
+All output is telegraphic — BC vocabulary, structured facts, no prose.
+
 **Resolve target paths:**
 - **Repo root:** `CONTEXT.md`, `docs/adr/` — durable across features.
 - **Spec folder:** `specs/<NNN>-<slug>/architecture.md` — created here.
@@ -26,7 +28,7 @@ Prefer parallel subagents for independent work and output-heavy steps.
 8. **Parallel design-twice (gate)** — mandatory for non-trivial. See *Parallel design-twice*.
 9. **AppSource compliance check.** Reshape before writing if violated.
 10. **ADR offers.** Architectural picks (mechanism, seam placement, pattern, test layer) surface here — see *ADR offer criteria*. If a fresh **domain** rule surfaces, pause and recommend re-running `/al-grill-adr`; do not write a domain ADR inline.
-11. **Branch + folder + write.** Already on `^\d{3}-`? `Stop.` — must run from `main`/`master`. Scan `specs/` for `^\d{3}-`, take `max + 1`, zero-pad (`001` if none). Derive a 2–4-word kebab-case slug; do not ask. Announce, then create branch `<NNN>-<slug>` and `specs/<NNN>-<slug>/`. Branch exists locally or remotely? `Stop.` — user resolves. Write `architecture.md` from the template exactly. `Stop.`
+11. **Branch + folder + write.** Already on `^\d{3}-`? `Stop.` — must run from `main`/`master`. Scan `specs/` for `^\d{3}-`, take `max + 1`, zero-pad (`001` if none). Derive a 2–4-word kebab-case slug; do not ask. Announce, then create branch `<NNN>-<slug>` and `specs/<NNN>-<slug>/`. Branch exists locally or remotely? `Stop.` — user resolves. Write `architecture.md` from the template exactly. Telegraphic. `Stop.`
 
 ## Output — architecture.md
 

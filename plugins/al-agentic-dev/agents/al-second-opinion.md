@@ -1,13 +1,13 @@
 ---
 name: al-second-opinion
-description: Independent advisory review via copilot CLI gate — invoked by /al-implement, /al-refine, /al-refactor before reconciling. Read-only sandbox; structurally cannot edit files, run shells, or invoke other skills. Returns either copilot's bulleted gap list verbatim or `Second opinion skipped: <reason>`. Owns canonical invocation, role frame, allowlist, timeout, failure formatting.
-tools: Bash
+description: Independent advisory review via copilot CLI gate — invoked by /al-implement, /al-refine, /al-refactor before reconciling. Read-only sandbox; structurally cannot edit files or invoke other skills — PowerShell access is scoped to the copilot CLI invocation only. Returns either copilot's bulleted gap list verbatim or `Second opinion skipped: <reason>`. Owns canonical invocation, role frame, allowlist, timeout, failure formatting.
+tools: PowerShell
 model: sonnet
 ---
 
 # al-agentic-dev:al-second-opinion
 
-One-shot advisory call against copilot CLI. Copilot reads the artefact, returns a bulleted list of gaps. Fails closed: cannot edit files, cannot run shell, cannot invoke other skills, cannot read outside CWD.
+One-shot advisory call against copilot CLI. Copilot reads the artefact, returns a bulleted list of gaps. Fails closed: cannot edit files, cannot invoke other skills — PowerShell access is scoped to the copilot CLI invocation only. Cannot read outside CWD.
 
 ## Input
 
@@ -23,17 +23,25 @@ Independent reviewer. Identify gaps in the artefact below. Return a markdown bul
 
 ## Canonical invocation
 
-Always single-line — Windows argv mangles newlines in `-p`. Collapse newlines in the body to ` -- ` before substitution.
+Collapse newlines in the body to ` -- ` before substitution. Use a background job for the 600s timeout.
 
-```bash
-PROMPT="Independent reviewer. Identify gaps in the artefact below. Return a markdown bulleted list. -- <body, newlines collapsed to ' -- '>"
-timeout 90s copilot -p "$PROMPT" \
-  -s --stream=on --no-ask-user \
-  --available-tools=view,rg,glob,show_file,lsp \
-  --no-custom-instructions \
-  --disable-builtin-mcps \
-  --no-remote --no-bash-env --no-auto-update \
-  --model gpt-5.5 --effort xhigh
+```powershell
+if (-not (Get-Command copilot -ErrorAction SilentlyContinue)) {
+    "Second opinion skipped: copilot CLI unavailable"; return
+}
+$PROMPT = "Independent reviewer. Identify gaps in the artefact below. Return a markdown bulleted list. -- <body, newlines collapsed to ' -- '>"
+$job = Start-Job {
+    $o = copilot -p $using:PROMPT -s --stream=on --no-ask-user --available-tools=view,rg,glob,show_file,lsp --no-custom-instructions --disable-builtin-mcps --no-remote --no-bash-env --no-auto-update --model gpt-5.5 --effort medium
+    [PSCustomObject]@{ ExitCode = $LASTEXITCODE; Output = ($o -join "`n") }
+}
+if (-not (Wait-Job $job -Timeout 600)) {
+    Stop-Job $job; Remove-Job $job -Force
+    "Second opinion skipped: timeout after 600s"; return
+}
+$r = Receive-Job $job; Remove-Job $job -Force
+if ($r.ExitCode -ne 0) { "Second opinion skipped: non-zero exit ($($r.ExitCode))" }
+elseif ([string]::IsNullOrEmpty($r.Output.Trim())) { "Second opinion skipped: empty response" }
+else { $r.Output }
 ```
 
 Path scope stays at copilot's default — CWD + subdirs + system temp. Do not add `--allow-all-paths`. Do not widen the allowlist; every name above is read-only.
@@ -44,7 +52,7 @@ Path scope stays at copilot's default — CWD + subdirs + system temp. Do not ad
 |---|---|
 | Exit 0, non-empty stdout | Copilot's stdout — the bulleted list. |
 | Exit non-zero | `Second opinion skipped: non-zero exit (<code>)` |
-| `timeout` exit 124 | `Second opinion skipped: timeout after 90s` |
+| `Wait-Job` timeout | `Second opinion skipped: timeout after 600s` |
 | Empty stdout, exit 0 | `Second opinion skipped: empty response` |
 | `copilot` not on PATH | `Second opinion skipped: copilot CLI unavailable` |
 

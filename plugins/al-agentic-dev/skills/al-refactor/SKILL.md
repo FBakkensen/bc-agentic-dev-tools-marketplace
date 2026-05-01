@@ -7,11 +7,13 @@ description: Refactor AL/Business Central production and test code while keeping
 
 Refactor production and test code without changing behaviour. Run `/al-build` between meaningful changes. **Stop if a green test goes red.**
 
+All output is telegraphic — BC vocabulary, structured facts, no prose.
+
 **Resolve `tasks.md`:** Branch matches `^\d{3}-`? Use `specs/<branch>/tasks.md`. Otherwise `Stop.` — run `/al-design` first. Calling task is `[!]`? `Stop.` — `T-X is [!] — run /al-steer to clear the replan.`
 
 ## Flow
 
-1. **Plan.** Write a 5–10 bullet refactor checklist for the area, drawn from *Architecture* and *Simplification* — what to extract, simplify, rename, reshape under R→P→W and BC vocabulary. If `architecture.md` exists, seed from its brownfield touchpoints. Append to the calling task's Notes (or a temporary note if standalone).
+1. **Plan.** Write a 5–10 bullet refactor checklist for the area, drawn from *Architecture* and *Simplification* — what to extract, simplify, rename, reshape under R→P→W and BC vocabulary. If `architecture.md` exists, seed from its brownfield touchpoints.
 2. **Second opinion (gate).** See below. **No silent skip.**
 3. **Refactor.** Apply *Architecture*, *Simplification*, *AppSource*, *Naming* inline. Run `/al-build` after every meaningful change. Production and tests are first-class — refactor both.
 4. **Replan check (gate).** See below.
@@ -87,6 +89,7 @@ Standalone refactors with no calling task: append the Notes line to a temporary 
 
 - May add new tests when refactoring reveals uncovered branches.
 - If a hidden requirement or design flaw surfaces → stop, append a Notes line, recommend `/al-design` or `/al-refine` via `/al-steer`. **No silent scope expansion.**
+- `tasks.md` Notes entries are telegraphic forward-facing facts — each independently actionable by a future agent, no prose.
 - No comments unless the WHY is non-obvious. No comment churn.
 - Prefer a subagent for output-heavy work.
 

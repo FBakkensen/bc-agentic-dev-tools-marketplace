@@ -7,6 +7,8 @@ description: Decompose a feature-level architecture.md into a ZOMBIES-ordered ta
 
 Decompose `architecture.md` into bare task entries in `tasks.md`. Output: `## Goal` (architecture.md's `## Solution` verbatim) + `## Tasks` with `T-NNN` entries — title + one context line each. No Gherkin (that is `/al-refine`), no per-task architecture (that is `/al-implement`).
 
+All output is telegraphic — BC vocabulary, structured facts, no prose.
+
 **Resolve target paths:**
 - **Branch:** must match `^\d{3}-`. If not, `Stop.` — run `/al-design` first.
 - **Spec folder:** `specs/<branch>/` — `architecture.md` must already exist. If missing, `Stop.` — run `/al-design` first.
@@ -20,7 +22,7 @@ Prefer parallel subagents for independent work and output-heavy steps.
 2. **Derive task entries** — one imperative title + one context line per task. Each task maps to a coherent slice of behaviour, typically a single scenario family from the test strategy.
 3. **Order ZOMBIES.** Zero, One, Many, Boundary, Interfaces, Exception, Simple — start with the simplest case that exercises the seam, then layer complexity outward.
 4. **Replan check (gate).** If decomposition surfaces a gap `architecture.md` doesn't cover (missing module, pattern conflict, unnamed brownfield touchpoint), do not invent. `Stop.` — recommend `/al-steer`. The replan venue routes to `/al-grill-adr` or `/al-design` re-run.
-5. **Write** `specs/<branch>/tasks.md` in the canonical shape below. `Stop.` — `/al-refine` consumes it next, one task at a time.
+5. **Write** `specs/<branch>/tasks.md` in the canonical shape below. Telegraphic. `Stop.` — `/al-refine` consumes it next, one task at a time.
 
 ## Output — tasks.md
 

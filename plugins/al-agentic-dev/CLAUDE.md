@@ -101,6 +101,6 @@ No build scripts. Skill bodies + agent definitions + reference templates are the
 Two plugin agents live alongside skills, each earning the pattern via tight tool needs + focused operational system prompt.
 
 - **`agents/al-mutate.md`** — preflight, canonical `**Mutations**` block, flow, mutation classes, survivor classification, BC safety, output. Tools: `Bash, Edit, Read, Glob`. Dispatched by `/al-implement` step 12.
-- **`agents/al-second-opinion.md`** — read-only advisory call against copilot CLI. Owns canonical invocation, tool allowlist (`view,rg,glob,show_file,lsp`), role frame, 90s timeout, failure formatting. Tools: `Bash` only. Dispatched by `/al-implement`, `/al-refine`, `/al-refactor` at their respective Second-opinion gates.
+- **`agents/al-second-opinion.md`** — read-only advisory call against copilot CLI. Owns canonical invocation, tool allowlist (`view,rg,glob,show_file,lsp`), role frame, 600s timeout, failure formatting. Tools: `PowerShell` only. **Windows-only** — `Start-Job`/`Wait-Job` invocation targets pwsh on Windows; portability is a future concern. Dispatched by `/al-implement`, `/al-refine`, `/al-refactor` at their respective Second-opinion gates.
 
 Generalize to other skills only when the case earns it: tight tool needs, output-heavy iteration, focused operational system prompt. Most skills (`/al-design`, `/al-refine`, `/al-grill-adr`, `/al-steer`) need full reasoning — they stay skill-only.

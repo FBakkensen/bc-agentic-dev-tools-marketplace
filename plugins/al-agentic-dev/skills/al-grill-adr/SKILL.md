@@ -7,6 +7,8 @@ description: Domain-aware grilling for AL/Business Central — sharpens BC vocab
 
 Grill the user about a feature idea. Cross-reference stated intent with `CONTEXT.md` and the codebase. Sharpen fuzzy BC vocabulary inline. Offer ADRs only for **domain or intent** decisions that pass all four gates. Update `CONTEXT.md` and `docs/adr/` lazily as decisions crystallise. Architectural picks defer to `/al-design`.
 
+All output is telegraphic — BC vocabulary, structured facts, no prose.
+
 **Resolve target paths:**
 - **Repo root:** `CONTEXT.md`, `docs/adr/` — durable across features, materialised lazily on first need.
 - **Templates:** `${CLAUDE_SKILL_DIR}/../al-design/references/CONTEXT.template.md`, `${CLAUDE_SKILL_DIR}/../al-design/references/adr.template.md` — owned by `/al-design`, read in place.
@@ -19,8 +21,8 @@ Prefer parallel subagents for independent work.
 2. **Walk the design tree.** Invoke `/grill-me` to interview the user, one branch at a time, resolving dependencies between decisions one-by-one. Provide a recommended answer for each question.
 3. **Sharpen fuzzy terms.** When a term conflicts with `CONTEXT.md`, surface it: *"Your glossary defines `<term>` as X, but you seem to mean Y — which is it?"*. When a vague or overloaded term appears, propose a precise canonical term. **Run `/al-research` before disambiguating against current BC state** — verify the current state, then sharpen.
 4. **Cross-reference with code.** When the user states how something works, check the code agrees. Surface contradictions: *"Your code posts the entire Sales Order, but you just said partial posting is supported — which is right?"*.
-5. **Update `CONTEXT.md` inline** as terms get resolved — don't batch. **Run `/al-research` before adding any term** — verify whether a canonical Microsoft definition exists; if yes, prefer it and list the project's variant as `_Avoid_`. Materialise from template on first resolved term. **If research fails, do not write the term this session** — continue grilling ephemerally; record next session.
-6. **Offer an ADR** when the decision passes all four gates — see *ADR offer criteria*. **Run `/al-research` before offering** — verify the BC facts the ADR will cite (regulatory references, AppSource constraints, table/field names underpinning the rule). On accept: materialise from `${CLAUDE_SKILL_DIR}/../al-design/references/adr.template.md` into `docs/adr/NNNN-<slug>.md`; `NNNN` = next free 4-digit number. **If research fails, do not write the ADR this session.**
+5. **Update `CONTEXT.md` inline** as terms get resolved — don't batch. Telegraphic. **Run `/al-research` before adding any term** — verify whether a canonical Microsoft definition exists; if yes, prefer it and list the project's variant as `_Avoid_`. Materialise from template on first resolved term. **If research fails, do not write the term this session** — continue grilling ephemerally; record next session.
+6. **Offer an ADR** when the decision passes all four gates — see *ADR offer criteria*. **Run `/al-research` before offering** — verify the BC facts the ADR will cite (regulatory references, AppSource constraints, table/field names underpinning the rule). On accept: materialise from `${CLAUDE_SKILL_DIR}/../al-design/references/adr.template.md` into `docs/adr/NNNN-<slug>.md`; `NNNN` = next free 4-digit number. Telegraphic. **If research fails, do not write the ADR this session.**
 7. **Stop.** Hand off to `/al-design` once shared understanding is reached.
 
 ## When design surfaces

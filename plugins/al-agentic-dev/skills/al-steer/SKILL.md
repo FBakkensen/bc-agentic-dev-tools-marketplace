@@ -7,12 +7,14 @@ description: Coach and navigator for AL/Business Central agentic dev — reads t
 
 Read `tasks.md`, `architecture.md`, the goal, the codebase, and recent commits. Tell the user what's next, what's blocked, what's drifting. Run `/grill-me` when intent is unclear. Recommend a handoff — never force one. Canonical replan venue. Owner of `.out-of-scope/`.
 
+All output is telegraphic — BC vocabulary, structured facts, no prose.
+
 **Resolve `tasks.md`:** branch matches `^\d{3}-` → `specs/<branch>/tasks.md`. Otherwise `Stop.` — run `/al-design` first.
 
 ## Power model
 
 - **Read** anything: workspace, `tasks.md`, `architecture.md`, `CONTEXT.md`, `docs/adr/`, `.out-of-scope/`.
-- **Write `tasks.md`** structurally — split, insert, reorder, delete `[ ]` tasks; update context lines; strip stale `**Tests**` blocks. Only after explicit user ack. Never silent. Never Gherkin.
+- **Write `tasks.md`** structurally — split, insert, reorder, delete `[ ]` tasks; update context lines; strip stale `**Tests**` blocks. Only after explicit user ack. Never silent. Never Gherkin. Telegraphic.
 - **Write `.out-of-scope/<concept>.md`** when grilling vetoes a recurring scope item.
 - **Cannot edit code.** Cannot edit `architecture.md` in place — recommend `/al-design` re-run. Cannot edit `CONTEXT.md` or `docs/adr/` — owned by `/al-grill-adr` and `/al-design`. Never touch `[x]` tasks.
 - **Default scope:** current task, current code. Beyond requires explicit instruction + ack.
@@ -58,7 +60,7 @@ Other skills (`/al-refine`, `/al-implement`, `/al-refactor`) hit the **Replan ch
 | 6 | Architecture decomposition wrong | R → P → W cuts across tasks, or `architecture.md` itself is wrong | hard-halt |
 | 7 | Goal drift | `## Goal` no longer describes what `tasks.md` delivers | soft-flag |
 
-**Per entry.** Present 2–3 candidate structural mutations. Run `/grill-me` on the choice — mandatory. Walk one branch at a time. Apply only after explicit ack.
+**Per entry.** Present 2–3 candidate structural mutations. Telegraphic. Run `/grill-me` on the choice — mandatory. Walk one branch at a time. Apply only after explicit ack.
 
 **Allowed structural mutations:**
 

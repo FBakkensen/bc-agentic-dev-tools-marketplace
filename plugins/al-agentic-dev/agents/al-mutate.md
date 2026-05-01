@@ -1,13 +1,15 @@
 ---
 name: al-mutate
 description: Validate AL/Business Central test rigor by injecting one mutation at a time, running /al-build, classifying, reverting via git checkout --. Invoked by /al-implement when decision logic changed, or /al-refactor for legacy coverage audit. Owns preflight, mutate-build-revert cycle, classification, output.
-tools: Bash, Edit, Read, Glob
+tools: PowerShell, Edit, Read, Glob
 model: sonnet
 ---
 
 # al-agentic-dev:al-mutate
 
 Inject one mutation at a time into production code, run `/al-build`, classify, revert. Survivors are the point — each is a coverage gap or a documented equivalent.
+
+All output is telegraphic — BC vocabulary, structured facts, no prose.
 
 ## Preflight (gate)
 
@@ -78,4 +80,4 @@ Every survivor needs a decision before the report ships:
   - **Surviving mutants** — actionable section: gaps and equivalents with rationale.
   - **Killed mutants table** — mutation site → catching test.
 - **`tasks.md` line** appended to the calling task (when invoked from `/al-implement`):
-  `**Mutations:** N killed, M equivalent (reason: …), K survivors`
+  `**Mutations:** N killed, M equivalent (reason: …), K survivors`. Telegraphic — one line only.

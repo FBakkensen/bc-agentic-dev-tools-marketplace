@@ -7,6 +7,8 @@ description: Pick a Gherkin-ready task from tasks.md and run TDD on it for AL/Bu
 
 Pick the next ready task from `tasks.md`. Run TDD per Gherkin bullet, gate every red→green with `/al-build`, refactor while green, then mutation-test. Update `tasks.md`. Stop. **One task, one session.**
 
+All output is telegraphic — BC vocabulary, structured facts, no prose.
+
 **Resolve target paths:**
 - **Spec folder:** branch must match `^\d{3}-` → `specs/<branch>/tasks.md` and `specs/<branch>/architecture.md`. Otherwise `Stop.` and run `/al-design` first.
 - **Task input:** task entry must carry a `**Tests**` block from `/al-refine`. If missing, `Stop.` and run `/al-refine <T-NNN>` first.
@@ -23,7 +25,7 @@ Prefer parallel subagents for independent work and output-heavy steps.
 6. **Green.** Smallest production change that turns the test green. No speculative code. Run `/al-build` — confirm green.
 7. **`/al-refactor`.** Improve shape while green; seed the checklist from `architecture.md`'s brownfield touchpoints. May add tests when uncovered branches surface. Run `/al-build` — must stay green.
 8. **Repeat 5–7** for each remaining Gherkin bullet on the task.
-9. **Mutation plan.** If decision logic changed (see *When to mutate*), append a `**Mutations**` block per `/al-mutate` *Canonical mutation block* — one row per mutation site in `/al-mutate` priority order, with an expected killer named pre-run. Otherwise: `**Mutations:** skipped — no decision logic changed`.
+9. **Mutation plan.** If decision logic changed (see *When to mutate*), append a `**Mutations**` block per `/al-mutate` *Canonical mutation block* — one row per mutation site in `/al-mutate` priority order, with an expected killer named pre-run. Otherwise: `**Mutations:** skipped — no decision logic changed`. Telegraphic.
 10. **Second opinion (gate)** on the mutation list — mandatory when decision logic changed.
 11. **Commit WIP.** Mandatory before `/al-mutate` runs — its preflight requires `git status` empty so revert is `git checkout --` against a known-good baseline. Stage all task work (tests, production, scaffolding, `**Mutations**` block, `[~]`) and commit. Skip if `/al-mutate` is skipped.
 12. **`/al-mutate`.** Mandatory when decision logic changed. Dispatch `Agent(subagent_type: 'al-agentic-dev:al-mutate')` with the calling task ID + `**Mutations**` block.
@@ -42,7 +44,7 @@ Cross-check the mutation list via the `al-agentic-dev:al-second-opinion` agent. 
 
 **Prompt body shape:** mutation list + production code it targets + operator priority + *"what mutations are missing or misaligned? AND does this surface any of the seven replan triggers? Return a bulleted list."* The agent prepends the role frame and applies the canonical safety envelope.
 
-Reconcile each returned bullet — accept (update list) or reject with one-line Notes. No silent skip. `/grill-me` when judgement needs the user. If the agent returns `Second opinion skipped: <reason>`, paste it verbatim as a Notes line and proceed.
+Reconcile each returned bullet — accept (update list) or reject with a reason. No silent skip. `/grill-me` when judgement needs the user. If the agent returns `Second opinion skipped: <reason>`, note it in session and proceed.
 
 ## Replan check (gate)
 
@@ -97,4 +99,5 @@ Walk all seven triggers. Hard-halt sets `[!]`, appends `**Replan** trigger #N: <
 
 - No re-refinement (Gherkin fixed) or re-architecting (`architecture.md` fixed) — when wrong, the Replan check halts; `/al-steer` clears, then `/al-refine` or `/al-design` reworks.
 - No restructuring `tasks.md` beyond status updates, the `[!]` halt, `**Replan**` Notes lines, and the `**Mutations**` section.
+- `tasks.md` Notes entries are telegraphic forward-facing facts — each independently actionable by a future agent, no prose.
 - No replan mutations — that's `/al-steer`.

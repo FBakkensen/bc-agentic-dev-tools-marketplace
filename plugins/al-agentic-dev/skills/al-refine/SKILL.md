@@ -7,6 +7,8 @@ description: One task → numbered Gherkin scenarios for AL/Business Central. Re
 
 Fill the `**Tests**` block for one task in `tasks.md`. Read `architecture.md`, explore the codebase, confirm the per-scenario layer, walk the replan gate, write Gherkin bullets. One task per run. Stop — `/al-implement` consumes it next.
 
+All output is telegraphic — BC vocabulary, structured facts, no prose.
+
 **Resolve `tasks.md`:** branch matches `^\d{3}-` → `specs/<branch>/tasks.md`. Otherwise `Stop.` — run `/al-design`. Task is `[!]` → `Stop.` — `T-X is [!], run /al-steer to clear the replan.` `architecture.md` missing in the spec folder → `Stop.` — run `/al-design`.
 
 ## Flow
@@ -20,7 +22,7 @@ Prefer parallel subagents for independent work and output-heavy steps.
 5. **Draft** numbered scenarios in ZOMBIES order — Zero first, then Many, Boundaries, Exceptions. Both positive and negative cases. Use the canonical block shape below. BC vocabulary as compression — field/codeunit/table names, no explanation. Plain Markdown, no AL code.
 6. **Second opinion (gate)** — mandatory for non-trivial. See *Second opinion*.
 7. **Replan check (gate)** — walk all seven triggers. See *Replan check*.
-8. **Write** the `**Tests**` block (and optional `**Notes**` line) into the task entry. `Stop.`
+8. **Write** the `**Tests**` block (and optional `**Notes**` line) into the task entry. Telegraphic. `Stop.`
 
 ## Canonical Gherkin block
 

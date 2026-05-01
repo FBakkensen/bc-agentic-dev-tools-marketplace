@@ -7,6 +7,8 @@ description: Verify AL/Business Central specifics from authoritative sources bef
 
 Verify AL/Business Central facts from authoritative sources before acting. Treat your own AL knowledge as untrusted until corroborated. The caller has already searched the workspace — `/al-research` answers what the codebase cannot. Stop at the first source that answers definitively. Return findings to the caller; persist nothing.
 
+All output is telegraphic — BC vocabulary, structured facts, no prose.
+
 ## Precondition
 
 Workspace already explored. If the answer lives in the current repo, the caller reads it directly — do not invoke `/al-research`.
@@ -50,7 +52,7 @@ If prior knowledge feels uncertain, default to verifying.
 
 ## Output
 
-Short findings note to the caller — question, answer, source, one-line citation each. No code edits. No `tasks.md` edits. No durable artifact writes.
+Short findings note to the caller — question, answer, source, one-line citation each. Telegraphic. No code edits. No `tasks.md` edits. No durable artifact writes.
 
 ## Composition
 
