@@ -1,6 +1,6 @@
 # release-notes
 
-Generate release notes from analysis of merged PRs since the last release.
+Generate release notes from per-PR analysis of merged work since the last release.
 
 ## Layout
 
@@ -8,15 +8,17 @@ Generate release notes from analysis of merged PRs since the last release.
 skills/release-notes/
 ├── SKILL.md
 ├── scripts/
-│   └── Get-ReleaseAnalysis.ps1   # produces .output/releases/release-analysis.jsonl
+│   └── Get-ReleaseAnalysis.ps1    # produces .output/releases/release-analysis.jsonl
 └── references/
-    ├── pr-classification.md       # PR classification + Deep Dive protocol
-    ├── output-format.md           # release notes template
-    └── content-guidelines.md      # tone/style rules
+    ├── pr-classification.md       # per-PR classification + Deep Dive Protocol
+    ├── output-format.md           # final markdown template
+    └── content-guidelines.md      # tone, phrasing, Good/Bad entries
 ```
 
 ## Editing rules
 
-- The JSONL contract between `Get-ReleaseAnalysis.ps1` and SKILL.md is load-bearing: `type == "summary"` (one record) and `type == "pr"` (one per PR). Don't change the script's output schema without updating SKILL.md's loading steps.
-- The context-management strategy (todo descriptions hold per-PR analysis so the main context stays small) is the reason this skill works on large releases — preserve it when refactoring.
-- Output path is fixed: `.output/releases/RELEASE-NOTES-<VERSION>.md`. Downstream tooling may depend on this.
+- **JSONL contract is load-bearing.** `Get-ReleaseAnalysis.ps1` emits one `type == "summary"` record and one `type == "pr"` record per PR. SKILL.md's load steps depend on these names. Do not change the script's output schema without updating SKILL.md and `pr-classification.md` in lockstep.
+- **Per-PR todo descriptions are the buffer.** The skill writes each PR's single-line JSON result into that PR's todo description so main context never holds the diff. This is *the* reason this skill works on releases with many PRs — preserve it when refactoring. The named anti-pattern is `**Anti-pattern: collapse all PR context into the main agent.**`
+- **Output path is fixed.** `.output/releases/RELEASE-NOTES-<VERSION>.md`. Downstream tooling reads this exact path.
+- **Reference-doc split.** `pr-classification.md` (per-PR protocol), `output-format.md` (markdown template), `content-guidelines.md` (tone). Each owns one concern — do not merge them.
+- **Six classifications.** `feature`, `improvement`, `bugfix`, `breaking`, `technical`, `exclude`. Adding a seventh changes the output template and the classification table.

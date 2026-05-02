@@ -1,87 +1,93 @@
-# BC/AL Design Patterns
+# BC/AL design patterns
 
-Canonical patterns documented at https://alguidelines.dev/docs/patterns/, embedded here so `/al-design` can pick one per module without external lookup.
+Reference vocabulary for `/al-design`. Pick **one pattern per module**. If a pattern needs explaining, the module shape is wrong — reshape, don't rename.
 
-Pick **one pattern per module**. If a pattern needs explaining, it's wrong for AL — pick a different one or reshape the module.
+Each entry follows the same shape: **What** / **When** / **When not** / **Structure** / **_Avoid_:** (named misuse → anti-pattern). Anti-patterns are named so reviews can call them by name.
+
+Source: https://alguidelines.dev/docs/patterns/.
 
 ---
 
 ## Façade
 
-**What:** A unified, simplified interface to complex subsystems. Hides implementation details behind an easy-to-understand façade, creating a clear public API while keeping internal complexity private.
+**What:** A unified, simplified interface to complex subsystems. Single `Access = Public` codeunit fronts a cluster of `Access = Internal` workers. The façade is depth made visible — small interface, large implementation behind it.
 
-**When:** Whenever you build a functional group or independent system with a distinct API. System Application modules (Azure Blob Services, Barcode, Cryptography Management) are canonical examples.
+**When:** A functional group with a distinct API that callers should never reach past. System Application modules (Azure Blob Services, Barcode, Cryptography Management) are canonical examples. Two-adapter rule applies if the façade fronts a swappable subsystem; otherwise, façade-without-seam is still legitimate when the value is locality and discoverability.
+
+**When not:** When external apps must extend the subsystem. Hiding implementation also hides extension points — choose Generic Method or Event Bridge instead.
 
 **Structure:**
-- **Façade (public)** — single codeunit with `Access = Public`. All methods documented. Methods contain no logic — they delegate.
-- **Subsystem (internal)** — one or more codeunits with `Access = Internal`. Holds the actual business logic. Inaccessible externally.
+- **Façade (public)** — single codeunit with `Access = Public`. Methods documented. Methods contain delegation, not logic.
+- **Subsystem (internal)** — one or more codeunits with `Access = Internal`. Holds the business logic. Inaccessible externally.
 
-**Benefits:** Decoupling (callers cannot depend on internals), maintainability (rewrite internals without breaking the contract), testability (test the façade's contract).
-
-**When not to use:** Hiding implementation details also prevents external extension points — use judgement when extensibility is primary.
+**_Avoid_:** **Pass-through façade** (anti-pattern) — façade methods that just forward call-by-call to one internal codeunit, no aggregation, no hiding. Fails the deletion test: delete the façade and complexity doesn't reappear across callers, it just shifts one hop. Either deepen (move real logic up, hide more behind), or delete and let callers depend on the internal codeunit directly.
 
 ---
 
 ## Event Bridge
 
-**What:** A dedicated, isolated codeunit containing only publisher events corresponding to an interface, so multiple implementations of the same interface raise consistent events.
+**What:** A dedicated codeunit containing only `IntegrationEvent` publishers, raised by every implementation of a shared AL `interface`. Every adapter raises consistent events through one bridge.
 
-**When:** Interface-based architectures where multiple implementations need shared, consistent events that external apps may subscribe to.
+**When:** Interface-based architectures where two-or-more implementations need shared, consistent events that external apps may subscribe to. The two-adapter rule earns its keep here — one implementation does not justify a bridge.
+
+**When not:** Single implementation. One adapter = hypothetical seam — wait for the second.
 
 **Structure:**
-- **Bridge codeunit** — houses `[IntegrationEvent(false, false)]` procedures. Named to match the interface (e.g. interface `"IScale"` → bridge `"IScale Triggers"`).
+- **Bridge codeunit** — houses `[IntegrationEvent(false, false)]` procedures. Named to match the AL `interface` (interface `"IScale"` → bridge `"IScale Triggers"`).
 - **Implementation codeunits** — instantiate the bridge codeunit and invoke its events.
-- **Naming:** interface and bridge share a common prefix for discoverability.
+- **Naming:** AL `interface` and bridge share a common prefix for discoverability.
 
-**When not to use:** Only implement events that logically apply across all implementations. Don't over-engineer with events specific to a single implementation.
+**_Avoid_:** **Per-implementation event drift** (anti-pattern) — adapters publish their own events because "this one's special." Subscribers then bind to one adapter. The contract breaks the moment a second adapter ships. Only events that logically apply across all adapters belong on the bridge; if an event truly is implementation-specific, it does not belong in the seam at all.
 
 ---
 
 ## Generic Method
 
-**What:** A standardised structure for one significant piece of business logic — posting documents, batch operations — encapsulated in a dedicated codeunit with a single public entry point and an extensibility surface.
+**What:** A standardised three-layer structure for one significant business operation — posting documents, batch operations — with a single public entry point and an extensibility surface (`OnBefore` / `OnAfter` with `IsHandled`).
 
-**When:** Significant business operations. Not for validation code, helper functions, or trivial logic.
+**When:** Significant business operations where extensibility is part of the contract. Document posting, large batch jobs, anything other apps will hook.
+
+**When not:** Validation, helpers, or trivial logic. The pattern's overhead — UI / Event / Method layering — is wasted if the operation is small or has no extension story.
 
 **Structure (three layers):**
 1. **UI layer** — manages dialogs and interaction via a `HideDialog` parameter.
-2. **Event layer** — exposes `OnBefore` and `OnAfter` integration events (with `IsHandled` flags so subscribers can override or disable functionality).
-3. **Method layer** — contains the actual business logic in a `Do…` procedure.
+2. **Event layer** — exposes `OnBefore` and `OnAfter` integration events with `IsHandled` flags so subscribers can override or disable functionality.
+3. **Method layer** — the actual business logic in a `Do…` procedure.
 
 The codeunit is exposed through a table or codeunit procedure for IntelliSense discoverability.
 
-**Benefits:** Extensibility (events let dependent apps hook in), decoupling (`IsHandled` flags), testability (single responsibility), maintainability.
-
-**When not to use:** Validation, helpers, or non-method logic. Use judgement on what counts as a "method."
+**_Avoid_:** **Validation dressed as Generic Method** (anti-pattern) — wrapping a validation procedure or helper in the three-layer ceremony. The events get no subscribers, the UI layer is empty, the `Do…` procedure is the only thing that ever runs. Use a plain procedure on a focused codeunit instead.
 
 ---
 
 ## Template Method
 
-**What:** A skeleton algorithm defined in a template codeunit, with specific steps delegated to interface implementations. The template owns the procedural flow; implementations own the details.
+**What:** A skeleton algorithm in a template codeunit with specific steps delegated to AL `interface` implementations. The template owns the procedural flow; adapters own the details.
 
-**When:** Related problems sharing identical workflows — document posting, report generation, data export. Improves maintainability by preventing "different solutions" for the same flow.
+**When:** Related problems sharing identical workflows — document posting, report generation, data export. Stops "different solutions" emerging for the same flow. Two-adapter rule must hold — one variant is not a Template Method, it's just a codeunit.
+
+**When not:** Implementations diverge substantially. If two data exports differ in shape (one exports header + lines, the other only header), use separate templates instead of forcing a shared one.
 
 **Structure (three components):**
-1. **Template codeunit** — defines the procedural flow without implementation details.
-2. **Interface** — specifies required procedures for implementations.
-3. **Implementation codeunit(s)** — concrete classes implementing the interface.
+1. **Template codeunit** — defines the procedural flow; calls into the AL `interface` for the variant steps.
+2. **AL `interface` object** — specifies required procedures.
+3. **Implementation codeunit(s)** — adapters realising the AL `interface`.
 
-**Benefits:** Readability and consistency, simplified addition of new cases, reduced cognitive load (developers focus on details, not the overall flow).
-
-**When not to use:** When implementations differ substantially. If two data exports diverge significantly (e.g. one exports header + lines, the other exports only header), use separate templates instead of forcing a shared one.
+**_Avoid_:** **Forced commonality** (anti-pattern) — flattening genuinely different workflows into a single template by stuffing the differences into wide AL `interface` parameters or `case`-on-type branches inside adapters. The template stops being a flow and becomes a router. Split into two templates the moment a variant carries shape-changing branches.
 
 ---
 
 ## Error Handling
 
-**What:** A structured approach to surfacing system issues to users — emphasising error *collection* (accumulating multiple errors during one operation) rather than halting at the first failure.
+**What:** Structured error *collection* — accumulating multiple validation failures during one operation and surfacing them together, instead of halting at the first failure. Built on `TryFunctions` and `GetLastErrorText`.
 
-**When:** Multiple validation errors might occur in a single process; you want to give users comprehensive feedback rather than one-issue-at-a-time interruptions.
+**When:** Multiple validation errors might occur in a single process and users benefit from comprehensive feedback (mass-import, document posting with many lines, batch validation).
 
-**Structure:** `TryFunctions` and `GetLastErrorText` to capture exceptions without halting; collect failures across an operation, then present them together. Microsoft Learn has the full error-collection mechanism details.
+**When not:** Single validation, or where the first failure invalidates everything that follows. Don't collect errors when collecting them is misleading.
 
-**Benefits:** User-friendly comprehensive feedback; transparent, actionable error messages; balances robustness with usability.
+**Structure:** `TryFunctions` capture exceptions without halting; collect failures across the operation; present them together at the end. Microsoft Learn covers the full collection mechanism.
+
+**_Avoid_:** **Silent collection** (anti-pattern) — gathering errors and forgetting to surface them, or surfacing them in a place users don't read (a hidden table, a log line). Collected errors that aren't shown are worse than first-failure-halt: the user thinks the operation succeeded.
 
 ---
 
@@ -89,39 +95,41 @@ The codeunit is exposed through a table or codeunit procedure for IntelliSense d
 
 **What:** Track which fields appear in an API request body by registering them in a temporary `Field` table during validation, so the API can distinguish *unset* from *set-to-default*.
 
-**When:** API operations that need to enforce mandatory fields, distinguish insert vs modify behaviour, prevent specific fields from being changed during certain operations, or apply templates without overwriting API-provided data.
+**When:** API operations enforcing mandatory fields, distinguishing insert vs modify, blocking specific fields during certain operations, or applying templates without overwriting API-provided data.
+
+**When not:** Internal callers or UI flows. The pattern exists because the API surface can't otherwise tell "absent" from "default" — non-API callers don't have the ambiguity.
 
 **Structure:** Store field numbers in a temporary `Field` record during `OnValidate` triggers. Reference the fieldset during `OnInsertRecord` and `OnModifyRecord` for conditional logic.
 
-**Key warning:** Without field registration, the API cannot tell "explicitly set to default" from "unspecified" — both reach the trigger as the same value, blocking validation and rule enforcement.
+**_Avoid_:** **Default-as-absent** (anti-pattern) — assuming a field's default value means the caller didn't send it. Without registration, both reach the trigger as the same value, blocking validation and rule enforcement, and the bug is invisible until a customer sets a field to its default deliberately.
 
 ---
 
 ## Delegate API Operation
 
-**What:** Move data manipulation (insert / modify / delete) from API pages into dedicated codeunits, giving you control over the order of business logic relative to record persistence.
+**What:** Move data manipulation (Insert / Modify / Delete) out of API pages into dedicated codeunits. Gives explicit control over the order of business logic relative to record persistence.
 
-**When:** You need logic before record persistence, default values during creation, temporary-buffer use, or `OnValidate` triggers operating on records that already exist.
+**When:** Logic must run before record persistence; default values must be set during creation; temporary buffers are involved; `OnValidate` triggers must operate on records that already exist.
 
-**Structure:** Create a codeunit with internal procedures taking record parameters. Return `false` from page triggers (`OnInsertRecord`, `OnModifyRecord`, `OnDeleteRecord`) after delegating to the codeunit.
+**When not:** Plain CRUD without ordering needs. The pattern's cost is the indirection; pay it only when ordering or pre-persistence work demands it.
 
-**Key benefit:** Bypasses delayed-insert behaviour on API pages; enables complex business logic before persistence.
+**Structure:** Codeunit with internal procedures taking record parameters. Page triggers (`OnInsertRecord`, `OnModifyRecord`, `OnDeleteRecord`) delegate to the codeunit and return `false`.
 
-**Warning:** Codeunit procedures must update the record parameters with final results so API responses reflect actual state.
+**_Avoid_:** **Stale response record** (anti-pattern) — codeunit procedures mutate a local copy and forget to update the record parameter. The page returns the pre-mutation state; the API response disagrees with what was actually written. Always update the record parameter with final state.
 
 ---
 
 ## Command Queue
 
-**What:** Sequential execution of multiple independent processes via an interface (`ICommand` with `Execute()`) and a Queue codeunit that manages entries. Each command implements the interface independently.
+**What:** Sequential execution of independent processes through an AL `interface` (`ICommand` with `Execute()`) and a Queue codeunit that owns the entries. Each command is one adapter.
 
-**When:** Several independent processes need to run successively — posting multiple orders, cascading operations — without spaghetti control flow. Each process handles its own error handling.
+**When:** Several independent processes need to run in sequence — posting multiple orders, cascading operations — without spaghetti control flow. Each adapter handles its own errors.
 
-**Structure:** Interface `ICommand` with `Execute()`. Queue codeunit holding entries. Implementations attach via the interface.
+**When not:** Controlling a single process; persistent / mission-critical sequences; anything that must survive a service restart. The queue lives in memory only.
 
-**Key warning:** The queue lives in memory only. Service restart loses it. Not suitable for critical, persistent operations needing durability.
+**Structure:** AL `interface` `ICommand` with `Execute()`. Queue codeunit holding entries. Adapters attach via the AL `interface`.
 
-**When not to use:** Controlling a single process. Persistent / mission-critical sequences.
+**_Avoid_:** **Persistent-illusion queue** (anti-pattern) — using Command Queue for operations that must survive process restart (long-running posting batches, scheduled jobs). The queue evaporates on restart; half-executed sequences leave inconsistent state. For durable work, use Job Queue Entries or persisted command tables — not this pattern.
 
 ---
 
@@ -129,13 +137,13 @@ The codeunit is exposed through a table or codeunit procedure for IntelliSense d
 
 **What:** BC's standard system for generating sequential, alphanumeric identifiers for master records and documents. Tracks usage, supports date-driven structures, controls manual entry permissions.
 
-**When:** Unique data entities like Customers or Sales Orders that need automatic numbering.
+**When:** Unique data entities — Customers, Sales Orders, custom master records — needing automatic numbering with manual-override semantics.
 
-**Avoid for:** Permanently-recorded entries (ledger Entry No.), mutable working data (journal Line No.).
+**When not:** Permanently-recorded entries (ledger Entry No. fields — these are sequence-stamped at posting time, not from a series), mutable working data (journal Line No. — this is line ordering, not identity).
 
-**Structure:** Define a `Code[20]` field for the number and another field for the series ID. `OnInsert` trigger calls `NoSeries.GetNextNo()` (BC v24+) after validating setup. `OnValidate` of the number field calls `NoSeries.TestManual()` when users override.
+**Structure:** `Code[20]` field for the number plus a field for the series ID. `OnInsert` calls `NoSeries.GetNextNo()` (BC v24+) after validating setup. `OnValidate` of the number field calls `NoSeries.TestManual()` when users override.
 
-**Warning:** BC v24+ deprecated `NoSeriesManagement` in favour of `codeunit "No. Series"` with streamlined methods. Use the new codeunit on v24+.
+**_Avoid_:** **Legacy `NoSeriesManagement`** (anti-pattern on v24+) — BC v24 deprecated `NoSeriesManagement` in favour of codeunit `"No. Series"` with streamlined methods. New code on v24+ that still calls the deprecated codeunit ages instantly. Use the new codeunit.
 
 ---
 

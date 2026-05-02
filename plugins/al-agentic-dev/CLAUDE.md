@@ -1,74 +1,88 @@
 # al-agentic-dev
 
-Composable skills for AL/Business Central agentic development. Two persistent layers — repo-root memory (`CONTEXT.md`, `docs/adr/`, `.out-of-scope/`) that survives merges, and branch-scoped feature state (`specs/<NNN>-<slug>/architecture.md` + `tasks.md`) per in-flight feature.
+Composable skills for AL/Business Central agentic development.
 
-| Skill | Role |
-|---|---|
-| `al-steer` | Coach/navigator — reads state, recommends next step, never edits code. Owns `.out-of-scope/`. |
-| `al-grill-adr` | Domain-aware grilling — sharpens BC vocabulary, updates `CONTEXT.md`, offers domain ADRs only (no design picks; those defer to `/al-design`). Standalone-callable. |
-| `al-design` | Idea → feature architecture: module map, BC patterns, R→P→W boundary, brownfield touchpoints, test strategy, parallel design-twice. Creates branch + `architecture.md`. |
-| `al-scope` | `architecture.md` → bare task list (Goal + `T-NNN` entries, ZOMBIES order). Reads, no grilling, no branch creation. |
-| `al-refine` | One task → numbered Gherkin scenarios (per task, not per feature). |
-| `al-implement` | Pick a Gherkin-ready task, run TDD (red → green → refactor → mutate). |
-| `al-refactor` | Improve shape while green; no new behaviour. |
-| `al-mutate` | Inject mutations to validate test rigor; mandatory for non-trivial work. Skill dispatches the `al-agentic-dev:al-mutate` agent (in `agents/al-mutate.md`). |
-| `al-research` | Verify BC specifics from authoritative sources. |
+## Persistence layers
+
+Two layers, on purpose.
+
+- **Repo-root, durable across features** — `CONTEXT.md`, `docs/adr/`, `.out-of-scope/`. Owners: `/al-grill-adr` (CONTEXT + domain ADRs), `/al-design` (design ADRs), `/al-steer` (out-of-scope).
+- **Branch-scoped, per in-flight feature** — `specs/<NNN>-<slug>/architecture.md` + `tasks.md`. The slug matches the current git branch.
+
+`tasks.md` is the per-feature task bus. Status markers: `[ ]` ready, `[~]` in progress, `[x]` done, `[!]` blocked. `T-NNN` IDs are monotonic and never reused.
 
 ## Pipeline
 
 ```
-/al-grill-adr   →  /al-design  →  /al-scope  →  /al-refine  →  /al-implement  →  /al-refactor  →  /al-mutate
-(CONTEXT, ADRs)    (architecture.md,    (tasks.md)     (per-task    (TDD per task)    (improve     (test-rigor
-                    branch)                            Gherkin)                       shape)        gate)
+/al-grill-adr  →  /al-design  →  /al-scope  →  /al-refine  →  /al-implement  →  /al-refactor  →  /al-mutate
+(CONTEXT, ADRs)   (architecture,   (tasks.md)    (per-task        (TDD per task)    (improve      (test-rigor
+                   branch)                       Gherkin)                          shape)        gate)
 
 side-band: /al-research, /al-steer (replan venue + .out-of-scope)
 ```
 
+## Skills
+
+| Skill | Role |
+|---|---|
+| `/al-steer` | Coach/navigator. Reads state, names next step, never edits code. Owns `.out-of-scope/`. |
+| `/al-grill-adr` | Domain-aware grilling. Sharpens BC vocabulary, updates `CONTEXT.md`, offers domain ADRs only. |
+| `/al-design` | Idea → feature architecture. Module map, BC patterns, R→P→W boundary, brownfield touchpoints, test strategy, parallel design-twice. Creates branch + `architecture.md`. |
+| `/al-scope` | `architecture.md` → bare task list. Goal + `T-NNN` entries in ZOMBIES order. No grilling, no branch creation. |
+| `/al-refine` | One task → numbered Gherkin scenarios. Per task, not per feature. |
+| `/al-implement` | Pick a Gherkin-ready task, run TDD: red → green → refactor → mutate. |
+| `/al-refactor` | Improve shape while green. No new behaviour. |
+| `/al-mutate` | Inject mutations to validate test rigor. Mandatory for non-trivial work. Dispatches the `al-agentic-dev:al-mutate` agent. |
+| `/al-research` | Verify BC specifics from authoritative sources. |
+
+Skills compose by name. When you change a skill, scan the others for cross-references and update in lockstep.
+
+## Replan
+
+`/al-steer` is the canonical replan venue. The seven triggers: task too big, hidden pre-req, wrong order, sibling now wrong, new behaviour emerges, architecture decomposition wrong, goal drift. Replan-check gates in `/al-refine`, `/al-implement`, `/al-refactor` either hard-halt (set `[!]`, stop) or soft-flag (append a Notes line, continue).
+
 ## Editing rules
 
-- **New skills need a stated purpose.** Adding a skill is fine when it earns its place. Before proposing one, check:
-  - whether an existing skill can absorb the work,
-  - whether the artifact fits as a `tasks.md` Notes line, an `/al-research` finding, or a side-band reference inside an existing skill, and
-  - only then propose, with one explicit line stating the gap and why no existing skill fits.
-- **No enumerated reference checklists.** Adequacy disciplines belong in `/al-mutate`'s loop; refinement disciplines belong in `/al-refine` prose. Static checklists in references rot fast and fight the prose. Reference docs are vocabulary and durable formats only — `LANGUAGE.md`, templates — never enumerations.
-- Each SKILL.md states naming/vocabulary inline rather than relying on CLAUDE.md — keep that pattern (the skills run in projects without this CLAUDE.md present).
-- Skills compose by name (`/al-build`, `/grill-me`, `/bc-standard-reference`, etc.). When changing a skill, scan the others for cross-references.
-- `tasks.md` is the per-feature task bus, located at `specs/<NNN-slug>/tasks.md` where `NNN-slug` matches the current git branch. Status markers: `[ ]` ready, `[~]` in progress, `[x]` done, `[!]` blocked, replan needed. Task IDs `T-NNN` are monotonic and never reused.
-- `architecture.md` lives alongside `tasks.md` in the spec folder. Written by `/al-design`, read by `/al-scope`/`/al-refine`/`/al-implement`/`/al-refactor`. Not edited in place — reshape via `/al-design` re-run.
-- `CONTEXT.md`, `docs/adr/`, `.out-of-scope/` live at repo root. Durable across features. Owned by `/al-grill-adr`, `/al-design`, `/al-steer` respectively.
-- **Lazy template materialisation.** Repo-root and spec-folder files are created only when first needed, copied from `${CLAUDE_SKILL_DIR}/references/*.template.md`. `/al-design` owns the canonical templates (`CONTEXT.template.md`, `adr.template.md`, `architecture.template.md`, plus the read-only `LANGUAGE.md`); `/al-steer` owns `out-of-scope.template.md`. Cross-skill paths within this plugin use `${CLAUDE_SKILL_DIR}/../<skill>/references/`.
-- `/al-steer` is the canonical replan venue. Replan-check gates in `/al-refine`, `/al-implement`, `/al-refactor` halt or soft-flag on the seven named triggers (task too big, hidden pre-req, wrong order, sibling now wrong, new behavior emerges, architecture decomposition wrong, goal drift). Hard-halt sets `[!]` and stops; soft-flag appends a Notes line and continues.
+- **Each SKILL.md states naming and BC vocabulary inline.** Skills run in projects without this CLAUDE.md present. Do not lean on it.
+- **No inline citations in durable artifacts.** `(see: file.al:120)` is forbidden in `architecture.md`, `tasks.md`, `CONTEXT.md`, ADRs, `.out-of-scope/`. Names are the citation — `NALICFCopyDocSubscribers.OnAfterInsertToSalesLine` is the address. Future readers grep; the IDE gives line numbers for free.
+- **Diagrams are gates, not defaults.** `architecture.md` only — at most one structural `## Module diagram` and one behavioural `## Flow`, each gated by the trigger in `references/architecture.template.md`. Mermaid only. ADRs and every other durable artifact are text only.
+- **`architecture.md` is reshape-only.** Written by `/al-design`, read by everyone downstream. Never edit in place — re-run `/al-design`.
+- **New skills need a stated gap.** _Avoid_: spinning up a skill that an existing one can absorb, or that fits as a `tasks.md` Notes line, an `/al-research` finding, or a side-band reference. Propose only when no existing skill fits, and say so in one line.
 
-## Skill style budget
+## Lazy template materialisation
 
-Hard rules for every SKILL.md, prompt, and template in this plugin.
+Repo-root and spec-folder files are created on first need by copying from `${CLAUDE_SKILL_DIR}/references/*.template.md`.
 
-- **100-line cap per SKILL.md.** Excess goes to `references/`. Splits go by content type, not by length — vocabulary, templates, pattern catalogues. Never an enumerated checklist.
-- **Voice: imperative, hierarchy in one line.** *"Run `/al-research` before naming the pattern, then check it against current BaseApp examples."* One sentence carries the rule and the order. Don't break a single decision across multiple bullets.
-- **Frontmatter description = one capability sentence + one trigger sentence.** Mirror `/grill-me`: *"Use when …"*. The description earns the dispatch.
-- **No Background, Overview, Why-this-matters, Welcome.** State the rule. Don't justify it.
-- **No hedging.** *"You might consider"* → *"Do X"* or delete. Hard stops are literal: when a precondition fails, write `Stop.` and name the prerequisite skill.
-- **Tables for shaped lists** — situation→action menus, priority lists, materialisation maps. Bullets only when shape varies between rows.
-- **Bold lead-ins as inline labels** on bullets — `**Real gap** → write a test...`.
-- **Canonical examples ≤10 lines, one per skill, only when the format is opaque without it** (Gherkin block, `tasks.md` entry). No worked-out before/after.
+| Template | Owner skill |
+|---|---|
+| `CONTEXT.template.md` | `/al-design` |
+| `adr.template.md` | `/al-design` |
+| `architecture.template.md` | `/al-design` |
+| `out-of-scope.template.md` | `/al-steer` |
 
-## Durable artifact rules
+`LANGUAGE.md` lives alongside these templates as a read-only vocabulary reference (owned by `/al-design`); it is not materialised into spec folders.
 
-Apply to every file the agent writes into the target repo: `architecture.md`, `tasks.md`, `CONTEXT.md`, ADRs, `.out-of-scope/` notes.
+Cross-skill paths within this plugin: `${CLAUDE_SKILL_DIR}/../<skill>/references/`.
 
-- **No inline citations in any durable artifact.** `(see: file.al:120)` is forbidden. Verify before writing; the conversation transcript carries the trail. Names are the citation — `NALICFCopyDocSubscribers.OnAfterInsertToSalesLine` is the address; future readers grep, the IDE gives line numbers for free.
-- **Map, not memoir.** Rationale lives in ADRs (when load-bearing — passes the four ADR gates) or conversation. Never in `architecture.md`. No `Notes` dumping ground.
-- **Diagrams gated, never default.** `architecture.md` only — max 2 (one structural `## Module diagram`, one behavioural `## Flow`). Each must clear its trigger and line cap — see `references/architecture.template.md`. Mermaid only; no ASCII art, no PlantUML, no image references. ADRs and every other durable artifact: text only.
-- **No future-roadmap sketches.** What ships now ships now. The next feature's design is `/al-design`'s next run.
-- **One sentence per slot.** Goal/Problem/Solution lines, Risk lines, ADR leads, brownfield touchpoint notes — bound to one sentence unless the format explicitly grants more.
-- **ADR length: 1–3 sentences.** `Considered Options` and `Consequences` are gated, not free — see `references/adr.template.md`.
+## Skill / agent split
+
+Most skills stay skill-only — `/al-design`, `/al-refine`, `/al-grill-adr`, `/al-steer` need full reasoning. An agent earns the pattern only on three signals:
+
+- tight tool needs (a small allowlist),
+- output-heavy iteration (mutate-build-revert, advisory call-and-format),
+- a focused operational system prompt that would otherwise dilute the parent skill.
+
+Two agents currently qualify:
+
+- **`agents/al-mutate.md`** — preflight, canonical `**Mutations**` block, mutation classes, survivor classification, BC safety, output. Tools: `PowerShell, Edit, Read, Glob`. Dispatched by `/al-implement` step 14.
+- **`agents/al-second-opinion.md`** — read-only advisory call against copilot CLI. Tool allowlist (`view,rg,glob,show_file,lsp`), 600s timeout, failure formatting. Tools: `PowerShell` only. **Windows-only** — `Start-Job`/`Wait-Job` targets pwsh on Windows; portability is a future concern. Dispatched by `/al-implement`, `/al-refine`, `/al-refactor` at their Second-opinion gates.
 
 ## Layout
 
 ```
 agents/
-├── al-mutate.md            # Plugin agent — invoked by /al-implement step 12
-└── al-second-opinion.md    # Plugin agent — advisory copilot CLI gate; invoked by /al-implement, /al-refine, /al-refactor
+├── al-mutate.md            # Invoked by /al-implement step 14
+└── al-second-opinion.md    # Advisory copilot CLI gate
 skills/
 ├── al-design/
 │   ├── SKILL.md
@@ -94,13 +108,4 @@ skills/
         └── out-of-scope.template.md
 ```
 
-No build scripts. Skill bodies + agent definitions + reference templates are the entire product.
-
-## Skill / agent split
-
-Two plugin agents live alongside skills, each earning the pattern via tight tool needs + focused operational system prompt.
-
-- **`agents/al-mutate.md`** — preflight, canonical `**Mutations**` block, flow, mutation classes, survivor classification, BC safety, output. Tools: `Bash, Edit, Read, Glob`. Dispatched by `/al-implement` step 12.
-- **`agents/al-second-opinion.md`** — read-only advisory call against copilot CLI. Owns canonical invocation, tool allowlist (`view,rg,glob,show_file,lsp`), role frame, 600s timeout, failure formatting. Tools: `PowerShell` only. **Windows-only** — `Start-Job`/`Wait-Job` invocation targets pwsh on Windows; portability is a future concern. Dispatched by `/al-implement`, `/al-refine`, `/al-refactor` at their respective Second-opinion gates.
-
-Generalize to other skills only when the case earns it: tight tool needs, output-heavy iteration, focused operational system prompt. Most skills (`/al-design`, `/al-refine`, `/al-grill-adr`, `/al-steer`) need full reasoning — they stay skill-only.
+No build scripts. Skill bodies, agent definitions, and reference templates are the entire product.

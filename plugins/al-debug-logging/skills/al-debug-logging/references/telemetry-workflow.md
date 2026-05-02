@@ -1,44 +1,37 @@
-# Temporary Debug Logging Workflow
+# Temporary debug logging workflow
 
-A short workflow for using `DEBUG-*` `FeatureTelemetry.LogUsage` probes to inspect AL runtime behavior. This is temporary scaffolding, not production telemetry.
+Reference for `/al-debug-logging`. The skill body has the contract; this expands the loop, the same-publisher constraint, and correlation discipline.
 
-## Why Probes At All
+## When to probe
 
-An AI agent reading AL source cannot watch a debugger step through code. When the runtime behavior diverges from what the source seems to say — a branch is unexpectedly skipped, a subscriber does not fire, a posting routine takes the wrong path — there is no built-in way to *see* what happened. `DEBUG-*` probes are the agent's substitute for stepping through code: they emit one fact per probe to `telemetry.jsonl`, where the agent can correlate events after the fact.
-
-This is symmetric for both directions of confusion:
+An AI agent reading AL source cannot watch a debugger step through code. `DEBUG-*` probes emit one fact per call to `telemetry.jsonl`. Correlate after the fact. Symmetric on both directions of confusion:
 
 | Question | Probe answers |
-|----------|---------------|
-| "The result is wrong — which branch produced it?" | Probes on each branch reveal which one ran. |
-| "The result is right — but did the code actually exercise the path I think?" | Probes confirm or refute the assumed path. |
+|---|---|
+| Result is wrong — which branch produced it? | Probes on each branch reveal which one ran. |
+| Result is right — but did the code exercise the path I think? | Probes confirm or refute the assumed path. |
 
-A passing assertion (or a successful posting, or a clean upgrade) does not, by itself, prove which code ran. Probes do.
+A passing assertion does not prove which code ran. Probes do.
 
-## Probes Are Always Temporary
+## Loop
 
-Expected starting state: zero `DEBUG-*` calls anywhere in the working tree. If you see existing `DEBUG-*` calls when you start, they are leftover scaffolding from previous work — either finish that work or remove them before adding new probes.
+Starting state: zero `DEBUG-*` calls in tree. End state: zero `DEBUG-*` calls in tree.
 
-Lifecycle:
+1. Add probes for the current hypothesis.
+2. Run the harness that exercises the AL path.
+3. Read telemetry from the harness's capture path (see Capture path below).
+4. Refine — move, narrow, add a peer probe — until answered.
+5. Remove every `DEBUG-*` call before hand-off.
 
-1. Start clean (no `DEBUG-*` anywhere).
-2. Add `DEBUG-*` probes for the current hypothesis.
-3. Run the harness that exercises the AL path.
-4. Read `.output/TestResults/telemetry.jsonl`.
-5. Refine probes (move, narrow, add peer probes) until the question is answered.
-6. Remove every `DEBUG-*` call before hand-off.
+## Hypothesis
 
-End state: zero `DEBUG-*` calls anywhere.
-
-## The Hypothesis-Driven Loop
-
-**Step 1 — name the question.** A vague "let me see what's happening" produces noisy probes that don't narrow anything down. Phrase the hypothesis as something a single probe can answer:
+Phrase the question so a single probe can answer:
 
 - "Does `OnAfterPostSalesDoc` fire when posting an order with zero lines?"
 - "Is the `IsHandled` short-circuit on our pricing extension hit during a price calculation for customer X?"
 - "Does the upgrade codeunit reach the migration branch on a database that already has rows?"
 
-**Step 2 — add the smallest probe that answers it.** One probe at the decision point. If the answer is binary, prefer two peer probes (one per branch) over a single probe that has to reason about the answer.
+Smallest probe that answers it. One probe at the decision point. Binary answer → two peer probes, one per branch.
 
 ```al
 if SalesLine.FindFirst() then begin
@@ -50,76 +43,88 @@ end else begin
 end;
 ```
 
-**Step 3 — emit a scope-identifying entry probe when correlation matters.** When several probes will fire and you need to distinguish runs (multiple tests, multiple posted documents, repeated subscriber invocations), emit a `DEBUG-ENTRY` (or `DEBUG-<Scope>-START`) at the start of the scope you control:
+## Correlate with `DEBUG-ENTRY`
+
+When several probes fire and runs need separating (multiple tests, multiple posted documents, repeated subscriber invocations), emit `DEBUG-ENTRY` (or `DEBUG-<Scope>-START`) at the start of the scope you control:
 
 ```al
 FeatureTelemetry.LogUsage('DEBUG-ENTRY', 'Investigation', 'PostScenario: invoice with item charge');
 ```
 
-In `telemetry.jsonl` everything between two `DEBUG-ENTRY` entries belongs to the first scope. This is the single most useful correlation tool when probes inside shared code (subscribers, library codeunits, BaseApp events) fire from many callers.
+Everything between two `DEBUG-ENTRY` entries belongs to the first scope. The single most useful correlation tool when probes inside shared code (subscribers, library codeunits, BaseApp events) fire from many callers.
 
-**Step 4 — pick a harness and run it.** The harness is whatever fires the AL code under observation. Common harnesses in BC:
+```
+DEBUG-ENTRY            -> PostScenario: invoice with item charge
+DEBUG-POSTING-LINES    -> Count=3
+DEBUG-PRICING-FALLBACK -> V16 calculator returned UnitPrice=0
+DEBUG-ENTRY            -> PostScenario: credit memo
+DEBUG-POSTING-NOLINES  -> No lines path
+```
+
+## Pick a harness
+
+Whatever fires the AL code. Common in BC:
 
 - A manual page action.
-- A posted document (sales, purchase, item journal, etc.).
+- A posted document (sales, purchase, item journal).
 - A web service / API call.
 - An install or upgrade codeunit run.
 - A scheduled job queue task.
 - An event subscriber that fires under a standard BC flow.
-- A test, run via `/al-build` — convenient because the BC test runner reliably produces `telemetry.jsonl`, but only one option among the above.
+- A test via `/al-build` — convenient because the BC test runner reliably produces `telemetry.jsonl`. One option among the above, not the only one.
 
-The probes work identically under any harness that runs in the same publisher.
+Probes work identically under any harness in the same publisher.
 
-**Step 5 — inspect.** Open `.output/TestResults/telemetry.jsonl` and look for the probe event IDs.
+## Capture path
 
-```text
-# rg
-rg "DEBUG-" .output/TestResults/telemetry.jsonl
-rg "DEBUG-ENTRY" .output/TestResults/telemetry.jsonl
-```
+The capture path depends on the harness:
 
-```powershell
-# PowerShell
-Select-String -Path .output/TestResults/telemetry.jsonl -Pattern "DEBUG-"
-```
+- `/al-build` test harness → `.output/TestResults/telemetry.jsonl`. Inspect with:
 
-Useful fields per entry: `eventId`, `message`, `customDimensions`, `callStack`. When a test was the harness, `testCodeunit` and `testProcedure` are also populated.
+  ```text
+  rg "DEBUG-" .output/TestResults/telemetry.jsonl
+  rg "DEBUG-ENTRY" .output/TestResults/telemetry.jsonl
+  ```
 
-**Step 6 — refine or remove.** If the probe answered the hypothesis, delete it and move on. If not, refine: tighten the message, add a peer probe at the next decision point, or move the probe earlier or later in the flow. Avoid leaving probes "just in case" — they will be forgotten and will pollute future telemetry.
+  ```powershell
+  Select-String -Path .output/TestResults/telemetry.jsonl -Pattern "DEBUG-"
+  ```
 
-## Correlation Example
+- Page action, posted document, web service, install/upgrade, job queue, manual subscriber trigger → no `telemetry.jsonl` produced by `/al-build`. Capture via Application Insights, the BC server's telemetry sink, or a local Telemetry Logger codeunit configured to write to a known path. Confirm where the host environment surfaces `FeatureTelemetry` events before running.
 
-```
-DEBUG-ENTRY            → PostScenario: invoice with item charge
-DEBUG-POSTING-LINES    → Count=3
-DEBUG-PRICING-FALLBACK → V16 calculator returned UnitPrice=0
-DEBUG-ENTRY            → PostScenario: credit memo
-DEBUG-POSTING-NOLINES  → No lines path
-```
+Useful fields per entry: `eventId`, `message`, `customDimensions`, `callStack`. When a test was the harness, `testCodeunit` and `testProcedure` are populated.
 
-Reading top-down: each `DEBUG-ENTRY` opens a new scope; everything until the next `DEBUG-ENTRY` belongs to the previous scope. This converts an undifferentiated stream of subscriber and branch events into per-scenario timelines.
+## Refine or remove
 
-## Mismatch Between Probe and Result
+Answered: delete the probe. Not answered: tighten the message, add a peer probe at the next decision point, or move earlier / later in the flow.
 
-The most useful failure mode of probes: when the probes contradict the result. A document posted "successfully" but the probes show the no-lines branch ran — that mismatch is itself the diagnosis. Without probes, the symptom alone (success) hides the bug.
+_Avoid_:
 
-## Same-Publisher Constraint
+- Probes left "just in case" — they pollute future telemetry.
+- Probes wrapped around a decision instead of inside the chosen branch.
+- More than two probes per question. Narrow the hypothesis.
 
-`FeatureTelemetry.LogUsage` is captured by a Telemetry Logger codeunit that subscribes to the platform's telemetry events. Capture only happens when the emitting code and the Telemetry Logger live in extensions with the **same publisher** in `app.json`.
+## Read the mismatch
 
-If probes produce no entries:
+Most useful failure mode: probes contradict the result. Document posted "successfully" but probes show the no-lines branch ran. The mismatch is the bug. Without probes, the symptom alone (success) hides it.
 
-- Confirm the harness ran (test pass/fail, document posted, codeunit invoked).
-- Check the publisher of the extension where the probe lives matches the publisher of the extension hosting the Telemetry Logger.
-- Verify a `Telemetry Logger` codeunit is present and registered as a subscriber in that publisher's extension.
+## Same-publisher constraint
 
-The constraint is on publishers, not on test-vs-app — production, test, upgrade, install, and subscriber code can all emit, as long as the publisher matches.
+`FeatureTelemetry.LogUsage` is captured by a Telemetry Logger codeunit subscribing to the platform's telemetry events. Capture only happens when the emitting code and the Telemetry Logger live in extensions with the **same publisher** in `app.json`.
 
-## Probe Hygiene
+Probes silent:
 
-- Use `FeatureTelemetry.LogUsage` (not `Session.LogMessage`).
-- Always start the event ID with `DEBUG-` so probes are trivial to grep and remove.
-- Use stable, descriptive suffixes (`DEBUG-PRICING-FALLBACK`, not `DEBUG-1`).
-- Use `Format()` for non-text values in the message or in custom dimensions.
-- Do not include secrets, credentials, tokens, PII, or full record bodies. Log counts, IDs, enum values, booleans — shape, not contents.
-- Before hand-off: `rg "DEBUG-"` should return nothing in the working tree (excluding this skill's own documentation). If a probe is intentionally left behind for ongoing investigation, add a comment naming the issue so a future cleanup pass knows it is deliberate.
+1. Confirm the harness ran (test pass/fail, document posted, codeunit invoked).
+2. Check the publisher of the extension where the probe lives matches the publisher hosting the Telemetry Logger.
+3. Verify a `Telemetry Logger` codeunit exists and is registered as a subscriber in that publisher's extension.
+
+Constraint is on publishers, not on test-vs-app. Production, test, upgrade, install, and subscriber code all emit, as long as the publisher matches.
+
+## Hygiene
+
+- `FeatureTelemetry.LogUsage`. Not `Session.LogMessage`.
+- Event IDs start with `DEBUG-`. Cleanup is one `rg`.
+- Stable, descriptive suffixes (`DEBUG-PRICING-FALLBACK`, not `DEBUG-1`).
+- `Format()` for non-text values in messages or custom dimensions.
+- Drop list: full record bodies, PII, credentials, tokens, secrets. Counts, IDs, enum values, booleans only — shape, not contents.
+- Hand-off precondition: `rg "DEBUG-" --type al` returns nothing in the working tree. If a probe is deliberately retained, comment with the issue so the next pass sees it.

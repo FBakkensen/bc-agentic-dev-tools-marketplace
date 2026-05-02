@@ -1,71 +1,39 @@
-# Scenario Walkthroughs
+# Scenarios
 
-## Force a Specific Customer Price in V16 Price Calculation
+Walkthroughs for recurring questions. Each follows the four-step procedure: Identify → Search → Inspect → Cross-check. Findings carry file path, object name + ID, and event signature — never a vague summary.
 
-### Step 1: Identify Standard Objects and Events
+## Force a customer-specific price in V16 price calculation
 
-Focus on standard pricing codeunits and events:
-- `Price Calculation - V16`
-- `Sales Line - Price`
-- `Price Calculation Mgt.`
+1. **Identify** — `Price Calculation - V16`, `Sales Line - Price`, `Price Calculation Mgt.` are the standard pricing codeunits.
+2. **Search** — narrow to `BaseApp/Source/Base Application/Sales/Pricing/` (or `Pricing` at the relevant level for your version) and locate `Price Calculation - V16`.
+3. **Inspect** — confirm: how price sources are selected, which events publish during calculation, the seam where a customer-specific override fits cleanly.
+4. **Cross-check** — verify the V16 contract on Microsoft Learn before committing to a hook point.
 
-### Step 2: Narrow Scope (Optional)
+Return: file path, codeunit ID, event signature, recommended hook.
 
-If you have extension code, search it for existing pricing event subscribers (e.g., `OnAfterCalcBestAmount`) to align with current behavior and signatures.
+## Block partial posting of sales orders
 
-### Step 3: Confirm in the Standard Source
+1. **Identify** — `Sales-Post`, `Sales-Post (Yes/No)` hold the posting flow.
+2. **Search** — locate `OnBeforePostSalesDoc` in `Sales/Posting`. Read the declaration.
+3. **Inspect** — confirm where validation happens before the actual post; check whether the extension already subscribes to a related posting event to avoid duplicate logic.
+4. **Cross-check** — Learn for the canonical posting contract and partial-posting behaviour.
 
-Search the standard mirror for `Price Calculation - V16` within the Pricing domain. Open the file and inspect:
-- How price sources are selected
-- Which events are published during calculation
-- The best hook point to enforce a customer-specific price
+Return: codeunit name + ID, event signature, hook position relative to existing subscribers.
 
----
+## Find events that fire during sales order release
 
-## Block Partial Posting of Sales Orders
+1. **Identify** — `Release Sales Document` is the codeunit.
+2. **Search** — open the file. Search within for `IntegrationEvent`, `OnBefore`, `OnAfter`.
+3. **Inspect** — trace the release flow. Order matters — note when each event fires relative to status update.
+4. **Cross-check** — Learn for the documented release contract.
 
-### Step 1: Identify Posting Codeunits
+Return: codeunit ID, the ordered list of event signatures with their position in the flow.
 
-Focus on standard posting codeunits:
-- `Sales-Post`
-- `Sales-Post (Yes/No)`
+## Understand standard test setup for sales documents
 
-### Step 2: Locate the Posting Event
+1. **Identify** — `Library - Sales` is the helper library.
+2. **Search** — locate the codeunit in `BaseApp/Test/Tests-TestLibraries`. Search within for `CreateSalesOrder`, `CreateSalesHeader`, `CreateSalesLine`.
+3. **Inspect** — read the helpers. Note which use `LibraryRandom`, which require setup, which return the inserted record.
+4. **Cross-check** — match against existing test scaffolding in the workspace; mirror only what fits the project's test layer.
 
-Search the standard mirror for the posting events (e.g., `OnBeforePostSalesDoc`) within `Sales/Posting`. Open the file and confirm where validation happens before posting.
-
-### Step 3: Validate the Event Choice
-
-Confirm the event signature and check whether your extension already subscribes to a related posting event to avoid duplicate logic.
-
----
-
-## Find Events That Fire During Sales Order Release
-
-### Step 1: Find the Release Codeunit
-
-Identify the standard codeunit `Release Sales Document`.
-
-### Step 2: List Events in the Codeunit
-
-Search within the codeunit for event publishers and `OnBefore`/`OnAfter` procedures to find release-related events.
-
-### Step 3: Inspect the Implementation
-
-Open the file in the standard mirror and trace the release flow to see exactly when each event fires.
-
----
-
-## Understand Standard Test Setup for Sales Documents
-
-### Step 1: Find the Test Library
-
-Locate the test library `Library - Sales`.
-
-### Step 2: Find Helper Methods
-
-Look for helper procedures such as `CreateSalesOrder` and other setup utilities.
-
-### Step 3: View Implementation
-
-Open the library in the standard mirror to see how standard tests set up sales documents and related data.
+Return: library codeunit name, helper procedure signatures, dependencies on other libraries.

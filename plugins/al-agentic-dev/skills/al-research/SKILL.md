@@ -5,32 +5,47 @@ description: Verify AL/Business Central specifics from authoritative sources bef
 
 # /al-research — Verify BC specifics
 
-Verify AL/Business Central facts from authoritative sources before acting. Treat your own AL knowledge as untrusted until corroborated. The caller has already searched the workspace — `/al-research` answers what the codebase cannot. Stop at the first source that answers definitively. Return findings to the caller; persist nothing.
-
-All output is telegraphic — BC vocabulary, structured facts, no prose.
+Treat your own AL/BC knowledge as untrusted. Quote the canonical source, return one finding per question, persist nothing. The caller has already searched the workspace — `/al-research` answers what the codebase cannot.
 
 ## Precondition
 
-Workspace already explored. If the answer lives in the current repo, the caller reads it directly — do not invoke `/al-research`.
+Workspace already explored. If the answer lives in the current repo, the caller reads it directly. Stop.
 
 ## Source priority
 
-Top-down. Stop at the first source that answers definitively. Don't browse past a hit.
+Top-down. Stop at the first source that answers definitively. Don't browse past a hit. If sources disagree, surface the conflict — do not pick silently.
 
 | # | Source | Tools | Use for |
 |---|---|---|---|
-| 1 | **AL symbols** | `mcp__al-symbols-mcp__al_search_objects`, `al_get_object_definition`, `al_get_object_summary`, `al_search_object_members`, `al_find_references`, `al_packages` | Definitions, signatures, references, members in dependencies you can't open. |
-| 2 | **`/bc-standard-reference`** | skill | BaseApp behaviour, standard publishers, reference patterns. |
-| 3 | **bc-knowledge MCP** | `mcp__bc-knowledge__find_bc_knowledge`, `ask_bc_expert`, `get_bc_topic` | Curated BC knowledge graph and topics. |
-| 4 | **Microsoft Learn** | `mcp__plugin_microsoft-docs_microsoft-learn__microsoft_docs_search`, `microsoft_docs_fetch`, `microsoft_code_sample_search` | Official, version-current docs. |
-| 5 | **context7** | `mcp__context7__resolve-library-id`, `query-docs` | External libraries / SDKs. |
+| 1 | **AL symbols** | `mcp__al-symbols-mcp__al_search_objects`, `al_get_object_definition`, `al_get_object_summary`, `al_search_object_members`, `al_find_references`, `al_packages` | The workspace's own symbols and dependencies. |
+| 2 | **`/bc-standard-reference`** | skill | BaseApp, System Application, APIV2 canonical behaviour. |
+| 3 | **bc-knowledge** | `mcp__bc-knowledge__find_bc_knowledge`, `ask_bc_expert`, `get_bc_topic`, `analyze_al_code` | BC concepts and patterns. |
+| 4 | **Microsoft Learn** | `mcp__plugin_microsoft-docs_microsoft-learn__microsoft_docs_search`, `microsoft_docs_fetch`, `microsoft_code_sample_search` | Official, version-current MS docs. |
+| 5 | **context7** | `mcp__context7__resolve-library-id`, `query-docs` | External library / framework / SDK docs. Rare for AL. |
 | 6 | **Web** | search | Last resort. AL/BC web content rots fast — treat with suspicion. |
 
-If sources disagree, surface the conflict — don't pick silently.
+## Situation → action
+
+| Question | Source |
+|---|---|
+| Need an event publisher in BaseApp. | `/bc-standard-reference` |
+| Need a posting flow's exact entry codeunit and signature. | `/bc-standard-reference` |
+| Need to know whether table T exists in 25.0. | `mcp__al-symbols-mcp__al_packages` + `al_search_objects` |
+| Need the field type / length of an existing extension table. | `mcp__al-symbols-mcp__al_get_object_definition` |
+| Need every caller of a procedure in the workspace. | `mcp__al-symbols-mcp__al_find_references` |
+| Need an event signature inside a dependency `.app` you can't open. | `mcp__al-symbols-mcp__al_get_object_summary` + `al_search_object_members` |
+| Need conceptual guidance — dimension propagation, install/upgrade contract, AppSource gate, permission inheritance, RDLC convention. | `mcp__bc-knowledge__*` |
+| Need API contract for an external integration. | `mcp__plugin_microsoft-docs__*` |
+| Need a non-AL library / SDK signature. | `mcp__context7__*` |
+| Nothing above answers and the question is BC-specific. | Stop. Report unanswerable. |
+
+## Verify before trusting training data
+
+Training data is thin and stale on BC version-specific behaviour — event signatures, install/upgrade contracts, AppSource gates, etc. Verify, do not recall. The Situation → action table above maps concrete questions to the right source.
 
 ## When the caller must run it
 
-Mandatory before non-trivial actions in the callers below. The caller spawns `/al-research` per claim, often in parallel.
+Mandatory before non-trivial actions in the callers below. Caller spawns `/al-research` per claim, often in parallel.
 
 | Caller | Research what |
 |---|---|
@@ -44,19 +59,28 @@ If prior knowledge feels uncertain, default to verifying.
 
 ## Discipline
 
-- **Verify, don't paraphrase.** Quote the canonical source for any behavioural claim.
-- **One-line citation per finding** — source path, symbol, or URL — in the return note. Never inline citations into durable artifacts; the caller decides what (if anything) to persist, and durable docs cite by name only.
-- **Stop when actionable.** Don't browse past a definitive answer.
-- **Parallel sub-agents** for independent claims — one research call per claim, dispatched together.
-- **Treat your own AL knowledge as untrusted** until corroborated.
+**Quote, don't paraphrase.** Every behavioural claim ships verbatim with a one-line citation — source path, symbol, or URL.
+
+| | Finding |
+|---|---|
+| _Avoid_: | Sales posting validates blocked customers before inserting ledger entries. |
+| Use: | `Cust.TestField(Blocked, Cust.Blocked::" ")` — `Codeunit 80 "Sales-Post"`, `OnRun → CheckCustomerBlockage`. |
+
+Citations live in the return note only — never inline into durable artifacts. The caller decides what to persist; `architecture.md`, `tasks.md`, `CONTEXT.md`, ADRs cite by name. Stop browsing the moment an answer is actionable. Dispatch independent claims as parallel sub-agents — one call per claim.
+
+_Avoid_:
+
+- Trusting training data on BC version specifics.
+- Web-searching before checking BaseApp via source #1 or #2.
+- Hedging — "might", "I think", "probably". A claim without a source is not a finding; drop it or verify it.
 
 ## Output
 
-Short findings note to the caller — question, answer, source, one-line citation each. Telegraphic. No code edits. No `tasks.md` edits. No durable artifact writes.
+Findings note to the caller. Per finding: question, answer, source, one-line citation. No code edits. No `tasks.md` edits. No durable artifact writes.
 
 ## Composition
 
-`/grill-me` when the research question itself is unclear and needs framing. `/bc-standard-reference` is source #2 in the priority chain — reachable directly when the question is purely BaseApp behaviour. Caller decides whether a finding earns a line in `architecture.md`, `CONTEXT.md`, or an ADR.
+`/grill-me` when the research question itself is unclear and needs framing. `/bc-standard-reference` is source #2 — reachable directly when the question is purely BaseApp behaviour. Caller decides whether a finding earns a line in `architecture.md`, `CONTEXT.md`, or an ADR.
 
 ## Out of scope
 

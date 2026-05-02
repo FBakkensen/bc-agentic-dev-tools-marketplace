@@ -1,67 +1,79 @@
 ---
 name: bc-standard-reference
-description: "Locate canonical Business Central Standard behavior (BaseApp, System Application, APIV2, etc.) to identify events, event publishers, codeunits, tables/fields, tests, pages, codeunits, APIs, etc.. Use when you need standard behavior, event signatures, or reference implementation patterns."
+description: "Locate canonical Business Central Standard behavior (BaseApp, System Application, APIV2, etc.) to identify events, event publishers, codeunits, tables/fields, tests, pages, APIs, etc. Use when you need standard behavior, event signatures, or reference implementation patterns."
 ---
 
-# BC Standard Reference
+# /bc-standard-reference — Canonical BaseApp lookup
 
-Use the canonical mirror of the Business Central Standard repo `fbakkensen/bc-w1` to locate events, APIs, tables, fields, tests, and implementation patterns. The focus is on *what* to find and *how to reason about it*, not on any specific tools.
+Go to the canonical mirror. Quote, don't paraphrase. Return file path, object name + ID, event signature, hook point — never a vague summary.
 
-## When to Use
+The mirror is `fbakkensen/bc-w1` — BaseApp, System Application, APIV2, ExternalEvents, test framework. Source #2 in `/al-research`'s priority table.
 
-- Finding events to subscribe to (e.g., "What events fire when posting a sales order?")
-- Understanding standard implementations (e.g., "How does BC calculate line discounts?")
-- Locating test patterns (e.g., "How do standard tests set up sales documents?")
-- Finding API implementations (e.g., "How does the APIV2 handle customer creation?")
-- Discovering table fields and their purposes
-- Learning how BC implements a specific feature
+## When to use
 
-## What You Need
+| Question | What you want back |
+|---|---|
+| What events fire when posting a sales order? | Event publisher list with signatures + file paths in `Sales/Posting`. |
+| How does BC calculate line discounts? | Codeunit name + ID, the procedure that holds the logic, the events around it. |
+| How do standard tests set up sales documents? | Library codeunit name + helper procedure signature. |
+| How does APIV2 expose customers? | API page name + ID + exposed fields. |
+| Where are field X's triggers / validations? | Table name + ID + field declaration with trigger code. |
+| Which codeunit holds release logic for sales documents? | Codeunit name + ID + the `OnBefore`/`OnAfter` events it publishes. |
 
-- Target domain (Sales, Purchases, Inventory, etc.)
-- Object name or behavior you're investigating
-- Optional: event name or API endpoint if you already know it
+If the workspace itself answers, read it directly. Stop. This skill is for behaviour the workspace doesn't own.
 
-## Procedure (Tool-Agnostic)
+## Procedure
 
-### Step 1: Identify Standard Objects and Events
+Tool-agnostic. Use whatever symbol-discovery, repo-search, or browse method you have — MCP server, dependency metadata, raw grep, web UI. _Avoid_: prescribing one tool as the only path.
 
-Identify the relevant codeunits, tables, pages, and events for the behavior you need. Use any symbol discovery method available to you (dependency metadata, symbols, reference notes, or docs).
+1. **Identify** — name the codeunit, table, page, or event you're after. Use known object/event names where possible. Symbol metadata, dependency packages, or a quick `/al-research` hit at source #1 narrows the target before you search the mirror.
+2. **Search the mirror** — query `fbakkensen/bc-w1` by object/event name, narrow by domain path (`Sales/Posting`, `Pricing`, `Inventory`). Goal: the exact file that declares the object or publishes the event.
+3. **Inspect** — open the file. Confirm the declaration (name + ID), the event signature, the surrounding flow. Don't trust a name match without reading the declaration.
+4. **Cross-check** — official Microsoft Learn docs for AL syntax, BC concepts, version-current behaviour. _Avoid_: trusting training data on BC version specifics — verify against the mirror or Learn.
 
-### Step 2: Search the Standard Source Mirror
+**Anti-pattern: prescribe a specific MCP server.** The procedure is tool-agnostic. Cite tools by name only as examples; describe the search heuristic.
 
-Search the repo `fbakkensen/bc-w1` using object/event names and narrow by domain paths (e.g., Sales/Posting, Pricing, Inventory). Your goal is to find the exact file that defines the object or publishes the event.
+## Findings cadence
 
-### Step 3: Inspect Implementation
+Per finding, return:
 
-Open the candidate file and confirm:
-- The object declaration (name/ID)
-- The event publisher and signature (if relevant)
-- The implementation flow surrounding the event or behavior
+- **File path** in the mirror.
+- **Object name + ID** (e.g., `codeunit 80 "Sales-Post"`).
+- **Event signature** verbatim (parameters, modifiers, attribute).
+- **Hook point or reference pattern** — the recommended event/seam, or the procedure to mirror.
+- **One-line citation** — repo path or symbol address.
 
-### Step 4: Cross-Check Official Documentation
+_Avoid_: paraphrasing docs, vague summaries, or naming a source without quoting its content.
 
-Use official documentation to confirm AL syntax, BC concepts, and best practices that contextualize what you saw in source.
+**Anti-pattern: paraphrase a finding without quoting.** Behavioural claims carry the verbatim signature. If you can't quote it, you didn't read it.
 
-## Outputs / Success Criteria
+**Anti-pattern: source name, not source content.** *"It's in `Sales-Post`"* is not a finding. Quote the line. Cite the declaration.
 
-- File path(s) in the standard mirror
-- Object name and ID
-- Event signature(s) and publisher location
-- A recommended hook point or reference pattern
+**No:** *"Found pricing logic in `Sales/Pricing`."*
+**Yes:** *"`codeunit 7002 \"Sales Line - Price\"` at `BaseApp/Source/Base Application/Sales/Pricing/SalesLinePrice.Codeunit.al` publishes the `OnAfter…` events used by V16 calculation; subscribe at the post-calc seam."*
 
-## Subagent Exploration (Optional)
+## Subagent dispatch
 
-For open-ended questions, delegate to a subagent with a focused brief:
+For open-ended questions, spawn a subagent with a focused brief:
 
 ```
-Search the standard mirror `fbakkensen/bc-w1` for [topic]. Identify candidate files, inspect implementations, and report back with relevant events, patterns, and example locations.
+Search the standard mirror `fbakkensen/bc-w1` for [topic].
+Return: file path, object name + ID, event signature, recommended hook point.
+Quote source content, don't paraphrase. Tool-agnostic — use whatever search you have.
 ```
 
-## References
+## Composition
 
-For detailed examples and repository structure:
+`/al-research` lists this skill as source #2 — reachable directly when the question is purely BaseApp / System Application / APIV2 behaviour. For BC concepts and patterns rather than a specific source location, the caller routes to source #3 (`mcp__bc-knowledge__*`). For AL syntax and version-current Microsoft docs, source #4 (`mcp__plugin_microsoft-docs__*`).
 
-- [Repository Structure](./references/repo-structure.md) - Full folder layout and key paths
-- [Search Patterns](./references/search-patterns.md) - Tool-agnostic search heuristics
-- [Scenario Walkthroughs](./references/scenarios.md) - Step-by-step guides for common tasks
+Detail in:
+
+- `references/repo-structure.md` — folder layout and key paths.
+- `references/search-patterns.md` — search heuristics by object kind.
+- `references/scenarios.md` — walkthroughs for common questions.
+
+## Out of scope
+
+- No code edits, no test edits, no durable artifact writes.
+- No design picks — which event to subscribe to, where to seam, what pattern to apply belongs to `/al-design` and `/al-implement`.
+- No grilling on intent — that's `/al-grill-adr` and `/grill-me`.

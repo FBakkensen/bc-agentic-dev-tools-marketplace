@@ -1,41 +1,37 @@
-# Release Notes Output Format
+# Output Format
 
-Use this template when generating release notes.
+Render the final markdown using the template below. Skip empty sections — never emit a header with no entries underneath. User-Facing Changes always precedes Technical Summary. No PR or issue links anywhere; release notes are self-contained.
+
+Version comes from `summary.appJsonDiff.version.new` (fall back to `summary.toVersion`). BC compatibility comes from `summary.appJsonDiff.application`.
+
+## Canonical template
 
 ```markdown
-# Release Notes - Version [X.X.X]
+# Release Notes - Version <X.Y.Z>
 
-**Release Date**: [Date]
-**Business Central Compatibility**: [BC version range from summary.appJsonDiff.application]
+**Release Date**: <YYYY-MM-DD>
+**Business Central Compatibility**: <BC version range from summary.appJsonDiff.application>
 
 ## User-Facing Changes
 
 ### 🚀 New Features
 
-For each PR with type "feature":
-
-- **[Feature Name based on area]**
-  - What it does (from desc)
-  - How to use it (from details)
-  - Why it matters (business value)
+- **<Feature name based on `area`>**
+  - <`desc` — what the user can now do>
+  - <`details` — how to reach it: page, action, field>
+  - <Why it matters — business value>
 
 ### ✨ Improvements
 
-For each PR with type "improvement":
-
-- **[Area]**: Description and user benefit
+- **<`area`>**: <`desc` — user benefit, not implementation>
 
 ### 🐛 Bug Fixes
 
-For each PR with type "bugfix":
-
-- **[Area]**: What was wrong and how it affected users, now resolved
+- **<`area`>**: <What was wrong, how it affected users, now resolved>
 
 ### ⚠️ Breaking Changes & Migration Notes
 
-For each PR with type "breaking":
-
-- **[Change]**: What changed and exact migration steps
+- **<`change`>**: <`migration` — exact, imperative, ordered steps>
 
 ---
 
@@ -43,28 +39,44 @@ For each PR with type "breaking":
 
 ### Architecture Changes
 
-Items with category "refactor" that affect architecture
+- <`technical` items with category `refactor` that affect architecture — one line each>
 
 ### API Changes
 
-New/modified/deprecated procedures or events
+- <New, modified, or deprecated procedures, events, or interfaces — one line each>
 
 ### Database Changes
 
-Table modifications, new fields
+- <Table additions, field additions, obsolete markers — one line each>
 
 ### Performance Optimizations
 
-Items with category "perf"
+- <`technical` items with category `perf` — one line each>
 
 ### Dependency Updates
 
-Version bumps, runtime updates (from summary.appJsonDiff)
+- <Version bumps, runtime updates, drawn from `summary.appJsonDiff` — one line each>
 ```
 
-## Section Rules
+## Slot mapping
 
-- **Skip empty sections** - Don't include headers with no content
-- **User-Facing first** - Always prioritize user-facing changes at the top
-- **No links** - Release notes should be self-contained, no PR/issue links
-- **Version from summary** - Use `summary.appJsonDiff.version.new` or `summary.toVersion`
+| Section | Source | Type filter |
+|---|---|---|
+| New Features | PR records | `type == "feature"` |
+| Improvements | PR records | `type == "improvement"` |
+| Bug Fixes | PR records | `type == "bugfix"` |
+| Breaking Changes | PR records | `type == "breaking"` |
+| Architecture Changes | PR records + judgement | `type == "technical"` AND `category == "refactor"` AND architecture-affecting |
+| API Changes | PR records + judgement | Public surface change (procedure/event/interface) |
+| Database Changes | PR records + judgement | Table or field change |
+| Performance Optimizations | PR records | `type == "technical"` AND `category == "perf"` |
+| Dependency Updates | `summary.appJsonDiff` | Runtime, platform, or dependency version delta |
+
+## Section rules
+
+- **Skip empty sections.** Drop the header entirely when no entry would land beneath it.
+- **User-Facing first.** Always above Technical Summary.
+- **No links.** No PR numbers, no issue numbers, no URLs. Names are the citation.
+- **Version from summary.** Pull from `summary.appJsonDiff.version.new` first, `summary.toVersion` as fallback. Do not infer from elsewhere.
+- **Emoji on section headers only.** Keep `🚀`, `✨`, `🐛`, `⚠️` exactly as shown — they are part of the markdown contract. Do not add emoji elsewhere in the body.
+- **Migration steps are imperative.** `Replace X with Y. Re-run upgrade codeunit. Recompile dependent extensions.` — not `It is recommended to consider replacing X.`

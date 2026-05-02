@@ -1,111 +1,98 @@
 # AL Build
 
-Self-contained build system for AL/Business Central development. No external task runners required.
+Self-contained build/test gate for AL/Business Central. No external task runners.
 
 ## Prerequisites
 
-- PowerShell 7.2+
-- Docker Desktop (for BC containers)
-- .NET SDK (for AL compiler installation)
-- [BcContainerHelper](https://github.com/microsoft/navcontainerhelper) PowerShell module
+- PowerShell 7.2+ (`pwsh`, not `powershell`).
+- Docker Desktop. Use container, not VM.
+- .NET SDK (compiler install).
+- [BcContainerHelper](https://github.com/microsoft/navcontainerhelper) PowerShell module.
 
-## Quick Start
+## Quick start
 
 ```powershell
-# 1. Install compiler and download symbols
+# 1. Install compiler, download symbols
 pwsh scripts/provision.ps1
 
-# 2. Create golden BC container (once per BC version)
+# 2. Golden BC container (once per BC version)
 pwsh scripts/new-bc-container.ps1
 
-# 3. Restart PC (required for Docker networking/hosts file changes)
+# 3. Restart PC — Docker networking + hosts file changes need it
 
-# 4. Create branch-specific agent container
+# 4. Branch-specific agent container
 pwsh scripts/new-agent-container.ps1
 
-# 5. Build and test
+# 5. Build + test
 pwsh scripts/test.ps1
 ```
 
-## Commands Reference
+## Scripts
 
-| Command | Script | Purpose |
-|---------|--------|---------|
-| `test` | `test.ps1` | **Canonical gate** - Build, publish, run tests |
-| `provision` | `provision.ps1` | One-time setup (compiler + symbols) |
-| `clean` | `clean.ps1` | Remove build artifacts |
-| `pagescript-replay` | `pagescript-replay.ps1` | Run page script YAML replays |
-| `new-bc-container` | `new-bc-container.ps1` | Create BC Docker container |
-| `commit-bc-container` | `commit-bc-container.ps1` | Commit container to snapshot image |
-| `new-agent-container` | `new-agent-container.ps1` | Create agent container from snapshot |
-| `prune` | `prune.ps1` | Remove orphaned containers |
-| `validate-breaking-changes` | `validate-breaking-changes.ps1` | Check public API changes |
+| Script | Purpose |
+|---|---|
+| `test.ps1` | **Canonical gate.** Build, publish, run tests. |
+| `init.ps1` | Drop `al-build.json` in repo root. |
+| `provision.ps1` | One-time setup (compiler + symbols). |
+| `clean.ps1` | Remove build artifacts. |
+| `new-bc-container.ps1` | Create golden BC container. |
+| `commit-bc-container.ps1` | Commit container to snapshot image. |
+| `new-agent-container.ps1` | Create agent container from snapshot. |
+| `prune.ps1` | Remove orphaned containers. |
+| `pagescript-replay.ps1` | Run page script YAML replays. |
+| `validate-breaking-changes.ps1` | Check public API changes. |
 
-## Usage Examples
-
-### First-Time Setup
-
-```powershell
-# Install compiler and download symbols
-pwsh scripts/provision.ps1
-```
-
-### Daily Development
-
-**First time**:
-1. Copy template config to repo root:
-   ```powershell
-   Copy-Item "<plugin-path>/config/al-build.json" -Destination "<repo-root>/al-build.json"
-   ```
-2. Customize `al-build.json` (especially `testAppName`)
-3. Run provision: `pwsh scripts/provision.ps1`
-
-**Every change**:
+## Daily loop
 
 ```powershell
-# Build and test (full gate)
+# Full gate
 pwsh scripts/test.ps1
 
-# Run specific test codeunit
+# Single codeunit
 pwsh scripts/test.ps1 -TestCodeunit 50123
 
-# Force republish (after container recreation)
+# Force republish (after container recreate)
 pwsh scripts/test.ps1 -Force
 ```
 
-### Container Management
+## Container management
 
 ```powershell
-# Create golden container (once per BC version)
+# Golden container — once per BC version
 pwsh scripts/new-bc-container.ps1
 
-# Commit to snapshot (after stopping)
+# Snapshot it
 docker stop bctest
 pwsh scripts/commit-bc-container.ps1
 docker start bctest
 
-# Create branch-specific agent container
+# Agent container — branch-scoped, fast spawn from snapshot
 pwsh scripts/new-agent-container.ps1
 
-# Clean up orphaned containers
-pwsh scripts/prune.ps1 -Preview  # dry run
-pwsh scripts/prune.ps1           # execute
+# Prune orphans
+pwsh scripts/prune.ps1 -Preview   # dry run
+pwsh scripts/prune.ps1            # execute
 ```
+
+**Never fix the container manually.** Restart, then delete and re-run. The scripts own reproducibility.
 
 ## Configuration
 
-### Three-Tier Resolution
+### Resolution order
 
-Configuration values are resolved in order:
+Highest wins:
 
-1. **Script parameters** — highest priority
-2. **Environment variables** — for CI/automation
-3. **Config file defaults** — `config/al-build.json`
+1. **CLI flag** — `-AppDir "src"`.
+2. **Env var** — `ALBT_APP_DIR`.
+3. **`al-build.json`** in repo root. **Required.**
+4. **Built-in defaults.**
 
-### Environment Variables
+The plugin's `config/al-build.json` is a template, not the live config. Copy it to repo root once.
+
+### Env vars
 
 | Variable | Description | Default |
-|----------|-------------|---------|
+|---|---|---|
 | `ALBT_APP_DIR` | Main app directory | `app` |
 | `ALBT_TEST_DIR` | Test app directory | `test` |
 | `WARN_AS_ERROR` | Treat warnings as errors | `1` |
@@ -117,17 +104,13 @@ Configuration values are resolved in order:
 | `ALBT_BC_ARTIFACT_COUNTRY` | BC artifact country | `w1` |
 | `ALBT_BC_ARTIFACT_SELECT` | BC version selection | `Latest` |
 
-### Project-Level Configuration
-
-**Manual Setup**: Copy the template config to your repo root:
+### Project config
 
 ```powershell
 Copy-Item "<plugin-path>/config/al-build.json" -Destination "<repo-root>/al-build.json"
 ```
 
-**Note**: Claude Code users get this automatically via session-start hook.
-
-**Customize for your project**:
+Claude Code users get this via session-start hook.
 
 ```json
 {
@@ -147,69 +130,60 @@ Copy-Item "<plugin-path>/config/al-build.json" -Destination "<repo-root>/al-buil
 }
 ```
 
-**Config Resolution Priority**:
-1. Script parameters (`-AppDir "src"`)
-2. Environment variables (`ALBT_APP_DIR`)
-3. **Project config** (`al-build.json` in repo root) ← **Required**
-
-**Note**: Plugin config is only a template - not loaded during build. Project config is required.
-
 ## Architecture
 
-### Container Strategy
+### Three-tier containers
 
-The build system uses a three-tier container approach:
+1. **Golden container** (`bctest`) — fully configured BC, all base dependencies.
+2. **Snapshot image** (`bctest:snapshot`) — committed Docker image, fast spawn.
+3. **Agent containers** — branch-scoped, derived from snapshot, named after git branch.
 
-1. **Golden container** (`bctest`): Fully configured BC container with all base dependencies
-2. **Snapshot image** (`bctest:snapshot`): Committed Docker image for fast spawning
-3. **Agent containers**: Branch-specific containers derived from snapshot (named after git branch)
+~30 seconds from snapshot vs ~10 minutes from scratch.
 
-This allows fast container creation (~30 seconds from snapshot vs ~10 minutes from scratch).
+### Incremental publish
 
-### Incremental Publish
+Skip redundant publishes via state tracking:
 
-The system tracks publish state to skip redundant operations:
+- **Source hash compare** — republish only when code changed.
+- **Container recreate detect** — force republish after recreate.
+- **Manual override** — `-Force`.
 
-- **Source file hash comparison** — Only republish when code changes
-- **Container recreation detection** — Force republish after container recreate
-- **Manual override** — Use `-Force` flag to bypass caching
-
-State files are stored per-container in the symbol cache directory.
+State files live per-container in the symbol cache directory.
 
 ## Troubleshooting
 
-### Build Failures
+### Build failures
 
-1. Check compiler output for error messages
-2. Ensure symbols are provisioned: `pwsh scripts/provision.ps1`
-3. Verify container is healthy: `docker ps`
+1. Read compiler output for errors.
+2. Symbols provisioned? `pwsh scripts/provision.ps1`.
+3. Container healthy? `docker ps`.
 
-### Test Failures
+### Test failures
 
-1. Check `.output/TestResults/last.xml` for assertion failures
-2. Use telemetry for debugging: see `telemetry-first-test-debugging` skill
-3. Run specific codeunit: `pwsh scripts/test.ps1 -TestCodeunit <id>`
+1. Read `.output/TestResults/last.xml` for assertion failures.
+2. Use telemetry — `/al-debug-logging` consumes `.output/TestResults/telemetry.jsonl`.
+3. Isolate: `pwsh scripts/test.ps1 -TestCodeunit <id>`.
 
-### Container Issues
+### Container issues
 
-1. Check container health: `docker inspect <name> --format '{{.State.Health.Status}}'`
-2. View container logs: `docker logs <name>`
-3. Recreate if unhealthy: `pwsh scripts/new-agent-container.ps1`
+1. `docker inspect <name> --format '{{.State.Health.Status}}'`.
+2. `docker logs <name>`.
+3. Recreate: `pwsh scripts/new-agent-container.ps1`.
 
-### Common Issues
+### Common
 
-| Issue | Cause | Solution |
-|-------|-------|----------|
-| "Compiler not found" | Provision not run | Run `pwsh scripts/provision.ps1` |
-| "Container unhealthy" | Docker issues | Restart Docker, recreate container |
-| "Symbol not found" | Missing dependency | Check app.json dependencies, re-provision |
-| "Test timeout" | Long-running tests | Increase timeout or isolate test |
+| Symptom | Cause | Fix |
+|---|---|---|
+| "Compiler not found" | Provision not run | `pwsh scripts/provision.ps1` |
+| "Container unhealthy" | Docker | Restart Docker, recreate container |
+| "Symbol not found" | Missing dependency | Check `app.json` deps, re-provision |
+| "Test timeout" | Long-running tests | Raise timeout or isolate the test |
 
-## Output Files
+## Output files
 
-| File | Location | Description |
-|------|----------|-------------|
-| Test results | `.output/TestResults/last.xml` | JUnit XML format |
-| Telemetry | `.output/TestResults/telemetry.jsonl` | Feature telemetry logs |
-| Build timing | `.output/logs/build-timing.jsonl` | Historical timing data |
-| Publish state | `~/.bc-symbol-cache/.../publish-state.*.json` | Incremental publish tracking |
+| File | Location |
+|---|---|
+| Test results (JUnit) | `.output/TestResults/last.xml` |
+| Telemetry | `.output/TestResults/telemetry.jsonl` |
+| Build timing | `.output/logs/build-timing.jsonl` |
+| Publish state | `~/.bc-symbol-cache/.../publish-state.*.json` |

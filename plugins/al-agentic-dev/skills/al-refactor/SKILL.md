@@ -1,65 +1,91 @@
 ---
 name: al-refactor
-description: Refactor AL/Business Central production and test code while keeping tests green — extract interfaces, apply Read → Process → Write, simplify, rename to BC vocabulary. Use after green inside /al-implement, or standalone on legacy code; may add tests when refactoring uncovers branches.
+description: Refactor AL/Business Central production and test code while keeping tests green — find deepening opportunities, apply Read → Process → Write, rename to BC vocabulary, extract real seams. Use after green inside /al-implement, or standalone on legacy code; may add tests when refactoring uncovers branches.
 ---
 
 # /al-refactor — Improve shape while green
 
-Refactor production and test code without changing behaviour. Run `/al-build` between meaningful changes. **Stop if a green test goes red.**
-
-All output is telegraphic — BC vocabulary, structured facts, no prose.
+Surface friction in AL code and reshape modules that earn their keep. Run `/al-build` between meaningful changes. Stop the moment a green test goes red.
 
 **Resolve `tasks.md`:** Branch matches `^\d{3}-`? Use `specs/<branch>/tasks.md`. Otherwise `Stop.` — run `/al-design` first. Calling task is `[!]`? `Stop.` — `T-X is [!] — run /al-steer to clear the replan.`
 
-## Flow
+**Anti-pattern: refactor while red.** Refactor only against a green build. If `/al-build` is red, the work belongs in `/al-implement` (drive to green) or in a fresh red→green cycle, not here.
 
-1. **Plan.** Write a 5–10 bullet refactor checklist for the area, drawn from *Architecture* and *Simplification* — what to extract, simplify, rename, reshape under R→P→W and BC vocabulary. If `architecture.md` exists, seed from its brownfield touchpoints.
-2. **Second opinion (gate).** See below. **No silent skip.**
-3. **Refactor.** Apply *Architecture*, *Simplification*, *AppSource*, *Naming* inline. Run `/al-build` after every meaningful change. Production and tests are first-class — refactor both.
-4. **Replan check (gate).** See below.
-
-**Standalone legacy code without tests.** Use `${CLAUDE_SKILL_DIR}/references/legacy-refactor-plan.md` — phased plan starting with "write tests first", with `/al-build` between phases. *Architecture* and *Simplification* below compose with it.
-
-## Architecture
-
-- **Testable by construction** — extract interfaces for DB I/O, time, HTTP, environment seams. Inject via overload pattern to preserve back-compat.
-- **Two adapters = real seam.** One adapter is hypothetical. Production + test usually justify; one-adapter "interfaces for testability" are speculative bloat.
-- **Read → Process → Write.** Read inputs first (DB, services, parameters), pass records-by-value or DTOs into a pure procedure, write outputs last. **The middle has no DB calls and no external calls** — unit-testable in isolation.
-- **Deletion test.** If removing a module makes complexity vanish, it was a pass-through — delete it. If removing concentrates complexity at N callers, it earned its keep. Skip when the seam is a published event with no in-tree callers.
-- **Two test surfaces.** E2E crosses `Access = Public` and survives internal refactors. Unit tests live inside the module against `Access = Internal` — especially the P layer. Internal renames break unit tests; update tests alongside, do not push tests outward.
-- **A unit test reaching past `Access = Internal`** means reshape, not widen — split the responsibility into a smaller internal codeunit.
-- Prefer standard BC patterns. If a pattern needs explaining, it is wrong for AL.
-
-## Simplification
-
-- Remove dead code, redundant guards, unused variables, dead branches.
-- Collapse equivalent test scenarios via shared setup or parameterised data — preserve `[SCENARIO]` intent.
-- Rename when the name lies. BC term over generic programming term.
-- Rename a test or edit `[SCENARIO]/[GIVEN]/[WHEN]/[THEN]`? Re-verify against the originating Gherkin bullet in `tasks.md` — if intent shifts, update the bullet alongside.
-
-## AppSource compliance
-
-- No BaseApp modification, even during refactor.
-- Never rename a shipped object, table field, page action, or procedure that other extensions may bind to. Obsolete via `ObsoleteState = Pending` then `Removed`; introduce the new name alongside.
-- Extracted interfaces and event publishers keep their signatures stable once shipped — the public surface is the contract.
-- Any new permission set entry ships in the same change. Every new `Caption` is translatable. Schema migrations route through install/upgrade codeunits.
-
-## Architectural vocabulary
+## Vocabulary
 
 Full discipline in `${CLAUDE_SKILL_DIR}/../al-design/references/LANGUAGE.md`.
 
-- **Module** — folder under `src/<module>/`, cohesive unit.
-- **Interface** — everything a caller must know: signatures, invariants, ordering, error modes, required setup. Includes but exceeds AL `interface` objects.
-- **Seam** — where behaviour can be altered without editing in place. Publisher event, AL `interface` boundary, Implementer injection point.
-- **Adapter** — concrete codeunit at a seam. **Two adapters = real seam.**
-- **Depth** — leverage at the interface. Deep = much behaviour behind a small interface.
+Use these terms exactly. Don't substitute "component," "service," "API," or "boundary." Consistent language is the point.
 
-## Naming and vocabulary
+- **Module** — anything with an interface and an implementation: a procedure, a codeunit, a folder under `src/<module>/`, or a tier-spanning slice.
+- **Interface** — everything a caller must know to use the module: signatures, invariants, ordering, error modes, required setup, permissions. Includes but exceeds the AL `interface` keyword.
+- **Implementation** — the code inside.
+- **Seam** — a place where you can alter behaviour without editing in place. Publisher event, AL `interface` boundary, `Implementation` enum injection point.
+- **Adapter** — a concrete codeunit satisfying an interface at a seam.
+- **Depth** — leverage at the interface. **Deep** = much behaviour behind a small interface. **Shallow** = interface nearly as complex as the implementation.
+- **Leverage** — what callers get from depth: capability per unit of interface they have to learn.
+- **Locality** — what maintainers get from depth: change, bugs, knowledge concentrated in one place.
 
-- **BC verbs:** Insert / Modify / Delete (records — not Create/Update/Remove). Post (not Submit). Validate (not Check). Get / Find (not Fetch). Ledger Entry (not Transaction). No. (not ID). Procedure (not Method).
+## Flow
+
+1. **Plan.** Walk the changed area and write a refactor checklist — one bullet per real gap, grouped by category: *Smells*, *Reshape*, *Naming*, *AppSource*. Drop categories with no gap. Seed from `architecture.md` brownfield touchpoints when present.
+2. **Second opinion (gate).** See below. **No silent skip.**
+3. **Refactor.** Apply the checklist inline. `/al-build` after every meaningful change. Production and tests are first-class — refactor both.
+4. **Replan check (gate).** See below.
+
+**Standalone legacy code without tests.** Use `${CLAUDE_SKILL_DIR}/references/legacy-refactor-plan.md` — phased plan starting with "write tests first," dependency-classified deepening, replace-don't-layer testing strategy.
+
+## Smells
+
+After the green build, look for:
+
+- **Duplication** — extract a procedure/codeunit. The deletion test should pass: removing the duplicate concentrates complexity at one place, not spreads it.
+- **Long methods** — break into private helpers behind `Access = Internal`. Tests stay on the public interface; helpers are not the test surface.
+- **Shallow modules** — interface nearly as complex as the implementation. Merge upward, or deepen by absorbing callers' boilerplate.
+- **Feature envy** — procedure reaches into another record/codeunit's data more than its own. Move the procedure to where the data lives.
+- **Primitive obsession** — `Code[20]` carrying meaning ("if first char is 'X' it's blocked") becomes a small record or enum.
+- **Existing code revealed.** The new test has unmasked a flaw upstream — the surrounding module is wrong, not just the diff. Note it; reshape if cheap, otherwise stop and recommend `/al-steer`.
+
+## Reshape
+
+- **Deletion test.** Imagine deleting the module. If complexity vanishes, it was a pass-through — delete it. If complexity reappears across N callers, it earned its keep — keep and probably deepen. Skip when the seam is a published event with no in-tree callers.
+- **Two adapters = real seam.** One adapter is a hypothetical seam — speculative bloat. Production + test fakes usually justify a real seam; one-adapter "interfaces for testability" do not. The prove-it threshold is two adapters that already need to coexist.
+- **Read → Process → Write.** Read inputs first (DB, services, parameters). Pass records-by-value or DTOs into a pure Process procedure. Write outputs last. **The Process layer has no DB calls and no external calls** — unit-testable in isolation.
+- **R → P → W is the reshape rule, not a label.** When a procedure mixes I/O and computation, splitting it along this line is the refactor — not annotating the existing tangle.
+- **Two test surfaces.** E2E crosses `Access = Public` and survives internal refactors. Unit tests live inside the module against `Access = Internal` — especially the Process layer. Internal renames break unit tests; update tests alongside, do not push tests outward.
+- **A unit test reaching past `Access = Internal`** signals reshape, not widen — split the responsibility into a smaller internal codeunit so the surface tells the truth.
+- **The interface is the test surface.** If you want to test past it, the module is the wrong shape.
+- Prefer standard BC patterns. If a pattern needs explaining, it is wrong for AL.
+
+## Naming
+
+Rename when the name lies. BC term over generic programming term. AL reads naturally to AL developers.
+
+| Verb | _Avoid_ |
+|---|---|
+| **Insert** (record operations) | Create, Add, New |
+| **Modify** (record operations) | Update, Change, Set |
+| **Delete** (record operations) | Remove, Drop, Destroy |
+| **Post** | Submit, Process, Commit |
+| **Validate** | Check, Verify, Ensure |
+| **Get** / **Find** | Fetch, Retrieve, Load, Query |
+| **Ledger Entry** | Transaction, History, Movement |
+| **No.** | ID, Identifier, Code |
+| **Procedure** | Method, Function, Routine |
+
 - **Objects:** `"Prefix Feature Suffix"` — suffixes `Impl`, `Card`, `List`, `Ext`, `Test`.
 - **Records** match the table name (`Customer`, `SalesHeader`). Primitives descriptive (`TotalBalance`, `IsBlocked`).
 - **Procedures** PascalCase, verb-first. **Events:** `OnBefore{Action}{Object}`, `OnAfter{Action}{Object}`.
+- **Tests** PascalCase scenario name (`PostSalesOrderWithItemCharge`), not `GivenX_WhenY_ThenZ`.
+
+**Gherkin sync rule.** Renaming a test or editing `[SCENARIO]/[GIVEN]/[WHEN]/[THEN]`? Re-verify against the originating Gherkin bullet in `tasks.md`. If intent shifts, update the bullet alongside via `/al-refine`.
+
+## AppSource
+
+- **Anti-pattern: rename across published API.** Never rename a shipped object, table field, page action, or procedure that other extensions may bind to. Obsolete via `ObsoleteState = Pending` then `Removed`; introduce the new name alongside. Internal-only symbols (`Access = Internal`, unpublished codeunits) rename freely.
+- Extracted interfaces and event publishers keep their signatures stable once shipped — the public surface is the contract.
+- No BaseApp modification, even during refactor.
+- Any new permission set entry ships in the same change. Every new `Caption` is translatable. Schema migrations route through install/upgrade codeunits.
 
 ## Second opinion (gate)
 
@@ -67,7 +93,7 @@ Cross-check the refactor checklist via the `al-agentic-dev:al-second-opinion` ag
 
 **Invoke:** `Agent(subagent_type: 'al-agentic-dev:al-second-opinion', prompt: <body>)`.
 
-**Prompt body shape:** the area + the checklist + *"what is missing for R→P→W, BC vocabulary, simplification, and AppSource compliance?"*. Ask for a bulleted list of gaps. No predefined out-of-scope. The agent prepends the role frame and applies the canonical safety envelope.
+**Prompt body shape:** the area + the checklist + *"what is missing for R→P→W, BC vocabulary, simplification, and AppSource compliance? Return a bulleted list."* The agent prepends the role frame and applies the canonical safety envelope.
 
 **Reconcile each returned bullet:** accept (update checklist) or reject with a one-line Notes reason. `/grill-me` when judgement needs the user. **No silent skip.** If the agent returns `Second opinion skipped: <reason>`, paste it verbatim as a Notes line and proceed.
 
@@ -87,17 +113,25 @@ Standalone refactors with no calling task: append the Notes line to a temporary 
 
 ## Discipline
 
-- May add new tests when refactoring reveals uncovered branches.
+- **Anti-pattern: feature creep during refactor.** No new behaviour. New behaviour belongs in `/al-implement` (new task) or `/al-refine` (re-plan). The refactor diff should leave observable behaviour identical.
+- May add new tests when refactoring reveals uncovered branches — those tests must pass against the *current* code before the refactor proceeds.
 - If a hidden requirement or design flaw surfaces → stop, append a Notes line, recommend `/al-design` or `/al-refine` via `/al-steer`. **No silent scope expansion.**
-- `tasks.md` Notes entries are telegraphic forward-facing facts — each independently actionable by a future agent, no prose.
-- No comments unless the WHY is non-obvious. No comment churn.
+- `tasks.md` Notes entries are forward-facing facts — each independently actionable by a future agent.
+- A comment earns its place only when WHY is non-obvious from BC vocabulary and the surrounding code. No comment churn.
+
+  | | Comment |
+  |---|---|
+  | _Avoid_: | `// Insert the customer record` before `Customer.Insert(true);` |
+  | Use: | `// BaseApp Codeunit 80 fires OnAfterPostSalesDoc twice for partial shipments — guard against double-post` |
 - Prefer a subagent for output-heavy work.
 
 ## Composition
 
-`/al-build` after every meaningful change. `/bc-standard-reference` for BC patterns, event signatures, BaseApp behaviour. `/al-research` when prior knowledge is uncertain. `/grill-me` when a non-obvious trade-off needs the user. `/al-design` for upfront architecture when refactoring legacy without a calling task. `/al-steer` is the replan venue. `al-agentic-dev:al-second-opinion` — advisory gate (read-only sandbox; copilot CLI under the hood).
+`/al-build` after every meaningful change. `/bc-standard-reference` for BC patterns, event signatures, BaseApp behaviour. `/al-research` when prior knowledge is uncertain. `/grill-me` when a non-obvious trade-off needs the user. `/al-design` for upfront architecture when refactoring legacy without a calling task. `/al-steer` is the replan venue. `/al-implement` calls `/al-refactor` only after green; `/al-mutate` runs after refactor to validate test rigor. `al-agentic-dev:al-second-opinion` — advisory gate (read-only sandbox; copilot CLI under the hood).
 
 ## Out of scope
 
 - **No new behaviour.** Belongs in `/al-implement` (new task) or `/al-refine` (re-plan).
+- **No test changes that aren't sync.** Test edits are limited to: Gherkin-bullet sync after a rename, new tests for branches the refactor reveals, deletion of unit tests on modules the refactor merges away.
+- **No cross-task scope drift.** One task, one refactor. Surfacing work for a sibling task is a replan, not a side quest.
 - No replan mutations — `/al-steer`.

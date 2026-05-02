@@ -1,50 +1,35 @@
-# Search Patterns (Tool-Agnostic)
+# Search Patterns
 
-These patterns describe *what to search for* and *what to expect*. Use any repository search or browsing method you have.
+Heuristics, not commands. Use any repo-search or symbol-discovery method. Each pattern names *what* to search for, *where*, and *what to expect on a hit*.
 
-## Find Objects
+## Objects
 
-- Search for: `codeunit "Sales-Post"`
-- Scope: `BaseApp/Source/Base Application/Sales/Posting`
-- Expect: the codeunit declaration and its procedures
+- **Codeunit** — search `codeunit "Sales-Post"` in `BaseApp/Source/Base Application/Sales/Posting`. Expect: declaration with ID, procedures, event publishers.
+- **Table** — search `table 18 "Customer"` in `BaseApp/Source/Base Application`. Expect: declaration, field list, triggers.
+- **Page** — search `page <id> "<name>"` in the relevant domain folder. Expect: declaration, layout, actions.
 
-- Search for: `table 18 "Customer"`
-- Scope: `BaseApp/Source/Base Application`
-- Expect: the table declaration and field list
+## Events
 
-## Find Events
+- **Named publisher** — search `OnBeforePostSalesDoc` in `Sales/Posting`. Expect: `[IntegrationEvent(...)]` attribute followed by the empty publisher procedure with its full signature.
+- **Discover events near an object** — search `IntegrationEvent` within the codeunit's file. Expect: attribute lines paired with publisher declarations. Read the signature, not the name.
+- **External / business events** — search `ExternalEvents/Source/_Exclude_Business_Events_/src/` by domain (AR, AP, Inventory). Expect: `[ExternalBusinessEvent(...)]` declarations.
 
-- Search for: `OnBeforePostSalesDoc`
-- Scope: `BaseApp/Source/Base Application/Sales/Posting`
-- Expect: an event publisher with a clear signature
+## Tables and fields
 
-- Search for: `IntegrationEvent` near your target object
-- Expect: event attributes followed by procedure definitions
+- **Field declaration** — search `field(` + field name in the table file. Expect: type, length, and any `OnValidate` / `OnLookup` / `OnAfterValidate` triggers.
+- **Standard ID** — fields with documented IDs (`field(1; "No."; Code[20])`) signal a stable contract you can reference.
 
-## Tables and Fields
+## Tests and libraries
 
-- Search for: `table 37 "Sales Line"`
-- Expect: field definitions and trigger logic
+- **Library** — search `Library - Sales` in `BaseApp/Test/Tests-TestLibraries`. Expect: helper procedures (`CreateSalesOrder`, `CreateSalesHeader`, `CreateSalesLine`).
+- **Standard test** — search a domain test path like `BaseApp/Test/Tests-ERM` for the helper name (e.g., `CreateSalesOrder`). Expect: arrange/act/assert flows you can mirror.
 
-- Search for: `field(` + field name
-- Expect: the field declaration and any triggers or validations
+## API implementations
 
-## Tests and Libraries
+- **API page** — search `pageextension` or `page` matching the entity in `APIV2/Source/_Exclude_APIV2_/src/pages`. Expect: API page declaration with `EntityName`, `EntitySetName`, exposed fields.
 
-- Search for: `Library - Sales`
-- Scope: `BaseApp/Test/Tests-TestLibraries`
-- Expect: helper procedures for sales document setup
+## Workflow
 
-- Search for: `CreateSalesOrder`
-- Scope: `BaseApp/Test/Tests-ERM`
-- Expect: standard test setup patterns you can reuse
+Start from a known object or event name. Narrow by domain path. Confirm the declaration before deciding where to hook or what to mirror.
 
-## API Implementations
-
-- Search for: `API page` + entity name (e.g., `Customer`)
-- Scope: `APIV2/Source/_Exclude_APIV2_/src/pages`
-- Expect: API page definitions and fields exposed
-
-## Workflow Tip
-
-Start from known object or event names, then narrow by domain path. Once you find a candidate file, confirm the exact declaration and signature before you decide where to hook or replicate behavior.
+_Avoid_: matching on a name alone. Read the declaration. Quote the signature.

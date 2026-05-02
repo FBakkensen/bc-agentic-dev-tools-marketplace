@@ -15,6 +15,7 @@ skills/bc-standard-reference/
 
 ## Editing rules
 
-- The skill targets `fbakkensen/bc-w1` as the canonical mirror. Any rename or move of that repo requires updating SKILL.md and all three reference files.
-- The skill is intentionally **tool-agnostic** — the procedure is described without prescribing a specific MCP server or grep tool, so it works for any agent. Preserve that abstraction; if you cite a tool by name, do it as an example, not as the only path.
-- Reference files trade off: `repo-structure.md` (paths), `search-patterns.md` (heuristics), `scenarios.md` (walkthroughs). Keep that split.
+- **Canonical mirror**: `fbakkensen/bc-w1`. Any rename or move requires updating `SKILL.md` and all three reference files in lockstep.
+- **Tool-agnostic**: the procedure describes *what* to find and *how to reason about it*. Cite tools by name only as examples, never as the only path. _Avoid_: hard-coding a specific MCP server or grep tool — describe the search heuristic instead.
+- **Reference split**: `repo-structure.md` (paths), `search-patterns.md` (heuristics), `scenarios.md` (walkthroughs). Keep the split — don't merge.
+- **Composition**: `/al-research` cites this skill as source #2. When renaming, update `/al-research`'s source-priority table in lockstep.

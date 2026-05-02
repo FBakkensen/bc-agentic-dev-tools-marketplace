@@ -3,46 +3,76 @@ name: al-scope
 description: Decompose a feature-level architecture.md into a ZOMBIES-ordered task list in tasks.md for AL/Business Central work. Use after /al-design and before /al-refine — reads the architecture, writes bare T-NNN entries (title + one context line each), no grilling and no branch creation.
 ---
 
-# /al-scope — architecture.md → task list
+# /al-scope — architecture.md to task list
 
-Decompose `architecture.md` into bare task entries in `tasks.md`. Output: `## Goal` (architecture.md's `## Solution` verbatim) + `## Tasks` with `T-NNN` entries — title + one context line each. No Gherkin (that is `/al-refine`), no per-task architecture (that is `/al-implement`).
+Decompose `architecture.md` into bare task entries in `tasks.md`. Output is `## Goal` (architecture.md `## Solution` verbatim) plus `## Tasks` with `T-NNN` entries — one imperative title, one context line. No Gherkin (that is `/al-refine`), no per-task seam (that is `/al-implement`).
 
-All output is telegraphic — BC vocabulary, structured facts, no prose.
+## Resolve target paths
 
-**Resolve target paths:**
-- **Branch:** must match `^\d{3}-`. If not, `Stop.` — run `/al-design` first.
-- **Spec folder:** `specs/<branch>/` — `architecture.md` must already exist. If missing, `Stop.` — run `/al-design` first.
-- **Output:** `specs/<branch>/tasks.md` — created or overwritten here.
+- **Branch** must match `^\d{3}-`. If not, `Stop.` — run `/al-design`.
+- **Spec folder** `specs/<branch>/` must already contain `architecture.md`. If missing, `Stop.` — run `/al-design`.
+- **Output** `specs/<branch>/tasks.md` — created or overwritten.
 
-## Flow
+## Process
 
-Prefer parallel subagents for independent work and output-heavy steps.
+### 1. Read the architecture
 
-1. **Read** `architecture.md`. Take `## Solution` (becomes `tasks.md` `## Goal`), the module map, the R → P → W boundary, the brownfield touchpoints, and the test strategy as inputs.
-2. **Derive task entries** — one imperative title + one context line per task. Each task maps to a coherent slice of behaviour, typically a single scenario family from the test strategy.
-3. **Order ZOMBIES.** Zero, One, Many, Boundary, Interfaces, Exception, Simple — start with the simplest case that exercises the seam, then layer complexity outward.
-4. **Replan check (gate).** If decomposition surfaces a gap `architecture.md` doesn't cover (missing module, pattern conflict, unnamed brownfield touchpoint), do not invent. `Stop.` — recommend `/al-steer`. The replan venue routes to `/al-grill-adr` or `/al-design` re-run.
-5. **Write** `specs/<branch>/tasks.md` in the canonical shape below. Telegraphic. `Stop.` — `/al-refine` consumes it next, one task at a time.
+Take `## Solution` (becomes `## Goal` verbatim), the module map, the R to P to W boundary, brownfield touchpoints, and test strategy as inputs. Do not re-derive any of these.
+
+### 2. Derive task entries
+
+One imperative title plus one context line per task. Each task maps to a coherent slice of behaviour, typically a single scenario family from the test strategy. Use BC field, codeunit, and table names as compression.
+
+### 3. Order ZOMBIES
+
+Zero, One, Many, Boundary, Interfaces, Exception, Simple. Start with the simplest case that exercises the seam, then layer complexity outward.
+
+### 4. Replan check (gate)
+
+If decomposition surfaces a gap `architecture.md` doesn't cover — missing module, pattern conflict, unnamed brownfield touchpoint — do not invent. `Stop.` — run `/al-steer`. The replan venue routes to `/al-grill-adr` or an `/al-design` re-run.
+
+### 5. Write tasks.md
+
+Use the slot-fill template below. `Stop.` — `/al-refine` consumes the list one task at a time next.
 
 ## Output — tasks.md
 
 ```markdown
 ## Goal
-<one sentence — architecture.md ## Solution verbatim>
+<architecture.md ## Solution verbatim — one sentence>
 
 ### [ ] T-001 — <imperative title>
-<one context line: the bug, gap, or constraint in BC vocabulary>
+<one context line: BC site, then gap>
 
 ### [ ] T-002 — <imperative title>
-<one context line>
+<one context line: BC site, then gap>
 ```
 
-- **One context line only.** Use BC field, codeunit, and table names as compression. No prose sections.
-- **Two lines feel necessary?** The task likely splits — try splitting first. If it doesn't split, take the second line and flag for `/al-steer`.
-- **Status markers:** `[ ]` ready, `[~]` in progress, `[x]` done, `[!]` blocked. Scope writes only `[ ]`.
-- **Task IDs `T-NNN` monotonic, never reused.** Start at `T-001`.
-- **No `**Tests**`, no `**Architecture**`, no Resolved Questions, no Cross-cutting Notes, no Notes dumping ground.**
-- **Scaffolding rides with its object.** Permission set entries, object ID assignment, captions/translations belong to the task that introduces the new codeunit/table/page they grant access to. Never their own task. `<App>All.PermissionSet.al` updates bundle into whichever task introduces the granted object.
+## Context-line cadence
+
+One fact. One line. BC vocabulary as compression.
+
+**Drop list.** Articles (`the`, `a`). Conjunctions (`and`, `but`, `so`). Hedging (`should probably`, `may need to`). Semicolon-glue. Stacked clauses (`"which also … and then …"`). Prescriptive verbs (`implement`, `add support for`).
+
+**Positional pattern.** `[BC site] [gap]`. The site names a codeunit, table, field, page, or event publisher. The gap names what is missing or wrong, not how to fix it.
+
+**Yes/No.**
+
+- No: `Codeunit 80 Sales-Post.OnAfterPostSalesDoc subscriber should be added; needs to handle returns and credit memos, and update the new "External Doc Status" field on Sales Header.`
+- Yes: `Sales Header "External Doc Status" not set on credit memo posting.`
+
+**Two lines feel necessary?** Split the task. If it doesn't split, the second line is a gap — flag for `/al-steer`.
+
+_Avoid_: not semicolon-glued clauses, not subordinate-clause stacking, not embedding `/al-refine` fixture work, not embedding `/al-mutate` outcomes.
+
+**Anti-pattern: context-line prose drift.** Multi-fact, hedged, prescriptive sentences masquerading as one line. Symptom of skipping the split.
+
+## Notes
+
+- **Status markers** `[ ]` ready, `[~]` in progress, `[x]` done, `[!]` blocked. Scope writes only `[ ]`.
+- **Task IDs** `T-NNN` monotonic, never reused. Start at `T-001`.
+- **Scaffolding rides with its object.** Permission set entries, object ID assignment, captions, translations bundle into the task that introduces the new codeunit, table, or page they cover. Never their own task. `<App>All.PermissionSet.al` updates ride with whichever task introduces the granted object.
+- **No** `**Tests**`, **no** `**Architecture**`, **no** Resolved Questions, **no** Cross-cutting Notes, **no** Notes dumping ground.
 
 ## Composition
 
@@ -52,5 +82,6 @@ Prefer parallel subagents for independent work and output-heavy steps.
 
 - No grilling — `/al-grill-adr` ran already.
 - No branch or spec-folder creation — `/al-design` did that.
-- No Gherkin (`/al-refine`), no code edits, no per-task seam decisions (`/al-implement` step 2).
+- No Gherkin — `/al-refine`.
+- No code edits, no per-task seam decisions — `/al-implement` step 2.
 - No replan mutations — `/al-steer`.

@@ -10,7 +10,7 @@
     {
       "name": "al-build",
       "source": "./plugins/al-build",
-      "description": "Build and test AL apps for Business Central. Compiles locally, runs tests on remote Azure VM."
+      "description": "Build and test AL apps for Business Central. Compiles and runs tests locally using a local Docker container. Includes quality gate hook."
     },
     {
       "name": "grill-me",

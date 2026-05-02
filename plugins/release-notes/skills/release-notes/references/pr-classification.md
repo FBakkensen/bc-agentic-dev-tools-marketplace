@@ -1,56 +1,67 @@
 # PR Classification Protocol
 
-Use this protocol to classify a single PR for release notes. Produce a single-line JSON result and nothing else.
-Analyze only the PR you were given. Avoid extra investigation unless classification is ambiguous; use the Deep Dive Protocol when needed.
+Classify one PR. Emit one single-line JSON record. Nothing else. Store the line in that PR's todo description.
+
+Stay inside the PR you were given. Do not browse the rest of the JSONL or the wider codebase unless the Deep Dive Protocol says to.
 
 ## Inputs
 
-- PR number
-- PR record from `.output/releases/release-analysis.jsonl` where `type == "pr"`
+- PR number.
+- The matching `type == "pr"` record from `.output/releases/release-analysis.jsonl`.
 
-Commonly used fields include `title`, `body` or `description`, `files`, `labels`, `breakingChangeIndicators`, and `keyALChanges`.
+Common fields: `title`, `body` / `description`, `files`, `labels`, `breakingChangeIndicators`, `keyALChanges`, `commits`.
 
 ## Steps
 
-1. Locate the PR record matching the PR number.
-2. Determine whether the change is user-facing, technical, breaking, or excluded.
-3. Apply classification rules in order:
-   - **Breaking**: `breakingChangeIndicators` is non-empty, a breaking-change label is present, or the PR introduces public API changes.
-   - **Exclude**: All changed files are limited to `test/`, `docs/`, `.github/`, or `scripts/` and there is no runtime/user impact.
-   - **Feature**: `feat:` prefix and introduces new user-facing functionality.
-   - **Bugfix**: `fix:` prefix and resolves a user-facing defect.
-   - **Technical**: `refactor:`, `chore:`, or `perf:` prefix, or the change is internal only.
-   - **Improvement**: Enhances existing user-facing functionality.
-4. For user-facing types (`feature`, `improvement`, `bugfix`), extract:
-   - **area**: Specific page, report, API, or workflow
-   - **desc**: Clear user impact description
-   - **details**: UI elements (fields, actions, pages) or concrete usage details
-5. For technical items, set:
-   - **category**: `refactor`, `chore`, or `perf`
-   - **summary**: One-line technical summary
-6. For breaking changes, include:
-   - **change**: What changed
-   - **migration**: Exact migration steps
-7. Emit a single-line JSON result and store it in the PR todo description.
+1. **Locate** the record matching the PR number.
+2. **Decide the type** by walking the rules in order — first match wins:
 
-## Output Templates
+| Order | Type | Rule |
+|---|---|---|
+| 1 | `breaking` | `breakingChangeIndicators` non-empty, breaking-change label present, or public API surface changed |
+| 2 | `exclude` | All changed files in `test/`, `docs/`, `.github/`, or `scripts/`; no runtime or user impact |
+| 3 | `feature` | `feat:` prefix and the change introduces new user-facing functionality |
+| 4 | `bugfix` | `fix:` prefix and the change resolves a user-facing defect |
+| 5 | `technical` | `refactor:`, `chore:`, or `perf:` prefix, or change is internal only |
+| 6 | `improvement` | Enhances existing user-facing functionality |
+
+3. **Extract slots** for the type:
+   - **User-facing** (`feature`, `improvement`, `bugfix`): `area`, `desc`, `details`.
+   - **Breaking**: `change`, `migration`.
+   - **Technical**: `category`, `summary`.
+   - **Exclude**: `reason`.
+4. **Emit** the matching template below as a single line. Store it in the PR's todo description.
+
+## Slot rules
+
+- **`area`** — name the page, report, API, codeunit, table, or workflow. _Avoid_: `Configuration`, `the page`. Use: `Item Configurator List page`, `Codeunit 80 Sales-Post`, `Sales Header table`.
+- **`desc`** — what the user can now do or no longer hits. One sentence, BC vocabulary. _Avoid_: `Updated logic`. Use: `Bulk-copy configuration from one item to many in one action`.
+- **`details`** — concrete UI surface or usage path. Name the field, action, page, or runtime entry point. _Avoid_: empty on a user-facing PR.
+- **`category`** — exactly one of `refactor`, `chore`, `perf`.
+- **`summary`** — one line, technical audience, what changed (not how).
+- **`change`** + **`migration`** — what broke + the exact steps a consumer takes. Migration is imperative, ordered, code-grounded.
+- **`reason`** — one of `test`, `docs`, `ci`, `al-go` (or another short tag if the file scope justifies it).
+
+**Anti-pattern: generic descriptions like 'Updated logic'.** Symptom of classifying off the title alone, without reading `keyALChanges` or `files`. Run the Deep Dive Protocol below before re-emitting.
+
+## Output templates
 
 User-facing:
 
 ```json
-{"pr":<NUMBER>,"type":"feature|improvement|bugfix","area":"Specific Page/Component","desc":"User impact description","details":"Field X, Action Y"}
+{"pr":<NUMBER>,"type":"feature|improvement|bugfix","area":"<page/codeunit/report>","desc":"<user impact>","details":"<field/action/page>"}
 ```
 
 Breaking:
 
 ```json
-{"pr":<NUMBER>,"type":"breaking","change":"What changed","migration":"Exact migration steps"}
+{"pr":<NUMBER>,"type":"breaking","change":"<what changed>","migration":"<exact steps>"}
 ```
 
 Technical:
 
 ```json
-{"pr":<NUMBER>,"type":"technical","category":"refactor|chore|perf","summary":"One-line summary"}
+{"pr":<NUMBER>,"type":"technical","category":"refactor|chore|perf","summary":"<one line>"}
 ```
 
 Excluded:
@@ -59,12 +70,21 @@ Excluded:
 {"pr":<NUMBER>,"type":"exclude","reason":"test|docs|ci|al-go"}
 ```
 
+## Per-PR Yes/No
+
+- No: `{"pr":142,"type":"improvement","area":"Configuration","desc":"Updated logic","details":""}`
+- Yes: `{"pr":142,"type":"improvement","area":"Item Configurator List page","desc":"Bulk-copy configuration from one item to many in one action","details":"\"Copy Configuration\" action; target items selected via lookup"}`
+
+The Yes line names the page, the action, and the user-visible behaviour. The No line names none.
+
 ## Deep Dive Protocol
 
-Use when the initial classification is vague or fails the quality check.
+Run when initial classification is vague, ambiguous, or fails the SKILL.md quality-check gate.
 
-- Review the PR description, key AL changes, file paths, and commit summaries.
-- Identify the exact UI surfaces and workflows impacted (page names, actions, fields).
-- If still unclear, inspect the most relevant AL objects to capture concrete names.
-- Rewrite `area`, `desc`, and `details` to be specific and user-facing.
-- Reclassify if new evidence changes the type.
+1. **Re-read** the PR record's `body`/`description`, `keyALChanges`, `files`, and `commits`.
+2. **Name the surface.** Identify the exact pages, actions, and fields the change touches. If `keyALChanges` does not name them, walk the file paths and look at the AL object headers (object name, page caption, action captions).
+3. **Inspect** the most relevant AL object only when names still aren't pinned down. One object, not the whole module.
+4. **Reclassify** if new evidence flips the type — e.g. a `chore:` PR that actually adds a user-visible action becomes `feature` or `improvement`.
+5. **Rewrite** `area`, `desc`, and `details` against the surface you just named. Overwrite the todo description with the sharper single-line JSON.
+
+One Deep Dive per PR. If the second pass still produces a vague line, flag it in the todo description with `"deepDive":"insufficient evidence"` and let the human resolve it before the final render.
