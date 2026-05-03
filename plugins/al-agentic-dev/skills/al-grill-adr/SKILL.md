@@ -31,7 +31,9 @@ During codebase exploration, also look for existing documentation:
 └── app/
 ```
 
-Create files lazily — only when you have something to write. If no `CONTEXT.md` exists, materialise it from `${CLAUDE_SKILL_DIR}/../al-design/references/CONTEXT.template.md` when the first term resolves. If no `docs/adr/` exists, materialise the first ADR from `${CLAUDE_SKILL_DIR}/../al-design/references/adr.template.md` when one is needed. Templates are owned by `/al-design`; reference them, do not edit them here.
+Create files lazily — only when you have something to write. If no `CONTEXT.md` exists, materialise it from `${CLAUDE_SKILL_DIR}/../../references/CONTEXT.template.md` when the first term resolves. If no `docs/adr/` exists, materialise the first ADR from `${CLAUDE_SKILL_DIR}/../../references/adr.template.md` when one is needed. Templates are plugin-level shared resources; reference them, do not edit them here.
+
+Voice contract for everything this skill writes to `CONTEXT.md` and ADRs: `${CLAUDE_SKILL_DIR}/../../references/voice-contract.md`. Read it before writing.
 
 Run `/al-research` before naming any BC term, before disambiguating against current BaseApp behaviour, and before writing an ADR that cites BC facts. AL/BC training data is thin and stale; verify first. If research fails, keep grilling — do not write the term or the ADR this session.
 
@@ -45,7 +47,7 @@ When I use a term that conflicts with the existing language in `CONTEXT.md`, cal
 
 When I use vague or overloaded BC terms, propose a precise canonical term. *"You're saying `Account` — do you mean the Customer, the G/L Account, or the Bank Account? Those are different tables."*
 
-Use BC vocabulary, not generic programming terms — `Post` not `Submit`, `Ledger Entry` not `Transaction`. Full canonical list at `${CLAUDE_SKILL_DIR}/../al-design/references/LANGUAGE.md`.
+Use BC vocabulary, not generic programming terms — `Post` not `Submit`, `Ledger Entry` not `Transaction`. Full canonical list at `${CLAUDE_SKILL_DIR}/../../references/LANGUAGE.md`.
 
 ### Discuss concrete scenarios
 
@@ -57,7 +59,7 @@ When I state how something works, check whether the code agrees. If you find a c
 
 ### Update CONTEXT.md inline
 
-Update `CONTEXT.md` inline when a term resolves; don't queue. Use the format owned by `/al-design` at `${CLAUDE_SKILL_DIR}/../al-design/references/CONTEXT.template.md`.
+Update `CONTEXT.md` inline when a term resolves; don't queue. Use the format at `${CLAUDE_SKILL_DIR}/../../references/CONTEXT.template.md`.
 
 Don't couple `CONTEXT.md` to implementation details. Standard Microsoft BC terms (`Sales Header`, `Customer`, `Posting Date`) are the canonical baseline — record only what this project narrows, extends, or names that Microsoft doesn't.
 
@@ -71,7 +73,7 @@ Only offer to create an ADR when **all three** are true:
 2. **Surprising without context** — a future reader will wonder *"why did they do it this way?"*
 3. **Real trade-off** — there were genuine alternatives and you picked one for specific reasons.
 
-If any gate fails, skip. Use the format owned by `/al-design` at `${CLAUDE_SKILL_DIR}/../al-design/references/adr.template.md`.
+If any gate fails, skip. Use the format at `${CLAUDE_SKILL_DIR}/../../references/adr.template.md`.
 
 | Qualifies (domain ADR) | Defers to `/al-design` (architectural) |
 |---|---|

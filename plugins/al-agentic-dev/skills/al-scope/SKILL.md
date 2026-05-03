@@ -13,6 +13,8 @@ Decompose `architecture.md` into bare task entries in `tasks.md`. Output is `## 
 - **Spec folder** `specs/<branch>/` must already contain `architecture.md`. If missing, `Stop.` — run `/al-design`.
 - **Output** `specs/<branch>/tasks.md` — created or overwritten.
 
+Voice contract for the goal line and task entries: `${CLAUDE_SKILL_DIR}/../../references/voice-contract.md`. Read it before writing.
+
 ## Process
 
 ### 1. Read the architecture

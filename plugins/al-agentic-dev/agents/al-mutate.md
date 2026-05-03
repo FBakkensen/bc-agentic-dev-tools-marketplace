@@ -106,9 +106,17 @@ Every survivor needs a decision before the report ships:
 - **`tasks.md` line** appended to the calling task (only when invoked from `/al-implement`):
   `**Mutations:** N killed, M equivalent (reason: …), K survivors.` One line.
 
+## Voice when writing to `tasks.md`
+
+The `tasks.md` line is bounded — one line, the format above. DO NOT write operator-priority prose, selection rationale, walked-but-skipped paragraphs, or "Lesson:" entries to `tasks.md`. Those belong in the `.output/mutation-report/` file or stay in the session.
+
+Voice and Notes-shape rules apply to the bounded line. Full contracts:
+- `${CLAUDE_SKILL_DIR}/../../references/voice-contract.md` — voice rules.
+- `${CLAUDE_SKILL_DIR}/../../references/notes-discipline.md` — Notes-line shapes; the mutation result line is the `**Mutations:**` shape listed there.
+
 ## Out of scope
 
 - No new behaviour. Mutate, classify, revert.
-- No `tasks.md` restructuring — survivors surface as Notes lines.
+- No `tasks.md` restructuring — survivors surface as the bounded result line above.
 - No fix-it edits in the report — that's `/al-refine` and `/al-implement`.
 - No mutation of generated, translated, or surface code.

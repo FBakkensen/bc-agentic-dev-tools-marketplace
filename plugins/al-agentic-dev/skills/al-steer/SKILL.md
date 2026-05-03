@@ -9,6 +9,10 @@ Read `tasks.md`, `architecture.md`, the goal, the codebase, and recent commits. 
 
 **Resolve `tasks.md`:** branch matches `^\d{3}-` → `specs/<branch>/tasks.md`. Otherwise `Stop.` — run `/al-design` first.
 
+Read before writing:
+- `${CLAUDE_SKILL_DIR}/../../references/voice-contract.md` — voice rules for the prose itself; applies to both `tasks.md` and `.out-of-scope/`.
+- `${CLAUDE_SKILL_DIR}/../../references/notes-discipline.md` — `tasks.md` Notes-line trigger test, valid shapes, escalation routing. Does not apply to `.out-of-scope/`.
+
 ## Reference docs
 
 - [references/out-of-scope.template.md](references/out-of-scope.template.md) — `.out-of-scope/` knowledge base format

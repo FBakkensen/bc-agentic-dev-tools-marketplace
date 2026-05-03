@@ -2,7 +2,7 @@
 
 Shared language for `/al-design` and `/al-refactor`. Use these terms exactly — don't substitute "component," "service," "API," "boundary," "class," or "entity." Consistent language is the whole point. Sits alongside the BC pattern catalogue (`bc-patterns.md`) — does not replace it.
 
-Read-only. Read in place via `${CLAUDE_SKILL_DIR}/references/LANGUAGE.md`.
+Read-only. Read in place via `${CLAUDE_SKILL_DIR}/../../references/LANGUAGE.md`.
 
 ## Terms
 

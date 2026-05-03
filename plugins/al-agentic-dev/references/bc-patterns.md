@@ -1,6 +1,6 @@
 # BC/AL design patterns
 
-Reference vocabulary for `/al-design`. Pick **one pattern per module**. If a pattern needs explaining, the module shape is wrong — reshape, don't rename.
+Plugin-level catalogue cited by `architecture.md`, design ADRs, and the `/al-design` flow. Pick **one pattern per module**. If a pattern needs explaining, the module shape is wrong — reshape, don't rename.
 
 Each entry follows the same shape: **What** / **When** / **When not** / **Structure** / **_Avoid_:** (named misuse → anti-pattern). Anti-patterns are named so reviews can call them by name.
 

@@ -13,7 +13,11 @@ Surface friction in AL code and reshape modules that earn their keep. Run `/al-b
 
 ## Vocabulary
 
-Full discipline in `${CLAUDE_SKILL_DIR}/../al-design/references/LANGUAGE.md`.
+Full discipline in `${CLAUDE_SKILL_DIR}/../../references/LANGUAGE.md`.
+
+Read before writing to `tasks.md`:
+- `${CLAUDE_SKILL_DIR}/../../references/voice-contract.md` — voice rules for the prose itself.
+- `${CLAUDE_SKILL_DIR}/../../references/notes-discipline.md` — what goes in a Notes line vs an ADR; trigger test; valid shapes.
 
 Use these terms exactly. Don't substitute "component," "service," "API," or "boundary." Consistent language is the point.
 
@@ -95,7 +99,7 @@ Cross-check the refactor checklist via the `al-agentic-dev:al-second-opinion` ag
 
 **Prompt body shape:** the area + the checklist + *"what is missing for R→P→W, BC vocabulary, simplification, and AppSource compliance? Return a bulleted list."* The agent prepends the role frame and applies the canonical safety envelope.
 
-**Reconcile each returned bullet:** accept (update checklist) or reject with a one-line Notes reason. `/grill-me` when judgement needs the user. **No silent skip.** If the agent returns `Second opinion skipped: <reason>`, paste it verbatim as a Notes line and proceed.
+**Reconcile each returned bullet:** accept (update checklist) or reject. Rejection rationale stays in the session — DO NOT write it to Notes. If a rejection encodes a durable principle, escalate via `/al-steer` to `/al-grill-adr` or `/al-design`. `/grill-me` when judgement needs the user. If the agent returns `Second opinion skipped: <reason>`, note it in the session and proceed.
 
 ## Replan check (gate)
 

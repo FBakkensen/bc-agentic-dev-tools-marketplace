@@ -35,6 +35,10 @@ plugins/<plugin-name>/
 
 Plugin name in `plugin.json` matches the folder name. Single-skill plugins put their skill at `skills/<plugin-name>/`; multi-skill plugins (like `al-agentic-dev`) put each skill at its own `skills/<skill-name>/`. Plugin agents are namespaced as `<plugin-name>:<agent-name>` when invoked via the `Agent` tool.
 
+## CLAUDE.md scope (this repo)
+
+Every `CLAUDE.md` in this repo — root and per-plugin — is **dev-time only**. They load when you're working in the marketplace repo (this session). Installed users never see them. Any rule the agent needs at runtime in an end-user's session must live in `SKILL.md`, `agents/*.md`, or a `references/*.md` the SKILL explicitly Reads — not in any `CLAUDE.md`.
+
 Run before pushing:
 
 ```powershell

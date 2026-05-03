@@ -11,6 +11,10 @@ Pick the next ready task from `tasks.md`. Run TDD per Gherkin bullet, gate every
 - **Spec folder:** branch must match `^\d{3}-` → `specs/<branch>/tasks.md` and `specs/<branch>/architecture.md`. Otherwise `Stop.` — run `/al-design` first.
 - **Task input:** task entry must carry a `**Tests**` block from `/al-refine`. If missing, `Stop.` — run `/al-refine <T-NNN>` first.
 
+Read before writing to `tasks.md`:
+- `${CLAUDE_SKILL_DIR}/../../references/voice-contract.md` — voice rules for the prose itself.
+- `${CLAUDE_SKILL_DIR}/../../references/notes-discipline.md` — what goes in a Notes line vs an ADR; trigger test; valid shapes.
+
 ## Philosophy
 
 **Tests verify behaviour through public interfaces, not implementation details.** Production code can change entirely; tests shouldn't. A test that breaks on rename of an internal procedure was testing implementation, not behaviour.
@@ -90,7 +94,7 @@ Cross-check the mutation list via the `al-agentic-dev:al-second-opinion` agent. 
 
 **Prompt body shape:** mutation list + production code it targets + operator priority + *"what mutations are missing or misaligned? AND does this surface any of the seven replan triggers? Return a bulleted list."* The agent prepends the role frame and applies the canonical safety envelope.
 
-Reconcile each returned bullet — accept (update list) or reject with a reason. No silent skip. `/grill-me` when judgement needs the user. If the agent returns `Second opinion skipped: <reason>`, note it in session and proceed.
+Reconcile each returned bullet — accept (update list) or reject. Rejection rationale stays in the session — DO NOT write it to Notes. If a rejection encodes a durable principle, escalate via `/al-steer` to `/al-grill-adr` or `/al-design`. `/grill-me` when judgement needs the user. If the agent returns `Second opinion skipped: <reason>`, note it in session and proceed.
 
 ## Replan check (gate)
 

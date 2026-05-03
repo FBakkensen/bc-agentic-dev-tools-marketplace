@@ -15,6 +15,10 @@ Drop articles, conjunctions, hedging. Scenario titles are positional: `<Action><
 - Task is `[!]` → `Stop.` — `T-X is [!], run /al-steer to clear the replan.`
 - `architecture.md` missing in spec folder → `Stop.` — run `/al-design`.
 
+Read before writing to `tasks.md`:
+- `${CLAUDE_SKILL_DIR}/../../references/voice-contract.md` — voice rules for the prose itself.
+- `${CLAUDE_SKILL_DIR}/../../references/notes-discipline.md` — what goes in a Notes line vs an ADR; trigger test; valid shapes.
+
 ## Flow
 
 Parallelise step 1 and step 2 in subagents.
@@ -87,7 +91,7 @@ Mandatory for non-trivial. Cross-check Gherkin bullets via the `al-agentic-dev:a
 
 **Prompt body shape:** task title + context line + Gherkin bullets + *"what scenarios, negatives, or boundaries are missing or wrong? AND does this surface any of the seven replan triggers? Return a bulleted list."*
 
-Reconcile each returned bullet — accept (update), or reject with a one-line Notes reason. `/grill-me` when judgement needs the user. Agent returns `Second opinion skipped: <reason>` → paste verbatim as a Notes line and proceed.
+Reconcile each returned bullet — accept (update) or reject. Rejection rationale stays in the session — DO NOT write it to Notes. If a rejection encodes a durable principle, escalate via `/al-steer` to `/al-grill-adr` or `/al-design`. `/grill-me` when judgement needs the user. If the agent returns `Second opinion skipped: <reason>`, note it in session and proceed.
 
 ### 7. Replan check (gate)
 

@@ -49,20 +49,30 @@ Skills compose by name. When you change a skill, scan the others for cross-refer
 - **`architecture.md` is reshape-only.** Written by `/al-design`, read by everyone downstream. Never edit in place — re-run `/al-design`.
 - **New skills need a stated gap.** _Avoid_: spinning up a skill that an existing one can absorb, or that fits as a `tasks.md` Notes line, an `/al-research` finding, or a side-band reference. Propose only when no existing skill fits, and say so in one line.
 
-## Lazy template materialisation
+## Reference layout
 
-Repo-root and spec-folder files are created on first need by copying from `${CLAUDE_SKILL_DIR}/references/*.template.md`.
+Two tiers, on purpose.
 
-| Template | Owner skill |
-|---|---|
-| `CONTEXT.template.md` | `/al-design` |
-| `adr.template.md` | `/al-design` |
-| `architecture.template.md` | `/al-design` |
-| `out-of-scope.template.md` | `/al-steer` |
+- **Plugin-level shared** — `plugins/al-agentic-dev/references/`. Cross-skill resources read by more than one skill. Path from any SKILL.md: `${CLAUDE_SKILL_DIR}/../../references/<file>`.
+- **Skill-local** — `plugins/al-agentic-dev/skills/<skill>/references/`. Resources only one skill reads. Path from that SKILL.md: `${CLAUDE_SKILL_DIR}/references/<file>`.
 
-`LANGUAGE.md` lives alongside these templates as a read-only vocabulary reference (owned by `/al-design`); it is not materialised into spec folders.
+**Rule**: a resource read by two or more skills lives in plugin-level `references/`. Skill-local references stay inside the skill that owns them. DO NOT put a shared resource inside one skill's folder — owner ambiguity invites drift.
 
-Cross-skill paths within this plugin: `${CLAUDE_SKILL_DIR}/../<skill>/references/`.
+| File | Tier | Notes |
+|---|---|---|
+| `LANGUAGE.md` | plugin-level | architectural vocabulary; read by `/al-design`, `/al-grill-adr`, `/al-refactor` |
+| `CONTEXT.template.md` | plugin-level | template materialised into the target repo's `CONTEXT.md` |
+| `adr.template.md` | plugin-level | template materialised into the target repo's `docs/adr/NNNN-<slug>.md` |
+| `voice-contract.md` | plugin-level | voice rules for prose; read by every skill that writes a durable artifact |
+| `notes-discipline.md` | plugin-level | Notes-line trigger test, valid shapes, escalation routing; read by every skill that writes `tasks.md` Notes or `.out-of-scope/` |
+| `bc-patterns.md` | plugin-level | BC pattern catalogue cited by `architecture.md`, design ADRs, and `/al-design` |
+| `architecture.template.md` | `/al-design`-local | template materialised into `specs/<NNN>-<slug>/architecture.md` |
+| `out-of-scope.template.md` | `/al-steer`-local | template materialised into `.out-of-scope/<concept>.md` |
+| `legacy-refactor-plan.md` | `/al-refactor`-local | reference plan for legacy code without tests |
+
+Templates are materialised lazily on first need by the owning flow.
+
+Cross-skill paths within this plugin (when reaching into another skill's local references): `${CLAUDE_SKILL_DIR}/../<skill>/references/<file>`. Reach for plugin-level first; cross-skill paths are a smell to be migrated.
 
 ## Skill / agent split
 
@@ -83,15 +93,18 @@ Two agents currently qualify:
 agents/
 ├── al-mutate.md            # Invoked by /al-implement step 14
 └── al-second-opinion.md    # Advisory copilot CLI gate
+references/                 # Plugin-level shared — read by ≥2 skills, or cited by shared templates
+├── CONTEXT.template.md
+├── adr.template.md
+├── LANGUAGE.md
+├── bc-patterns.md
+├── voice-contract.md       # Voice rules for prose
+└── notes-discipline.md     # Notes-line trigger test + valid shapes + escalation routing
 skills/
 ├── al-design/
 │   ├── SKILL.md
-│   └── references/
-│       ├── CONTEXT.template.md
-│       ├── adr.template.md
-│       ├── architecture.template.md
-│       ├── bc-patterns.md
-│       └── LANGUAGE.md
+│   └── references/         # Skill-local — read only by /al-design
+│       └── architecture.template.md
 ├── al-grill-adr/SKILL.md
 ├── al-implement/SKILL.md
 ├── al-mutate/SKILL.md      # Thin shim — dispatches agents/al-mutate.md
