@@ -26,7 +26,7 @@ _Avoid_: asking copilot to write code; asking for opinions on style; including l
 
 ## Role frame
 
-Prepend verbatim, separated from the body by ` -- `:
+Prepend verbatim, separated from the body by a blank line:
 
 ```
 Independent reviewer. Identify gaps in the artefact below. Return a markdown bulleted list.
@@ -34,16 +34,21 @@ Independent reviewer. Identify gaps in the artefact below. Return a markdown bul
 
 ## Canonical invocation
 
-Collapse newlines in the body to ` -- ` before substitution. Background job for the 600s timeout.
+Body goes in a single-quoted here-string — multiline-native, no escaping for `"`, `'`, backtick, `$`, `--`, `:=`. Closing `'@` MUST be at column 0. Background job for the 600s timeout. Force UTF-8 inside the job — copilot writes UTF-8 stdout but the job's child pwsh decodes as the system code page by default, mojifying `→ ’ é` across the `Receive-Job` boundary.
 
 ```powershell
 if (-not (Get-Command copilot -ErrorAction SilentlyContinue)) {
     "Second opinion skipped: copilot CLI unavailable"; return
 }
-$PROMPT = "Independent reviewer. Identify gaps in the artefact below. Return a markdown bulleted list. -- <body, newlines collapsed to ' -- '>"
+$body = @'
+<artefact body — multiline OK, no escaping; closing '@ must be at column 0>
+'@
+$prompt = "Independent reviewer. Identify gaps in the artefact below. Return a markdown bulleted list.`n`n$body"
 $job = Start-Job {
-    $o = copilot -p $using:PROMPT -s --stream=on --no-ask-user --available-tools=view,rg,glob,show_file,lsp --add-dir . --no-custom-instructions --disable-builtin-mcps --no-remote --no-bash-env --no-auto-update --model gpt-5.5 --effort medium
-    [PSCustomObject]@{ ExitCode = $LASTEXITCODE; Output = ($o -join "`n") }
+    [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+    $OutputEncoding = [System.Text.Encoding]::UTF8
+    $o = & copilot -p $using:prompt -s --stream on --no-ask-user --available-tools=view,rg,glob,show_file,lsp --add-dir . --no-custom-instructions --disable-builtin-mcps --no-remote --no-bash-env --no-auto-update --model gpt-5.5 --effort medium 2>&1
+    [PSCustomObject]@{ ExitCode = $LASTEXITCODE; Output = ($o | Out-String) }
 }
 if (-not (Wait-Job $job -Timeout 600)) {
     Stop-Job $job; Remove-Job $job -Force
