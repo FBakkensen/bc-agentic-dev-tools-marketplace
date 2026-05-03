@@ -27,6 +27,8 @@ Parallelise step 1 and step 2 in subagents.
 
 Module map. R → P → W boundary. Brownfield touchpoints. Family-level test layer covering this task. Note the default — Pure, E2E, or Both — and which scenario families the family-level decision covers.
 
+**Slice context.** Read the `## Slice(s) (Event Modeling)` paragraph that this task contributes to. For *wire* tasks (those crossing the slice's trigger), Gherkin scenarios must cross the trigger → state path of the slice. For *primitive / extract / fix / refactor* tasks, scenarios stay at the task's own scope — the slice is upstream context, not the per-task spec. Vertical slicing (tests + code together) is inherited from `/al-scope`.
+
 ### 2. Walk the codebase
 
 Ground every precondition and outcome in real symbols before writing.

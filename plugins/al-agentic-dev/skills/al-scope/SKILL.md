@@ -19,11 +19,15 @@ Voice contract for the goal line and task entries: `${CLAUDE_SKILL_DIR}/../../re
 
 ### 1. Read the architecture
 
-Take `## Solution` (becomes `## Goal` verbatim), the module map, the R to P to W boundary, brownfield touchpoints, and test strategy as inputs. Do not re-derive any of these.
+Take `## Solution` (becomes `## Goal` verbatim), the `## Slice(s) (Event Modeling)` paragraph(s), the module map, the R to P to W boundary, brownfield touchpoints, and test strategy as inputs. Do not re-derive any of these. The slice paragraph(s) name the initiated behaviour the feature delivers — the *wire* task in the decomposed list is the one crossing the slice's trigger; everything else composes into it.
 
 ### 2. Derive task entries
 
 One imperative title plus one context line per task. Each task maps to a coherent slice of behaviour, typically a single scenario family from the test strategy. Use BC field, codeunit, and table names as compression.
+
+**Vertical slicing.** Every `T-NNN` ships tests + production code together. *Layer-only tasks* — data-only (table changes without callers), logic-only (codeunit without tests), wire-up-only (subscribers without their target) — are an anti-pattern. If a task cannot satisfy this, split or merge until it does. The *kind* of slice varies — primitive (pure logic + tests), extract (refactor moving an existing capability), wire (the slice's trigger surface), fix (contract correction), pure refactor (shape change under invariant) — verticality does not. The opposite, *horizontal phasing* (data first, then logic, then UI, then tests-as-afterthought), is rejected by name.
+
+A complex `## Slice(s)` paragraph in `architecture.md` typically fans into many tasks — one *wire* task crossing the slice's trigger, plus *primitive / extract / fix* tasks composing into it. One slice ≠ one task. The slice is the architectural unit; the task is the TDD-cycle unit.
 
 ### 3. Order ZOMBIES
 

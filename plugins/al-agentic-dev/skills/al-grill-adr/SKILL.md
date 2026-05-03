@@ -65,6 +65,10 @@ Don't couple `CONTEXT.md` to implementation details. Standard Microsoft BC terms
 
 No inline citations in `CONTEXT.md`. Names are the citation; the conversation transcript carries the trail.
 
+### Sharpen the slice
+
+Before signaling the grilling done, ensure the trigger (page action, subscribed event, API call, install/upgrade hook, Job Queue), command, state change, and confirming view are clear enough that `/al-design` can fill an **Event Modeling slice** (Adam Dymitruk, eventmodeling.org) — *trigger → command → event → state → view* — without guessing. If any of those is fuzzy, keep grilling. The slice itself is `/al-design`'s output; this skill's job is to ensure the inputs exist. The trigger source decides the slice pattern (Command / Automation / Translation / View) — see `${CLAUDE_SKILL_DIR}/../../references/LANGUAGE.md` *Slice* entry.
+
 ### Offer ADRs sparingly
 
 Only offer to create an ADR when **all three** are true:

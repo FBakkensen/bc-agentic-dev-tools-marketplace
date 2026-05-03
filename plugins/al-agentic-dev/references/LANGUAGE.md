@@ -4,10 +4,12 @@ Shared language for `/al-design` and `/al-refactor`. Use these terms exactly —
 
 Read-only. Read in place via `${CLAUDE_SKILL_DIR}/../../references/LANGUAGE.md`.
 
+**Provenance.** Structural terms below come from Ousterhout (*A Philosophy of Software Design* — Module, Depth, Leverage) and Feathers (*Working Effectively with Legacy Code* — Seam). Behavioural-decomposition terms come from Event Modeling (Adam Dymitruk, eventmodeling.org — Slice and its four patterns). Citation matters: a sourced term has an external definition the project can't quietly redefine. Rejected aliases (`_Avoid_`) are themselves cited concepts — listing them by name is what makes the rejection meaningful.
+
 ## Terms
 
 **Module**
-A folder under `src/<module>/` containing a cohesive unit — codeunits, tables, pages, permissions for one bounded responsibility. Scale-agnostic: applies equally to a single codeunit, a façade-plus-subsystem cluster, or a multi-table feature slice. The whole AL app stays one shipped artifact; "module" is the in-app boundary, not the `.app` boundary.
+A folder under `src/<module>/` containing a cohesive unit — codeunits, tables, pages, permissions for one bounded responsibility. Scale-agnostic: applies equally to a single codeunit, a façade-plus-subsystem cluster, or a multi-table feature slice. The whole AL app stays one shipped artifact; "module" is the in-app boundary, not the `.app` boundary. Modules under `src/<module>/` realise **Vertical Slice Architecture** (Jimmy Bogard) — feature folder, not layered architecture.
 _Avoid_: component, service, unit, package.
 
 **Interface**
@@ -38,6 +40,24 @@ _Avoid_: reuse (too vague — reuse can be shallow copy-paste).
 What maintainers get from depth. Change, bugs, knowledge, and verification concentrate at one place rather than spreading across callers. Fix once, fixed everywhere. Locality is the maintainer-side mirror of leverage.
 _Avoid_: cohesion (related, but locality is about *where the change lands*, not about what belongs together).
 
+## Behavioural decomposition
+
+The terms above describe static structure (what's a module, where the seams are). The terms below describe behavioural decomposition (what the feature *does*, which trigger initiates each behaviour). Both vocabularies are needed; neither replaces the other.
+
+**Slice** _(Event Modeling, Dymitruk)_
+One initiated behaviour expressed as **trigger → command → event → state → view**. The unit of architectural decomposition at the funnel-top — sits between `## Solution` and `## Module map` in `architecture.md`. A feature has one slice if it delivers one initiated behaviour; more if more. AL slices map to Event Modeling's four canonical patterns:
+
+- **Command** slice — page action, report request *(user-initiated)*.
+- **Automation** slice — event subscriber, Job Queue, install/upgrade *(system-initiated)*. Most common AL pattern.
+- **Translation** slice — API page, web service, webhook *(external-system-initiated)*.
+- **View** slice — page render, FlowField, report layout *(read-only)*.
+
+The pattern qualifies the slice in `architecture.md` — `Slice (Automation): trigger ...`. _Avoid_: user story (too unstructured), use case (too OO), flow (already used for the diagram).
+
+**Vertical slicing** _(working principle, predates VSA — implicit in Kent Beck's TDD, 2002)_
+Per-task / per-PR rule: every task ships tests + production code together; never data-only, logic-only, or wire-up-only; always leaves the system green. Applies to every `T-NNN` in `tasks.md`. The opposite — *horizontal phasing* (data, then logic, then UI, then tests-as-afterthought) — is rejected by name. Lower-altitude than Vertical Slice Architecture; folder structure is VSA, per-task discipline is vertical slicing.
+_Avoid_: horizontal phasing, layer-by-layer build, big-bang integration.
+
 ## BC translations (state inline)
 
 The architectural vocabulary above maps onto AL constructs — but the AL construct is never the architectural concept. Keep both labels.
@@ -52,6 +72,7 @@ The architectural vocabulary above maps onto AL constructs — but the AL constr
 | Codeunit | AL's procedure container; *plays the role of* an adapter or holds implementation | "class" — codeunits are not classes; they are object-with-procedures, no inheritance |
 | Table | AL's persisted record schema; *plays the role of* an entity but with BC semantics (Insert / Modify / Delete triggers, FlowFields, FlowFilters, primary key, SystemId) | "entity" without qualification — the BC semantics matter |
 | AL `interface` object | a single seam *declaration* — the contract row of an Implementer-pattern seam; never the whole architectural Interface | TS/C# `interface` keyword (different lifecycle, different runtime) |
+| Slice | the trigger / command / event / state / view chain naming one initiated behaviour | "user story" — slices include non-user triggers (subscribers, Job Queue, install/upgrade, API) |
 
 ## Principles
 
@@ -69,6 +90,7 @@ The architectural vocabulary above maps onto AL constructs — but the AL constr
 - A **seam** is where a **module**'s **interface** lives.
 - An **adapter** sits at a **seam** and satisfies the **interface**.
 - **Depth** produces **leverage** for callers and **locality** for maintainers.
+- A **slice** is decomposed *behaviourally* (one initiated behaviour); a **module** is decomposed *structurally* (one cohesive responsibility). One slice typically lives across one or more modules; one module typically participates in one or more slices.
 
 ## Rejected framings
 
@@ -77,3 +99,5 @@ The architectural vocabulary above maps onto AL constructs — but the AL constr
 - **TypeScript `interface` ≡ AL `interface`.** They share a name and almost nothing else. AL `interface` objects are runtime-resolved seams, declared once and Implemented by a codeunit; TS `interface` is a compile-time type. Conflating them leaks wrong intuitions about lifecycle, polymorphism, and testing.
 - **"Boundary" for seam.** Overloaded with DDD's bounded context. Use **seam** or **interface**.
 - **Depth as ratio of impl-lines to interface-lines.** Rewards padding the body. Use depth-as-leverage instead.
+- **"User story" for slice.** Excludes the most common AL trigger sources — event subscribers, Job Queue Entries, install/upgrade hooks, API page handlers. Use **slice** with its qualifying pattern (Command / Automation / Translation / View).
+- **"Horizontal phasing" as a build strategy** — data first, then logic, then UI, then tests-as-afterthought. Rejected by **vertical slicing**: each task ships tests + production code together, leaving the system green.

@@ -7,7 +7,7 @@ Slot-fill, not free prose. Each slot is sharpened by a gate — say what earns t
 **Memoir prose** — *"We chose the Façade pattern here because, after considering Variant Façade and Generic Method, we felt that the synchronous return values needed by the caller and the relatively stable shape of the export workflow argued for a plain Façade; the alternative would have been..."* — rationale, alternatives considered, narrative voice. None of that goes in this doc. Load-bearing rationale becomes an ADR; the rest stays in the conversation.
 
 Required sections, in this order:
-`## Goal` → `## Problem` → `## Solution` → `## Module map` → `## R → P → W` → (optional `## Module diagram`, `## Flow`) → `## Brownfield touchpoints` → `## Test strategy` → `## ADRs cited` → `## Risks`.
+`## Goal` → `## Problem` → `## Solution` → `## Slice(s) (Event Modeling)` → `## Module map` → `## R → P → W` → (optional `## Module diagram`, `## Flow`) → `## Brownfield touchpoints` → `## Test strategy` → `## ADRs cited` → `## Risks`.
 
 Every section uses the gate format: a short slot-fill, with `_When earned:_` / `_Skip when:_` triggers stating what makes the section honest.
 
@@ -42,6 +42,33 @@ _Skip when:_ never.
 
 _When earned:_ always.
 _Skip when:_ never.
+
+## Slice(s) (Event Modeling)
+
+One paragraph per slice. Each slice opens with its **pattern** — `Command` / `Automation` / `Translation` / `View` — and fills five positions: **trigger → command → event → state → view**. Pattern qualifies the trigger source; positions describe the chain. Pattern catalogue and BC trigger-source mapping live in `LANGUAGE.md` *Slice* entry.
+
+Slot-fill format:
+
+> **Slice ({Pattern}) — {one-phrase name in domain vocabulary}.**
+> **Trigger:** {what initiates the slice — page action / event publisher / API path / install hook}.
+> **Command:** {procedure or composition that mutates state}.
+> **Event(s):** {`IntegrationEvent` published, BaseApp event subscribed to, or `none` for slices that change state without publishing}.
+> **State:** {tables / fields the slice writes; existing state it preserves}.
+> **View:** {page, list, FlowField, or report row that confirms the state change to a human or downstream system}.
+
+- No: *"User-facing slice — when something happens on the sales side, the system processes it and updates configuration data, then the relevant pages refresh to show what changed…"*
+- Yes: *"**Slice (Automation) — Posted sales invoices queue a bank-file line.** Trigger: `OnAfterInsertSalesInvoiceHeader` published from BaseApp `Sales-Post`. Command: `SettlementExportMgt.QueueLine(SalesInvHeader)`. Event(s): none — slice subscribes; does not publish. State: new `Settlement Export Line` row keyed on the posted invoice; `Settlement Batch.Status` advances when the day's queue closes. View: Settlement Export page shows the day's batch with line totals."*
+
+**Sharpness — slice completeness gate.** Every slice fills all five positions. A void = the feature isn't ready for `/al-scope`. Voids and what they mean:
+
+- *No trigger* → no interface; the work is internal-only (pure refactor / build / test only) — see `_Skip when:_` below.
+- *No command* → the slice is a *View* (read-only); confirm that's intended.
+- *No event(s)* → either the BaseApp event you'd subscribe to / publish doesn't exist (run `/al-research`) or the slice doesn't change state (View again).
+- *No state* → View slice.
+- *No view* → no observable confirmation; reconsider whether the slice belongs here.
+
+_When earned:_ the feature delivers at least one initiated behaviour — Command / Automation / Translation / View.
+_Skip when:_ the feature is purely internal — pure refactor (no behaviour change), build-only, test-only. State the skip reason in the conversation, not the doc.
 
 ## Module map
 
