@@ -28,7 +28,7 @@ _When earned:_ the decision has been revisited, deprecated, or superseded. Defau
 
 **Considered Options** — _When earned:_ a future reader will re-litigate the decision without seeing the alternatives, and the rejected options carry load-bearing reasons. One bullet per option, lead with the option then the reason it lost. _Skip when:_ the alternatives are obvious or the rejection reason is self-evident from the decision.
 
-**Consequences** — _When earned:_ a non-obvious downstream effect exists — typically a `/al-implement` discipline rule the ADR creates ("every new posting routine must register its events on the bridge"), an AppSource compliance constraint, or a migration step. _Skip when:_ the consequence just paraphrases the lead.
+**Consequences** — _When earned:_ a non-obvious downstream effect that `/al-design` must surface in a slot of `architecture.md` (Module map, Brownfield touchpoints, R→P→W, Test strategy) so downstream skills meet the constraint without re-reading the ADR. Examples: an AppSource compliance constraint, a migration step, an event-registration rule ("every new posting routine must register its events on the bridge"). _Skip when:_ the consequence just paraphrases the lead.
 
 ## Numbering
 

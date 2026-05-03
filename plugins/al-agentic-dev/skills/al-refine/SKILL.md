@@ -42,7 +42,7 @@ If you cannot point at the codeunit, table, field, or event, you cannot write th
 
 Trigger `/grill-me` when:
 
-- A domain rule is implicit — user says it but it's not in `architecture.md` or `CONTEXT.md`.
+- A domain rule is implicit — user says it but it's not in `architecture.md`.
 - ZOMBIES surfaces a case the user must adjudicate — _Many_ has no stated upper bound, _Boundary_ falls between two contradicting rules, _Exception_ has no agreed recovery.
 - Intent splits — *"validate"* could mean schema-check or business-rule-check.
 
