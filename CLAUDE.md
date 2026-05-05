@@ -47,7 +47,7 @@ pwsh scripts/Validate-PowerShell.ps1      # All .ps1 files have valid syntax
 pwsh scripts/Validate-PluginStructure.ps1 # Marketplace and per-plugin manifests exist
 ```
 
-CI (`.github/workflows/ci.yml`) runs all three on push/PR to `main`/`master`.
+CI (`.github/workflows/ci.yml`) runs all three on push/PR to `main`.
 
 Adding or renaming a plugin:
 

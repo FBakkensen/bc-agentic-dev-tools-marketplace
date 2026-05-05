@@ -33,7 +33,7 @@ Prefer parallel sub-agents for independent work and output-heavy steps.
 11. **ADR offers.** Architectural picks (mechanism, seam placement, pattern, test layer) surface here — see *ADR offer criteria*. If a fresh **domain** rule surfaces, pause and recommend re-running `/al-grill-adr`; do not write a domain ADR inline.
 12. **Branch + folder + write.** Already on `^\d{3}-`?
 Stop.
-Must run from `main` / `master`. Scan `specs/` for `^\d{3}-`, take `max + 1`, zero-pad (`001` if none). Derive a 2–4-word kebab-case slug; do not ask. Announce the branch name and slug, then create branch `<NNN>-<slug>` and `specs/<NNN>-<slug>/`. Branch exists locally or remotely?
+Must run from `main`. Scan `specs/` for `^\d{3}-`, take `max + 1`, zero-pad (`001` if none). Derive a 2–4-word kebab-case slug; do not ask. Announce the branch name and slug, then create branch `<NNN>-<slug>` and `specs/<NNN>-<slug>/`. Branch exists locally or remotely?
 Stop.
 User resolves. Write `architecture.md` from `references/architecture.template.md`. Slot-fill the gates. Names are the citation.
 Stop.
