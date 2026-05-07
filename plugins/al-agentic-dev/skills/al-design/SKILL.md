@@ -18,7 +18,7 @@ Voice contract for everything this skill writes to `architecture.md`, ADRs, and 
 
 ## Flow
 
-Prefer parallel sub-agents for independent work and output-heavy steps.
+Prefer parallel delegated workers for independent work and output-heavy steps when the host supports subagents.
 
 1. **Precondition.** `/al-grill-adr` must have run for this idea. No exception. If not, `Stop.` and run it first. The grilling outcome (sharpened intent + `CONTEXT.md` / domain ADR side-effects) feeds step 2.
 2. **Repo memory.** Read `CONTEXT.md` (materialise from template if missing). Read every ADR in `docs/adr/` touching the area. Use the project's domain language throughout the rest of this flow. **Absorb every cited ADR's Consequence section (where present) into a slot of `architecture.md`** (Slice(s), Module map, Brownfield touchpoints, R→P→W, Test strategy) — `## ADRs cited` is a pointer list, not a substitute. Downstream skills do not re-read the ADR.
@@ -30,7 +30,7 @@ Prefer parallel sub-agents for independent work and output-heavy steps.
 8. **Test layer per scenario family.** Pure (P-layer, no DB) by default — drawing the R → P → W boundary is what makes Pure available. E2E when the behaviour is composition or a side effect that can't be reproduced at the pure layer (event wiring, table triggers, telemetry shape, install/upgrade transitions). `Both` only when intent splits cleanly across layers. ZOMBIES sequencing happens in `/al-scope` / `/al-refine`, not here.
 9. **Parallel design-twice (gate)** — mandatory for non-trivial. See *Parallel design-twice*.
 10. **AppSource compliance sanity.** Two design-time risks: BaseApp modification (intercept via published events, table extensions, or AL `interface` implementations — never edit in place), and design choices that force a shipped-field rename or removal. Both are reshape triggers. The full compliance block — IDs, permission sets, `DataClassification`, captions, install / upgrade — lives in `/al-implement`, where it bites per task.
-11. **ADR offers.** Architectural picks (mechanism, seam placement, pattern, test layer) surface here — see *ADR offer criteria*. If a fresh **domain** rule surfaces, pause and recommend re-running `/al-grill-adr`; do not write a domain ADR inline.
+11. **ADR offers.** Architectural picks (mechanism, seam placement, pattern, test layer) surface here — see *ADR offer criteria*. If a fresh **domain** rule surfaces, pause and run `/al-grill-adr` again; do not write a domain ADR inline.
 12. **Branch + folder + write.** Already on `^\d{3}-`?
 Stop.
 Must run from `main`. Scan `specs/` for `^\d{3}-`, take `max + 1`, zero-pad (`001` if none). Derive a 2–4-word kebab-case slug; do not ask. Announce the branch name and slug, then create branch `<NNN>-<slug>` and `specs/<NNN>-<slug>/`. Branch exists locally or remotely?
@@ -48,19 +48,19 @@ Use `references/architecture.template.md`. Required sections in order: `## Goal`
 
 ## Parallel design-twice (gate)
 
-Non-trivial = multi-module, brownfield refactor, or novel pattern selection. Spawn 3 sub-agents via the Agent tool with divergent constraints:
+Non-trivial = multi-module, brownfield refactor, or novel pattern selection. Use three parallel delegated design passes with divergent constraints when the host supports subagents:
 
-| Agent | Constraint |
+| Pass | Constraint |
 |---|---|
 | 1 | Minimise the **interface** — 1–3 entry points, maximise leverage per entry. |
 | 2 | Maximise flexibility — many use cases, easy extension. |
 | 3 | Optimise the most common caller — default case trivial. |
 
-Each sub-agent runs its own `/al-research` for any AL/BC behavioural claim. Each receives a brief that includes BC vocabulary from `CONTEXT.md` and architectural vocabulary from `${CLAUDE_SKILL_DIR}/../../references/LANGUAGE.md`, so all three name things consistently.
+Each delegated pass runs its own `/al-research` for any AL/BC behavioural claim. Each receives a brief that includes BC vocabulary from `CONTEXT.md` and architectural vocabulary from `${CLAUDE_SKILL_DIR}/../../references/LANGUAGE.md`, so all three name things consistently.
 
 **Output contract:** module map + per-module interface, named adapters at every seam, and the one trade-off line that distinguishes this design from the others.
 
-Reconcile: present all three sequentially so the user can absorb each. Then compare in prose along three axes — **depth** (leverage at the interface), **locality** (where change concentrates), and **seam placement**. Recommend one design — or a hybrid — with reasoning. Be opinionated; the user wants a strong read, not a menu. Run `/grill-me` when judgement needs the user. **No silent skip.**
+Reconcile: present all three sequentially so the user can absorb each. Then compare in prose along three axes — **depth** (leverage at the interface), **locality** (where change concentrates), and **seam placement**. Pick one design — or a hybrid — with reasoning. Be opinionated; the user wants a strong read, not a menu. Run `/grill-me` when judgement needs the user. **No silent skip.**
 
 Skip when single-module addition, well-known pattern, no brownfield seams. Record the skip reason in the conversation, not the doc.
 
@@ -110,7 +110,7 @@ Full discipline in `${CLAUDE_SKILL_DIR}/../../references/LANGUAGE.md`.
 ## Composition
 
 - `/al-grill-adr` — precondition.
-- `/al-research` — mandatory at flow steps 4, 5, 6, and inside every design-twice sub-agent.
+- `/al-research` — mandatory at flow steps 4, 5, 6, and inside every design-twice delegated pass.
 - `/bc-standard-reference` — reachable directly when the question is purely BaseApp behaviour.
 - `/grill-me` — for ADR offers and design-twice reconciliation.
 - `/al-scope` — consumes `architecture.md` next.

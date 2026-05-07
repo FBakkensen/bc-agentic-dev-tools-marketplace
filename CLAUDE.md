@@ -1,4 +1,4 @@
-Marketplace of AI-assisted AL/Business Central development plugins for Claude Code.
+Marketplace of AI-assisted AL/Business Central development plugins for Claude Code and Codex.
 
 Plugins live under `plugins/`:
 
@@ -12,7 +12,8 @@ Plugins live under `plugins/`:
 Top-level layout:
 
 ```
-.claude-plugin/marketplace.json   # Marketplace manifest — every plugin listed here
+.claude-plugin/marketplace.json   # Claude marketplace manifest — every plugin listed here
+.agents/plugins/marketplace.json  # Codex marketplace manifest — same plugin set
 plugins/<name>/                   # One folder per plugin
 scripts/                          # PowerShell 7.2+ validation scripts (CI gates)
 .github/workflows/                # ci.yml, claude.yml, claude-code-review.yml
@@ -23,21 +24,21 @@ Every plugin has the same shape:
 ```
 plugins/<plugin-name>/
 ├── .claude-plugin/plugin.json    # Claude manifest (name, version, description)
+├── .codex-plugin/plugin.json     # Codex manifest (name, version, description, skills)
 ├── CLAUDE.md                     # Plugin-specific context — voice and conventions live here
+├── AGENTS.md                     # Codex-facing bridge to CLAUDE.md
 ├── skills/                       # One or more skills
 │   └── <skill-name>/
 │       ├── SKILL.md              # User-facing skill body
 │       ├── scripts/              # PowerShell 7.2+ (optional)
 │       └── references/           # Supporting docs (optional)
-└── agents/                       # Optional — declare in plugin.json via "agents": "./agents/"
-    └── <agent-name>.md           # Frontmatter + system prompt
 ```
 
-Plugin name in `plugin.json` matches the folder name. Single-skill plugins put their skill at `skills/<plugin-name>/`; multi-skill plugins (like `al-agentic-dev`) put each skill at its own `skills/<skill-name>/`. Plugin agents are namespaced as `<plugin-name>:<agent-name>` when invoked via the `Agent` tool.
+Plugin name in `plugin.json` matches the folder name. Single-skill plugins put their skill at `skills/<plugin-name>/`; multi-skill plugins (like `al-agentic-dev`) put each skill at its own `skills/<skill-name>/`.
 
 ## CLAUDE.md scope (this repo)
 
-Every `CLAUDE.md` in this repo — root and per-plugin — is **dev-time only**. They load when you're working in the marketplace repo (this session). Installed users never see them. Any rule the agent needs at runtime in an end-user's session must live in `SKILL.md`, `agents/*.md`, or a `references/*.md` the SKILL explicitly Reads — not in any `CLAUDE.md`.
+Every `CLAUDE.md` in this repo — root and per-plugin — is **dev-time only**. They load when you're working in the marketplace repo (this session). Installed users never see them. Any rule the assistant needs at runtime in an end-user's session must live in `SKILL.md` or a `references/*.md` the SKILL explicitly reads — not in any `CLAUDE.md`.
 
 Run before pushing:
 

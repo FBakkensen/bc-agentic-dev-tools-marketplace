@@ -48,7 +48,7 @@ After the green build, look for:
 - **Shallow modules** — interface nearly as complex as the implementation. Merge upward, or deepen by absorbing callers' boilerplate.
 - **Feature envy** — procedure reaches into another record/codeunit's data more than its own. Move the procedure to where the data lives.
 - **Primitive obsession** — `Code[20]` carrying meaning ("if first char is 'X' it's blocked") becomes a small record or enum.
-- **Existing code revealed.** The new test has unmasked a flaw upstream — the surrounding module is wrong, not just the diff. Note it; reshape if cheap, otherwise stop and recommend `/al-steer`.
+- **Existing code revealed.** The new test has unmasked a flaw upstream — the surrounding module is wrong, not just the diff. Note it; reshape if cheap, otherwise stop and run `/al-steer`.
 
 ## Reshape
 
@@ -93,13 +93,13 @@ Rename when the name lies. BC term over generic programming term. AL reads natur
 
 ## Second opinion (gate)
 
-Cross-check the refactor checklist via the `al-agentic-dev:al-second-opinion` agent — independent perspective, not authority.
+Cross-check the refactor checklist via `/al-second-opinion` — independent perspective, not authority.
 
-**Invoke:** `Agent(subagent_type: 'al-agentic-dev:al-second-opinion', prompt: <body>)`.
+**Invoke:** `/al-second-opinion` with the prompt body below.
 
-**Prompt body shape:** the area + the checklist + *"what is missing for R→P→W, BC vocabulary, simplification, and AppSource compliance? Return a bulleted list."* The agent prepends the role frame and applies the canonical safety envelope.
+**Prompt body shape:** the area + the checklist + *"what is missing for R→P→W, BC vocabulary, simplification, and AppSource compliance? Return a bulleted list."* `/al-second-opinion` prepends the role frame and applies the canonical safety envelope.
 
-**Reconcile each returned bullet:** accept (update checklist) or reject. Rejection rationale stays in the session — DO NOT write it to Notes. If a rejection encodes a durable principle, escalate via `/al-steer` to `/al-grill-adr` or `/al-design`. `/grill-me` when judgement needs the user. If the agent returns `Second opinion skipped: <reason>`, note it in the session and proceed.
+**Reconcile each returned bullet:** accept (update checklist) or reject. Rejection rationale stays in the session — DO NOT write it to Notes. If a rejection encodes a durable principle, escalate via `/al-steer` to `/al-grill-adr` or `/al-design`. `/grill-me` when judgement needs the user. If `/al-second-opinion` returns `Second opinion skipped: <reason>`, note it in the session and proceed.
 
 ## Replan check (gate)
 
@@ -113,13 +113,13 @@ Run after tests are green. Triggers in scope: #2 hidden pre-req, #4 sibling now 
 
 **Trivia exception** (precedes hard-halt). Missing scaffolding — permission set entry, object ID assignment, caption for a new object, BC-vocabulary rename — is not a replan trigger. Apply inline (≤3 lines), append `**Absorbed**: <one line>` to Notes, re-run `/al-build`, continue. Cap: one absorption per task. Never absorbs schema changes, new event publishers, new codeunits, or test-outcome changes.
 
-Standalone refactors with no calling task: append the Notes line to a temporary note and recommend `/al-steer`. Code stays at green — planning halt, not rollback. Replan venue is `/al-steer`.
+Standalone refactors with no calling task: append the Notes line to a temporary note and run `/al-steer`. Code stays at green — planning halt, not rollback. Replan venue is `/al-steer`.
 
 ## Discipline
 
 - **Anti-pattern: feature creep during refactor.** No new behaviour. New behaviour belongs in `/al-implement` (new task) or `/al-refine` (re-plan). The refactor diff should leave observable behaviour identical.
 - May add new tests when refactoring reveals uncovered branches — those tests must pass against the *current* code before the refactor proceeds.
-- If a hidden requirement or design flaw surfaces → stop, append a Notes line, recommend `/al-design` or `/al-refine` via `/al-steer`. **No silent scope expansion.**
+- If a hidden requirement or design flaw surfaces → stop, append a Notes line, route to `/al-design` or `/al-refine` via `/al-steer`. **No silent scope expansion.**
 - `tasks.md` Notes entries are forward-facing facts — each independently actionable by a future agent.
 - A comment earns its place only when WHY is non-obvious from BC vocabulary and the surrounding code. No comment churn.
 
@@ -131,7 +131,7 @@ Standalone refactors with no calling task: append the Notes line to a temporary 
 
 ## Composition
 
-`/al-build` after every meaningful change. `/bc-standard-reference` for BC patterns, event signatures, BaseApp behaviour. `/al-research` when prior knowledge is uncertain. `/grill-me` when a non-obvious trade-off needs the user. `/al-design` for upfront architecture when refactoring legacy without a calling task. `/al-steer` is the replan venue. `/al-implement` calls `/al-refactor` only after green; `/al-mutate` runs after refactor to validate test rigor. `al-agentic-dev:al-second-opinion` — advisory gate (read-only sandbox; copilot CLI under the hood).
+`/al-build` after every meaningful change. `/bc-standard-reference` for BC patterns, event signatures, BaseApp behaviour. `/al-research` when prior knowledge is uncertain. `/grill-me` when a non-obvious trade-off needs the user. `/al-design` for upfront architecture when refactoring legacy without a calling task. `/al-steer` is the replan venue. `/al-implement` calls `/al-refactor` only after green; `/al-mutate` runs after refactor to validate test rigor. `/al-second-opinion` is the advisory gate (read-only sandbox; copilot CLI under the hood).
 
 ## Out of scope
 

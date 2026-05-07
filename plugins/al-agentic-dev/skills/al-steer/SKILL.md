@@ -5,7 +5,7 @@ description: Coach and navigator for AL/Business Central agentic dev — reads t
 
 # /al-steer — Coach / navigator
 
-Read `tasks.md`, `architecture.md`, the goal, the codebase, and recent commits. Name what's next, what's blocked, what's drifting. Run `/grill-me` when intent is unclear. Recommend a handoff — never force one. Canonical replan venue. Owner of `.out-of-scope/`.
+Read `tasks.md`, `architecture.md`, the goal, the codebase, and recent commits. Name what's next, what's blocked, what's drifting. Run `/grill-me` when intent is unclear. Name the next handoff — never force one. Canonical replan venue. Owner of `.out-of-scope/`.
 
 **Resolve `tasks.md`:** branch matches `^\d{3}-` → `specs/<branch>/tasks.md`. Otherwise `Stop.` — run `/al-design` first.
 
@@ -22,7 +22,7 @@ Read before writing:
 - **Read** anything: workspace, `tasks.md`, `architecture.md`, `CONTEXT.md`, `docs/adr/`, `.out-of-scope/`.
 - **Write `tasks.md`** structurally — only after explicit user ack. Never silent.
 - **Write `.out-of-scope/<concept>.md`** when grilling vetoes a recurring scope item with a substantive reason.
-- **Cannot edit code.** Cannot edit `architecture.md` in place — recommend `/al-design` re-run. Cannot edit `CONTEXT.md` or `docs/adr/` — owned by `/al-grill-adr` and `/al-design`. Never touch `[x]` tasks.
+- **Cannot edit code.** Cannot edit `architecture.md` in place — run `/al-design` again. Cannot edit `CONTEXT.md` or `docs/adr/` — owned by `/al-grill-adr` and `/al-design`. Never touch `[x]` tasks.
 
 Status markers in `tasks.md`: `[ ]` ready, `[~]` in progress, `[x]` done, `[!]` blocked. `T-NNN` IDs are monotonic and never reused.
 
@@ -51,7 +51,7 @@ One line per entry — task ID, severity tag, the symptom in BC vocabulary. Let 
 | _Avoid_: | T-007 is currently blocked because the refactor uncovered that the install codeunit needs a permission set entry, and we should probably also revisit T-009's scenarios since they may overlap |
 | Use: | `T-007 [!] trigger #2: install codeunit needs permission set entry — no covering task` |
 
-## Identify state and recommend (situation → action)
+## Identify state and route (situation → action)
 
 | Situation | Action |
 |---|---|
@@ -66,7 +66,7 @@ One line per entry — task ID, severity tag, the symptom in BC vocabulary. Let 
 | Code lacks coverage | `/al-mutate <area>` |
 | Code shape wrong, tests green | `/al-refactor <area>` |
 | "How does X work in BC?" | `/al-research <topic>` (or `/bc-standard-reference` for pure BaseApp) |
-| User uncertain | `/grill-me`, then recommend |
+| User uncertain | `/grill-me`, then route |
 | User has clarity | No handoff |
 
 ## Replan flow
@@ -89,7 +89,7 @@ Other skills (`/al-refine`, `/al-implement`, `/al-refactor`) hit a **Replan chec
 
    _Avoid_ mismatched markers — `[!]` not `[?]`, never `[ ]`-with-Notes when the trigger is a hard-halt. Mismatched markers fool the gate scanner.
 
-3. **Recommend mutations.** Present 2–3 candidate structural mutations for the entry. Run `/grill-me` on the choice — mandatory. Walk one branch at a time. Apply only after explicit ack.
+3. **Name candidate mutations.** Present 2–3 candidate structural mutations for the entry. Run `/grill-me` on the choice — mandatory. Walk one branch at a time. Apply only after explicit ack.
 
 4. **Apply the outcome:**
 
@@ -102,7 +102,7 @@ Other skills (`/al-refine`, `/al-implement`, `/al-refactor`) hit a **Replan chec
    | Update context line on `[ ]` task | One line under the task title. |
    | Strip stale `**Tests**` block | Reverts task to bare `[ ]`. |
 
-   Forbidden: rewriting Gherkin (`/al-refine`); rewriting `architecture.md` (`/al-design`); editing `## Goal` in place (recommend `/al-design` re-run); editing `CONTEXT.md` or `docs/adr/`; touching `[x]`.
+   Forbidden: rewriting Gherkin (`/al-refine`); rewriting `architecture.md` (`/al-design`); editing `## Goal` in place (run `/al-design` again); editing `CONTEXT.md` or `docs/adr/`; touching `[x]`.
 
 5. **False halt.** User vetoes the trigger after grilling → rewrite the Notes line as `**Replan** trigger #N: resolved — false halt: <reason>` and restore the prior status marker. Never silent un-flag.
 

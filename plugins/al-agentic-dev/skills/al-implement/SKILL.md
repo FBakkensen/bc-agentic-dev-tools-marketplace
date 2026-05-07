@@ -64,16 +64,16 @@ Prefer parallel subagents for independent work and output-heavy steps.
    - [ ] Assertions read posting outcomes / ledger entries / document flow — not table shape or call order.
    - [ ] `[SCENARIO]` / `[GIVEN]` / `[WHEN]` / `[THEN]` restate the originating Gherkin bullet faithfully.
 10. **Repeat 6–9** for each remaining Gherkin bullet on the task.
-11. **Mutation plan.** If decision logic changed (see *When to mutate*), append a `**Mutations**` block per the *Canonical `**Mutations**` block* in `agents/al-mutate.md` — one row per mutation site in `/al-mutate` priority order, with an expected killer named pre-run. Otherwise: `**Mutations:** skipped — no decision logic changed`.
+11. **Mutation plan.** If decision logic changed (see *When to mutate*), append a `**Mutations**` block per the *Canonical `**Mutations**` block* in `/al-mutate` — one row per mutation site in `/al-mutate` priority order, with an expected killer named pre-run. Otherwise: `**Mutations:** skipped — no decision logic changed`.
 12. **Second opinion (gate)** on the mutation list — mandatory when decision logic changed.
 13. **Commit WIP.** Mandatory before `/al-mutate`. Its preflight requires `git status` empty so revert is `git checkout --` against a known-good baseline. Stage all task work (tests, production, scaffolding, `**Mutations**` block, `[~]`) and commit. Skip if `/al-mutate` is skipped.
-14. **`/al-mutate`.** Mandatory when decision logic changed. Dispatch `Agent(subagent_type: 'al-agentic-dev:al-mutate')` with the calling task ID + `**Mutations**` block.
+14. **`/al-mutate`.** Mandatory when decision logic changed. Invoke `/al-mutate` with the calling task ID + `**Mutations**` block.
 15. **Replan check (gate)** — see below.
 16. **Close.** `/al-build` green is the precondition. Mark task `[x]`, commit. `Stop.`
 
 ## `/al-build` — the test gate
 
-**Invocation:** `Skill('al-build')`. **Returns:** compile status + test summary (passed / failed / errors). **Gates:**
+**Invocation:** run `/al-build`. **Returns:** compile status + test summary (passed / failed / errors). **Gates:**
 
 - After every RED — confirms the test fails on behaviour, not on missing types.
 - After every GREEN — confirms the test passes and others still pass.
@@ -88,13 +88,13 @@ Mutate if changed production lines contain branching, comparisons, boolean opera
 
 ## Second opinion (gate)
 
-Cross-check the mutation list via the `al-agentic-dev:al-second-opinion` agent. Mandatory when decision logic changed.
+Cross-check the mutation list via `/al-second-opinion`. Mandatory when decision logic changed.
 
-**Invoke:** `Agent(subagent_type: 'al-agentic-dev:al-second-opinion', prompt: <body>)`.
+**Invoke:** `/al-second-opinion` with the prompt body below.
 
-**Prompt body shape:** mutation list + production code it targets + operator priority + *"what mutations are missing or misaligned? AND does this surface any of the seven replan triggers? Return a bulleted list."* The agent prepends the role frame and applies the canonical safety envelope.
+**Prompt body shape:** mutation list + production code it targets + operator priority + *"what mutations are missing or misaligned? AND does this surface any of the seven replan triggers? Return a bulleted list."* `/al-second-opinion` prepends the role frame and applies the canonical safety envelope.
 
-Reconcile each returned bullet — accept (update list) or reject. Rejection rationale stays in the session — DO NOT write it to Notes. If a rejection encodes a durable principle, escalate via `/al-steer` to `/al-grill-adr` or `/al-design`. `/grill-me` when judgement needs the user. If the agent returns `Second opinion skipped: <reason>`, note it in session and proceed.
+Reconcile each returned bullet — accept (update list) or reject. Rejection rationale stays in the session — DO NOT write it to Notes. If a rejection encodes a durable principle, escalate via `/al-steer` to `/al-grill-adr` or `/al-design`. `/grill-me` when judgement needs the user. If `/al-second-opinion` returns `Second opinion skipped: <reason>`, note it in session and proceed.
 
 ## Replan check (gate)
 
@@ -112,7 +112,7 @@ Walk all seven triggers. Hard-halt sets `[!]`, appends `**Replan** trigger #N: <
 
 **Trivia exception** (precedes hard-halt). Missing scaffolding — permission set entry, object ID assignment, caption for a new object, BC-vocabulary rename — is not a replan trigger. Apply inline (≤3 lines), append `**Absorbed**: <one line>` to Notes, re-run `/al-build`, continue. Cap: one absorption per task. Never absorbs schema changes, new event publishers, new codeunits, or test-outcome changes.
 
-**No silent expansion.** A new Gherkin bullet is not a fix here — that's `/al-refine` after `/al-steer` clears the replan. A reshape of feature architecture isn't either — that's `/al-design` after `/al-steer`. Code stays as it lands; the gate halts planning, not rollback. Recommend `/al-steer`.
+**No silent expansion.** A new Gherkin bullet is not a fix here — that's `/al-refine` after `/al-steer` clears the replan. A reshape of feature architecture isn't either — that's `/al-design` after `/al-steer`. Code stays as it lands; the gate halts planning, not rollback. Run `/al-steer`.
 
 ## AL test conventions
 
@@ -126,7 +126,7 @@ Walk all seven triggers. Hard-halt sets `[!]`, appends `**Replan** trigger #N: <
 
 `/al-design` owns the canonical rules. Two bite at implementation time:
 
-- **New object** → assign ID via `mcp__al-object-id-ninja__ninja_assignObjectId` at the moment you add the object. Never hand-pick.
+- **New object** → assign ID via `/al-object-id-allocator` or the available object ID allocator at the moment you add the object. Never hand-pick.
 - **Renaming a shipped field** → don't. Set `ObsoleteState = Pending` → `Removed` over the deprecation window.
 
 If green code violates either, halt before mutation, reshape, and flag breaking-change risk on the task Notes.
@@ -144,7 +144,7 @@ If green code violates either, halt before mutation, reshape, and flag breaking-
 - `/al-design` precondition (`architecture.md` exists). `/al-refine` precondition (`**Tests**` block on the task).
 - `/al-research` for AL/BC facts not covered by `architecture.md`. `/bc-standard-reference` for pure BaseApp questions.
 - `/al-refactor` after green. `/al-mutate` after refactor (mandatory when decision logic changed). `/al-debug-logging` only when execution path is unclear and tests can't reveal it.
-- `al-agentic-dev:al-second-opinion` — advisory gate before `/al-mutate` (read-only sandbox; copilot CLI under the hood). `/grill-me` when judgement needs the user. `/al-steer` is the replan venue.
+- `/al-second-opinion` — advisory gate before `/al-mutate` (read-only sandbox; copilot CLI under the hood). `/grill-me` when judgement needs the user. `/al-steer` is the replan venue.
 
 ## Out of scope
 

@@ -40,7 +40,7 @@ Per finding, return:
 - **File path** in the mirror.
 - **Object name + ID** (e.g., `codeunit 80 "Sales-Post"`).
 - **Event signature** verbatim (parameters, modifiers, attribute).
-- **Hook point or reference pattern** — the recommended event/seam, or the procedure to mirror.
+- **Hook point or reference pattern** — the event/seam to use, or the procedure to mirror.
 - **One-line citation** — repo path or symbol address.
 
 _Avoid_: paraphrasing docs, vague summaries, or naming a source without quoting its content.
@@ -58,13 +58,13 @@ For open-ended questions, spawn a subagent with a focused brief:
 
 ```
 Search the standard mirror `fbakkensen/bc-w1` for [topic].
-Return: file path, object name + ID, event signature, recommended hook point.
+Return: file path, object name + ID, event signature, hook point.
 Quote source content, don't paraphrase. Tool-agnostic — use whatever search you have.
 ```
 
 ## Composition
 
-`/al-research` lists this skill as source #2 — reachable directly when the question is purely BaseApp / System Application / APIV2 behaviour. For BC concepts and patterns rather than a specific source location, the caller routes to source #3 (`mcp__bc-knowledge__*`). For AL syntax and version-current Microsoft docs, source #4 (`mcp__plugin_microsoft-docs__*`).
+`/al-research` lists this skill as source #2 — reachable directly when the question is purely BaseApp / System Application / APIV2 behaviour. For BC concepts and patterns rather than a specific source location, route to the available BC knowledge source. For AL syntax and version-current Microsoft docs, route to Microsoft Learn.
 
 Detail in:
 

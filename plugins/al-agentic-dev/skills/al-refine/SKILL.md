@@ -87,13 +87,13 @@ Scenario disagrees with family default → record override as a Notes line: `T-0
 
 ### 6. Second opinion (gate)
 
-Mandatory for non-trivial. Cross-check Gherkin bullets via the `al-agentic-dev:al-second-opinion` agent.
+Mandatory for non-trivial. Cross-check Gherkin bullets via `/al-second-opinion`.
 
-`Agent(subagent_type: 'al-agentic-dev:al-second-opinion', prompt: <body>)`
+Invoke `/al-second-opinion` with the prompt body below.
 
 **Prompt body shape:** task title + context line + Gherkin bullets + *"what scenarios, negatives, or boundaries are missing or wrong? AND does this surface any of the seven replan triggers? Return a bulleted list."*
 
-Reconcile each returned bullet — accept (update) or reject. Rejection rationale stays in the session — DO NOT write it to Notes. If a rejection encodes a durable principle, escalate via `/al-steer` to `/al-grill-adr` or `/al-design`. `/grill-me` when judgement needs the user. If the agent returns `Second opinion skipped: <reason>`, note it in session and proceed.
+Reconcile each returned bullet — accept (update) or reject. Rejection rationale stays in the session — DO NOT write it to Notes. If a rejection encodes a durable principle, escalate via `/al-steer` to `/al-grill-adr` or `/al-design`. `/grill-me` when judgement needs the user. If `/al-second-opinion` returns `Second opinion skipped: <reason>`, note it in session and proceed.
 
 ### 7. Replan check (gate)
 
@@ -109,7 +109,7 @@ Walk all seven triggers. Subjective triggers require a written verdict — one l
 | 6 | Architecture decomposition wrong | Family-level layer or module boundary cannot house this scenario cleanly | Hard-halt |
 | 7 | Goal drift | Scenarios push past the feature `Goal` line | Soft-flag |
 
-Hard-halt → set `[!]`, append Notes, stop, recommend `/al-steer`.
+Hard-halt → set `[!]`, append Notes, stop, run `/al-steer`.
 Soft-flag → append Notes, continue.
 
 Notes-line format: `**Replan** trigger #N: <one-line reason>`.

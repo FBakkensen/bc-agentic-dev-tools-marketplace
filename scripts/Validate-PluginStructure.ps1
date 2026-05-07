@@ -137,6 +137,45 @@ foreach ($pluginName in $claudePlugins) {
         $errors += "Missing .codex-plugin/plugin.json in $pluginName"
         Write-Host "FAIL: $pluginName/.codex-plugin/plugin.json missing" -ForegroundColor Red
     }
+
+    if ((Test-Path $claudePluginJson) -and (Test-Path $codexPluginJson)) {
+        try {
+            $claudeManifest = Get-Content -Path $claudePluginJson -Raw | ConvertFrom-Json
+            $codexManifest = Get-Content -Path $codexPluginJson -Raw | ConvertFrom-Json
+
+            if ($claudeManifest.version -ne $codexManifest.version) {
+                $errors += "Version mismatch in $pluginName manifests: Claude=$($claudeManifest.version), Codex=$($codexManifest.version)"
+                Write-Host "FAIL: $pluginName manifest versions differ: Claude=$($claudeManifest.version), Codex=$($codexManifest.version)" -ForegroundColor Red
+            } else {
+                Write-Host "OK: $pluginName manifest versions match ($($claudeManifest.version))" -ForegroundColor Green
+            }
+        } catch {
+            $errors += "Invalid JSON while comparing manifest versions in $pluginName"
+            Write-Host "FAIL: cannot compare manifest versions in $pluginName" -ForegroundColor Red
+        }
+    }
+}
+
+$pluginAgentDirs = @(Get-ChildItem -Path $pluginsPath -Recurse -Directory -Filter "agents" -ErrorAction SilentlyContinue)
+foreach ($pluginAgentDir in $pluginAgentDirs) {
+    $relativeAgentDir = Resolve-Path -Path $pluginAgentDir.FullName -Relative
+    $errors += "Plugin agents directory is not portable across Claude and Codex: $relativeAgentDir"
+    Write-Host "FAIL: plugin agents directory is not portable: $relativeAgentDir" -ForegroundColor Red
+}
+
+$runtimeSkillFiles = @(Get-ChildItem -Path $pluginsPath -Recurse -File -Filter "SKILL.md" -ErrorAction SilentlyContinue)
+foreach ($runtimeSkillFile in $runtimeSkillFiles) {
+    $content = Get-Content -Path $runtimeSkillFile.FullName -Raw
+    $relativeRuntimePath = Resolve-Path -Path $runtimeSkillFile.FullName -Relative
+
+    if ($content -match "Agent\(" -or
+        $content -match "Skill\(" -or
+        $content -match "mcp__" -or
+        $content -match "subagent_type" -or
+        $content -match "al-agentic-dev:al-") {
+        $errors += "Runtime skill contains host-specific tool invocation syntax or namespaced plugin-agent reference: $relativeRuntimePath"
+        Write-Host "FAIL: runtime skill contains host-specific tool syntax: $relativeRuntimePath" -ForegroundColor Red
+    }
 }
 
 $claudeInstructionFiles = @(Get-ChildItem -Path $repoRoot -Recurse -Filter "CLAUDE.md")

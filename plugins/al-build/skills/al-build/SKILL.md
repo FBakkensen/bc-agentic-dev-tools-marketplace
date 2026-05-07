@@ -35,9 +35,9 @@ Force republish: `pwsh "<skill-folder>/scripts/test.ps1" -Force`
 
 For test failures, dispatch `/al-debug-logging`. Don't grep the build log for clues telemetry already answers.
 
-## Run as subagent (recommended)
+## Delegation
 
-Build output is verbose. Contain it.
+Prefer a delegated worker when the host supports subagents. Build output is verbose. Contain it.
 
 ```
 IMPORTANT: READ-ONLY. Do not edit files.

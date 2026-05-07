@@ -32,8 +32,9 @@ side-band: /al-research, /al-steer (replan venue + .out-of-scope)
 | `/al-refine` | One task → numbered Gherkin scenarios. Per task, not per feature. |
 | `/al-implement` | Pick a Gherkin-ready task, run TDD: red → green → refactor → mutate. |
 | `/al-refactor` | Improve shape while green. No new behaviour. |
-| `/al-mutate` | Inject mutations to validate test rigor. Mandatory for non-trivial work. Dispatches the `al-agentic-dev:al-mutate` agent. |
+| `/al-mutate` | Inject mutations to validate test rigor. Mandatory for non-trivial work. Owns the mutate-build-revert cycle. |
 | `/al-research` | Verify BC specifics from authoritative sources. |
+| `/al-second-opinion` | Read-only copilot CLI advisory gate for non-trivial scenarios, mutation lists, and refactor checklists. |
 
 Skills compose by name. When you change a skill, scan the others for cross-references and update in lockstep.
 
@@ -74,25 +75,18 @@ Templates are materialised lazily on first need by the owning flow.
 
 Cross-skill paths within this plugin (when reaching into another skill's local references): `${CLAUDE_SKILL_DIR}/../<skill>/references/<file>`. Reach for plugin-level first; cross-skill paths are a smell to be migrated.
 
-## Skill / agent split
+## Skill-only runtime
 
-Most skills stay skill-only — `/al-design`, `/al-refine`, `/al-grill-adr`, `/al-steer` need full reasoning. An agent earns the pattern only on three signals:
+**Rule**: Ship runtime behavior as skills only. DO NOT add Claude-only plugin agents or Codex-invisible runtime prompts. Put reusable runtime rules in `SKILL.md` or in a `references/*.md` file a skill explicitly reads.
 
-- tight tool needs (a small allowlist),
-- output-heavy iteration (mutate-build-revert, advisory call-and-format),
-- a focused operational system prompt that would otherwise dilute the parent skill.
+The two former agent-shaped workflows now live as skills:
 
-Two agents currently qualify:
-
-- **`agents/al-mutate.md`** — preflight, canonical `**Mutations**` block, mutation classes, survivor classification, BC safety, output. Tools: `PowerShell, Edit, Read, Glob`. Dispatched by `/al-implement` step 14.
-- **`agents/al-second-opinion.md`** — read-only advisory call against copilot CLI. Tool allowlist (`view,rg,glob,show_file,lsp`), 600s timeout, failure formatting. Tools: `PowerShell` only. **Windows-only** — `Start-Job`/`Wait-Job` targets pwsh on Windows; portability is a future concern. Dispatched by `/al-implement`, `/al-refine`, `/al-refactor` at their Second-opinion gates.
+- **`skills/al-mutate/SKILL.md`** — preflight, canonical `**Mutations**` block, mutation classes, survivor classification, BC safety, output.
+- **`skills/al-second-opinion/SKILL.md`** — read-only advisory call against copilot CLI. Tool allowlist (`view,rg,glob,show_file,lsp`), 600s timeout, failure formatting. **Windows-only** — `Start-Job` / `Wait-Job` targets pwsh on Windows; portability is a future concern.
 
 ## Layout
 
 ```
-agents/
-├── al-mutate.md            # Invoked by /al-implement step 14
-└── al-second-opinion.md    # Advisory copilot CLI gate
 references/                 # Plugin-level shared — read by ≥2 skills, or cited by shared templates
 ├── CONTEXT.template.md
 ├── adr.template.md
@@ -107,13 +101,14 @@ skills/
 │       └── architecture.template.md
 ├── al-grill-adr/SKILL.md
 ├── al-implement/SKILL.md
-├── al-mutate/SKILL.md      # Thin shim — dispatches agents/al-mutate.md
+├── al-mutate/SKILL.md
 ├── al-refactor/
 │   ├── SKILL.md
 │   └── references/
 │       └── legacy-refactor-plan.md
 ├── al-refine/SKILL.md
 ├── al-research/SKILL.md
+├── al-second-opinion/SKILL.md
 ├── al-scope/SKILL.md
 └── al-steer/
     ├── SKILL.md
@@ -121,4 +116,4 @@ skills/
         └── out-of-scope.template.md
 ```
 
-No build scripts. Skill bodies, agent definitions, and reference templates are the entire product.
+No build scripts. Skill bodies and reference templates are the entire product.
