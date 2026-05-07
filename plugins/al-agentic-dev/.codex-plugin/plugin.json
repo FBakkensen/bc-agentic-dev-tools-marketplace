@@ -1,0 +1,11 @@
+{
+  "name": "al-agentic-dev",
+  "description": "Agentic AL/Business Central development — composable skills (al-steer, al-grill-adr, al-design, al-scope, al-refine, al-implement, al-refactor, al-mutate, al-research) with two persistent layers: repo-root memory (CONTEXT.md, docs/adr/, .out-of-scope/) and branch-scoped feature state (architecture.md + tasks.md). Replaces complex multi-agent workflows with focused single-purpose skills, standard BC vocabulary, and KISS/YAGNI principles.",
+  "version": "0.11.1",
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "AL Agentic Dev",
+    "developerName": "9Altitudes",
+    "category": "Developer Tools"
+  }
+}

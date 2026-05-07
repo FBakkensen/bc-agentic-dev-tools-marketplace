@@ -1,0 +1,80 @@
+{
+  "name": "bc-agentic-dev-tools",
+  "interface": {
+    "displayName": "BC Agentic Dev Tools"
+  },
+  "plugins": [
+    {
+      "name": "al-build",
+      "source": {
+        "source": "local",
+        "path": "./plugins/al-build"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Developer Tools"
+    },
+    {
+      "name": "grill-me",
+      "source": {
+        "source": "local",
+        "path": "./plugins/grill-me"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Developer Tools"
+    },
+    {
+      "name": "bc-standard-reference",
+      "source": {
+        "source": "local",
+        "path": "./plugins/bc-standard-reference"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Developer Tools"
+    },
+    {
+      "name": "release-notes",
+      "source": {
+        "source": "local",
+        "path": "./plugins/release-notes"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Developer Tools"
+    },
+    {
+      "name": "al-debug-logging",
+      "source": {
+        "source": "local",
+        "path": "./plugins/al-debug-logging"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Developer Tools"
+    },
+    {
+      "name": "al-agentic-dev",
+      "source": {
+        "source": "local",
+        "path": "./plugins/al-agentic-dev"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Developer Tools"
+    }
+  ]
+}

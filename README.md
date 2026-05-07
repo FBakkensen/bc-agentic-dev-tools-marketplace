@@ -1,13 +1,25 @@
 # bc-agentic-dev-tools
 
-Business Central agentic development tools — Claude Code plugin marketplace for AI-assisted AL development.
+Business Central agentic development tools — Claude Code and Codex plugin marketplace for AI-assisted AL development.
 
 ## Install
+
+### Claude Code
 
 ```bash
 /plugin marketplace add fbakkensen/bc-agentic-dev-tools
 /plugin install <plugin-name>@bc-agentic-dev-tools
 ```
+
+### Codex
+
+From Codex, add this repo as a plugin marketplace and install the plugin you need:
+
+```bash
+codex plugin marketplace add fbakkensen/bc-agentic-dev-tools
+```
+
+Codex can then browse the marketplace from `/plugins`, or install plugins from the Codex plugin UI.
 
 ## Plugins
 
@@ -20,8 +32,10 @@ Business Central agentic development tools — Claude Code plugin marketplace fo
 
 ## Manifest
 
-- Marketplace: `.claude-plugin/marketplace.json`
-- Plugin: `plugins/<plugin-name>/.claude-plugin/plugin.json`
+- Claude marketplace: `.claude-plugin/marketplace.json`
+- Claude plugin: `plugins/<plugin-name>/.claude-plugin/plugin.json`
+- Codex marketplace: `.agents/plugins/marketplace.json`
+- Codex plugin: `plugins/<plugin-name>/.codex-plugin/plugin.json`
 
 ## License
 
