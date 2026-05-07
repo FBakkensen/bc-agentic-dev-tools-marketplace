@@ -1,11 +1,12 @@
 #Requires -Version 7.2
 <#
 .SYNOPSIS
-    Validates the Claude and Codex marketplaces and per-plugin manifests.
+    Validates the Claude and Codex marketplaces, manifests, and instructions.
 .DESCRIPTION
     Checks that every plugin listed in the Claude marketplace has a folder
     under plugins/, both Claude and Codex per-plugin manifests, and a matching
-    Codex marketplace entry.
+    Codex marketplace entry. Also checks that every CLAUDE.md instruction file
+    has a colocated AGENTS.md bridge for Codex.
 .EXAMPLE
     pwsh scripts/Validate-PluginStructure.ps1
 #>
@@ -135,6 +136,20 @@ foreach ($pluginName in $claudePlugins) {
     } else {
         $errors += "Missing .codex-plugin/plugin.json in $pluginName"
         Write-Host "FAIL: $pluginName/.codex-plugin/plugin.json missing" -ForegroundColor Red
+    }
+}
+
+$claudeInstructionFiles = @(Get-ChildItem -Path $repoRoot -Recurse -Filter "CLAUDE.md")
+foreach ($claudeInstructionFile in $claudeInstructionFiles) {
+    $agentsInstructionPath = Join-Path $claudeInstructionFile.Directory.FullName "AGENTS.md"
+    $relativeClaudePath = Resolve-Path -Path $claudeInstructionFile.FullName -Relative
+    $relativeAgentsPath = Resolve-Path -Path $agentsInstructionPath -Relative -ErrorAction SilentlyContinue
+
+    if (Test-Path $agentsInstructionPath) {
+        Write-Host "OK: $relativeAgentsPath exists" -ForegroundColor Green
+    } else {
+        $errors += "Missing AGENTS.md next to $relativeClaudePath"
+        Write-Host "FAIL: missing AGENTS.md next to $relativeClaudePath" -ForegroundColor Red
     }
 }
 

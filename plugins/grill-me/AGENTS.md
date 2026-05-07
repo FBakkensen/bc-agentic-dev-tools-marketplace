@@ -1,0 +1,7 @@
+# Codex instructions
+
+Read [CLAUDE.md](CLAUDE.md) before changing this plugin. It is the canonical
+dev-time guidance for this plugin.
+
+Keep this file as the Codex-facing bridge. If plugin guidance changes, update
+`CLAUDE.md` first and keep this reference in sync.
