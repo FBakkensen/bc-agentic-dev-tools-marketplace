@@ -6,16 +6,24 @@
 
 .DESCRIPTION
     Runs provisioning for both main app and test app:
-    - Installs/updates AL compiler from NuGet
+    - Ensures the AL compiler is installed
     - Downloads symbol packages for app/
     - Downloads symbol packages for test/
 
+.PARAMETER UpdateCompiler
+    Force update of the global AL compiler tool. By default an existing compiler is reused.
+
 .EXAMPLE
     pwsh -File provision.ps1
+
+.EXAMPLE
+    pwsh -File provision.ps1 -UpdateCompiler
 #>
 
 [CmdletBinding()]
-param()
+param(
+    [switch]$UpdateCompiler
+)
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
@@ -35,8 +43,8 @@ Write-BuildMessage -Type Info -Message "Configuration:"
 Write-BuildMessage -Type Detail -Message "App Directory: $($config.AppDir)"
 Write-BuildMessage -Type Detail -Message "Test Directory: $($config.TestDir)"
 
-# Step 1: Install/update compiler
-Install-ALCompiler
+# Step 1: Ensure compiler
+Install-ALCompiler -Update:$UpdateCompiler
 
 # Step 2: Download symbols for main app
 if (Test-Path $config.AppDir) {

@@ -25,7 +25,7 @@ Set location to the consumer repo root, then:
 pwsh "<skill-folder>/scripts/test.ps1"
 ```
 
-Faster iteration: `pwsh "<skill-folder>/scripts/test.ps1" -TestCodeunit <id>`
+Always run the full gate. Do not filter tests by codeunit.
 Force republish: `pwsh "<skill-folder>/scripts/test.ps1" -Force`
 
 **Outputs:**
@@ -56,7 +56,7 @@ Report:
 
 Resolution order, highest wins:
 
-1. **CLI flag** — `-AppDir "src"`, `-TestCodeunit 50123`.
+1. **CLI flag** — script switches such as `-Force`; app/test paths come from env/config.
 2. **Env var** — `ALBT_APP_DIR`, `ALBT_BC_CONTAINER_NAME`, `WARN_AS_ERROR`.
 3. **`al-build.json`** in repo root.
 4. **Built-in defaults.**

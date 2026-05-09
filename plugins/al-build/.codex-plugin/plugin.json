@@ -1,7 +1,7 @@
 {
   "name": "al-build",
   "description": "Build and test AL apps for Business Central. Compiles and runs tests locally using a local Docker container. Includes quality gate hook.",
-  "version": "2.1.5",
+  "version": "3.0.0",
   "skills": "./skills/",
   "interface": {
     "displayName": "AL Build",

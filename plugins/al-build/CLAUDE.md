@@ -15,8 +15,23 @@ skills/al-build/
 ## Lifecycle (in consuming projects)
 
 1. `init.ps1` — drops `al-build.json` into the consumer repo root.
-2. `provision.ps1` — one-time symbol/Docker setup.
+2. `provision.ps1` — one-time symbol/Docker setup. Reuses an installed compiler by default; `-UpdateCompiler` is explicit.
 3. `test.ps1` — the gate. Writes `last.xml` and `telemetry.jsonl`.
+
+## Smoke test
+
+Use this after changing the script contract or gate behavior.
+
+1. Create a new disposable repo under `$env:TEMP`.
+2. Add a minimal AL app under `app/` and a minimal AL test app under `test/`. Keep the test app dependent on the app so provisioning proves repo-local dependencies are not downloaded as symbol packages.
+3. Add repo-root `al-build.json` with `appDir`, `testDir`, and `testAppName`.
+4. Initialize git and switch to a non-default branch. The branch name drives the agent container name.
+5. Verify the snapshot image from `container.imageName` exists. Do not bootstrap a golden container as part of this smoke test unless that is the explicit target.
+6. From the disposable repo root, run `pwsh "<marketplace-root>/plugins/al-build/skills/al-build/scripts/provision.ps1"`.
+7. From the disposable repo root, run `pwsh "<marketplace-root>/plugins/al-build/skills/al-build/scripts/test.ps1"`.
+8. Verify `.output/TestResults/last.xml` exists and reports the expected test pass.
+
+The smoke test must exercise the full gate. Do not use test-codeunit filtering.
 
 ## Editing rules
 

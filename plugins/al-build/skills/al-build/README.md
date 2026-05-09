@@ -15,6 +15,9 @@ Self-contained build/test gate for AL/Business Central. No external task runners
 # 1. Install compiler, download symbols
 pwsh scripts/provision.ps1
 
+# Optional: force AL compiler update
+pwsh scripts/provision.ps1 -UpdateCompiler
+
 # 2. Golden BC container (once per BC version)
 pwsh scripts/new-bc-container.ps1
 
@@ -33,7 +36,7 @@ pwsh scripts/test.ps1
 |---|---|
 | `test.ps1` | **Canonical gate.** Build, publish, run tests. |
 | `init.ps1` | Drop `al-build.json` in repo root. |
-| `provision.ps1` | One-time setup (compiler + symbols). |
+| `provision.ps1` | One-time setup (compiler + symbols). Reuses an installed compiler unless `-UpdateCompiler` is passed. |
 | `clean.ps1` | Remove build artifacts. |
 | `new-bc-container.ps1` | Create golden BC container. |
 | `commit-bc-container.ps1` | Commit container to snapshot image. |
@@ -47,9 +50,6 @@ pwsh scripts/test.ps1
 ```powershell
 # Full gate
 pwsh scripts/test.ps1
-
-# Single codeunit
-pwsh scripts/test.ps1 -TestCodeunit 50123
 
 # Force republish (after container recreate)
 pwsh scripts/test.ps1 -Force
@@ -82,7 +82,7 @@ pwsh scripts/prune.ps1            # execute
 
 Highest wins:
 
-1. **CLI flag** — `-AppDir "src"`.
+1. **CLI flag** — script switches such as `-Force`; app/test paths come from env/config.
 2. **Env var** — `ALBT_APP_DIR`.
 3. **`al-build.json`** in repo root. **Required.**
 4. **Built-in defaults.**
@@ -162,7 +162,7 @@ State files live per-container in the symbol cache directory.
 
 1. Read `.output/TestResults/last.xml` for assertion failures.
 2. Use telemetry — `/al-debug-logging` consumes `.output/TestResults/telemetry.jsonl`.
-3. Isolate: `pwsh scripts/test.ps1 -TestCodeunit <id>`.
+3. Fix the failing test or code, then rerun the full gate.
 
 ### Container issues
 
@@ -177,7 +177,7 @@ State files live per-container in the symbol cache directory.
 | "Compiler not found" | Provision not run | `pwsh scripts/provision.ps1` |
 | "Container unhealthy" | Docker | Restart Docker, recreate container |
 | "Symbol not found" | Missing dependency | Check `app.json` deps, re-provision |
-| "Test timeout" | Long-running tests | Raise timeout or isolate the test |
+| "Test timeout" | Long-running tests | Raise timeout or optimize the slow suite |
 
 ## Output files
 

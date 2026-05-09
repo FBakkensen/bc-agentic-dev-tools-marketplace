@@ -39,6 +39,7 @@ $script:StartTime = Get-Date
 $script:versionWarnings = @{}
 $script:summaryRows = New-Object System.Collections.Generic.List[object]
 $script:raiseRows = New-Object System.Collections.Generic.List[object]
+$script:localDependencySkips = New-Object System.Collections.Generic.List[object]
 
 Add-Type -AssemblyName System.IO.Compression.FileSystem -ErrorAction SilentlyContinue
 
@@ -106,8 +107,49 @@ function Compare-Version {
     return [string]::Compare($Left, $Right, $true)
 }
 
+function Get-CopiedLocalDependencyIds {
+    param([string]$CurrentAppDir)
+
+    $copiedLocalAppIds = @{}
+    if (-not $env:ALBT_APP_DIR -or -not $env:ALBT_TEST_DIR) {
+        return $copiedLocalAppIds
+    }
+
+    $currentAppPath = Expand-FullPath -Path $CurrentAppDir
+    $testAppPath = Expand-FullPath -Path $env:ALBT_TEST_DIR
+    if ([string]::Compare($currentAppPath, $testAppPath, $true) -ne 0) {
+        return $copiedLocalAppIds
+    }
+
+    $mainAppPath = Expand-FullPath -Path $env:ALBT_APP_DIR
+    $mainAppJsonPath = Join-Path -Path $mainAppPath -ChildPath 'app.json'
+    if (-not (Test-Path -LiteralPath $mainAppJsonPath)) {
+        return $copiedLocalAppIds
+    }
+
+    try {
+        $mainAppJson = Read-JsonFile -Path $mainAppJsonPath
+        if (-not $mainAppJson.id) { return $copiedLocalAppIds }
+
+        $appId = ([string]$mainAppJson.id).Trim().ToLowerInvariant()
+        if (-not $appId) { return $copiedLocalAppIds }
+
+        $copiedLocalAppIds[$appId] = [pscustomobject]@{
+            Name = [string]$mainAppJson.name
+            Path = $mainAppJsonPath
+        }
+    } catch {
+        Write-Warning "Failed to inspect configured main app manifest $($mainAppJsonPath): $($_.Exception.Message)"
+    }
+
+    return $copiedLocalAppIds
+}
+
 function Build-PackageMap {
-    param($AppJson)
+    param(
+        $AppJson,
+        [hashtable]$CopiedLocalAppIds = @{}
+    )
 
     $map = [ordered]@{}
 
@@ -118,6 +160,17 @@ function Build-PackageMap {
     if ((Test-JsonProperty $AppJson 'dependencies') -and $AppJson.dependencies) {
         foreach ($dep in $AppJson.dependencies) {
             if (-not ($dep.publisher) -or -not ($dep.name) -or -not ($dep.id) -or -not ($dep.version)) { continue }
+            $depAppId = ([string]$dep.id).Trim().ToLowerInvariant()
+            if ($CopiedLocalAppIds.ContainsKey($depAppId)) {
+                $script:localDependencySkips.Add([pscustomobject]@{
+                    Publisher = [string]$dep.publisher
+                    Name      = [string]$dep.name
+                    Id        = [string]$dep.id
+                    Path      = $CopiedLocalAppIds[$depAppId].Path
+                }) | Out-Null
+                continue
+            }
+
             $publisher = ($dep.publisher -replace '\s+', '')
             $name = ($dep.name -replace '\s+', '')
             $appId = ($dep.id -replace '\s+', '')
@@ -519,10 +572,14 @@ Ensure-Directory -Path $cacheDir
 
 $manifestPath = Join-Path -Path $cacheDir -ChildPath 'symbols.lock.json'
 $manifest = Load-Manifest -Path $manifestPath
-$packageMap = Build-PackageMap -AppJson $appJson
+$copiedLocalAppIds = Get-CopiedLocalDependencyIds -CurrentAppDir $AppDir
+$packageMap = Build-PackageMap -AppJson $appJson -CopiedLocalAppIds $copiedLocalAppIds
 
 Write-BuildHeader 'Package Requirements'
 Write-BuildMessage -Type Info -Message "$($packageMap.Count) packages required"
+foreach ($localDependency in $script:localDependencySkips) {
+    Write-BuildMessage -Type Detail -Message "Skipping test-gate local dependency: $($localDependency.Publisher) $($localDependency.Name)"
+}
 
 if ($packageMap.Count -gt 0) {
     Write-BuildMessage -Type Step -Message "Processing package requirements..."
@@ -533,7 +590,7 @@ if ($packageMap.Count -gt 0) {
     }
 
     # Clear existing symbols to prevent duplicate .app files (AL compiler picks randomly)
-    $existingApps = Get-ChildItem -Path $cacheDir -Filter '*.app' -File -ErrorAction SilentlyContinue
+    $existingApps = @(Get-ChildItem -Path $cacheDir -Filter '*.app' -File -ErrorAction SilentlyContinue)
     if ($existingApps -and $existingApps.Count -gt 0) {
         Write-BuildMessage -Type Step -Message "Clearing $($existingApps.Count) existing symbol file(s)..."
         $existingApps | Remove-Item -Force -ErrorAction SilentlyContinue

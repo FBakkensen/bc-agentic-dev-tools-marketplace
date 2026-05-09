@@ -15,9 +15,6 @@
     7. Publish test app
     8. Run tests
 
-.PARAMETER TestCodeunit
-    Optional: Run only a specific test codeunit (by ID or name, wildcards supported).
-
 .PARAMETER Force
     Force republish even if apps are unchanged.
 
@@ -26,17 +23,12 @@
     # Run all tests
 
 .EXAMPLE
-    pwsh -File test.ps1 -TestCodeunit 50123
-    # Run specific test codeunit
-
-.EXAMPLE
     pwsh -File test.ps1 -Force
     # Force republish and run all tests
 #>
 
 [CmdletBinding()]
 param(
-    [string]$TestCodeunit,
     [switch]$Force
 )
 
@@ -74,9 +66,6 @@ Write-BuildMessage -Type Info -Message "Configuration:"
 Write-BuildMessage -Type Detail -Message "App Directory: $($config.AppDir)"
 Write-BuildMessage -Type Detail -Message "Test Directory: $($config.TestDir)"
 Write-BuildMessage -Type Detail -Message "Container: $($config.ContainerName)"
-if ($TestCodeunit) {
-    Write-BuildMessage -Type Detail -Message "Test Filter: $TestCodeunit"
-}
 
 # Step 1: Build main app
 Start-Step 'build'
@@ -124,9 +113,6 @@ Stop-Step 'publish-test'
 Start-Step 'test'
 $testParams = @{
     TestDir = $config.TestDir
-}
-if ($TestCodeunit) {
-    $testParams['TestCodeunit'] = $TestCodeunit
 }
 Invoke-ALTest @testParams
 Stop-Step 'test'

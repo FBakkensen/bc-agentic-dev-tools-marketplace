@@ -198,13 +198,18 @@ function Get-ToolPackageId {
 function Install-ALCompiler {
     <#
     .SYNOPSIS
-        Install or update the AL compiler to the latest available version
+        Ensure the AL compiler is available
     .DESCRIPTION
-        Installs the latest AL compiler from NuGet using dotnet global tools.
+        Reuses an existing AL compiler by default. Installs the compiler when missing,
+        or updates it only when explicitly requested.
         Also downloads and installs LinterCop analyzer.
+    .PARAMETER Update
+        Force update of an existing global compiler tool.
     #>
     [CmdletBinding()]
-    param()
+    param(
+        [switch]$Update
+    )
 
     Write-BuildHeader 'AL Compiler Provisioning'
 
@@ -214,32 +219,48 @@ function Install-ALCompiler {
     }
 
     $packageId = Get-ToolPackageId
-    Write-BuildMessage -Type Step -Message "Installing AL compiler from NuGet..."
     Write-BuildMessage -Type Detail -Message "Package: $packageId"
 
-    # Try install first (will fail if already exists)
-    $installArgs = @('tool', 'install', '--global', $packageId, '--prerelease')
-    $installOutput = & dotnet @installArgs 2>&1
+    $version = Get-InstalledCompilerVersion -PackageId $packageId
+    $alcPath = $null
+    if ($version) {
+        $alcPath = Get-LatestCompilerPath -PackageId $packageId
+    }
 
-    if ($LASTEXITCODE -ne 0) {
-        # Tool exists, update it instead
-        Write-BuildMessage -Type Detail -Message "Updating existing installation..."
+    if ($version -and $alcPath -and -not $Update) {
+        Write-BuildMessage -Type Success -Message "AL compiler already installed: $version"
+        Write-BuildMessage -Type Detail -Message "Path: $alcPath"
+    } elseif ($version -and $Update) {
+        Write-BuildMessage -Type Step -Message "Updating AL compiler from NuGet..."
         $updateArgs = @('tool', 'update', '--global', $packageId, '--prerelease')
         $updateOutput = & dotnet @updateArgs 2>&1
 
         if ($LASTEXITCODE -ne 0) {
-            throw "dotnet tool install and update both failed with exit code $LASTEXITCODE"
+            throw "dotnet tool update failed with exit code $LASTEXITCODE. Output: $($updateOutput -join [Environment]::NewLine)"
         }
+
+        $version = Get-InstalledCompilerVersion -PackageId $packageId
+        $alcPath = Get-LatestCompilerPath -PackageId $packageId
+        Write-BuildMessage -Type Success -Message "AL compiler updated: $version"
+    } elseif (-not $version) {
+        Write-BuildMessage -Type Step -Message "Installing AL compiler from NuGet..."
+        $installArgs = @('tool', 'install', '--global', $packageId, '--prerelease')
+        $installOutput = & dotnet @installArgs 2>&1
+
+        if ($LASTEXITCODE -ne 0) {
+            throw "dotnet tool install failed with exit code $LASTEXITCODE. Output: $($installOutput -join [Environment]::NewLine)"
+        }
+
+        $version = Get-InstalledCompilerVersion -PackageId $packageId
+        $alcPath = Get-LatestCompilerPath -PackageId $packageId
+        Write-BuildMessage -Type Success -Message "AL compiler installed: $version"
     }
 
-    # Get installed version
-    $version = Get-InstalledCompilerVersion -PackageId $packageId
-    Write-BuildMessage -Type Success -Message "AL compiler installed: $version"
-
-    # Find compiler path
-    $alcPath = Get-LatestCompilerPath -PackageId $packageId
+    if (-not $version) {
+        throw "AL compiler version not found after provisioning"
+    }
     if (-not $alcPath) {
-        throw "Compiler executable not found after installation"
+        throw "Compiler executable not found after provisioning. Run `provision.ps1 -UpdateCompiler` to repair the global tool installation."
     }
 
     # Save sentinel file
@@ -774,15 +795,11 @@ function Invoke-ALTest {
         Run AL tests in a Business Central container
     .PARAMETER TestDir
         Directory containing the test app
-    .PARAMETER TestCodeunit
-        Optional: specific test codeunit to run
     #>
     [CmdletBinding()]
     param(
         [Parameter(Mandatory)]
-        [string]$TestDir,
-
-        [string]$TestCodeunit
+        [string]$TestDir
     )
 
     $config = Get-BuildConfig
@@ -794,9 +811,6 @@ function Invoke-ALTest {
 
     Write-BuildHeader "AL Test Execution"
     Write-BuildMessage -Type Step -Message "Running tests: $($appJson.name)"
-    if ($TestCodeunit) {
-        Write-BuildMessage -Type Detail -Message "Filter: $TestCodeunit"
-    }
 
     # Setup results paths - store outside source to avoid AL1025 compiler errors
     $repoRoot = & git rev-parse --show-toplevel 2>$null
@@ -869,9 +883,6 @@ function Invoke-ALTest {
 
     if ($config.TestRunnerCodeunitId) {
         $testParams['testRunner'] = $config.TestRunnerCodeunitId
-    }
-    if ($TestCodeunit) {
-        $testParams['testCodeunit'] = $TestCodeunit
     }
 
     # Run tests
