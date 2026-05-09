@@ -111,17 +111,17 @@ function Get-CopiedLocalDependencyIds {
     param([string]$CurrentAppDir)
 
     $copiedLocalAppIds = @{}
-    if (-not $env:ALBT_APP_DIR -or -not $env:ALBT_TEST_DIR) {
+    if (-not $env:ALBT_APP_DIR) {
         return $copiedLocalAppIds
     }
 
+    # If the current app is not the main app, treat main app as a local dependency
     $currentAppPath = Expand-FullPath -Path $CurrentAppDir
-    $testAppPath = Expand-FullPath -Path $env:ALBT_TEST_DIR
-    if ([string]::Compare($currentAppPath, $testAppPath, $true) -ne 0) {
+    $mainAppPath = Expand-FullPath -Path $env:ALBT_APP_DIR
+    if ([string]::Compare($currentAppPath, $mainAppPath, $true) -eq 0) {
         return $copiedLocalAppIds
     }
 
-    $mainAppPath = Expand-FullPath -Path $env:ALBT_APP_DIR
     $mainAppJsonPath = Join-Path -Path $mainAppPath -ChildPath 'app.json'
     if (-not (Test-Path -LiteralPath $mainAppJsonPath)) {
         return $copiedLocalAppIds

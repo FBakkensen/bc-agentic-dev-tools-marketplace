@@ -1,0 +1,17 @@
+{
+  "id": "11111111-1111-1111-1111-111111111101",
+  "runtime": "14.0",
+  "target": "OnPrem",
+  "version": "1.0.0.0",
+  "idRanges": [
+    {
+      "to": 70199,
+      "from": 70100
+    }
+  ],
+  "name": "Smoke S1 Main",
+  "platform": "25.0.0.0",
+  "application": "25.0.0.0",
+  "publisher": "SmokeTest",
+  "dependencies": []
+}
