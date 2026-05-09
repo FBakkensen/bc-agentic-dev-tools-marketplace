@@ -8,6 +8,9 @@
   "warnAsError": false,
   "rulesetPath": "al.ruleset.json",
 
+  "unitTestApp": "",
+  "unitTestInitEvents": false,
+
   "serverInstance": "BC",
 
   "container": {

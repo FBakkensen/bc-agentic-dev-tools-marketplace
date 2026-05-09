@@ -46,6 +46,11 @@ Write-BuildMessage -Type Detail -Message "Test Apps: $($config.TestApps -join ',
 # Step 1: Ensure compiler
 Install-ALCompiler -Update:$UpdateCompiler
 
+# Step 1b: Ensure AL Runner (if unitTestApp is configured)
+if ($config.UnitTestApp) {
+    Install-ALRunner -Update:$UpdateCompiler
+}
+
 # Step 2: Download symbols for main app
 if (Test-Path $config.AppDir) {
     & "$PSScriptRoot/download-symbols.ps1" -AppDir $config.AppDir
@@ -66,6 +71,19 @@ foreach ($testAppDir in $config.TestApps) {
     } else {
         $dirName = Split-Path $testAppDir -Leaf
         Write-BuildMessage -Type Detail -Message "Test app directory not found: $dirName (skipping)"
+    }
+}
+
+# Step 4: Download symbols for unitTestApp (if not already covered by testApps)
+if ($config.UnitTestApp -and (Test-Path $config.UnitTestApp)) {
+    $alreadyCovered = $config.TestApps | Where-Object {
+        [IO.Path]::GetFullPath($_) -eq [IO.Path]::GetFullPath($config.UnitTestApp)
+    }
+    if (-not $alreadyCovered) {
+        & "$PSScriptRoot/download-symbols.ps1" -AppDir $config.UnitTestApp
+        if ($LASTEXITCODE -ne 0) {
+            throw "Symbol download failed for unit test app: $($config.UnitTestApp)"
+        }
     }
 }
 

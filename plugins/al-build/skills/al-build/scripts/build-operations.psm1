@@ -127,9 +127,22 @@ function Get-BuildConfig {
         return $Default
     }
 
+    # Resolve unitTestApp (single string, empty = disabled)
+    $unitTestAppRaw = Resolve-Value 'unitTestApp' 'ALBT_UNIT_TEST_APP' ''
+    $unitTestApp = ''
+    if ($unitTestAppRaw -and $unitTestAppRaw -ne '') {
+        if (-not [System.IO.Path]::IsPathRooted($unitTestAppRaw)) {
+            $unitTestApp = Join-Path $workspaceRoot $unitTestAppRaw
+        } else {
+            $unitTestApp = $unitTestAppRaw
+        }
+    }
+
     $config = [PSCustomObject]@{
         AppDir                              = $appDir
         TestApps                            = $testApps
+        UnitTestApp                         = $unitTestApp
+        UnitTestInitEvents                  = ConvertTo-Boolean (Resolve-Value 'unitTestInitEvents' 'ALBT_UNIT_TEST_INIT_EVENTS' $false)
         WarnAsError                         = Resolve-Value 'warnAsError' 'WARN_AS_ERROR' $false
         RulesetPath                         = Resolve-Value 'rulesetPath' 'RULESET_PATH' 'al.ruleset.json'
         ServerInstance                      = Resolve-Value 'serverInstance' 'ALBT_BC_SERVER_INSTANCE' 'BC'
@@ -290,6 +303,66 @@ function Install-ALCompiler {
     Install-LinterCop -CompilerVersion $version -CompilerDir (Split-Path -Parent $alcPath)
 
     Write-BuildMessage -Type Success -Message "Compiler provisioning complete"
+}
+
+function Install-ALRunner {
+    <#
+    .SYNOPSIS
+        Ensure the AL Runner tool is available
+    .DESCRIPTION
+        Installs BusinessCentral.AL.Runner as a global dotnet tool for containerless
+        unit testing. Mirrors the Install-ALCompiler pattern.
+    .PARAMETER Update
+        Force update of an existing global tool.
+    #>
+    [CmdletBinding()]
+    param(
+        [switch]$Update
+    )
+
+    Write-BuildHeader 'AL Runner Provisioning'
+
+    if (-not (Get-Command dotnet -ErrorAction SilentlyContinue)) {
+        throw 'dotnet CLI not found. Install .NET SDK from https://dotnet.microsoft.com/download'
+    }
+
+    $packageId = 'MSDyn365BC.AL.Runner'
+    $existing = Get-Command al-runner -ErrorAction SilentlyContinue
+
+    if ($existing -and -not $Update) {
+        Write-BuildMessage -Type Success -Message "AL Runner already installed: $($existing.Source)"
+    } elseif ($existing -and $Update) {
+        Write-BuildMessage -Type Step -Message "Updating AL Runner..."
+        $updateOutput = & dotnet tool update --global $packageId 2>&1
+        if ($LASTEXITCODE -ne 0) {
+            throw "dotnet tool update failed for $packageId with exit code $LASTEXITCODE. Output: $($updateOutput -join [Environment]::NewLine)"
+        }
+        Write-BuildMessage -Type Success -Message "AL Runner updated"
+    } else {
+        Write-BuildMessage -Type Step -Message "Installing AL Runner..."
+        $installOutput = & dotnet tool install --global $packageId 2>&1
+        if ($LASTEXITCODE -ne 0) {
+            throw "dotnet tool install failed for $packageId with exit code $LASTEXITCODE. Output: $($installOutput -join [Environment]::NewLine)"
+        }
+        Write-BuildMessage -Type Success -Message "AL Runner installed"
+    }
+
+    # Verify al-runner is on PATH after install
+    $postInstall = Get-Command al-runner -ErrorAction SilentlyContinue
+    if (-not $postInstall) {
+        $dotnetToolsDir = Join-Path (if ($env:HOME) { $env:HOME } else { $env:USERPROFILE }) '.dotnet' 'tools'
+        if (Test-Path $dotnetToolsDir) {
+            $env:PATH = "$dotnetToolsDir$([IO.Path]::PathSeparator)$env:PATH"
+            Write-BuildMessage -Type Detail -Message "Added $dotnetToolsDir to PATH"
+        }
+        $postInstall = Get-Command al-runner -ErrorAction SilentlyContinue
+        if (-not $postInstall) {
+            throw "al-runner not found on PATH after installation. Ensure ~/.dotnet/tools is on your PATH."
+        }
+    }
+
+    Write-BuildMessage -Type Detail -Message "Path: $($postInstall.Source)"
+    Write-BuildMessage -Type Success -Message "AL Runner provisioning complete"
 }
 
 function Get-InstalledCompilerVersion {
@@ -929,6 +1002,106 @@ function Invoke-ALTest {
     return $result
 }
 
+function Invoke-ALRunnerTest {
+    <#
+    .SYNOPSIS
+        Run AL unit tests using BusinessCentral.AL.Runner (no container required)
+    .PARAMETER AppDir
+        Directory containing the main app source
+    .PARAMETER TestDir
+        Directory containing the unit test app source
+    .PARAMETER OutputDir
+        Directory to write test results (last.xml)
+    .PARAMETER InitEvents
+        Fire BC lifecycle events (OnCompanyInitialize, OnInstallAppPerCompany) at startup
+    .OUTPUTS
+        PSCustomObject with Passed, AppName, TestDir, ResultFile, TelemetryFile properties
+    #>
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory)]
+        [string]$AppDir,
+
+        [Parameter(Mandatory)]
+        [string]$TestDir,
+
+        [Parameter(Mandatory)]
+        [string]$OutputDir,
+
+        [switch]$InitEvents
+    )
+
+    # Guard: al-runner must be available
+    $alRunner = Get-Command al-runner -ErrorAction SilentlyContinue
+    if (-not $alRunner) {
+        throw "al-runner not found on PATH. Run provision.ps1 to install it."
+    }
+
+    $appJson = Get-AppJsonObject $TestDir
+    if (-not $appJson) {
+        throw "app.json not found in '$TestDir'"
+    }
+
+    Write-BuildHeader 'AL Runner Unit Test'
+    Write-BuildMessage -Type Step -Message "Running unit tests: $($appJson.name)"
+
+    # Setup output directory and clean stale results
+    Ensure-Directory -Path $OutputDir
+    $resultFile = Join-Path $OutputDir 'last.xml'
+    if (Test-Path -LiteralPath $resultFile) {
+        Remove-Item -LiteralPath $resultFile -Force
+        Write-BuildMessage -Type Detail -Message "Removed previous result: $resultFile"
+    }
+
+    # Resolve symbol package path for the test app
+    $packageCachePath = $null
+    try {
+        $symbolCacheInfo = Get-SymbolCacheInfo -AppJson $appJson
+        $packageCachePath = $symbolCacheInfo.CacheDir
+    } catch {
+        Write-BuildMessage -Type Warning -Message "Could not resolve symbol cache for unit test app: $_"
+    }
+
+    # Build arguments
+    $arguments = @(
+        '--output-junit', $resultFile,
+        '--strict',
+        '--no-telemetry'
+    )
+    if ($InitEvents) {
+        $arguments += '--init-events'
+    }
+    if ($packageCachePath) {
+        $arguments += @('--packages', $packageCachePath)
+    }
+    $arguments += @($AppDir, $TestDir)
+
+    Write-BuildMessage -Type Detail -Message "Command: al-runner $($arguments -join ' ')"
+
+    # Run al-runner
+    & $alRunner.Source @arguments
+    $exitCode = $LASTEXITCODE
+
+    # Exit codes: 0 = all passed, 1 = test failures, 2 = runner limitations (--strict promotes to 1), 3 = compile error
+    $testsPassed = $exitCode -eq 0
+
+    $result = [PSCustomObject]@{
+        Passed        = $testsPassed
+        AppName       = $appJson.name
+        TestDir       = $TestDir
+        ResultFile    = if (Test-Path -LiteralPath $resultFile) { $resultFile } else { '' }
+        TelemetryFile = ''
+    }
+
+    if ($testsPassed) {
+        Write-BuildMessage -Type Success -Message "All unit tests passed: $($appJson.name)"
+    } else {
+        Write-BuildMessage -Type Error -Message "Unit tests failed (exit $exitCode): $($appJson.name). See results in $OutputDir"
+    }
+
+    return $result
+}
+
 function Invoke-ALUnpublish {
     <#
     .SYNOPSIS
@@ -1070,6 +1243,10 @@ Export-ModuleMember -Function @(
 
     # Test
     'Invoke-ALTest'
+    'Invoke-ALRunnerTest'
+
+    # AL Runner
+    'Install-ALRunner'
 
     # Local Symbols
     'Copy-ALSymbolToCache'

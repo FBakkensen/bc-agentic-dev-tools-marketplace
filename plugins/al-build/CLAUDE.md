@@ -43,3 +43,5 @@ The smoke test must exercise the full gate. Do not use test-codeunit filtering. 
 - **PowerShell 7.2+ only.** `#Requires -Version 7.2`. _Avoid_: `powershell.exe` (5.1) — pipeline-chain `&&`/`||` and `??` aren't there.
 - **SKILL.md's subagent block is the canonical invocation.** Build output is verbose; the subagent contains it. Keep that block accurate.
 - **Container recovery is restart → delete → re-run.** Never document a manual fix path inside the container.
+- **AL Runner is a fast gate, not a replacement for container tests.** `Invoke-ALRunnerTest` runs before the container; its result does not appear in final `summary.json` during full-mode runs (the container overwrites `last.xml`). In `-UnitTestOnly` mode, it is the only result.
+- **AL Runner installation follows the compiler pattern.** `Install-ALRunner` mirrors `Install-ALCompiler` — global dotnet tool, guarded by `Get-Command`, skip when `unitTestApp` is not configured.

@@ -28,6 +28,16 @@ pwsh "<skill-folder>/scripts/test.ps1"
 Always run the full gate. Do not filter tests by codeunit.
 Force republish: `pwsh "<skill-folder>/scripts/test.ps1" -Force`
 
+### Fast unit test (inner loop)
+
+When `unitTestApp` is configured in `al-build.json`, run only AL Runner unit tests:
+
+```powershell
+pwsh "<skill-folder>/scripts/test.ps1" -UnitTestOnly
+```
+
+Compiles all apps, runs AL Runner against the unit test app, exits. No container needed. Use during the RED→GREEN inner loop in `/al-implement` for fast feedback.
+
 **Outputs (per test app):**
 
 - `.output/TestResults/<dirName>/last.xml` — JUnit XML per test app.
@@ -41,6 +51,8 @@ For test failures, dispatch `/al-debug-logging`. Don't grep the build log for cl
 ## Delegation
 
 Prefer a delegated worker when the host supports subagents. Build output is verbose. Contain it.
+
+### Full gate delegation
 
 ```
 IMPORTANT: READ-ONLY. Do not edit files.
@@ -56,6 +68,20 @@ Report:
 6. If telemetry relevant: key entries from .output/TestResults/*/telemetry.jsonl
 ```
 
+### Fast unit test delegation (inner loop)
+
+```
+IMPORTANT: READ-ONLY. Do not edit files.
+
+Run: pwsh "<skill-folder>/scripts/test.ps1" -UnitTestOnly
+
+Report:
+1. Build result: success or failure
+2. Unit test result: pass / fail counts
+3. Failures: error messages from last.xml
+4. Summary: contents of .output/TestResults/summary.json
+```
+
 ## Configuration
 
 Resolution order, highest wins:
@@ -68,6 +94,8 @@ Resolution order, highest wins:
 Key config fields:
 - `appDir` — path to the main app folder (default: `"app"`)
 - `testApps` — array of test app directory paths (default: `["test"]`)
+- `unitTestApp` — path to the AL Runner unit test app (default: `""`, disabled). When set, `test.ps1` runs AL Runner unit tests as a fast gate before container tests. The app may also appear in `testApps` — container tests run all `testApps` regardless.
+- `unitTestInitEvents` — fire BC lifecycle events (`OnCompanyInitialize`, `OnInstallAppPerCompany`) before AL Runner tests (default: `false`). Enable if unit tests depend on install-time data.
 
 _Avoid_: editing the plugin's template `config/al-build.json`. It's a template, not the live config. The repo-root copy is the live one.
 
@@ -93,7 +121,7 @@ Situation → action:
 
 ## Composition
 
-- `/al-implement` — calls this after every RED, GREEN, `/al-refactor`, and before marking `[x]`.
+- `/al-implement` — calls this after every RED, GREEN, `/al-refactor`, and before marking `[x]`. Use `-UnitTestOnly` for the RED→GREEN inner loop when `unitTestApp` is configured; use the full gate before committing.
 - `/al-debug-logging` — consumes `telemetry.jsonl` produced here (in per-app subfolders).
 - `pwsh "<skill-folder>/scripts/init.ps1"`, `pwsh "<skill-folder>/scripts/provision.ps1"` — one-time setup before this skill is usable.
 
