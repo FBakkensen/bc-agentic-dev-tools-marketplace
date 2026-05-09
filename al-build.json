@@ -1,9 +1,0 @@
-{
-  "testApps": [
-    "test"
-  ],
-  "appDir": "app",
-  "container": {
-    "imageName": "bctest:snapshot"
-  }
-}
