@@ -76,6 +76,12 @@ if ($UnitTestOnly -and -not $config.UnitTestApp) {
     exit 1
 }
 
+# Validate unitTestApp path exists when configured
+if ($config.UnitTestApp -and -not (Test-Path $config.UnitTestApp)) {
+    Write-BuildMessage -Type Error -Message "unitTestApp directory not found: $($config.UnitTestApp)"
+    exit 1
+}
+
 $modeName = if ($UnitTestOnly) { 'Unit Test Only' } else { 'Build & Test Gate' }
 Write-BuildHeader "Test: $modeName"
 
@@ -115,30 +121,16 @@ if ($config.TestApps.Count -eq 0 -and -not $UnitTestOnly) {
 }
 
 # Step 2: Provision main app as local symbol and build each test app
-foreach ($testAppDir in $config.TestApps) {
-    $dirName = Split-Path $testAppDir -Leaf
-    Start-Step "provision-symbols-$dirName"
-    Copy-ALSymbolToCache -SourceAppDir $config.AppDir -TargetAppDir $testAppDir
-    Stop-Step "provision-symbols-$dirName"
-
-    Start-Step "build-test-$dirName"
-    Invoke-ALBuild -AppDir $testAppDir -WarnAsError:(ConvertTo-Boolean $config.WarnAsError)
-    Stop-Step "build-test-$dirName"
-}
-
-# Step 2b: If unitTestApp is not in testApps, provision and build it separately
-if ($config.UnitTestApp) {
-    $unitTestAlreadyBuilt = $config.TestApps | Where-Object {
-        [IO.Path]::GetFullPath($_) -eq [IO.Path]::GetFullPath($config.UnitTestApp)
-    }
-    if (-not $unitTestAlreadyBuilt -and (Test-Path $config.UnitTestApp)) {
-        $dirName = Split-Path $config.UnitTestApp -Leaf
+# In -UnitTestOnly mode, skip standard compilation — AL Runner compiles from source internally
+if (-not $UnitTestOnly) {
+    foreach ($testAppDir in $config.TestApps) {
+        $dirName = Split-Path $testAppDir -Leaf
         Start-Step "provision-symbols-$dirName"
-        Copy-ALSymbolToCache -SourceAppDir $config.AppDir -TargetAppDir $config.UnitTestApp
+        Copy-ALSymbolToCache -SourceAppDir $config.AppDir -TargetAppDir $testAppDir
         Stop-Step "provision-symbols-$dirName"
 
         Start-Step "build-test-$dirName"
-        Invoke-ALBuild -AppDir $config.UnitTestApp -WarnAsError:(ConvertTo-Boolean $config.WarnAsError)
+        Invoke-ALBuild -AppDir $testAppDir -WarnAsError:(ConvertTo-Boolean $config.WarnAsError)
         Stop-Step "build-test-$dirName"
     }
 }

@@ -1059,7 +1059,7 @@ function Invoke-ALRunnerTest {
         $symbolCacheInfo = Get-SymbolCacheInfo -AppJson $appJson
         $packageCachePath = $symbolCacheInfo.CacheDir
     } catch {
-        Write-BuildMessage -Type Warning -Message "Could not resolve symbol cache for unit test app: $_"
+        throw "Symbol cache not found for unit test app '$($appJson.name)'. Run provision.ps1 first. Error: $_"
     }
 
     # Build arguments
@@ -1078,8 +1078,8 @@ function Invoke-ALRunnerTest {
 
     Write-BuildMessage -Type Detail -Message "Command: al-runner $($arguments -join ' ')"
 
-    # Run al-runner
-    & $alRunner.Source @arguments
+    # Run al-runner — pipe to Out-Host to avoid polluting the return pipeline
+    & $alRunner.Source @arguments | Out-Host
     $exitCode = $LASTEXITCODE
 
     # Exit codes: 0 = all passed, 1 = test failures, 2 = runner limitations (--strict promotes to 1), 3 = compile error
