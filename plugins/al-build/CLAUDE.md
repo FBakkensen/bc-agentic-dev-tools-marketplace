@@ -22,17 +22,18 @@ skills/al-build/
 
 Use this after changing the script contract or gate behavior.
 
-1. Create a new disposable repo under `$env:TEMP`.
-2. Add a minimal AL app under `app/` and one or more minimal AL test apps under `test/`, `test-integration/`, etc. Keep test apps dependent on the app so provisioning proves repo-local dependencies are not downloaded as symbol packages.
-3. Add repo-root `al-build.json` with `appDir` and `testApps` array.
-4. Initialize git and switch to a non-default branch. The branch name drives the agent container name.
-5. Verify the snapshot image from `container.imageName` exists. Do not bootstrap a golden container as part of this smoke test unless that is the explicit target.
-6. From the disposable repo root, run `pwsh "<marketplace-root>/plugins/al-build/skills/al-build/scripts/provision.ps1"`.
-7. From the disposable repo root, run `pwsh "<marketplace-root>/plugins/al-build/skills/al-build/scripts/test.ps1"`.
-8. Verify `.output/TestResults/<dirName>/last.xml` exists for each test app and reports the expected test pass.
-9. Verify `.output/TestResults/summary.json` exists and lists all test apps with `passed: true`.
+1. Create a disposable dir under `$env:TEMP` with a random suffix. `Set-Location` into it — everything runs from here.
+2. `git init`, `git checkout -b smoke-<scenario>`, then **`git commit --allow-empty -m "init"`**. The branch name becomes the container name via `Get-BCAgentContainerName`. Without a commit the branch lookup fails and falls back to `bctest`, colliding with the golden container. Never use `main` or `bctest` as branch name.
+3. Add a minimal AL app under `app/` and one or more test apps under `test/`, `test-integration/`, etc. Test apps must depend on the main app so provisioning proves local deps are not downloaded as symbol packages.
+4. Add repo-root `al-build.json` with `appDir` and `testApps` array.
+5. Verify the snapshot image from `container.imageName` exists. Do not bootstrap a golden container unless that is the explicit target.
+6. Run `pwsh "<marketplace-root>/plugins/al-build/skills/al-build/scripts/provision.ps1"`.
+7. Run `pwsh "<marketplace-root>/plugins/al-build/skills/al-build/scripts/test.ps1"`.
+8. Verify `.output/TestResults/<dirName>/last.xml` and `telemetry.jsonl` exist per test app.
+9. Verify `.output/TestResults/summary.json` lists all test apps with expected pass/fail.
+10. Clean up: `docker rm -f <container-name>`, then delete the temp dir.
 
-The smoke test must exercise the full gate. Do not use test-codeunit filtering.
+The smoke test must exercise the full gate. Do not use test-codeunit filtering. Run container tests sequentially — one branch/container at a time.
 
 ## Editing rules
 
