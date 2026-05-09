@@ -50,23 +50,26 @@ if (Test-Path $config.AppDir) {
     }
 }
 
-# Clean test app
-if (Test-Path $config.TestDir) {
-    $testOutputPath = Get-OutputPath $config.TestDir
-    if ($testOutputPath -and (Test-Path $testOutputPath)) {
-        $fileInfo = Get-Item $testOutputPath
-        $sizeKB = [math]::Round($fileInfo.Length / 1KB, 1)
-        Remove-Item -Force $testOutputPath
-        Write-BuildMessage -Type Success -Message "Removed: $(Split-Path -Leaf $testOutputPath) ($sizeKB KB)"
-        $cleanedCount++
+# Clean test apps
+foreach ($testAppDir in $config.TestApps) {
+    if (Test-Path $testAppDir) {
+        $testOutputPath = Get-OutputPath $testAppDir
+        if ($testOutputPath -and (Test-Path $testOutputPath)) {
+            $fileInfo = Get-Item $testOutputPath
+            $sizeKB = [math]::Round($fileInfo.Length / 1KB, 1)
+            Remove-Item -Force $testOutputPath
+            Write-BuildMessage -Type Success -Message "Removed: $(Split-Path -Leaf $testOutputPath) ($sizeKB KB)"
+            $cleanedCount++
 
-        # Clear publish state
-        $testJson = Get-AppJsonObject $config.TestDir
-        if ($testJson) {
-            Clear-PublishState -AppJson $testJson -ContainerName $config.ContainerName
+            # Clear publish state
+            $testJson = Get-AppJsonObject $testAppDir
+            if ($testJson) {
+                Clear-PublishState -AppJson $testJson -ContainerName $config.ContainerName
+            }
+        } else {
+            $dirName = Split-Path $testAppDir -Leaf
+            Write-BuildMessage -Type Detail -Message "Test app '$dirName': no artifact to clean"
         }
-    } else {
-        Write-BuildMessage -Type Detail -Message "Test app: no artifact to clean"
     }
 }
 

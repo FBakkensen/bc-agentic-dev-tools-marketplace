@@ -5,10 +5,10 @@
     One-time setup: install AL compiler and download symbol packages.
 
 .DESCRIPTION
-    Runs provisioning for both main app and test app:
+    Runs provisioning for main app and all configured test apps:
     - Ensures the AL compiler is installed
     - Downloads symbol packages for app/
-    - Downloads symbol packages for test/
+    - Downloads symbol packages for each test app
 
 .PARAMETER UpdateCompiler
     Force update of the global AL compiler tool. By default an existing compiler is reused.
@@ -41,7 +41,7 @@ Write-BuildHeader 'Provision: One-Time Setup'
 
 Write-BuildMessage -Type Info -Message "Configuration:"
 Write-BuildMessage -Type Detail -Message "App Directory: $($config.AppDir)"
-Write-BuildMessage -Type Detail -Message "Test Directory: $($config.TestDir)"
+Write-BuildMessage -Type Detail -Message "Test Apps: $($config.TestApps -join ', ')"
 
 # Step 1: Ensure compiler
 Install-ALCompiler -Update:$UpdateCompiler
@@ -56,14 +56,17 @@ if (Test-Path $config.AppDir) {
     Write-BuildMessage -Type Warning -Message "App directory not found: $($config.AppDir)"
 }
 
-# Step 3: Download symbols for test app
-if (Test-Path $config.TestDir) {
-    & "$PSScriptRoot/download-symbols.ps1" -AppDir $config.TestDir
-    if ($LASTEXITCODE -ne 0) {
-        throw "Symbol download failed for $($config.TestDir)"
+# Step 3: Download symbols for each test app
+foreach ($testAppDir in $config.TestApps) {
+    if (Test-Path $testAppDir) {
+        & "$PSScriptRoot/download-symbols.ps1" -AppDir $testAppDir
+        if ($LASTEXITCODE -ne 0) {
+            throw "Symbol download failed for $testAppDir"
+        }
+    } else {
+        $dirName = Split-Path $testAppDir -Leaf
+        Write-BuildMessage -Type Detail -Message "Test app directory not found: $dirName (skipping)"
     }
-} else {
-    Write-BuildMessage -Type Detail -Message "Test directory not found: $($config.TestDir) (skipping)"
 }
 
 Write-BuildHeader 'Provision Complete'

@@ -1,5 +1,5 @@
 {
   "name": "al-debug-logging",
-  "description": "Temporarily add DEBUG-* FeatureTelemetry.LogUsage probes to AL code to inspect runtime state via .output/TestResults/telemetry.jsonl. Use when runtime behaviour diverges from source and tests alone can't reveal which path ran. Probes are temporary; remove before delivery.",
+  "description": "Temporarily add DEBUG-* FeatureTelemetry.LogUsage probes to AL code to inspect runtime state via .output/TestResults/*/telemetry.jsonl. Use when runtime behaviour diverges from source and tests alone can't reveal which path ran. Probes are temporary; remove before delivery.",
   "version": "1.2.2"
 }

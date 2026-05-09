@@ -12,7 +12,7 @@ Required gate before committing AL changes. `/al-implement` calls this after eve
 ## First time
 
 1. `pwsh "<skill-folder>/scripts/init.ps1"` — drops `al-build.json` in repo root.
-2. Set `testAppName` to match your test app.
+2. Set `testApps` to list your test app directories.
 3. `pwsh "<skill-folder>/scripts/provision.ps1"` — one-time symbol + container setup.
 
 `Stop. Run pwsh "<skill-folder>/scripts/provision.ps1" first.` if `test.ps1` complains the compiler or symbols are missing.
@@ -28,10 +28,13 @@ pwsh "<skill-folder>/scripts/test.ps1"
 Always run the full gate. Do not filter tests by codeunit.
 Force republish: `pwsh "<skill-folder>/scripts/test.ps1" -Force`
 
-**Outputs:**
+**Outputs (per test app):**
 
-- `.output/TestResults/last.xml` — JUnit XML. Query with `jq` or read directly.
-- `.output/TestResults/telemetry.jsonl` — feature telemetry. `/al-debug-logging` reads this.
+- `.output/TestResults/<dirName>/last.xml` — JUnit XML per test app.
+- `.output/TestResults/<dirName>/telemetry.jsonl` — feature telemetry per test app. `/al-debug-logging` reads this.
+- `.output/TestResults/summary.json` — machine-readable pass/fail summary for all test apps.
+
+To find all test results: `glob .output/TestResults/*/last.xml`
 
 For test failures, dispatch `/al-debug-logging`. Don't grep the build log for clues telemetry already answers.
 
@@ -46,10 +49,11 @@ Run: pwsh "<skill-folder>/scripts/test.ps1"
 
 Report:
 1. Build result: success or failure
-2. Test result: pass / fail counts
-3. Failures: error messages and stack traces
+2. Test result: pass / fail counts per test app
+3. Failures: error messages and stack traces (from per-app last.xml)
 4. Warnings: list them
-5. If telemetry relevant: key entries from .output/TestResults/telemetry.jsonl
+5. Summary: contents of .output/TestResults/summary.json
+6. If telemetry relevant: key entries from .output/TestResults/*/telemetry.jsonl
 ```
 
 ## Configuration
@@ -60,6 +64,10 @@ Resolution order, highest wins:
 2. **Env var** — `ALBT_APP_DIR`, `ALBT_BC_CONTAINER_NAME`, `WARN_AS_ERROR`.
 3. **`al-build.json`** in repo root.
 4. **Built-in defaults.**
+
+Key config fields:
+- `appDir` — path to the main app folder (default: `"app"`)
+- `testApps` — array of test app directory paths (default: `["test"]`)
 
 _Avoid_: editing the plugin's template `config/al-build.json`. It's a template, not the live config. The repo-root copy is the live one.
 
@@ -86,7 +94,7 @@ Situation → action:
 ## Composition
 
 - `/al-implement` — calls this after every RED, GREEN, `/al-refactor`, and before marking `[x]`.
-- `/al-debug-logging` — consumes `telemetry.jsonl` produced here.
+- `/al-debug-logging` — consumes `telemetry.jsonl` produced here (in per-app subfolders).
 - `pwsh "<skill-folder>/scripts/init.ps1"`, `pwsh "<skill-folder>/scripts/provision.ps1"` — one-time setup before this skill is usable.
 
 ## Out of scope

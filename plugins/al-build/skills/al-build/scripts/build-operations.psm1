@@ -84,15 +84,27 @@ function Get-BuildConfig {
 
     # Resolve all configuration values
     $appDir = Resolve-Value 'appDir' 'ALBT_APP_DIR' 'app'
-    $testDir = Resolve-Value 'testDir' 'ALBT_TEST_DIR' 'test'
+
+    # Resolve testApps array
+    $testAppsRaw = if ($defaults.ContainsKey('testApps') -and $defaults['testApps'] -is [System.Collections.IEnumerable] -and $defaults['testApps'] -isnot [string]) {
+        @($defaults['testApps'])
+    } else {
+        @('test')
+    }
 
     # Resolve to absolute paths if relative
     $workspaceRoot = (Get-Location).Path
     if (-not [System.IO.Path]::IsPathRooted($appDir)) {
         $appDir = Join-Path $workspaceRoot $appDir
     }
-    if (-not [System.IO.Path]::IsPathRooted($testDir)) {
-        $testDir = Join-Path $workspaceRoot $testDir
+
+    $testApps = @()
+    foreach ($testAppDir in $testAppsRaw) {
+        if (-not [System.IO.Path]::IsPathRooted($testAppDir)) {
+            $testApps += Join-Path $workspaceRoot $testAppDir
+        } else {
+            $testApps += $testAppDir
+        }
     }
 
     # Always derive container name from git branch (no env var caching)
@@ -117,8 +129,7 @@ function Get-BuildConfig {
 
     $config = [PSCustomObject]@{
         AppDir                              = $appDir
-        TestDir                             = $testDir
-        TestAppName                         = Resolve-Value 'testAppName' 'ALBT_TEST_APP_NAME' '9A Advanced Manufacturing - Item Configurator.Test'
+        TestApps                            = $testApps
         WarnAsError                         = Resolve-Value 'warnAsError' 'WARN_AS_ERROR' $false
         RulesetPath                         = Resolve-Value 'rulesetPath' 'RULESET_PATH' 'al.ruleset.json'
         ServerInstance                      = Resolve-Value 'serverInstance' 'ALBT_BC_SERVER_INSTANCE' 'BC'
@@ -134,7 +145,6 @@ function Get-BuildConfig {
         Tenant                              = Resolve-Value 'tenant' 'ALBT_BC_TENANT' 'default'
         ValidateCurrent                     = Resolve-Value 'validateCurrent' 'ALBT_VALIDATE_CURRENT' '1'
         ApplicationInsightsConnectionString = Resolve-Value 'applicationInsightsConnectionString' 'ALBT_APPLICATION_INSIGHTS_CONNECTION_STRING' ''
-        TestRunnerCodeunitId                = Resolve-Value 'testRunnerCodeunitId' 'ALBT_TEST_RUNNER_CODEUNIT_ID' ''
     }
 
     return $config
@@ -154,8 +164,6 @@ function Set-BuildEnvironment {
     )
 
     $env:ALBT_APP_DIR = $Config.AppDir
-    $env:ALBT_TEST_DIR = $Config.TestDir
-    $env:ALBT_TEST_APP_NAME = $Config.TestAppName
     $env:WARN_AS_ERROR = $Config.WarnAsError
     $env:RULESET_PATH = $Config.RulesetPath
     $env:ALBT_BC_SERVER_URL = $Config.ServerUrl
@@ -171,7 +179,6 @@ function Set-BuildEnvironment {
     $env:ALBT_BC_TENANT = $Config.Tenant
     $env:ALBT_VALIDATE_CURRENT = $Config.ValidateCurrent
     $env:ALBT_APPLICATION_INSIGHTS_CONNECTION_STRING = $Config.ApplicationInsightsConnectionString
-    $env:ALBT_TEST_RUNNER_CODEUNIT_ID = $Config.TestRunnerCodeunitId
 }
 
 # =============================================================================
@@ -795,11 +802,18 @@ function Invoke-ALTest {
         Run AL tests in a Business Central container
     .PARAMETER TestDir
         Directory containing the test app
+    .PARAMETER OutputDir
+        Directory to write test results (last.xml, telemetry.jsonl)
+    .OUTPUTS
+        PSCustomObject with Passed, AppName, ResultFile, TelemetryFile properties
     #>
     [CmdletBinding()]
     param(
         [Parameter(Mandatory)]
-        [string]$TestDir
+        [string]$TestDir,
+
+        [Parameter(Mandatory)]
+        [string]$OutputDir
     )
 
     $config = Get-BuildConfig
@@ -812,21 +826,13 @@ function Invoke-ALTest {
     Write-BuildHeader "AL Test Execution"
     Write-BuildMessage -Type Step -Message "Running tests: $($appJson.name)"
 
-    # Setup results paths - store outside source to avoid AL1025 compiler errors
-    $repoRoot = & git rev-parse --show-toplevel 2>$null
-    if ($LASTEXITCODE -ne 0 -or -not $repoRoot) {
-        $repoRoot = (Get-Location).Path
-    }
-    if ($IsWindows -or $env:OS -match 'Windows') {
-        $repoRoot = $repoRoot -replace '/', '\'
-    }
-    $localResultsPath = Join-Path $repoRoot '.output' 'TestResults'
-    Ensure-Directory -Path $localResultsPath
+    # Setup output directory
+    Ensure-Directory -Path $OutputDir
 
-    Write-BuildMessage -Type Step -Message "Cleaning local test results"
+    Write-BuildMessage -Type Step -Message "Cleaning test results in $OutputDir"
     $localResultFiles = @(
-        Join-Path $localResultsPath 'last.xml'
-        Join-Path $localResultsPath 'telemetry.jsonl'
+        Join-Path $OutputDir 'last.xml'
+        Join-Path $OutputDir 'telemetry.jsonl'
     )
 
     foreach ($localResultFile in $localResultFiles) {
@@ -881,21 +887,18 @@ function Invoke-ALTest {
         returnTrueIfAllPassed = $true
     }
 
-    if ($config.TestRunnerCodeunitId) {
-        $testParams['testRunner'] = $config.TestRunnerCodeunitId
-    }
-
     # Run tests
     $testsPassed = Run-TestsInBcContainer @testParams
 
-    # Copy results
+    # Copy results to output dir
+    $resultFile = Join-Path $OutputDir 'last.xml'
     if (Test-Path -LiteralPath $sharedResultFile) {
-        $localResultFile = Join-Path $localResultsPath 'last.xml'
-        Copy-Item -LiteralPath $sharedResultFile -Destination $localResultFile -Force
-        Write-BuildMessage -Type Success -Message "Results saved: $localResultFile"
+        Copy-Item -LiteralPath $sharedResultFile -Destination $resultFile -Force
+        Write-BuildMessage -Type Success -Message "Results saved: $resultFile"
     }
 
     # Merge and copy telemetry
+    $telemetryFile = Join-Path $OutputDir 'telemetry.jsonl'
     try {
         Merge-TestTelemetryLogs -ContainerName $config.ContainerName | Out-Null
     } catch {
@@ -903,16 +906,27 @@ function Invoke-ALTest {
     }
 
     try {
-        Copy-TestTelemetryLogs -SharedFolder $sharedBaseFolder -LocalResultsPath $localResultsPath | Out-Null
+        Copy-TestTelemetryLogs -SharedFolder $sharedBaseFolder -LocalResultsPath $OutputDir | Out-Null
     } catch {
         Write-BuildMessage -Type Warning -Message "Telemetry copy failed (non-fatal): $_"
     }
 
-    if (-not $testsPassed) {
-        throw "Tests failed. See results in $localResultsPath"
+    # Return result object
+    $result = [PSCustomObject]@{
+        Passed        = [bool]$testsPassed
+        AppName       = $appJson.name
+        TestDir       = $TestDir
+        ResultFile    = $resultFile
+        TelemetryFile = $telemetryFile
     }
 
-    Write-BuildMessage -Type Success -Message "All tests passed"
+    if ($testsPassed) {
+        Write-BuildMessage -Type Success -Message "All tests passed: $($appJson.name)"
+    } else {
+        Write-BuildMessage -Type Error -Message "Tests failed: $($appJson.name). See results in $OutputDir"
+    }
+
+    return $result
 }
 
 function Invoke-ALUnpublish {

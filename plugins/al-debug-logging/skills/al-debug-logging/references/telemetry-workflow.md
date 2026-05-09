@@ -79,15 +79,15 @@ Probes work identically under any harness in the same publisher.
 
 The capture path depends on the harness:
 
-- `/al-build` test harness → `.output/TestResults/telemetry.jsonl`. Inspect with:
+- `/al-build` test harness → `.output/TestResults/*/telemetry.jsonl`. Inspect with:
 
   ```text
-  rg "DEBUG-" .output/TestResults/telemetry.jsonl
-  rg "DEBUG-ENTRY" .output/TestResults/telemetry.jsonl
+  rg "DEBUG-" .output/TestResults/*/telemetry.jsonl
+  rg "DEBUG-ENTRY" .output/TestResults/*/telemetry.jsonl
   ```
 
   ```powershell
-  Select-String -Path .output/TestResults/telemetry.jsonl -Pattern "DEBUG-"
+  Select-String -Path .output/TestResults/*/telemetry.jsonl -Pattern "DEBUG-"
   ```
 
 - Page action, posted document, web service, install/upgrade, job queue, manual subscriber trigger → no `telemetry.jsonl` produced by `/al-build`. Capture via Application Insights, the BC server's telemetry sink, or a local Telemetry Logger codeunit configured to write to a known path. Confirm where the host environment surfaces `FeatureTelemetry` events before running.

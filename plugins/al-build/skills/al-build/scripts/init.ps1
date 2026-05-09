@@ -57,8 +57,7 @@ Copy-Item -LiteralPath $templatePath -Destination $projectConfigPath -Force
 
 # Auto-detect app and test directories
 $detectedAppDir = $null
-$detectedTestDir = $null
-$detectedTestAppName = $null
+$detectedTestDirs = @()
 
 $appJsonFiles = Get-ChildItem -Path $repoRoot -Filter 'app.json' -Recurse -Depth 3 -ErrorAction SilentlyContinue |
     Where-Object { $_.FullName -notmatch '[\\/]\.' }
@@ -72,11 +71,9 @@ foreach ($appJsonFile in $appJsonFiles) {
                      $relativeDir -match 'test' -or
                      ($appJson.dependencies | Where-Object { $_.name -match 'test' })
 
-        # First match wins - don't overwrite if already found
-        if ($isTestApp -and -not $detectedTestDir) {
-            $detectedTestDir = $relativeDir
-            $detectedTestAppName = $appJson.name
-        } elseif (-not $isTestApp -and -not $detectedAppDir) {
+        if ($isTestApp) {
+            $detectedTestDirs += $relativeDir
+        } elseif (-not $detectedAppDir) {
             $detectedAppDir = $relativeDir
         }
     } catch {
@@ -87,19 +84,15 @@ foreach ($appJsonFile in $appJsonFiles) {
 # Update config with detected values
 $configUpdated = $false
 try {
-    if ($detectedAppDir -or $detectedTestDir -or $detectedTestAppName) {
+    if ($detectedAppDir -or $detectedTestDirs.Count -gt 0) {
         $config = Get-Content -LiteralPath $projectConfigPath -Raw | ConvertFrom-Json
 
         if ($detectedAppDir) {
             $config.appDir = $detectedAppDir
             $configUpdated = $true
         }
-        if ($detectedTestDir) {
-            $config.testDir = $detectedTestDir
-            $configUpdated = $true
-        }
-        if ($detectedTestAppName) {
-            $config.testAppName = $detectedTestAppName
+        if ($detectedTestDirs.Count -gt 0) {
+            $config.testApps = @($detectedTestDirs)
             $configUpdated = $true
         }
 
@@ -132,8 +125,7 @@ Write-Host "Created: $projectConfigPath" -ForegroundColor Green
 if ($configUpdated) {
     Write-Host "Auto-configured:" -ForegroundColor Cyan
     if ($detectedAppDir) { Write-Host "  appDir: $detectedAppDir" }
-    if ($detectedTestDir) { Write-Host "  testDir: $detectedTestDir" }
-    if ($detectedTestAppName) { Write-Host "  testAppName: $detectedTestAppName" }
+    if ($detectedTestDirs.Count -gt 0) { Write-Host "  testApps: $($detectedTestDirs -join ', ')" }
 }
 
 if ($gitignoreUpdated) {

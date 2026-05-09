@@ -39,14 +39,14 @@ codeunit 50XXX "Debug [Subsystem] Subsc"
 }
 ```
 
-Run whatever harness exercises the BaseApp flow (posting a document, running a workflow, opening a page action), then read `.output/TestResults/telemetry.jsonl`:
+Run whatever harness exercises the BaseApp flow (posting a document, running a workflow, opening a page action), then read `.output/TestResults/*/telemetry.jsonl`:
 
 ```text
-rg "DEBUG-BC-" .output/TestResults/telemetry.jsonl
+rg "DEBUG-BC-" .output/TestResults/*/telemetry.jsonl
 ```
 
 ```powershell
-Select-String -Path .output/TestResults/telemetry.jsonl -Pattern "DEBUG-BC-"
+Select-String -Path .output/TestResults/*/telemetry.jsonl -Pattern "DEBUG-BC-"
 ```
 
 When the investigation is done, delete the subscriber codeunit. Scaffolding, not production code.

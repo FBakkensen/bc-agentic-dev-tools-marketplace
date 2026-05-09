@@ -3,8 +3,7 @@
   "$comment": "AL Build System configuration defaults. Override by placing al-build.json in repo root.",
 
   "appDir": "app",
-  "testDir": "test",
-  "testAppName": "Your Test App Name Here",
+  "testApps": ["test"],
 
   "warnAsError": false,
   "rulesetPath": "al.ruleset.json",
@@ -23,7 +22,5 @@
   },
 
   "tenant": "default",
-  "validateCurrent": true,
-
-  "testRunnerCodeunitId": ""
+  "validateCurrent": true
 }

@@ -115,8 +115,7 @@ Claude Code users get this via session-start hook.
 ```json
 {
   "appDir": "app",
-  "testDir": "test",
-  "testAppName": "Your Test App Name Here",
+  "testApps": ["test"],
 
   "warnAsError": true,
   "rulesetPath": "al.ruleset.json",

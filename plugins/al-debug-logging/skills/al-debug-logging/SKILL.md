@@ -1,6 +1,6 @@
 ---
 name: al-debug-logging
-description: Temporarily add `DEBUG-*` `FeatureTelemetry.LogUsage` probes to AL code to inspect runtime state via `.output/TestResults/telemetry.jsonl`. Use when runtime behaviour diverges from source and tests alone can't reveal which path ran. Probes are temporary; remove before delivery.
+description: Temporarily add `DEBUG-*` `FeatureTelemetry.LogUsage` probes to AL code to inspect runtime state via `.output/TestResults/*/telemetry.jsonl`. Use when runtime behaviour diverges from source and tests alone can't reveal which path ran. Probes are temporary; remove before delivery.
 ---
 
 # /al-debug-logging — Temporary runtime probe loop
@@ -16,7 +16,7 @@ Drop `DEBUG-*` `FeatureTelemetry.LogUsage` probes, exercise the AL path, read `t
 1. **Hypothesis.** Name the specific question — which branch, which subscriber, which code path. A vague "let me see what's happening" produces noise that narrows nothing.
 2. **Probe.** One or two `FeatureTelemetry.LogUsage` calls. Prefix every event ID `DEBUG-`. Place at the decision point, not around it. Binary branch → two peer probes, one per branch.
 3. **Run.** Exercise the AL path: page action, posted document, web service call, install/upgrade codeunit, job queue task, event subscriber under a standard flow, or a test via `/al-build`. Harness is whatever fires the code.
-4. **Inspect.** `rg "DEBUG-" .output/TestResults/telemetry.jsonl`. Path applies when `/al-build` is the harness; other harnesses require a different capture path — see `references/telemetry-workflow.md`. Probes silent → `Stop.` Same-publisher first — see `references/telemetry-workflow.md`.
+4. **Inspect.** `rg "DEBUG-" .output/TestResults/*/telemetry.jsonl`. Path applies when `/al-build` is the harness; other harnesses require a different capture path — see `references/telemetry-workflow.md`. Probes silent → `Stop.` Same-publisher first — see `references/telemetry-workflow.md`.
 5. **Refine or remove.** Answer found: delete probes. Not found: move the probe or add a peer probe at the next decision point. Never leave probes "just in case".
 
 ## Canonical probe
@@ -61,7 +61,7 @@ _Avoid_:
 
 ## Composition
 
-- `/al-build` — runs the test harness, produces `.output/TestResults/telemetry.jsonl`.
+- `/al-build` — runs the test harness, produces `.output/TestResults/*/telemetry.jsonl`.
 - `/bc-standard-reference` — finds BaseApp events for subscriber-based probes.
 
 ## Out of scope
