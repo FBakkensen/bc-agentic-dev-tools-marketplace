@@ -50,9 +50,13 @@ Trigger `/grill-me` when:
 
 Sharpen vague language inline. _Avoid_: "the order is processed". Instead: "Sales Order is posted via Codeunit 80".
 
-### 4. Draft scenarios in ZOMBIES order
+### 4. Draft scenarios in layer-then-ZOMBIES order
 
-Zero, One, Many, Boundary, Interfaces, Exception, Simple. Both positive and negative cases per letter that admits them.
+**Pure block first, then E2E block.** Within each block, ZOMBIES order — Zero, One, Many, Boundary, Interfaces, Exception, Simple. Both positive and negative cases per letter that admits them.
+
+Numbering is contiguous across blocks and reflects this final order: `T-NNN#1` is the first Pure bullet; the first E2E bullet's number = `(count of Pure bullets) + 1`. The numbering becomes the execution order — `/al-implement` traverses bullets sequentially, so Pure-first is enforced by construction. Layer tag from step 5 decides which block a scenario sits in.
+
+`Both`-tagged scenarios sit in the Pure block — `/al-implement` drives RED→GREEN at the Pure layer (inner loop) and adds the E2E counterpart alongside; the bullet is listed once.
 
 Title cadence — positional, BaseApp PascalCase, behaviour not implementation:
 
@@ -77,13 +81,13 @@ Scenario body — drop articles. BC vocabulary is the compression. Field/codeuni
 
 ### 5. Confirm test layer per scenario
 
-Architecture set the family default. Override per scenario only when intent forces it.
+Architecture set the family default. Override per scenario only when intent forces it. The tag decides which block (Pure or E2E) the bullet sits in — see step 4.
 
-- **Pure** — process layer, no DB. Default for value-in/value-out logic.
-- **E2E** — composition or side effect unreproducible at the pure layer (posting, document flow, event chain).
-- **Both** — intent splits cleanly; same behaviour at both layers buys distinct evidence.
+- **Pure** — process layer, no DB. Default for value-in/value-out logic. Pure block.
+- **E2E** — composition or side effect unreproducible at the pure layer (posting, document flow, event chain). E2E block.
+- **Both** — intent splits cleanly; same behaviour at both layers buys distinct evidence. Pure block (one bullet; `/al-implement` produces tests at both layers).
 
-Scenario disagrees with family default → record override as a Notes line: `T-007#3: layer = E2E (override; posting side effect)`.
+Scenario disagrees with family default → place the bullet in the override block and record the rationale as a Notes line: `T-007#3: layer = E2E (override; posting side effect)`.
 
 *Pure tag is intent. AL Runner verifies at `/al-implement` RED — the unit test app contract is PASS-or-FAIL. ERROR / exit 2 routes to the three-step resolution (review test → refactor production → reclassify) in `/al-implement` and `al-runner.md`.*
 
@@ -118,7 +122,7 @@ Notes-line format: `**Replan** trigger #N: <one-line reason>`.
 
 ### 8. Write the block
 
-Write `**Tests**` block (and optional `**Notes**` line) onto the task entry. `Stop.`
+Write `**Tests**` block (and optional `**Notes**` line) onto the task entry — Pure sub-block first, E2E sub-block second, contiguous numbering across blocks. `Stop.`
 
 ## Canonical Gherkin block
 
@@ -141,7 +145,21 @@ context line
 
 **Tests**
 
+**Pure**
+
 1. **<ScenarioTitle>**
+   - **Given** ...
+   - **When** ...
+   - **Then** ...
+
+2. **<ScenarioTitle>**
+   - **Given** ...
+   - **When** ...
+   - **Then** ...
+
+**E2E**
+
+3. **<ScenarioTitle>**
    - **Given** ...
    - **When** ...
    - **Then** ...
@@ -149,6 +167,8 @@ context line
 **Notes**
 - one-line constraint (only if needed)
 ```
+
+Pure or E2E sub-block may be absent when the task has no scenarios at that layer — the remaining sub-block stays. Numbering is contiguous across the present blocks.
 
 ## Notes line — when valid
 
@@ -167,6 +187,7 @@ One line max. No fixture mechanics, no implementation choices beyond explicit de
 [ ] ZOMBIES letters covered or explicitly skipped (Notes line)
 [ ] Both positive and negative where the letter admits
 [ ] Per-scenario layer matches architecture default OR Notes line records override
+[ ] Pure sub-block precedes E2E sub-block; numbering contiguous across blocks; ZOMBIES preserved within each
 ```
 
 ## Composition

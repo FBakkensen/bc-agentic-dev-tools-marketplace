@@ -80,7 +80,7 @@ Prefer parallel subagents for independent work and output-heavy steps.
 
 - **Pure-tagged bullets** — `/al-build -UnitTestOnly` after every RED, GREEN, refactor. AL Runner is the inner-loop gate (seconds); container precedes `[x]`.
 - **E2E-tagged bullets** — full `/al-build` after every RED, GREEN, refactor. Container is the gate.
-- **Order**: process all Pure bullets first (one vertical slice each), then all E2E bullets. ZOMBIES order preserved within each layer.
+- **Order**: traverse bullets in numeric order. `/al-refine` writes the Pure sub-block before the E2E sub-block (contiguous numbering, ZOMBIES preserved within each), so Pure-first is enforced by construction — no reordering at execution time.
 - **Final precondition before `[x]`** — full `/al-build` regardless. AL Runner does not replace the container; it precedes it.
 
 **ERROR / exit 2 resolution** (Pure bullets only — three steps in order, cheapest first):
