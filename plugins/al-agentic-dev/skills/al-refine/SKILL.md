@@ -54,6 +54,8 @@ Sharpen vague language inline. _Avoid_: "the order is processed". Instead: "Sale
 
 **Pure block first, then E2E block.** Within each block, ZOMBIES order — Zero, One, Many, Boundary, Interfaces, Exception, Simple. Both positive and negative cases per letter that admits them.
 
+**ZOMBIES coverage is across the task, not per block.** A `Z` scenario at Pure satisfies the `Z` slot even when E2E has no `Z`. Edge cases belong at the cheaper layer (Pure runs in seconds via AL Runner); E2E proves wiring, not edges. Re-proving every letter in the container is the ice-cream-cone anti-pattern — slow, brittle, no new signal.
+
 Numbering is contiguous across blocks and reflects this final order: `T-NNN#1` is the first Pure bullet; the first E2E bullet's number = `(count of Pure bullets) + 1`. The numbering becomes the execution order — `/al-implement` traverses bullets sequentially, so Pure-first is enforced by construction. Layer tag from step 5 decides which block a scenario sits in.
 
 `Both`-tagged scenarios sit in the Pure block — `/al-implement` drives RED→GREEN at the Pure layer (inner loop) and adds the E2E counterpart alongside; the bullet is listed once.
@@ -184,7 +186,7 @@ One line max. No fixture mechanics, no implementation choices beyond explicit de
 ```
 [ ] Title is positional PascalCase; no Given_When_Then; no implementation name
 [ ] Body cites real fields/codeunits/events — grep finds them
-[ ] ZOMBIES letters covered or explicitly skipped (Notes line)
+[ ] ZOMBIES letters covered across the task (Pure + E2E combined) or explicitly skipped (Notes line)
 [ ] Both positive and negative where the letter admits
 [ ] Per-scenario layer matches architecture default OR Notes line records override
 [ ] Pure sub-block precedes E2E sub-block; numbering contiguous across blocks; ZOMBIES preserved within each
