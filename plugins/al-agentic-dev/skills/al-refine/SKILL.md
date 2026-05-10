@@ -50,13 +50,25 @@ Trigger `/grill-me` when:
 
 Sharpen vague language inline. _Avoid_: "the order is processed". Instead: "Sales Order is posted via Codeunit 80".
 
-### 4. Draft scenarios in layer-then-ZOMBIES order
+### 4. Decide test layer per scenario
+
+Architecture set the family default. Override per scenario only when intent forces it. The tag decides which block (Pure or E2E) the bullet sits in — see step 5.
+
+- **Pure** — process layer, no DB. Default for value-in/value-out logic. Pure block.
+- **E2E** — composition or side effect unreproducible at the pure layer (posting, document flow, event chain). E2E block.
+- **Both** — intent splits cleanly; same behaviour at both layers buys distinct evidence. Pure block (one bullet; `/al-implement` produces tests at both layers).
+
+Scenario disagrees with family default → place the bullet in the override block and record the rationale as a Notes line: `T-007#3: layer = E2E (override; posting side effect)`.
+
+*Pure tag is intent. AL Runner verifies at `/al-implement` RED — the unit test app contract is PASS-or-FAIL. ERROR / exit 2 routes to the three-step resolution (review test → refactor production → reclassify) in `/al-implement` and `al-runner.md`.*
+
+### 5. Draft scenarios in layer-then-ZOMBIES order
 
 **Pure block first, then E2E block.** Within each block, ZOMBIES order — Zero, One, Many, Boundary, Interfaces, Exception, Simple. Both positive and negative cases per letter that admits them.
 
 **ZOMBIES coverage is across the task, not per block.** A `Z` scenario at Pure satisfies the `Z` slot even when E2E has no `Z`. Edge cases belong at the cheaper layer (Pure runs in seconds via AL Runner); E2E proves wiring, not edges. Re-proving every letter in the container is the ice-cream-cone anti-pattern — slow, brittle, no new signal.
 
-Numbering is contiguous across blocks and reflects this final order: `T-NNN#1` is the first Pure bullet; the first E2E bullet's number = `(count of Pure bullets) + 1`. The numbering becomes the execution order — `/al-implement` traverses bullets sequentially, so Pure-first is enforced by construction. Layer tag from step 5 decides which block a scenario sits in.
+Numbering is contiguous across blocks and reflects this final order: `T-NNN#1` is the first Pure bullet; the first E2E bullet's number = `(count of Pure bullets) + 1`. The numbering becomes the execution order — `/al-implement` traverses bullets sequentially, so Pure-first is enforced by construction. Layer tag from step 4 decides which block a scenario sits in.
 
 `Both`-tagged scenarios sit in the Pure block — `/al-implement` drives RED→GREEN at the Pure layer (inner loop) and adds the E2E counterpart alongside; the bullet is listed once.
 
@@ -80,18 +92,6 @@ Scenario body — drop articles. BC vocabulary is the compression. Field/codeuni
 | Use: | **When** Codeunit 80 runs on Sales Header type Invoice |
 | _Avoid_: | **Then** `an error message should be displayed to the user` |
 | Use: | **Then** error `Customer is blocked` raised; no Cust. Ledger Entry inserted |
-
-### 5. Confirm test layer per scenario
-
-Architecture set the family default. Override per scenario only when intent forces it. The tag decides which block (Pure or E2E) the bullet sits in — see step 4.
-
-- **Pure** — process layer, no DB. Default for value-in/value-out logic. Pure block.
-- **E2E** — composition or side effect unreproducible at the pure layer (posting, document flow, event chain). E2E block.
-- **Both** — intent splits cleanly; same behaviour at both layers buys distinct evidence. Pure block (one bullet; `/al-implement` produces tests at both layers).
-
-Scenario disagrees with family default → place the bullet in the override block and record the rationale as a Notes line: `T-007#3: layer = E2E (override; posting side effect)`.
-
-*Pure tag is intent. AL Runner verifies at `/al-implement` RED — the unit test app contract is PASS-or-FAIL. ERROR / exit 2 routes to the three-step resolution (review test → refactor production → reclassify) in `/al-implement` and `al-runner.md`.*
 
 ### 6. Second opinion (gate)
 
