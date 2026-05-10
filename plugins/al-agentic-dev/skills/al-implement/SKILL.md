@@ -80,6 +80,7 @@ Prefer parallel subagents for independent work and output-heavy steps.
 
 - **Pure-tagged bullets** — `/al-build -UnitTestOnly` after every RED, GREEN, refactor. AL Runner is the inner-loop gate (seconds); container precedes `[x]`.
 - **E2E-tagged bullets** — full `/al-build` after every RED, GREEN, refactor. Container is the gate.
+- **Both-tagged bullets** (sit in Pure sub-block) — two consecutive cycles per bullet. **First**: full Pure cycle (`/al-build -UnitTestOnly` for RED → GREEN → refactor) — drives the implementation. **Second**: write an E2E test exercising the same scenario through the public surface; gate with full `/al-build`. The E2E test should pass against the production code the Pure cycle just wrote — failure surfaces integration-level behaviour the Pure layer missed (fix, re-gate). Both cycles complete before moving to the next bullet.
 - **Order**: traverse bullets in numeric order. `/al-refine` writes the Pure sub-block before the E2E sub-block (contiguous numbering, ZOMBIES preserved within each), so Pure-first is enforced by construction — no reordering at execution time.
 - **Final precondition before `[x]`** — full `/al-build` regardless. AL Runner does not replace the container; it precedes it.
 
