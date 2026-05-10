@@ -25,11 +25,11 @@ Leverage at the interface — how much behaviour a caller (or test) can exercise
 _Avoid_: ratio of implementation-lines to interface-lines (rewards padding the body). Depth here is leverage, not line count.
 
 **Seam** _(from Michael Feathers)_
-A place where behaviour can be altered without editing in place. The *location* at which a module's interface lives. Choosing where the seam goes is its own design decision, distinct from what sits behind it. In AL, seams take concrete shapes: a published `IntegrationEvent` (with optional `IsHandled`), an AL `interface` object plus an Implementer codeunit, a table-extension field, an event subscriber attaching to a publisher.
+A place where behaviour can be altered without editing in place. The *location* at which a module's interface lives. Choosing where the seam goes is its own design decision, distinct from what sits behind it. In AL, seams take concrete shapes: a published `IntegrationEvent` (with optional `IsHandled`), an AL `interface` object plus an Implementer codeunit, a table-extension field, an event subscriber attaching to a publisher, and a `List of [Interface I…]` / `Dictionary of [Text, Interface I…]` collection (BC 2025 W1, runtime 15.0) where adapters self-register via `.Add()` — no DI plumbing.
 _Avoid_: boundary (overloaded with DDD's bounded context). Say **seam**, **interface**, or — when the AL construct is what's meant — **AL `interface` object**.
 
 **Adapter**
-A concrete codeunit (or implementing codeunit) that satisfies an interface at a seam. Names a *role* (which slot it fills), not substance (what's inside). A `Deposit Slip Printer` and a `Deposit Slip Printer Mock` are two adapters at the same seam.
+A concrete codeunit (or implementing codeunit) that satisfies an interface at a seam. Names a *role* (which slot it fills), not substance (what's inside). An `App Deposit Slip Printer` and a `Stub Deposit Slip Printer` are two adapters at the same seam — Stub returns fixed data; Mock would additionally verify call contracts. The doubles vocabulary (Dummy / Stub / Spy / Mock / Fake) lives below; see `test-doubles.md` for AL code shapes.
 _Avoid_: implementation (when you mean role, say adapter), driver, plugin.
 
 **Leverage**
@@ -39,6 +39,10 @@ _Avoid_: reuse (too vague — reuse can be shallow copy-paste).
 **Locality**
 What maintainers get from depth. Change, bugs, knowledge, and verification concentrate at one place rather than spreading across callers. Fix once, fixed everywhere. Locality is the maintainer-side mirror of leverage.
 _Avoid_: cohesion (related, but locality is about *where the change lands*, not about what belongs together).
+
+**R → P → W** _(layering rule for procedures)_
+The internal layering inside a module: **R** = reads (DB queries, parameters in, events subscribed to), **P** = pure process (decisions, no DB, no external calls), **W** = writes (`Insert` / `Modify` / `Delete`, telemetry, errors, events published). P is the unit-test surface — `Access = Internal` makes it test-accessible without crossing the external interface. Two test surfaces follow: E2E crosses the external interface (R + P + W end-to-end); unit tests target P directly with stubbed R/W collaborators. Cited by `tdd-cycle.md`, `decoupling.md`, and `/al-implement`.
+_Avoid_: treating R / P / W as a label slapped on an existing tangle. The split *is* the refactor — not annotation.
 
 ## Behavioural decomposition
 
@@ -57,6 +61,22 @@ The pattern qualifies the slice in `architecture.md` — `Slice (Automation): tr
 **Vertical slicing** _(working principle, predates VSA — implicit in Kent Beck's TDD, 2002)_
 Per-task / per-PR rule: every task ships tests + production code together; never data-only, logic-only, or wire-up-only; always leaves the system green. Applies to every `T-NNN` in `tasks.md`. The opposite — *horizontal phasing* (data, then logic, then UI, then tests-as-afterthought) — is rejected by name. Lower-altitude than Vertical Slice Architecture; folder structure is VSA, per-task discipline is vertical slicing.
 _Avoid_: horizontal phasing, layer-by-layer build, big-bang integration.
+
+## Test doubles
+
+Five kinds (Meszaros — *xUnit Test Patterns*). **Adapter** (above) names a *role* — which slot at the seam an implementation fills. **Double** names a *kind* — what the implementation does. Both axes apply: a Stub of `IConverter` is one adapter playing the Stub kind. Cross-cite `test-doubles.md` for AL code shapes.
+
+**Dummy** — satisfies the interface parameter; no state, no behaviour. Used when the test doesn't exercise that dependency path at all.
+
+**Stub** — returns pre-configured fixed data. Default for environment-interface seams (`IEnvironment`, `IApiRequest`, `IFinance`-family). See `environment-interfaces.md`.
+
+**Spy** — records whether it was called; post-hoc assertion. Used to assert an execution path without inspecting return data.
+
+**Mock** — combines stub + spy; verifies call contracts (count, order, args). Used when the test asserts interaction patterns.
+
+**Fake** — simplified but working implementation (in-memory store standing in for a DB). Used when the test needs real-behaving dependency without real cost.
+
+_Avoid_: calling every double a "Mock". Name the kind exactly. Mock-without-call-assertions is just a Stub with extra fields.
 
 ## BC translations (state inline)
 

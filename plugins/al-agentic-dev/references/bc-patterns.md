@@ -6,6 +6,8 @@ Each entry follows the same shape: **What** / **When** / **When not** / **Struct
 
 Source: https://alguidelines.dev/docs/patterns/.
 
+**Forward-look.** Two BC features sharpen this catalogue. **BC 2024 wave 2** introduces `interface extends`: a child interface declares new procedures while leaving the parent (and its existing adapters) AS0066-stable — interface evolution becomes per-adapter migration. **BC 2025 wave 1** introduces interface collections (`List of [Interface I…]` / `Dictionary of [Text, Interface I…]`, runtime 15.0): adapters self-register via `.Add()`, collapsing the cost of the two-adapter rule for testability seams. When picking a pattern that names a seam (Event Bridge, Template Method, Implementer Injection, Command Queue), keep these in mind — they shift which patterns earn their ceremony at design time.
+
 ---
 
 ## Façade
@@ -74,6 +76,23 @@ The codeunit is exposed through a table or codeunit procedure for IntelliSense d
 3. **Implementation codeunit(s)** — adapters realising the AL `interface`.
 
 **_Avoid_:** **Forced commonality** (anti-pattern) — flattening genuinely different workflows into a single template by stuffing the differences into wide AL `interface` parameters or `case`-on-type branches inside adapters. The template stops being a flow and becomes a router. Split into two templates the moment a variant carries shape-changing branches.
+
+---
+
+## Implementer Injection
+
+**What:** Self-injection seam for testability. The production codeunit implements its own AL `interface` object; an `internal` overload accepts the interface; the public-facing procedure (or `OnRun()` trigger) calls the overload passing `This: Codeunit <Self>`. Tests call the overload with a stub adapter. See `decoupling.md` Phase 3.
+
+**When:** Refactoring legacy code that mixes DB calls with decisions, where callers must remain untouched and the seam needs to land without breaking change. Phase 3 of three-phase decoupling.
+
+**When not:** Greenfield code where the interface is the contract from day one — accept the interface on the public procedure directly, no overload ceremony. Seams that won't ship a second adapter — single-adapter ports are speculative bloat.
+
+**Structure:**
+- **AL `interface` object** — declares the procedures injected in tests.
+- **Production codeunit** — implements the interface; declares an `internal` overload accepting the interface; the public procedure (or `OnRun`) calls the overload passing `This`.
+- **Stub adapter** — second implementation in the unit test app, fulfilling the two-adapter rule.
+
+**_Avoid_:** **Single-adapter port** (anti-pattern) — declaring an interface and implementing it once just to "be testable" without ever shipping a second adapter. One adapter is a hypothetical seam; the production + stub pair (or two real production variants) earns the ceremony.
 
 ---
 
@@ -151,6 +170,6 @@ The codeunit is exposed through a table or codeunit procedure for IntelliSense d
 
 Common at feature level: **Façade**, **Event Bridge**, **Generic Method**, **Template Method**, **Error Handling**.
 
-Specialised: **API Register Fieldset**, **Delegate API Operation** (API page design), **Command Queue** (in-memory sequencing), **No. Series** (numbered records).
+Specialised: **API Register Fieldset**, **Delegate API Operation** (API page design), **Command Queue** (in-memory sequencing), **Implementer Injection** (testability seam, brownfield refactor), **No. Series** (numbered records).
 
 Pick one per module. State the choice on the module line in `architecture.md`. If the module's responsibility doesn't match any pattern in this catalogue, the module shape is probably wrong — reshape before naming a pattern.
