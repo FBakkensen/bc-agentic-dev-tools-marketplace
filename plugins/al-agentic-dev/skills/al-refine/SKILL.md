@@ -85,6 +85,8 @@ Architecture set the family default. Override per scenario only when intent forc
 
 Scenario disagrees with family default → record override as a Notes line: `T-007#3: layer = E2E (override; posting side effect)`.
 
+*Pure tag is intent. AL Runner verifies at `/al-implement` RED — the unit test app contract is PASS-or-FAIL. ERROR / exit 2 routes to the three-step resolution (review test → refactor production → reclassify) in `/al-implement` and `al-runner.md`.*
+
 ### 6. Second opinion (gate)
 
 Mandatory for non-trivial. Cross-check Gherkin bullets via `/al-second-opinion`.
@@ -176,6 +178,11 @@ One line max. No fixture mechanics, no implementation choices beyond explicit de
 - `/bc-standard-reference` — BaseApp patterns and event signatures.
 - `/al-steer` — replan venue when a hard-halt fires.
 - `/al-implement` — consumes the Gherkin next.
+
+**References** (`${CLAUDE_SKILL_DIR}/../../references/`):
+
+- `zombies-scenarios.md` — Z/O/M/B/I/E/S ordering rationale and naming examples.
+- `al-runner.md` — what `/al-build -UnitTestOnly` runs against; Pure tag is intent, AL Runner verifies.
 
 ## Out of scope
 

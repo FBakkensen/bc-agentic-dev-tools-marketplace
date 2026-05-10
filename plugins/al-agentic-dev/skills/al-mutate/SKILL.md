@@ -61,7 +61,7 @@ Top-down by signal-per-minute. Pick the class that exercises decision logic. Nev
 3. Run preflight.
 4. For each mutation in the plan, one at a time:
    - Apply the mutation to one site.
-   - Run `/al-build` with tests.
+   - Run `/al-build` with tests. *P-layer mutations gate via `/al-build -UnitTestOnly` when `unitTestApp` is configured; AL Runner ERROR / exit 2 from a mutation = "broke runner contract", not a survivor — note and skip. See `al-runner.md`.*
    - Classify per the table below.
    - Revert with `git checkout -- <file>`.
    - Verify revert by re-running `/al-build`. Baseline must return green. If not, abort and surface the broken revert.
@@ -127,10 +127,15 @@ Voice and Notes-shape rules apply to the bounded line. Full contracts:
 
 ## Composition
 
-- `/al-build` runs every iteration.
+- `/al-build` runs every iteration. `-UnitTestOnly` for P-layer mutation gating when `unitTestApp` is configured.
 - `/al-research` when a survivor needs BaseApp behaviour verified.
 - `/al-refactor` consumes the standalone report — gaps drive new tests before any shape change.
 - `/grill-me` when a survivor's classification needs the user.
+
+**References** (`${CLAUDE_SKILL_DIR}/../../references/`):
+
+- `mutation-operators.md` — operator catalogue and selection heuristics; pre-flight self-report shape.
+- `al-runner.md` — Pure-layer mutation gating; ERROR / exit 2 ≠ survivor.
 
 ## Out of scope
 

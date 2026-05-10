@@ -17,11 +17,11 @@ Read before writing to `tasks.md`:
 
 ## Philosophy
 
-**Tests verify behaviour through public interfaces, not implementation details.** Production code can change entirely; tests shouldn't. A test that breaks on rename of an internal procedure was testing implementation, not behaviour.
+**Tests target the Process layer's seam interface** (`Access = Internal` for Pure bullets, public for E2E). Production code outside the seam — Read collaborators, Write collaborators, public façade — can change entirely; the seam is the contract under test. This is the R → P → W layering of `${CLAUDE_SKILL_DIR}/../../references/LANGUAGE.md`. Two test surfaces follow: E2E crosses the external interface; unit tests target P directly with stubbed R/W collaborators. See `tdd-cycle.md`.
 
-**Good tests** describe what the system does — `PostSalesOrderWithBlockedCustomer` reads as a specification. They exercise real codeunits through public entry points and survive refactor.
+**Deep internals rename freely.** A test that breaks on rename of a private procedure inside the Process implementation was testing implementation, not behaviour — the rename-survival invariant is canon. See `test-invariants.md`.
 
-**Bad tests** mock internal collaborators, assert on call order inside the codeunit under test, or verify by reading a table the production code just wrote. The warning sign: the test breaks when you rename a private procedure but no behaviour changed.
+**AL Runner is the empirical classifier.** A bullet tagged Pure that returns ERROR / exit 2 under `/al-build -UnitTestOnly` is not unit-runnable yet — apply the three-step resolution (review test → refactor production → reclassify). See `al-runner.md`.
 
 ## Anti-Pattern: Horizontal Slices
 
@@ -54,31 +54,40 @@ Prefer parallel subagents for independent work and output-heavy steps.
 2. **Seam map.** Read `specs/<branch>/architecture.md`: module map, R → P → W boundary, brownfield touchpoints, test strategy. Name the seam in BC vocabulary — the procedure to extract, event to subscribe, interface to implement. One line.
 3. **Test layer per Gherkin bullet.** Pure (process layer, no DB) by default. E2E when behaviour is composition or a side effect that can't reproduce at the pure layer. Both only when intent splits cleanly across layers. Default to `architecture.md`'s strategy; deviate explicitly.
 4. **Verify before transcribing.** If the seam surfaces an AL/BC fact `architecture.md` doesn't cover (event signature, Validate-trigger side effects, permission keys), run `/al-research` first. Compile loop catches hallucinated names; research catches silent-wrong-behaviour.
-5. **Tracer bullet.** Pick the first Gherkin bullet that proves the seam end-to-end. Run cycle (steps 6–9). This bullet is the proof the path works.
-6. **RED.** Transcribe one Gherkin bullet → AL test. Must compile and fail on **behaviour**, not on missing types. Run `/al-build` — confirm red.
-7. **GREEN.** Smallest production change that turns the test green. No speculative code, no anticipation of the next bullet. Run `/al-build` — confirm green.
-8. **`/al-refactor`.** Improve shape while green; seed the checklist from `architecture.md`'s brownfield touchpoints. May add tests when uncovered branches surface. Run `/al-build` — must stay green.
-9. **Cycle checklist** (every red → green → refactor):
-   - [ ] Test exercises the public interface — page action, codeunit `Run`, event publisher.
-   - [ ] Test would survive a rename of any private procedure inside the unit.
-   - [ ] Assertions read posting outcomes / ledger entries / document flow — not table shape or call order.
-   - [ ] `[SCENARIO]` / `[GIVEN]` / `[WHEN]` / `[THEN]` restate the originating Gherkin bullet faithfully.
-10. **Repeat 6–9** for each remaining Gherkin bullet on the task.
-11. **Mutation plan.** If decision logic changed (see *When to mutate*), append a `**Mutations**` block per the *Canonical `**Mutations**` block* in `/al-mutate` — one row per mutation site in `/al-mutate` priority order, with an expected killer named pre-run. Otherwise: `**Mutations:** skipped — no decision logic changed`.
-12. **Second opinion (gate)** on the mutation list — mandatory when decision logic changed.
-13. **Commit WIP.** Mandatory before `/al-mutate`. Its preflight requires `git status` empty so revert is `git checkout --` against a known-good baseline. Stage all task work (tests, production, scaffolding, `**Mutations**` block, `[~]`) and commit. Skip if `/al-mutate` is skipped.
-14. **`/al-mutate`.** Mandatory when decision logic changed. Invoke `/al-mutate` with the calling task ID + `**Mutations**` block.
-15. **Replan check (gate)** — see below.
-16. **Close.** `/al-build` green is the precondition. Mark task `[x]`, commit. `Stop.`
+5. **Tracer bullet.** Pick the first Gherkin bullet that proves the seam end-to-end. Run cycle (steps 7–10). This bullet is the proof the path works.
+6. **Scaffold.** One-time per task. Create compilable stubs for the seam — interface declaration, procedure signatures, empty implementations, new test codeunit shell. Run `/al-build` to confirm green. Subsequent bullets reuse the scaffold. See `tdd-cycle.md`.
+7. **RED.** Transcribe one Gherkin bullet → AL test. Must compile and fail on **behaviour**, not on missing types. Run the gate (see *`/al-build` — the test gate*) — confirm red.
+8. **GREEN.** Smallest production change that turns the test green. No speculative code, no anticipation of the next bullet. Run the gate — confirm green.
+9. **`/al-refactor`.** Improve shape while green; seed the checklist from `architecture.md`'s brownfield touchpoints. May add tests when uncovered branches surface. Run the gate — must stay green.
+10. **Cycle checklist** (every red → green → refactor):
+    - [ ] Test exercises the seam interface — `Access = Internal` for Pure bullets, public (page action, codeunit `Run`, event publisher) for E2E.
+    - [ ] Test would survive a rename of any private procedure inside the unit.
+    - [ ] Assertions read posting outcomes / ledger entries / document flow — not table shape or call order.
+    - [ ] `[SCENARIO]` / `[GIVEN]` / `[WHEN]` / `[THEN]` restate the originating Gherkin bullet faithfully.
+11. **Repeat 7–10** for each remaining Gherkin bullet on the task.
+12. **Mutation plan.** If decision logic changed (see *When to mutate*), append a `**Mutations**` block per the *Canonical `**Mutations**` block* in `/al-mutate` — one row per mutation site in `/al-mutate` priority order, with an expected killer named pre-run. Otherwise: `**Mutations:** skipped — no decision logic changed`.
+13. **Second opinion (gate)** on the mutation list — mandatory when decision logic changed.
+14. **Commit WIP.** Mandatory before `/al-mutate`. Its preflight requires `git status` empty so revert is `git checkout --` against a known-good baseline. Stage all task work (tests, production, scaffolding, `**Mutations**` block, `[~]`) and commit. Skip if `/al-mutate` is skipped.
+15. **`/al-mutate`.** Mandatory when decision logic changed. Invoke `/al-mutate` with the calling task ID + `**Mutations**` block.
+16. **Replan check (gate)** — see below.
+17. **Close.** Final full `/al-build` green is the precondition (container, regardless of how many bullets ran on `-UnitTestOnly`). Mark task `[x]`, commit. `Stop.`
 
 ## `/al-build` — the test gate
 
-**Invocation:** run `/al-build`. **Returns:** compile status + test summary (passed / failed / errors). **Gates:**
+**Invocation:** `/al-build` (full gate, container) or `/al-build -UnitTestOnly` (AL Runner only — Pure layer, when `unitTestApp` is configured). **Returns:** compile status + test summary (passed / failed / errors). See `al-runner.md`.
 
-- After every RED — confirms the test fails on behaviour, not on missing types.
-- After every GREEN — confirms the test passes and others still pass.
-- After every `/al-refactor` — confirms green is preserved.
-- Before marking `[x]` — final precondition.
+**Layer routing:**
+
+- **Pure-tagged bullets** — `/al-build -UnitTestOnly` after every RED, GREEN, refactor. AL Runner is the inner-loop gate (seconds); container precedes `[x]`.
+- **E2E-tagged bullets** — full `/al-build` after every RED, GREEN, refactor. Container is the gate.
+- **Order**: process all Pure bullets first (one vertical slice each), then all E2E bullets. ZOMBIES order preserved within each layer.
+- **Final precondition before `[x]`** — full `/al-build` regardless. AL Runner does not replace the container; it precedes it.
+
+**ERROR / exit 2 resolution** (Pure bullets only — three steps in order, cheapest first):
+
+1. **Review the test.** Was it reaching for an unsupported runner feature unnecessarily (`HttpClient.Send` direct, multi-dataitem query, `Commit()`-dependent assertion)? Adjust to exercise the same behaviour without the unsupported feature.
+2. **Refactor production.** Extract a seam via `decoupling.md` (three-phase) so the test can inject a stub. The unsupported call moves behind the seam. Retry RED.
+3. **Reclassify the bullet as E2E.** The bullet fundamentally needs a container. Move test to a container test app, append a `T-NNN#K: layer = E2E (override; AL Runner ERROR)` Notes line. Last resort.
 
 A red turn from any non-RED build halts the cycle. Fix forward; do not leave the task with a failing build.
 
@@ -140,11 +149,18 @@ If green code violates either, halt before mutation, reshape, and flag breaking-
 
 ## Composition
 
-- `/al-build` — test gate after every RED, GREEN, `/al-refactor`, and before `[x]`.
+- `/al-build` — test gate after every RED, GREEN, `/al-refactor`, and before `[x]`. `-UnitTestOnly` for Pure-layer inner loop.
 - `/al-design` precondition (`architecture.md` exists). `/al-refine` precondition (`**Tests**` block on the task).
 - `/al-research` for AL/BC facts not covered by `architecture.md`. `/bc-standard-reference` for pure BaseApp questions.
 - `/al-refactor` after green. `/al-mutate` after refactor (mandatory when decision logic changed). `/al-debug-logging` only when execution path is unclear and tests can't reveal it.
 - `/al-second-opinion` — advisory gate before `/al-mutate` (read-only sandbox; copilot CLI under the hood). `/grill-me` when judgement needs the user. `/al-steer` is the replan venue.
+
+**References** (`${CLAUDE_SKILL_DIR}/../../references/`):
+
+- `tdd-cycle.md` — three-layer trust, three laws, five phases (Scaffold/Red/Green/Refactor/Mutate).
+- `test-doubles.md` — Meszaros 5-kind taxonomy (Dummy/Stub/Spy/Mock/Fake) with AL code shapes.
+- `test-invariants.md` — no-touch list (`[Test]`, `Subtype = Test`, `[HandlerFunctions(...)]`, etc.) and rename-safety protocol.
+- `al-runner.md` — fast pre-check, three outcomes (PASS/FAIL/ERROR), ERROR / exit 2 resolution.
 
 ## Out of scope
 

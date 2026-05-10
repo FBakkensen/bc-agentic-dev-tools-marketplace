@@ -116,6 +116,11 @@ Full discipline in `${CLAUDE_SKILL_DIR}/../../references/LANGUAGE.md`.
 - `/al-scope` — consumes `architecture.md` next.
 - `/al-steer` — replan venue if a flow gate hard-halts.
 
+**References** (`${CLAUDE_SKILL_DIR}/../../references/`):
+
+- `decoupling.md` — three-phase legacy refactor (extract internals → interface → inject) when brownfield touchpoints surface seams worth carving.
+- `environment-interfaces.md` — three default decoupling seams (`IEnvironment`, `IApiRequest`, `IFinance`-family); reach for the named pattern before declaring a fresh one.
+
 ## Out of scope
 
 - No code edits, no interface extraction (`/al-refactor`), no Gherkin (`/al-refine`), no mutations (`/al-mutate`).

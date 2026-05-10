@@ -91,6 +91,10 @@ When a design question feels substantive, find the domain constraint behind it a
 
 `/grill-me` is the interview engine; this skill wraps it with BC domain awareness. `/al-research` mandatory before naming a BC term, disambiguating, or writing an ADR. `/bc-standard-reference` reachable directly when the question is purely BaseApp behaviour. `/al-design` consumes the resulting `CONTEXT.md` + ADRs and picks the architecture.
 
+**References** (`${CLAUDE_SKILL_DIR}/../../references/`):
+
+- `testability-pillars.md` — 7 pillars of agent-friendly code; useful when triaging "is this a domain rule or an architecture/testability concern?" — testability concerns route to `/al-design`, not a domain ADR.
+
 ## Out of scope
 
 - No code edits.
