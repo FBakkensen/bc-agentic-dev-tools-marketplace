@@ -1,28 +1,28 @@
 ---
 name: al-steer
-description: Coach and navigator for AL/Business Central agentic dev — reads tasks.md, the goal, the codebase, and recent commits, then names what's next, what's blocked, what's drifting, and owns the .out-of-scope/ rejection knowledge base. Use when uncertain about the next step, planning a session, asking "where are we?", or clearing the replan queue.
+description: Coach and navigator for AL/Business Central agentic dev, reads tasks.md, the goal, the codebase, and recent commits, then names what's next, what's blocked, what's drifting, and owns the .out-of-scope/ rejection knowledge base. Use when uncertain about the next step, planning a session, asking "where are we?", or clearing the replan queue.
 ---
 
-# /al-steer — Coach / navigator
+# /al-steer, Coach / navigator
 
-Read `tasks.md`, `architecture.md`, the goal, the codebase, and recent commits. Name what's next, what's blocked, what's drifting. Run `/grill-me` when intent is unclear. Name the next handoff — never force one. Canonical replan venue. Owner of `.out-of-scope/`.
+Read `tasks.md`, `architecture.md`, the goal, the codebase, and recent commits. Name what's next, what's blocked, what's drifting. Run `/grill-me` when intent is unclear. Name the next handoff, never force one. Canonical replan venue. Owner of `.out-of-scope/`.
 
-**Resolve `tasks.md`:** branch matches `^\d{3}-` → `specs/<branch>/tasks.md`. Otherwise `Stop.` — run `/al-design` first.
+**Resolve `tasks.md`:** branch matches `^\d{3}-` → `specs/<branch>/tasks.md`. Otherwise `Stop.`, run `/al-design` first.
 
 Read before writing:
-- `${CLAUDE_SKILL_DIR}/../../references/voice-contract.md` — voice rules for the prose itself; applies to both `tasks.md` and `.out-of-scope/`.
-- `${CLAUDE_SKILL_DIR}/../../references/notes-discipline.md` — `tasks.md` Notes-line trigger test, valid shapes, escalation routing. Does not apply to `.out-of-scope/`.
+- `${CLAUDE_SKILL_DIR}/../../references/voice-contract.md`, voice rules for the prose itself; applies to both `tasks.md` and `.out-of-scope/`.
+- `${CLAUDE_SKILL_DIR}/../../references/notes-discipline.md`, `tasks.md` Notes-line trigger test, valid shapes, escalation routing. Does not apply to `.out-of-scope/`.
 
 ## Reference docs
 
-- [references/out-of-scope.template.md](references/out-of-scope.template.md) — `.out-of-scope/` knowledge base format
+- [references/out-of-scope.template.md](references/out-of-scope.template.md), `.out-of-scope/` knowledge base format
 
 ## Power model
 
 - **Read** anything: workspace, `tasks.md`, `architecture.md`, `CONTEXT.md`, `docs/adr/`, `.out-of-scope/`.
-- **Write `tasks.md`** structurally — only after explicit user ack. Never silent.
+- **Write `tasks.md`** structurally, only after explicit user ack. Never silent.
 - **Write `.out-of-scope/<concept>.md`** when grilling vetoes a recurring scope item with a substantive reason.
-- **Cannot edit code.** Cannot edit `architecture.md` in place — run `/al-design` again. Cannot edit `CONTEXT.md` or `docs/adr/` — owned by `/al-grill-adr` and `/al-design`. Never touch `[x]` tasks.
+- **Cannot edit code.** Cannot edit `architecture.md` in place, run `/al-design` again. Cannot edit `CONTEXT.md` or `docs/adr/`, owned by `/al-grill-adr` and `/al-design`. Never touch `[x]` tasks.
 
 Status markers in `tasks.md`: `[ ]` ready, `[~]` in progress, `[x]` done, `[!]` blocked. `T-NNN` IDs are monotonic and never reused.
 
@@ -33,23 +33,23 @@ The user invokes `/al-steer` and describes what they want in natural language. I
 - "Where are we?"
 - "What's next?"
 - "Clear the replan queue"
-- "T-007 is `[!]` — walk me through it"
+- "T-007 is `[!]`, walk me through it"
 - "Mark T-009 as soft-flagged for goal drift"
 
 ## Show what needs attention
 
 Read `tasks.md`, scan `architecture.md` and recent commits. Present three buckets, severity then ID:
 
-1. **Hard halts** — `[!]` tasks. Replan required before work resumes.
-2. **Soft flags** — `**Replan** trigger #N: <reason>` Notes lines on `[ ]` / `[~]` tasks.
-3. **Drift signals** — `## Goal` no longer matches `tasks.md`; `architecture.md` module map diverges from code shape; broken `Depends-on`; redundancy; gaps; open-question Notes.
+1. **Hard halts**: tasks whose `<summary>` carries `[!]`. Replan required before work resumes.
+2. **Soft flags**: tasks whose `<details>` block carries `> [!IMPORTANT] **Replan flag**: trigger #N` and the `<summary>` is still `[ ]` or `[~]`.
+3. **Drift signals**: `## Goal` no longer matches `tasks.md`; `architecture.md` module map diverges from code shape; broken `**Depends on:**` line referencing a non-existent task; redundancy; gaps; open-question `**Notes**` entries.
 
-One line per entry — task ID, severity tag, the symptom in BC vocabulary. Let the user pick.
+One line per entry: task ID, severity tag, the symptom in BC vocabulary. Let the user pick.
 
 | | Entry |
 |---|---|
 | _Avoid_: | T-007 is currently blocked because the refactor uncovered that the install codeunit needs a permission set entry, and we should probably also revisit T-009's scenarios since they may overlap |
-| Use: | `T-007 [!] trigger #2: install codeunit needs permission set entry — no covering task` |
+| Use: | `T-007 [!] trigger #2: install codeunit needs permission set entry, no covering task` |
 
 ## Identify state and route (situation → action)
 
@@ -57,7 +57,7 @@ One line per entry — task ID, severity tag, the symptom in BC vocabulary. Let 
 |---|---|
 | No `tasks.md` / new feature | `/al-grill-adr` then `/al-design` |
 | `architecture.md` exists, no `tasks.md` | `/al-scope` |
-| Task is `[!]` or `**Replan**` Notes line present | Replan flow (below) |
+| Task `<summary>` is `[!]` or `<details>` carries an IMPORTANT replan-flag alert | Replan flow (below) |
 | `## Goal` no longer describes `tasks.md` | `/al-design` re-run |
 | Code shape diverges from `architecture.md` | `/al-design` re-run |
 | Term fuzzy or contested | `/al-grill-adr` |
@@ -71,9 +71,9 @@ One line per entry — task ID, severity tag, the symptom in BC vocabulary. Let 
 
 ## Replan flow
 
-Other skills (`/al-refine`, `/al-implement`, `/al-refactor`) hit a **Replan check (gate)** and either set the task `[!]` (hard-halt) or append a `**Replan** trigger #N: <reason>` Notes line (soft-flag). `/al-steer` clears the queue.
+Other skills (`/al-refine`, `/al-implement`, `/al-refactor`) hit a **Replan check (gate)** and either flip the task `<summary>` to `[!]` and add an IMPORTANT alert (hard-halt) or add an IMPORTANT alert while keeping the existing status marker (soft-flag). `/al-steer` clears the queue.
 
-1. **Read the queue.** Scan `tasks.md` for `[!]` and `**Replan**` Notes. Order by trigger severity, then task ID. Read `.out-of-scope/*.md` and surface any prior rejection that resembles the entry.
+1. **Read the queue.** Scan `tasks.md` for `[!]` summary markers and `> [!IMPORTANT] **Replan flag**` alerts inside `<details>` blocks. Order by trigger severity, then task ID. Read `.out-of-scope/*.md` and surface any prior rejection that resembles the entry.
 
 2. **Name the trigger.** Cite the number every time.
 
@@ -87,24 +87,24 @@ Other skills (`/al-refine`, `/al-implement`, `/al-refactor`) hit a **Replan chec
    | 6 | Architecture decomposition wrong | R → P → W cuts across tasks, or `architecture.md` itself is wrong | hard-halt |
    | 7 | Goal drift | `## Goal` no longer describes what `tasks.md` delivers | soft-flag |
 
-   _Avoid_ mismatched markers — `[!]` not `[?]`, never `[ ]`-with-Notes when the trigger is a hard-halt. Mismatched markers fool the gate scanner.
+   _Avoid_ mismatched markers, `[!]` not `[?]`, never `[ ]`-with-Notes when the trigger is a hard-halt. Mismatched markers fool the gate scanner.
 
-3. **Name candidate mutations.** Present 2–3 candidate structural mutations for the entry. Run `/grill-me` on the choice — mandatory. Walk one branch at a time. Apply only after explicit ack.
+3. **Name candidate mutations.** Present 2–3 candidate structural mutations for the entry. Run `/grill-me` on the choice, mandatory. Walk one branch at a time. Apply only after explicit ack.
 
 4. **Apply the outcome:**
 
    | Mutation | Shape |
    |---|---|
-   | Split `[!]` task into N bare tasks | Drop original ID; new IDs at next free `T-NNN`. |
-   | Insert new bare `[ ]` task at position M | New ID at next free `T-NNN`. |
-   | Reorder `[ ]` tasks | No ID changes. Never touch `[~]` / `[x]` / `[!]`. |
-   | Delete redundant `[ ]` task | Never `[~]`, `[x]`, or `[!]`. |
-   | Update context line on `[ ]` task | One line under the task title. |
-   | Strip stale `**Tests**` block | Reverts task to bare `[ ]`. |
+   | Split `[!]` task into N bare tasks | Drop original ID; new IDs at next free `T-NNN`. Write each as a fresh `<details>` block with anchor, declared edges (`**Depends on:**`, `**Refactors:**`, `**Fixes:**` as appropriate), description paragraph, empty `**Tests**` block. Regenerate the Mermaid graph and `## Summary` table. |
+   | Insert new bare `[ ]` task at position M | New ID at next free `T-NNN`. Same `<details>` shape as above. Assign to an existing subgraph phase, or add a new phase label if none fits. Regenerate the graph and Summary. |
+   | Reorder `[ ]` tasks | No ID changes. Never touch `<summary>` markers of `[~]` / `[x]` / `[!]` tasks. Regenerate the Summary table (graph edges follow the declared lines and do not change with reorder). |
+   | Delete redundant `[ ]` task | Delete the whole `<details>` block. Update any `**Depends on:** / **Refactors:** / **Fixes:**` lines on other tasks that point at the deleted ID. Never delete `[~]`, `[x]`, or `[!]`. Regenerate graph and Summary. |
+   | Update description paragraph on `[ ]` task | Replace the paragraph inside the `<details>` block. Chips / alerts / edge lines above stay. |
+   | Strip stale `**Tests**` block | Empty the Tests block; flip `<summary>` back to `[ ]` if it was `[~]`; regenerate Summary `Tests` cell. |
 
    Forbidden: rewriting Gherkin (`/al-refine`); rewriting `architecture.md` (`/al-design`); editing `## Goal` in place (run `/al-design` again); editing `CONTEXT.md` or `docs/adr/`; touching `[x]`.
 
-5. **False halt.** User vetoes the trigger after grilling → rewrite the Notes line as `**Replan** trigger #N: resolved — false halt: <reason>` and restore the prior status marker. Never silent un-flag.
+5. **False halt.** User vetoes the trigger after grilling → rewrite the IMPORTANT alert body as `**Replan flag**: trigger #N, resolved (false halt): <reason>.` and restore the prior `<summary>` status marker. Regenerate the Summary row. Never silent un-flag.
 
 No cap on replans per session. Long grills are the point.
 
@@ -112,16 +112,16 @@ No cap on replans per session. Long grills are the point.
 
 ## Quick state override
 
-If the user says "split T-007 into three bare tasks" or "delete T-012, redundant", trust them and apply the mutation directly. Confirm what you're about to do (which IDs, which positions, which Notes lines), then act. Skip grilling. If the override touches a `[!]` task, ask whether the **Replan** Notes line should be cleared too.
+If the user says "split T-007 into three bare tasks" or "delete T-012, redundant", trust them and apply the mutation directly. Confirm what you are about to do (which IDs, which positions, which alerts, which declared-edge lines), then act. Skip grilling. If the override touches a `[!]` task, ask whether the IMPORTANT replan-flag alert should be cleared too.
 
 ## Out-of-scope rejection knowledge base
 
 Grilling vetoes a recurring scope item with a substantive reason → record at `.out-of-scope/<concept>.md` so future replans don't re-litigate.
 
-- **When to write** — user rejected a recurring scope item with a substantive reason (project scope, technical constraint, strategic decision, referenced ADR). Not every "not now".
-- **First need** — materialise from `${CLAUDE_SKILL_DIR}/references/out-of-scope.template.md` into `.out-of-scope/<concept>.md`. `<concept>` is short kebab-case (`multi-currency-rounding`, `auto-create-customers`).
-- **Match on existing** — append the new request to the *Prior requests* list. One file per concept, not per request.
-- **Scan first** during replan and grilling; on a match, surface the prior rejection: "This is similar to `.out-of-scope/<concept>.md` — we rejected this before because <reason>. Do you still feel the same way?"
+- **When to write**: user rejected a recurring scope item with a substantive reason (project scope, technical constraint, strategic decision, referenced ADR). Not every "not now".
+- **First need**: materialise from `${CLAUDE_SKILL_DIR}/references/out-of-scope.template.md` into `.out-of-scope/<concept>.md`. `<concept>` is short kebab-case (`multi-currency-rounding`, `auto-create-customers`).
+- **Match on existing**: append the new request to the *Prior requests* list. One file per concept, not per request.
+- **Scan first** during replan and grilling; on a match, surface the prior rejection: "This is similar to `.out-of-scope/<concept>.md`, we rejected this before because <reason>. Do you still feel the same way?"
 
 The user may **confirm** (append the new request and move on), **reconsider** (delete or update the file, proceed with normal replan), or **disagree** (related but distinct, proceed).
 
@@ -135,5 +135,5 @@ The user may **confirm** (append the new request and move on), **reconsider** (d
 ## Out of scope
 
 - No code edits, no mutation runs, no `/al-build`. No silent `tasks.md` restructuring.
-- No Gherkin or architecture rewrites — `/al-refine` and `/al-design`. No in-place `## Goal` rewrite — `/al-design` re-run.
+- No Gherkin or architecture rewrites, `/al-refine` and `/al-design`. No in-place `## Goal` rewrite, `/al-design` re-run.
 - No edits to `CONTEXT.md` or `docs/adr/`. No touching `[x]`. No forcing a handoff.

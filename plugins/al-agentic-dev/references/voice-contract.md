@@ -4,59 +4,95 @@ Direct, opinionated, no padding. Same voice, every line you write to a durable a
 
 ## Voice
 
-- Direct second-person voice. No hedging — kill "perhaps", "you might want to", "I think we could maybe".
+- Direct second-person voice. No hedging. Kill "perhaps", "you might want to", "I think we could maybe".
 - Short declarative sentences. Fragments OK when they land.
 - No filler: "just", "really", "basically", "actually", "simply".
 - No pleasantries: "Sure!", "Happy to help", "Of course".
-- **Bold for openers and key terms** — `**Default**:`, `**Why**:`, `**Exception**:`, `**Rule**:`.
-- Em-dash for clarification — like this.
+- **Bold for openers and key terms**: `**Default**:`, `**Why**:`, `**Exception**:`, `**Rule**:`.
 - Arrows (→) for causality: bad cache key → stale read → wrong UI.
 - Prescriptive form. "DO NOT X. Do Y." beats "I'd recommend Y over X".
-- Opinionated. Pick a side, state it, explain. Don't enumerate options without recommending one.
+- Opinionated. Pick a side, state it, explain. Do not enumerate options without recommending one.
 - One-line opener that states the answer. No preamble.
 - No closing summary.
 
+## No em-dashes
+
+DO NOT use em-dashes (—) anywhere in any generated artifact. Includes `tasks.md`, `architecture.md`, ADRs, `CONTEXT.md`, `.out-of-scope/`, commit messages, PR bodies, and the SKILL.md files themselves.
+
+Substitute by job:
+
+| Job | Substitute |
+|---|---|
+| Mild pause or parenthetical mid-sentence | comma |
+| Parenthetical aside | parens `( ... )` |
+| Joining two independent clauses with causal link | semicolon `;` |
+| Introducing a clarification, list, or punchline | colon `:` |
+| Heavier pause where a new sentence is warranted | period |
+
+Worked examples (the `_Avoid_` line shows the forbidden em-dash; the `Use` line shows the substitution):
+
+- _Avoid_: `Posting fails — credit limit exceeded.`
+- Use: `Posting fails: credit limit exceeded.`
+- _Avoid_: `The pricing path runs once per line — and again per substitution.`
+- Use: `The pricing path runs once per line, and again per substitution.`
+- _Avoid_: `Fix is a one-line clear at line 32 — before ConfToSalesLine.`
+- Use: `Fix is a one-line clear at line 32, before ConfToSalesLine.`
+
+## Voice scope
+
+Two cadences inside a `tasks.md` task entry, picked by where the line lives.
+
+| Where | Cadence |
+|---|---|
+| `<summary>` line (`[x] T-NNN: Title`) | One-line. Title PascalCase. Status marker plus title; no metadata. |
+| Gherkin bullets inside `**Tests**` | One-line per bullet. Drop articles, conjunctions, hedging. BC vocabulary is the compression. |
+| Notes-line entries | One-line per shape. See `notes-discipline.md`. |
+| Description paragraph inside `<details>` | Normal prose. Multi-sentence allowed. Direct, opinionated, no padding. Semicolon-glue acceptable when it joins independent clauses with causal link. |
+| Alert bodies (NOTE / IMPORTANT / WARNING / CAUTION / TIP) | Normal prose. Lead with the label, then the body. |
+
+The one-line cadence stops the bare entry from sprawling. The prose cadence keeps descriptions and alert bodies readable. Apply the right one to the right slot.
+
 ## BC vocabulary
 
-DO NOT use generic programming terms. Use BC vocabulary everywhere — names, prose, slot fills, ADR bodies.
+DO NOT use generic programming terms. Use BC vocabulary everywhere: names, prose, slot fills, ADR bodies.
 
-- Insert / Modify / Delete — not Create / Update / Remove (record operations).
-- Post — not Submit. Validate — not Check. Get / Find — not Fetch.
-- Ledger Entry — not Transaction. No. — not ID. Procedure — not Method.
+- Insert / Modify / Delete (record operations), not Create / Update / Remove.
+- Post, not Submit. Validate, not Check. Get / Find, not Fetch.
+- Ledger Entry, not Transaction. No., not ID. Procedure, not Method.
 
 State the specific object and procedure when describing a change. "Refactor the codeunit" is too vague. "Extract `PostSalesOrder` from codeunit 80 into a new `Sales-Post Impl`" is right.
 
 ## Lists of findings
 
-When you write a multi-item list where the reader has to decide which item to look at next — code review findings, replan analyses, audit results — write so they can skim, not slow-read.
+When you write a multi-item list where the reader has to decide which item to look at next (code review findings, replan analyses, audit results), write so they can skim, not slow-read.
 
 - Each item multi-line, not a paragraph.
 - Blank line between multi-line items.
 - Every line has a leading label, including the headline.
-- Lede first — impact, not measurement or cause.
+- Lede first: impact, not measurement or cause.
 - Uniform shape across items in the list.
 - **Bold + labels together**: `**Finding**:`, `**Where**:`, `**Action**:`, `**Note**:`.
 
-Default slot set: `Finding:` (what) / `Where:` (file:line or location) / `Action:` (what to do) / `Note:` (severity, effort, caveat). Adapt slots to the list — uniform shape is the principle, not these specific labels.
+Default slot set: `Finding:` (what) / `Where:` (file:line or location) / `Action:` (what to do) / `Note:` (severity, effort, caveat). Adapt slots to the list; uniform shape is the principle, not these specific labels.
 
 ## No workflow chatter in artifact prose
 
-DO NOT write workflow-narrative prose into any durable artifact. The voice rule applies regardless of which file you're writing to.
+DO NOT write workflow-narrative prose into any durable artifact. The voice rule applies regardless of which file you are writing to.
 
-- DO NOT prefix lines with the agent that decided — `/al-implement decision (filter placement):`, `/al-refine second opinion:`.
-- DO NOT narrate TDD steps as prose — "bullet 1 went red on stub, green on body fill".
+- DO NOT prefix lines with the agent that decided: `/al-implement decision (filter placement):`, `/al-refine second opinion:`.
+- DO NOT narrate TDD steps as prose: "bullet 1 went red on stub, green on body fill".
 - DO NOT cite advisor cross-checks, second-opinion accept/reject reasoning, or session-internal reconciliation.
 
 Workflow log belongs in the commit message and PR description. The artifact carries the forward-facing fact in declarative voice.
 
-## Anti-pattern — do not write this
+## Anti-pattern: do not write this
 
 > `/al-implement decision (filter placement): T-005 pre-filters TempSourceLink to sub-config edges; planner trusts caller-shaped input — no internal filter. Rationale: bullets do not exercise a planner-internal Comp. Type / Line Configuration No. filter, so a coverage gap would surface at /al-mutate.`
 
-What's wrong, by voice rule: workflow-step prefix → process noise. Walkthrough prose → not declarative. References the agent that decided → not forward-facing. Multi-line for one fact → padding.
+What is wrong, by voice rule: workflow-step prefix is process noise; walkthrough prose is not declarative; references the agent that decided rather than the forward-facing fact; multi-line for one fact is padding; em-dash inside the prose violates the no-em-dash rule.
 
-## Right shape — write this
+## Right shape: write this
 
-> `LoadConfigurationIntoTemps` stays generic; deep-clone callers pre-filter `TempSourceLink` to sub-config edges before passing it to the planner — chosen over a planner-internal filter so the loader stays reusable across ADR-0007 future-import composition.
+> `LoadConfigurationIntoTemps` stays generic. Deep-clone callers pre-filter `TempSourceLink` to sub-config edges before passing it to the planner, chosen over a planner-internal filter so the loader stays reusable across ADR-0007 future-import composition.
 
-Single declarative line. Names the decision and the hinge. No agent prefix. No archaeology.
+Single declarative line. Names the decision and the hinge. No agent prefix. No archaeology. No em-dashes.
