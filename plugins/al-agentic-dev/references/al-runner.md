@@ -1,6 +1,6 @@
 # AL Runner
 
-Fast pre-check for AL unit tests. Transpiles AL to C# in-memory and runs against in-memory mocks of BC runtime types — no BC service tier, no Docker, no SQL. Cited by `/al-implement` and `/al-mutate` for Pure-layer gating; cited by `tdd-cycle.md` and `mutation-operators.md` for `-UnitTestOnly` invocation.
+Fast pre-check for AL unit tests. Transpiles AL to C# in-memory and runs against in-memory mocks of BC runtime types, no BC service tier, no Docker, no SQL. Cited by `/al-implement` and `/al-mutate` for Pure-layer gating; cited by `tdd-cycle.md` and `mutation-operators.md` for `-UnitTestOnly` invocation.
 
 Upstream: `https://github.com/StefanMaron/BusinessCentral.AL.Runner`. Coverage map: `docs/coverage.yaml`. Limitations: `docs/limitations.md`.
 
@@ -23,11 +23,11 @@ Full BC pipeline (45+ min)     ← full fidelity
 | Outcome | Meaning | Exit code |
 |---|---|---|
 | **PASS** | Codeunit's direct logic is correct | `0` |
-| **FAIL** | Assertion failed or test threw — real failure | `1` |
-| **ERROR** | Codeunit reaches for an unsupported runner feature — configuration issue, not test failure | `2` (use `--strict` to promote to `1`) |
+| **FAIL** | Assertion failed or test threw, real failure | `1` |
+| **ERROR** | Codeunit reaches for an unsupported runner feature, configuration issue, not test failure | `2` (use `--strict` to promote to `1`) |
 | *(compile)* | AL compilation error | `3` |
 
-**The guarantee:** if al-runner says FAIL, it is a real failure. Silent passes due to missing event subscriber side-effects are an accepted known limitation — always run the full pipeline after al-runner.
+**The guarantee:** if al-runner says FAIL, it is a real failure. Silent passes due to missing event subscriber side-effects are an accepted known limitation, always run the full pipeline after al-runner.
 
 ## What's supported
 
@@ -40,7 +40,7 @@ Full BC pipeline (45+ min)     ← full fidelity
 
 ## Built-in test toolkit
 
-Auto-loaded — no stubs needed:
+Auto-loaded, no stubs needed:
 
 | Codeunit | ID | Purpose |
 |---|---|---|
@@ -56,18 +56,18 @@ Auto-loaded — no stubs needed:
 | Limitation | Workaround |
 |---|---|
 | Code inside `.app` packages does not execute | Auto-stubbed (returns defaults). Provide controlled stubs via `--stubs`, or compile dependency AL to a rewritten DLL via `--compile-dep`. |
-| `Commit()` / `Rollback()` are no-ops | None at runner layer — assert state, not commit boundaries. |
-| `StartSession` runs inline | None — design tests to assume serial execution. |
-| No UI rendering — page layout, field visibility, report rendering | Test the underlying procedures directly. |
-| Multi-dataitem queries — JOINs, aggregation | Single-dataitem queries work; restructure or move to E2E. |
-| `HttpClient.Send()` throws | Inject via AL interface — see `environment-interfaces.md` `IApiRequest`. |
+| `Commit()` / `Rollback()` are no-ops | None at runner layer, assert state, not commit boundaries. |
+| `StartSession` runs inline | None, design tests to assume serial execution. |
+| No UI rendering, page layout, field visibility, report rendering | Test the underlying procedures directly. |
+| Multi-dataitem queries, JOINs, aggregation | Single-dataitem queries work; restructure or move to E2E. |
+| `HttpClient.Send()` throws | Inject via AL interface, see `environment-interfaces.md` `IApiRequest`. |
 | `XmlPort.Import()` / `Export()` throw | XmlPort variables compile and surrounding logic runs; move I/O to E2E. |
 
-If AL code fails for a reason not in `docs/limitations.md`, that is a runner gap — report upstream.
+If AL code fails for a reason not in `docs/limitations.md`, that is a runner gap, report upstream.
 
 ## ERROR / exit 2 resolution
 
-When a Pure-tagged bullet returns ERROR (exit 2) under `/al-build -UnitTestOnly`, work through these in order — cheapest first:
+When a Pure-tagged bullet returns ERROR (exit 2) under `/al-build -UnitTestOnly`, work through these in order, cheapest first:
 
 1. **Review the test.** Was the test reaching for an unsupported feature unnecessarily (`HttpClient.Send` directly, multi-dataitem query, `Commit()`-dependent assertion)? Adjust the test to exercise the same behaviour without the unsupported feature.
 2. **Refactor production.** Extract a seam via `decoupling.md` (three-phase) so the test can inject a stub. The unsupported call moves behind the seam; the SUT becomes a unit-runnable shape.
@@ -75,7 +75,7 @@ When a Pure-tagged bullet returns ERROR (exit 2) under `/al-build -UnitTestOnly`
 
 ## Testability pattern
 
-Inject dependencies via AL interfaces. Anything that can't be injected can't be unit-tested by the runner — and that's the right boundary.
+Inject dependencies via AL interfaces. Anything that can't be injected can't be unit-tested by the runner, and that's the right boundary.
 
 ```al
 interface "IInventoryCheck"
@@ -95,4 +95,4 @@ Greenfield: `environment-interfaces.md` for the three default seams. Legacy: `de
 
 ## Pipeline ordering
 
-`/al-build -UnitTestOnly` (al-runner) runs first; full `/al-build` runs second. The runner shrinks the inner loop to seconds; the container guarantees fidelity at the gate. Both are required — neither replaces the other.
+`/al-build -UnitTestOnly` (al-runner) runs first; full `/al-build` runs second. The runner shrinks the inner loop to seconds; the container guarantees fidelity at the gate. Both are required, neither replaces the other.

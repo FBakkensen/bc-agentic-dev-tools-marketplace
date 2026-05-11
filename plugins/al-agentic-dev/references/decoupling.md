@@ -7,7 +7,7 @@ Three-phase legacy refactor for AL/Business Central code that mixes DB calls wit
 Any procedure that mixes a DB call with a decision is a decoupling target:
 
 ```al
-// BEFORE — untestable: decision + DB read in the same procedure
+// BEFORE, untestable: decision + DB read in the same procedure
 if VendorLedgerEntry.Get(PurchInvHeader."Vendor Ledger Entry No.") then
     VendorLedgerEntry.Validate("Payment Reference", Rec."Payment Reference");
 ```
@@ -16,13 +16,13 @@ The `if ... Get() then Validate()` pattern cannot be unit-tested without a real 
 
 ## Three-Phase Decoupling
 
-### Phase 1 — Extract internal procedures
+### Phase 1, Extract internal procedures
 
 Split every distinct responsibility into `internal procedure` methods. Each does exactly one thing:
-- `Find*` — read from DB (no decisions)
-- `Edit*` — pure field assignments (no DB calls)
-- `Modify*` — write to DB (no decisions)
-- External-call wrappers — one per external dependency
+- `Find*`, read from DB (no decisions)
+- `Edit*`, pure field assignments (no DB calls)
+- `Modify*`, write to DB (no decisions)
+- External-call wrappers, one per external dependency
 
 ```al
 internal procedure FindPurchInvHeader(var PurchInvHeader: Record "Purch. Inv. Header";
@@ -34,7 +34,7 @@ begin
 end;
 ```
 
-### Phase 2 — Extract interface
+### Phase 2, Extract interface
 
 Declare `Access = Internal` interface containing only procedures you want to inject in tests:
 
@@ -51,9 +51,9 @@ interface "IPurchInvEdit"
 }
 ```
 
-### Phase 3 — Inject via overload (self-injection, zero breaking changes)
+### Phase 3, Inject via overload (self-injection, zero breaking changes)
 
-The production codeunit implements its own interface. `OnRun()` passes `This` (self) — all existing `Codeunit.Run()` callsites are untouched:
+The production codeunit implements its own interface. `OnRun()` passes `This` (self), all existing `Codeunit.Run()` callsites are untouched:
 
 ```al
 codeunit 50100 "App PurchInvEdit" implements "IPurchInvEdit"
@@ -79,7 +79,7 @@ codeunit 50100 "App PurchInvEdit" implements "IPurchInvEdit"
 For public-facing procedures without `OnRun`, add a separate `internal` overload accepting the interface:
 
 ```al
-// Public entry point — backward-compatible, no callers change
+// Public entry point, backward-compatible, no callers change
 procedure GetItemPrice(ItemNo: Code[20]): Decimal
 var
     Converter: Codeunit "App Converter";
@@ -88,7 +88,7 @@ begin
     exit(GetItemPrice(Item."Unit Price", UserSetup."Currency Code", Converter));
 end;
 
-// Testable overload — interface injected, no DB reads
+// Testable overload, interface injected, no DB reads
 internal procedure GetItemPrice(UnitPrice: Decimal; CurrencyCode: Code[10];
     Converter: Interface "IConverter"): Decimal
 begin
@@ -101,8 +101,8 @@ end;
 
 The "Handled" event pattern (`IsHandled: Boolean` by reference) is an extensibility tool, not a testability tool.
 
-- **Use interfaces** when the goal is testability — inject a stub per test call.
-- **Use events** when the goal is extensibility across apps — external ISVs subscribe.
+- **Use interfaces** when the goal is testability, inject a stub per test call.
+- **Use events** when the goal is extensibility across apps, external ISVs subscribe.
 
 An event subscriber in a test app fires globally and cannot be selectively injected per test. An interface parameter is injected per call. Use the right tool.
 
@@ -115,4 +115,4 @@ PurchInvHeader."Payment Reference" := 'REF-001';
 // no Insert(), no Library call required
 ```
 
-Database operations belong at the top level of the call stack. Codeunits below receive `var TempRecord: Record X temporary` — they never call the database themselves.
+Database operations belong at the top level of the call stack. Codeunits below receive `var TempRecord: Record X temporary`, they never call the database themselves.

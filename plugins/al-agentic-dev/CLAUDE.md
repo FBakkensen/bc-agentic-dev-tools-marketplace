@@ -6,8 +6,8 @@ Composable skills for AL/Business Central agentic development.
 
 Two layers, on purpose.
 
-- **Repo-root, durable across features** — `CONTEXT.md`, `docs/adr/`, `.out-of-scope/`. Owners: `/al-grill-adr` (CONTEXT + domain ADRs), `/al-design` (design ADRs), `/al-steer` (out-of-scope).
-- **Branch-scoped, per in-flight feature** — `specs/<NNN>-<slug>/architecture.md` + `tasks.md`. The slug matches the current git branch.
+- **Repo-root, durable across features**, `CONTEXT.md`, `docs/adr/`, `.out-of-scope/`. Owners: `/al-grill-adr` (CONTEXT + domain ADRs), `/al-design` (design ADRs), `/al-steer` (out-of-scope).
+- **Branch-scoped, per in-flight feature**, `specs/<NNN>-<slug>/architecture.md` + `tasks.md`. The slug matches the current git branch.
 
 `tasks.md` is the per-feature task bus. Status markers: `[ ]` ready, `[~]` in progress, `[x]` done, `[!]` blocked. `T-NNN` IDs are monotonic and never reused.
 
@@ -40,24 +40,24 @@ Skills compose by name. When you change a skill, scan the others for cross-refer
 
 ## Replan
 
-`/al-steer` is the canonical replan venue. The seven triggers: task too big, hidden pre-req, wrong order, sibling now wrong, new behaviour emerges, architecture decomposition wrong, goal drift. Replan-check gates in `/al-refine`, `/al-implement`, `/al-refactor` either hard-halt (set `[!]`, stop) or soft-flag (append a Notes line, continue).
+`/al-steer` is the canonical replan venue. The seven triggers: task too big, hidden pre-req, wrong order, sibling now wrong, new behaviour emerges, architecture decomposition wrong, goal drift. Replan-check gates in `/al-refine`, `/al-implement`, `/al-refactor` either hard-halt (set `[!]`, stop) or soft-flag (append a `> [!IMPORTANT] **Replan flag**: trigger #N` callout inside the task's `<details>` block, continue).
 
 ## Editing rules
 
 - **Each SKILL.md states naming and BC vocabulary inline.** Skills run in projects without this CLAUDE.md present. Do not lean on it.
-- **No inline citations in durable artifacts.** `(see: file.al:120)` is forbidden in `architecture.md`, `tasks.md`, `CONTEXT.md`, ADRs, `.out-of-scope/`. Names are the citation — `NALICFCopyDocSubscribers.OnAfterInsertToSalesLine` is the address. Future readers grep; the IDE gives line numbers for free.
-- **Diagrams are gates, not defaults.** `architecture.md` only — at most one structural `## Module diagram` and one behavioural `## Flow`, each gated by the trigger in `references/architecture.template.md`. Mermaid only. ADRs and every other durable artifact are text only.
-- **`architecture.md` is reshape-only.** Written by `/al-design`, read by everyone downstream. Never edit in place — re-run `/al-design`.
+- **No inline citations in durable artifacts.** `(see: file.al:120)` is forbidden in `architecture.md`, `tasks.md`, `CONTEXT.md`, ADRs, `.out-of-scope/`. Names are the citation, `NALICFCopyDocSubscribers.OnAfterInsertToSalesLine` is the address. Future readers grep; the IDE gives line numbers for free.
+- **Diagrams are gates, not defaults.** Mermaid is permitted in `architecture.md` (at most one structural `## Module dependencies` and one behavioural `## Flow`) and in `tasks.md` (one task-dependency `graph LR`, derived from declared edges). Each diagram is gated per the rules in `references/architecture.template.md` (for architecture) and `skills/al-scope/SKILL.md` (for tasks). ADRs and every other durable artifact stay text-only.
+- **`architecture.md` is reshape-only.** Written by `/al-design`, read by everyone downstream. Never edit in place, re-run `/al-design`.
 - **New skills need a stated gap.** _Avoid_: spinning up a skill that an existing one can absorb, or that fits as a `tasks.md` Notes line, an `/al-research` finding, or a side-band reference. Propose only when no existing skill fits, and say so in one line.
 
 ## Reference layout
 
 Two tiers, on purpose.
 
-- **Plugin-level shared** — `plugins/al-agentic-dev/references/`. Cross-skill resources read by more than one skill. Path from any SKILL.md: `${CLAUDE_SKILL_DIR}/../../references/<file>`.
-- **Skill-local** — `plugins/al-agentic-dev/skills/<skill>/references/`. Resources only one skill reads. Path from that SKILL.md: `${CLAUDE_SKILL_DIR}/references/<file>`.
+- **Plugin-level shared**, `plugins/al-agentic-dev/references/`. Cross-skill resources read by more than one skill. Path from any SKILL.md: `${CLAUDE_SKILL_DIR}/../../references/<file>`.
+- **Skill-local**, `plugins/al-agentic-dev/skills/<skill>/references/`. Resources only one skill reads. Path from that SKILL.md: `${CLAUDE_SKILL_DIR}/references/<file>`.
 
-**Rule**: a resource read by two or more skills lives in plugin-level `references/`. Skill-local references stay inside the skill that owns them. DO NOT put a shared resource inside one skill's folder — owner ambiguity invites drift.
+**Rule**: a resource read by two or more skills lives in plugin-level `references/`. Skill-local references stay inside the skill that owns them. DO NOT put a shared resource inside one skill's folder, owner ambiguity invites drift.
 
 | File | Tier | Notes |
 |---|---|---|
@@ -81,13 +81,13 @@ Cross-skill paths within this plugin (when reaching into another skill's local r
 
 The two former agent-shaped workflows now live as skills:
 
-- **`skills/al-mutate/SKILL.md`** — preflight, canonical `**Mutations**` block, mutation classes, survivor classification, BC safety, output.
-- **`skills/al-second-opinion/SKILL.md`** — read-only advisory call against copilot CLI. Tool allowlist (`view,rg,glob,show_file,lsp`), 600s timeout, failure formatting. **Windows-only** — `Start-Job` / `Wait-Job` targets pwsh on Windows; portability is a future concern.
+- **`skills/al-mutate/SKILL.md`**, preflight, canonical `**Mutations**` block, mutation classes, survivor classification, BC safety, output.
+- **`skills/al-second-opinion/SKILL.md`**, read-only advisory call against copilot CLI. Tool allowlist (`view,rg,glob,show_file,lsp`), 600s timeout, failure formatting. **Windows-only**, `Start-Job` / `Wait-Job` targets pwsh on Windows; portability is a future concern.
 
 ## Layout
 
 ```
-references/                 # Plugin-level shared — read by ≥2 skills, or cited by shared templates
+references/                 # Plugin-level shared, read by ≥2 skills, or cited by shared templates
 ├── CONTEXT.template.md
 ├── adr.template.md
 ├── LANGUAGE.md
@@ -97,7 +97,7 @@ references/                 # Plugin-level shared — read by ≥2 skills, or ci
 skills/
 ├── al-design/
 │   ├── SKILL.md
-│   └── references/         # Skill-local — read only by /al-design
+│   └── references/         # Skill-local, read only by /al-design
 │       └── architecture.template.md
 ├── al-grill-adr/SKILL.md
 ├── al-implement/SKILL.md

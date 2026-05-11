@@ -10,13 +10,13 @@ Use ZOMBIES to build a scenario list bottom-up. This order surfaces edge cases t
 | **O** | One | Single attribute line, one rule entry, first sub-configuration, single mapping |
 | **M** | Many | Full rule set, batch of headers, multiple simultaneous attribute updates |
 | **B** | Boundary | Period cutoff date, max/min field values, exact threshold match, last day of posting period |
-| **I** | Interface | Implementer substitution — different stub injected per scenario (unit layer) |
+| **I** | Interface | Implementer substitution, different stub injected per scenario (unit layer) |
 | **E** | Exceptional | Error paths: blocked record, missing setup, permission denied, duplicate key, invalid state |
-| **S** | Simple | The happy path — named last because it is never the most revealing |
+| **S** | Simple | The happy path, named last because it is never the most revealing |
 
 ## Application
 
-Write **Zero first**. If the system can't handle empty input, everything else is irrelevant. Then One, Many, Boundary, Interface, Exceptional. Simple scenarios (S) are a hygiene check — write them last.
+Write **Zero first**. If the system can't handle empty input, everything else is irrelevant. Then One, Many, Boundary, Interface, Exceptional. Simple scenarios (S) are a hygiene check, write them last.
 
 A scenario list that only covers S is a demo script, not a test plan.
 
@@ -26,7 +26,7 @@ Writing scenarios top-down from the feature description: "User creates a configu
 
 ## Scenario naming
 
-Each ZOMBIES scenario becomes one short PascalCase test name (BaseApp style — see `/al-refine`):
+Each ZOMBIES scenario becomes one short PascalCase test name (BaseApp style, see `/al-refine`):
 - Z: `RuleSetWithNoEntriesReturnsDefault`
 - O: `RuleSetWithSingleEntryMatchesExactly`
 - B: `RuleSetBoundaryValueMatchesUpperLimit`

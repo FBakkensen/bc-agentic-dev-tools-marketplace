@@ -21,13 +21,13 @@ Skip for: metadata-only edits, pure delegation (procedure that only calls anothe
 | Early-return insertion | *(add `exit` before logic block)* | |
 | Skip Validate() | `Rec.Validate("Amount", Value);` | `Rec.Amount := Value;` |
 
-The `Validate()` skip is BC-specific — it bypasses trigger firing, which is a behavioral change distinct from simple field assignment.
+The `Validate()` skip is BC-specific, it bypasses trigger firing, which is a behavioral change distinct from simple field assignment.
 
 ## Selection Heuristics
 
-1. **Candidate list from the diff** — only mutate lines changed in the current cycle.
+1. **Candidate list from the diff**: only mutate lines changed in the current cycle.
 2. **Priority order**: (1) conditionals and comparators on changed lines, (2) assignments to record fields / return values / error paths, (3) `Validate()` skips and lock calls, (4) constants last.
-3. **Skip equivalences**: `x >= 1` ↔ `x > 0` for integers — semantically identical, skip one.
+3. **Skip equivalences**: `x >= 1` ↔ `x > 0` for integers, semantically identical, skip one.
 4. **Reachability first**: confirm at least one test exercises the target line before mutating.
 5. **Breadth before depth**: one mutation per operator class before any class gets a second site.
 6. **Stop when**: every behavioral line mutated by ≥ 1 operator AND new survivors duplicate prior survivors.
@@ -36,12 +36,12 @@ Pre-flight self-report before starting the loop: "Diff: N changed lines, M behav
 
 ## Revert Mechanism
 
-Revert is `git checkout -- <file>` against the Refactor-end commit. Deterministic and crash-safe — no in-memory state to lose.
+Revert is `git checkout -- <file>` against the Refactor-end commit. Deterministic and crash-safe, no in-memory state to lose.
 
-**Precondition**: the working tree must be clean before starting. A dirty tree means the Refactor commit was skipped — `git checkout --` would clobber uncommitted work.
+**Precondition**: the working tree must be clean before starting. A dirty tree means the Refactor commit was skipped, `git checkout --` would clobber uncommitted work.
 
 ```powershell
-# Precondition check — must return empty output
+# Precondition check, must return empty output
 git status --porcelain
 ```
 

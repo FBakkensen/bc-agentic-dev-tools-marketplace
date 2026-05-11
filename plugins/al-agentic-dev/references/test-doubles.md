@@ -22,12 +22,12 @@ codeunit 50100 "Dummy IConverter" implements "IConverter"
 {
     procedure Convert(Amount: Decimal; CurrencyCode: Code[10]; AtDate: Date): Decimal
     begin
-        // intentionally empty — test does not exercise this path
+        // intentionally empty, test does not exercise this path
     end;
 }
 ```
 
-### Stub — setup-then-return
+### Stub, setup-then-return
 ```al
 codeunit 50100 "Stub IConverter" implements "IConverter"
 {
@@ -89,10 +89,10 @@ Examples (prefix dropped for clarity):
 - `SpyILogger.Codeunit.al`
 - `MockIPurchInvEdit.Codeunit.al`
 
-All test doubles live in the unit test app — never in the production app. Location rule (co-located vs `Stubs/` folder) depends on where the interface is defined — see `environment-interfaces.md`.
+All test doubles live in the unit test app, never in the production app. Location rule (co-located vs `Stubs/` folder) depends on where the interface is defined, see `environment-interfaces.md`.
 
 ## Common mistakes
 
-- Using Mock when Stub is enough — mocks without call assertions are just stubs with extra fields.
-- Using Spy when you only need the return value — a Stub is simpler.
-- Calling any test double a "mock" regardless of kind — name the kind exactly.
+- Using Mock when Stub is enough, mocks without call assertions are just stubs with extra fields.
+- Using Spy when you only need the return value, a Stub is simpler.
+- Calling any test double a "mock" regardless of kind, name the kind exactly.
