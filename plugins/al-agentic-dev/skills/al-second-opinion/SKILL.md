@@ -1,6 +1,6 @@
 ---
 name: al-second-opinion
-description: Independent read-only advisory review via copilot CLI. Use from al-implement, al-refine, or al-refactor before reconciling non-trivial plans, scenarios, mutation lists, or refactor checklists. Returns either copilot's bulleted gap list verbatim or `Second opinion skipped: <reason>`.
+description: Independent read-only advisory review via copilot CLI. Use from al-implement, al-refine, or al-refactor before reconciling non-trivial plans, scenarios, mutation lists, or refactor checklists. Returns copilot's bulleted gap list verbatim or a skipped message with the reason.
 ---
 
 # /al-second-opinion
