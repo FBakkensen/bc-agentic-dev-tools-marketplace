@@ -34,7 +34,7 @@ side-band: /al-research, /al-steer (replan venue + .out-of-scope)
 | `/al-refactor` | Improve shape while green. No new behaviour. |
 | `/al-mutate` | Inject mutations to validate test rigor. Mandatory for non-trivial work. Owns the mutate-build-revert cycle. |
 | `/al-research` | Verify BC specifics from authoritative sources. |
-| `/al-second-opinion` | Read-only copilot CLI advisory gate for non-trivial scenarios, mutation lists, and refactor checklists. |
+| `/al-second-opinion` | Cross-runtime read-only advisory gate for non-trivial scenarios, mutation lists, and refactor checklists. From Claude Code: `codex exec`. From Codex: `claude -p`. |
 
 Skills compose by name. When you change a skill, scan the others for cross-references and update in lockstep.
 
@@ -82,7 +82,7 @@ Cross-skill paths within this plugin (when reaching into another skill's local r
 The two former agent-shaped workflows now live as skills:
 
 - **`skills/al-mutate/SKILL.md`**, preflight, canonical `**Mutations**` block, mutation classes, survivor classification, BC safety, output.
-- **`skills/al-second-opinion/SKILL.md`**, read-only advisory call against copilot CLI. Tool allowlist (`view,rg,glob,show_file,lsp`), 600s timeout, failure formatting. **Windows-only**, `Start-Job` / `Wait-Job` targets pwsh on Windows; portability is a future concern.
+- **`skills/al-second-opinion/SKILL.md`** is the contract; **`skills/al-second-opinion/scripts/Invoke-AlSecondOpinion.ps1`** is the execution. Dispatched by runtime. `$env:CLAUDECODE -eq '1'` → `codex exec --sandbox read-only --skip-git-repo-check --color never --json -c model_reasoning_effort=medium`. Else → `claude -p --output-format json --no-session-persistence --disable-slash-commands --strict-mcp-config '{}'`. 600s timeout via `Start-Job` / `Wait-Job`. Skip lines name the target CLI. SKILL.md documents the sandbox flags so the security envelope stays visible without reading the script. **Windows-only**, `Start-Job` / `Wait-Job` targets pwsh on Windows; portability is a future concern.
 
 ## Layout
 
@@ -108,7 +108,10 @@ skills/
 │       └── legacy-refactor-plan.md
 ├── al-refine/SKILL.md
 ├── al-research/SKILL.md
-├── al-second-opinion/SKILL.md
+├── al-second-opinion/
+│   ├── SKILL.md
+│   └── scripts/
+│       └── Invoke-AlSecondOpinion.ps1
 ├── al-scope/SKILL.md
 └── al-steer/
     ├── SKILL.md

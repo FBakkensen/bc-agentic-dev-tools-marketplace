@@ -5,6 +5,8 @@ description: Pick a Gherkin-ready task from tasks.md and run TDD on it for AL/Bu
 
 # /al-implement, Pick a task, run TDD
 
+> **Runtime gate.** Content inside `<claude-only>...</claude-only>` blocks applies only to Claude Code (which has an `advisor()` tool). Codex and other runtimes without it: skip the block contents and move on. No need to comment on what was skipped.
+
 Pick the next ready task from `tasks.md`. Run TDD per Gherkin bullet, gate every red → green → refactor with `/al-build`, then mutation-test. Update `tasks.md`. Stop. **One task, one session.**
 
 **Resolve target paths:**
@@ -156,7 +158,13 @@ If green code violates either, halt before mutation, reshape, and flag breaking-
 - `/al-design` precondition (`architecture.md` exists). `/al-refine` precondition (`**Tests**` block on the task).
 - `/al-research` for AL/BC facts not covered by `architecture.md`. `/bc-standard-reference` for pure BaseApp questions.
 - `/al-refactor` after green. `/al-mutate` after refactor (mandatory when decision logic changed). `/al-debug-logging` only when execution path is unclear and tests can't reveal it.
-- `/al-second-opinion`, advisory gate before `/al-mutate` (read-only sandbox; copilot CLI under the hood). `/grill-me` when judgement needs the user. `/al-steer` is the replan venue.
+- `/al-second-opinion`, advisory gate before `/al-mutate`. Cross-runtime: from Claude Code it shells out to `codex exec`; from Codex it shells out to `claude -p`. `/grill-me` when judgement needs the user. `/al-steer` is the replan venue.
+
+<claude-only>
+
+**Advisor checkpoint.** Call `advisor()` before flipping the task to `[x]`. Final correctness check on the implementation, the refactor outcome, and the mutation result, before the durable status change.
+
+</claude-only>
 
 **References** (`${CLAUDE_SKILL_DIR}/../../references/`):
 

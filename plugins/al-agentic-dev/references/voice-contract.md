@@ -1,5 +1,7 @@
 # Voice contract
 
+> **Runtime gate.** Content inside `<claude-only>...</claude-only>` blocks applies only to Claude Code (which has an `advisor()` tool). Codex and other runtimes without it: skip the block contents and move on. No need to comment on what was skipped.
+
 Direct, opinionated, no padding. Same voice, every line you write to a durable artifact.
 
 ## Voice
@@ -81,7 +83,13 @@ DO NOT write workflow-narrative prose into any durable artifact. The voice rule 
 
 - DO NOT prefix lines with the agent that decided: `/al-implement decision (filter placement):`, `/al-refine second opinion:`.
 - DO NOT narrate TDD steps as prose: "bullet 1 went red on stub, green on body fill".
-- DO NOT cite advisor cross-checks, second-opinion accept/reject reasoning, or session-internal reconciliation.
+- DO NOT cite second-opinion accept/reject reasoning or session-internal reconciliation.
+
+<claude-only>
+
+**Claude Code only.** DO NOT cite `advisor()` cross-checks either; same rule.
+
+</claude-only>
 
 Workflow log belongs in the commit message and PR description. The artifact carries the forward-facing fact in declarative voice.
 

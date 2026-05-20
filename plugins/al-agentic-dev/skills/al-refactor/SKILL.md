@@ -133,7 +133,7 @@ Standalone refactors with no calling task: capture the replan condition in the s
 
 ## Composition
 
-`/al-build` after every meaningful change. `/bc-standard-reference` for BC patterns, event signatures, BaseApp behaviour. `/al-research` when prior knowledge is uncertain. `/grill-me` when a non-obvious trade-off needs the user. `/al-design` for upfront architecture when refactoring legacy without a calling task. `/al-steer` is the replan venue. `/al-implement` calls `/al-refactor` only after green; `/al-mutate` runs after refactor to validate test rigor. `/al-second-opinion` is the advisory gate (read-only sandbox; copilot CLI under the hood).
+`/al-build` after every meaningful change. `/bc-standard-reference` for BC patterns, event signatures, BaseApp behaviour. `/al-research` when prior knowledge is uncertain. `/grill-me` when a non-obvious trade-off needs the user. `/al-design` for upfront architecture when refactoring legacy without a calling task. `/al-steer` is the replan venue. `/al-implement` calls `/al-refactor` only after green; `/al-mutate` runs after refactor to validate test rigor. `/al-second-opinion` is the cross-runtime advisory gate (from Claude Code it shells out to `codex exec`; from Codex it shells out to `claude -p`).
 
 **References** (`${CLAUDE_SKILL_DIR}/../../references/`):
 

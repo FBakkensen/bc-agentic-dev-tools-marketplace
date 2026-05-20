@@ -5,6 +5,8 @@ description: Idea → feature architecture for AL/Business Central. Names module
 
 # /al-design, Idea → feature architecture
 
+> **Runtime gate.** Content inside `<claude-only>...</claude-only>` blocks applies only to Claude Code (which has an `advisor()` tool). Codex and other runtimes without it: skip the block contents and move on. No need to comment on what was skipped.
+
 Turn a sharpened idea into a feature-level architecture. Name **modules**, pick one BC **pattern** per module, draw R → P → W, list brownfield touchpoints, decide the test layer. Run parallel design-twice for non-trivial calls. Create the branch + spec folder. Write `architecture.md` as a map, not a memoir. Stop, `/al-scope` consumes it next.
 
 This skill produces a slot-fill `architecture.md` whose load-bearing decisions are: which **modules** earn rows, where their **seams** sit, which **adapters** justify each seam, and which test surface each scenario family crosses. Vocabulary is fixed, see *Architectural vocabulary* below and `${CLAUDE_SKILL_DIR}/../../references/LANGUAGE.md` in full.
@@ -115,6 +117,12 @@ Full discipline in `${CLAUDE_SKILL_DIR}/../../references/LANGUAGE.md`.
 - `/grill-me`, for ADR offers and design-twice reconciliation.
 - `/al-scope`, consumes `architecture.md` next.
 - `/al-steer`, replan venue if a flow gate hard-halts.
+
+<claude-only>
+
+**Advisor checkpoint.** Call `advisor()` before materialising `architecture.md` for the first time. The slot-fill is load-bearing for every downstream skill; drift caught here costs minutes, drift caught at `/al-implement` costs a feature.
+
+</claude-only>
 
 **References** (`${CLAUDE_SKILL_DIR}/../../references/`):
 

@@ -5,6 +5,8 @@ description: One task → numbered Gherkin scenarios for AL/Business Central. Re
 
 # /al-refine, Task to Gherkin
 
+> **Runtime gate.** Content inside `<claude-only>...</claude-only>` blocks applies only to Claude Code (which has an `advisor()` tool). Codex and other runtimes without it: skip the block contents and move on. No need to comment on what was skipped.
+
 Fill the `**Tests**` block for one task in `tasks.md`. Read `architecture.md`, walk the codebase, write numbered Gherkin in ZOMBIES order, confirm the test layer per scenario, gate against the seven replan triggers. One task per run. Stop, `/al-implement` consumes it next.
 
 Drop articles, conjunctions, hedging on Gherkin bullets. Scenario titles are positional: `<Action><Subject><Qualifier>` PascalCase, no underscores.
@@ -265,6 +267,12 @@ One line max. No fixture mechanics, no implementation choices beyond explicit de
 - `/bc-standard-reference`, BaseApp patterns and event signatures.
 - `/al-steer`, replan venue when a hard-halt fires.
 - `/al-implement`, consumes the Gherkin next.
+
+<claude-only>
+
+**Advisor checkpoint.** Call `advisor()` before writing the first scenario into the `**Tests**` block. Gherkin shape is hard to retract once `/al-implement` has consumed it; checking your refinement reasoning here is cheaper than re-running `/al-refine`.
+
+</claude-only>
 
 **References** (`${CLAUDE_SKILL_DIR}/../../references/`):
 

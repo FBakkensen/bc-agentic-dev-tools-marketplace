@@ -1,5 +1,7 @@
 # Notes discipline
 
+> **Runtime gate.** Content inside `<claude-only>...</claude-only>` blocks applies only to Claude Code (which has an `advisor()` tool). Codex and other runtimes without it: skip the block contents and move on. No need to comment on what was skipped.
+
 Placement rules for `tasks.md` content. What goes in the `**Notes**` block, what goes in a NOTE/IMPORTANT/WARNING alert, what gets rejected entirely.
 
 Voice for the prose itself comes from `voice-contract.md`. This file is destination-only: where content lives, not how prose is shaped.
@@ -96,7 +98,7 @@ This is destination routing. Prose-form rules (declarative, no workflow chatter)
 - **Process IDs**: issue numbers, PR numbers, "the current fix", "this PR". Goes in the commit message and PR description, not the artifact.
 - **Environment lessons**: "`-Force` is mandatory on this workstation", "the container needs republishing". Goes in `scripts/` or a local `CLAUDE.md`, not the artifact.
 - **Lessons learned**: `Lesson:` entries, post-mortems, "Note for next time". Goes in the PR description if cross-cutting, or a retrospective doc. Never in `tasks.md` Notes.
-- **Session-internal reasoning**: second-opinion accept/reject lists, advisor cross-checks, mutation rationale not selected. Stays in the session; the durable artifact carries the outcome, not the deliberation.
+- **Session-internal reasoning**: second-opinion accept/reject lists, mutation rationale not selected. <claude-only>Also: `advisor()` cross-checks.</claude-only> Stays in the session; the durable artifact carries the outcome, not the deliberation.
 
 ## Escalation routing
 
