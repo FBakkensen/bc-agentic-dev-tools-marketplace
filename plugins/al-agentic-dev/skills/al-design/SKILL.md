@@ -38,7 +38,7 @@ Prefer parallel delegated workers for independent work and output-heavy steps wh
 11. **ADR offers.** Architectural picks (mechanism, seam placement, pattern, test layer) surface here; see *ADR offer criteria*. If a fresh **domain** rule surfaces, pause and run `/al-grill-adr` again; do not write a domain ADR inline.
 12. **Branch + folder + write.** Already on `^\d{3}-`?
 `Stop.`
-Must run from `main`. Scan `specs/` for `^\d{3}-`, take `max + 1`, zero-pad (`001` if none). Derive a 2–4-word kebab-case slug; do not ask. Announce the branch name and slug, then create branch `<NNN>-<slug>` and `specs/<NNN>-<slug>/`. Branch exists locally or remotely?
+Must run from `main`. Resolve `<NNN>` per `${CLAUDE_SKILL_DIR}/../../references/cross-branch-numbering.md` (the cross-branch scan, not a local-only scan of `specs/`). Derive a 2–4-word kebab-case slug; do not ask. Announce the branch name and slug, then create branch `<NNN>-<slug>` and `specs/<NNN>-<slug>/`. Branch exists locally or remotely?
 `Stop.`
 User resolves. Read `${CLAUDE_SKILL_DIR}/../../references/html-spec-discipline.md` and the most recently modified prior spec under `specs/*/` (if any) for visual coherence; write `architecture.html` per the *Section list and order* and *Slot rules* below. Names are the citation.
 `Stop.`
@@ -300,7 +300,8 @@ Full discipline in `${CLAUDE_SKILL_DIR}/../../references/LANGUAGE.md`.
 | Source (read-only) | Target (writable) | Trigger |
 |---|---|---|
 | `${CLAUDE_SKILL_DIR}/../../references/CONTEXT.template.md` | `CONTEXT.md` (repo root) | step 2, if missing |
-| `${CLAUDE_SKILL_DIR}/../../references/adr.template.md` | `docs/adr/NNNN-<slug>.md` | step 11, on ADR accept; `NNNN` = next free 4-digit number |
+| `${CLAUDE_SKILL_DIR}/../../references/adr.template.md` | `docs/adr/NNNN-<slug>.md` | step 11, on ADR accept; resolve `NNNN` per `cross-branch-numbering.md` |
+| `${CLAUDE_SKILL_DIR}/../../references/cross-branch-numbering.md` | (read, not materialised) | step 11 (ADR `NNNN`) and step 12 (spec folder `NNN`), before picking the number |
 | `${CLAUDE_SKILL_DIR}/../../references/html-spec-discipline.md` | (read, not materialised) | step 12, before writing HTML |
 | most recently modified prior spec under `specs/*/` | (read, not materialised) | step 12, before writing HTML, when a prior spec exists |
 
@@ -329,6 +330,7 @@ Full discipline in `${CLAUDE_SKILL_DIR}/../../references/LANGUAGE.md`.
 **References** (`${CLAUDE_SKILL_DIR}/../../references/`):
 
 - `html-spec-discipline.md`, aesthetic posture + Mermaid embedding + self-contained constraint + prior-spec consultation; mandatory before writing `architecture.html`.
+- `cross-branch-numbering.md`, source-of-truth for picking `NNN` (spec folders, step 12) and `NNNN` (ADRs, step 11) across parallel branches.
 - `decoupling.md`, three-phase legacy refactor (extract internals → interface → inject) when brownfield touchpoints surface seams worth carving.
 - `environment-interfaces.md`, three default decoupling seams (`IEnvironment`, `IApiRequest`, `IFinance`-family); reach for the named pattern before declaring a fresh one.
 

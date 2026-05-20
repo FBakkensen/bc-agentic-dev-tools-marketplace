@@ -77,7 +77,7 @@ Only offer to create an ADR when **all three** are true:
 2. **Surprising without context**: a future reader will wonder *"why did they do it this way?"*
 3. **Real trade-off**: there were genuine alternatives and you picked one for specific reasons.
 
-If any gate fails, skip. Use the format at `${CLAUDE_SKILL_DIR}/../../references/adr.template.md`.
+If any gate fails, skip. Use the format at `${CLAUDE_SKILL_DIR}/../../references/adr.template.md`. Resolve `NNNN` per `${CLAUDE_SKILL_DIR}/../../references/cross-branch-numbering.md` (the cross-branch scan, not a local-only scan of `docs/adr/`).
 
 | Qualifies (domain ADR) | Defers to `/al-design` (architectural) |
 |---|---|
@@ -94,6 +94,7 @@ When a design question feels substantive, find the domain constraint behind it a
 **References** (`${CLAUDE_SKILL_DIR}/../../references/`):
 
 - `testability-pillars.md`, 7 pillars of agent-friendly code; useful when triaging "is this a domain rule or an architecture/testability concern?", testability concerns route to `/al-design`, not a domain ADR.
+- `cross-branch-numbering.md`, source-of-truth for picking `NNNN` (ADRs) across parallel branches.
 
 ## Out of scope
 

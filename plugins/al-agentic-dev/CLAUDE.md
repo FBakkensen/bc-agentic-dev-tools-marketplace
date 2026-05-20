@@ -73,6 +73,7 @@ Two tiers, on purpose.
 | `voice-contract.md` | plugin-level | voice rules for prose; read by every skill that writes a durable artifact |
 | `notes-discipline.md` | plugin-level | destination map for chips, alerts, Notes lines; Summary regeneration rule; read by every skill that writes `tasks.html` Notes or `.out-of-scope/` |
 | `html-spec-discipline.md` | plugin-level | aesthetic posture, data-attribute contract, Mermaid embedding, self-contained constraint, prior-spec consultation, surgical-edit discipline; read by `/al-design`, `/al-scope`, `/al-refine`, `/al-implement`, `/al-mutate`, `/al-steer` |
+| `cross-branch-numbering.md` | plugin-level | algorithm for picking `NNN` (spec folders) and `NNNN` (ADRs) across parallel branches; read by `/al-design`, `/al-grill-adr` |
 | `bc-patterns.md` | plugin-level | BC pattern catalogue cited by `architecture.html`, design ADRs, and `/al-design` |
 | `out-of-scope.template.md` | `/al-steer`-local | template materialised into `.out-of-scope/<concept>.md` |
 | `legacy-refactor-plan.md` | `/al-refactor`-local | reference plan for legacy code without tests |
