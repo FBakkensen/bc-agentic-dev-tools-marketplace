@@ -1,6 +1,6 @@
 ---
 name: al-refactor
-description: Refactor AL/Business Central production and test code while keeping tests green, find deepening opportunities, apply Read → Process → Write, rename to BC vocabulary, extract real seams. Use after green inside /al-implement, or standalone on legacy code; may add tests when refactoring uncovers branches.
+description: Refactor AL/Business Central production and test code while keeping tests green, find deepening opportunities, apply Read → Process → Write, rename to AL/BC vocabulary and project terminology (per CONTEXT.md), extract real seams. Use after green inside /al-implement (mandatory full pass on whole task diff, once per task), or standalone on legacy code; may add tests when refactoring uncovers branches.
 ---
 
 # /al-refactor, Improve shape while green
@@ -64,19 +64,7 @@ After the green build, look for:
 
 ## Naming
 
-Rename when the name lies. BC term over generic programming term. AL reads naturally to AL developers.
-
-| Verb | _Avoid_ |
-|---|---|
-| **Insert** (record operations) | Create, Add, New |
-| **Modify** (record operations) | Update, Change, Set |
-| **Delete** (record operations) | Remove, Drop, Destroy |
-| **Post** | Submit, Process, Commit |
-| **Validate** | Check, Verify, Ensure |
-| **Get** / **Find** | Fetch, Retrieve, Load, Query |
-| **Ledger Entry** | Transaction, History, Movement |
-| **No.** | ID, Identifier, Code |
-| **Procedure** | Method, Function, Routine |
+Rename when the name lies. BC term over generic programming term. AL reads naturally to AL developers. Apply your AL/BC vocabulary knowledge; read `CONTEXT.md` (`## Language` and `## Flagged ambiguities`) for project-specific terms and resolved aliases. `architecture.html`, ADRs under `docs/adr/`, and the existing codebase carry established conventions when `CONTEXT.md` is absent or thin. For multi-context repos, `CONTEXT-MAP.md` lists the contexts — pick the one covering the module under `src/<module>/`.
 
 - **Objects:** `"Prefix Feature Suffix"`, suffixes `Impl`, `Card`, `List`, `Ext`, `Test`.
 - **Records** match the table name (`Customer`, `SalesHeader`). Primitives descriptive (`TotalBalance`, `IsBlocked`).
@@ -98,7 +86,7 @@ Cross-check the refactor checklist via `/al-second-opinion`, independent perspec
 
 **Invoke:** `/al-second-opinion` with the prompt body below.
 
-**Prompt body shape:** the area + the checklist + *"what is missing for R→P→W, BC vocabulary, simplification, and AppSource compliance? Return a bulleted list."* `/al-second-opinion` prepends the role frame and applies the canonical safety envelope.
+**Prompt body shape:** the area + the checklist + *"what is missing for R→P→W, AL/BC vocabulary, project terminology (per `CONTEXT.md`), simplification, and AppSource compliance? Return a bulleted list."* `/al-second-opinion` prepends the role frame and applies the canonical safety envelope.
 
 **Reconcile each returned bullet:** accept (update checklist) or reject. Rejection rationale stays in the session, DO NOT write it to Notes. If a rejection encodes a durable principle, escalate via `/al-steer` to `/al-grill-adr` or `/al-design`. `/grill-me` when judgement needs the user. If `/al-second-opinion` returns `Second opinion skipped: <reason>`, note it in the session and proceed.
 
