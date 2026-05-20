@@ -7,7 +7,7 @@ description: Validate AL/Business Central test rigor by mutation testing. Inject
 
 Mutate production code one site at a time. Build. Classify. Revert. Survivors are the point: each one is a coverage gap or a documented equivalent.
 
-**Resolve `tasks.md`:** Branch matches `^\d{3}-` → `specs/<branch>/tasks.md`. Otherwise standalone, no `tasks.md` write, report only.
+**Resolve `tasks.html`:** Branch matches `^\d{3}-` → `specs/<branch>/tasks.html`. Otherwise standalone, no `tasks.html` write, report only. If `tasks.md` is present without `tasks.html`, the spec is frozen legacy; standalone only.
 
 ## Preflight (gate)
 
@@ -22,29 +22,49 @@ Abort if any fails. Required Yes/No before mutating:
 
 **Anti-pattern: skip preflight.** A dirty tree or red baseline turns every survivor into a question mark.
 
-## Where Mutations live in `tasks.md`
+## Where Mutations live in `tasks.html`
 
 Two artifacts, distinct lifetimes:
 
 - **Mutation plan** (transient): a `**Mutations plan**` table inside the task's `<details>` block, written by `/al-implement` after the second-opinion gate, just before WIP commit. `/al-mutate` reads this table, runs the mutations, then deletes the block.
-- **Mutation result** (durable): a `**Mutations**` chip inside the task's NOTE alert, written by `/al-mutate` after the last mutation classifies. Same value lands in the `Mutations` column of the `## Summary` table on the next Summary regeneration.
+- **Mutation result** (durable): a `**Mutations**` chip inside the task's NOTE alert (`<aside data-alert="note">`), written by `/al-mutate` after the last mutation classifies. Same value lands in the Mutations column of the Summary table on the next Summary regeneration.
 
-No `**Mutations:**` Notes line anywhere. The chip and the Summary cell are the single source of truth (see `notes-discipline.md`).
+No `Mutations` Notes line anywhere. The chip and the Summary cell are the single source of truth (see `notes-discipline.md`).
 
 ## Canonical `**Mutations plan**` block
 
-Written by `/al-implement` to the calling task's `<details>` in `tasks.md`, after `**Tests**`. One row per mutation site. `/al-mutate` reads it and replaces it with the NOTE chip plus Summary cell.
+Written by `/al-implement` to the calling task's `<details>` in `tasks.html`, after the Tests slot. One row per mutation site. `/al-mutate` reads it and replaces it with the NOTE chip plus Summary cell.
 
-```
-**Mutations plan**
+The block is a labelled table inside the task body. Aesthetic chooses the visible style; structural shape:
 
-| ID | Site | Operator | Expected killer |
-|---|---|---|---|
-| M1 | `Foo.Codeunit.al:47`, guard against blocked customer | remove `not` | T-042#3 |
-| M2 | `Foo.Codeunit.al:52`, credit-limit boundary | `>=` → `>` | T-042#4 |
+```html
+<section data-section="mutations-plan">
+  <h4>Mutations plan</h4>
+  <table>
+    <thead>
+      <tr><th>ID</th><th>Site</th><th>Operator</th><th>Expected killer</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>M1</td>
+        <td><code>Foo.Codeunit.al:47</code>, guard against blocked customer</td>
+        <td>remove <code>not</code></td>
+        <td>T-042#3</td>
+      </tr>
+      <tr>
+        <td>M2</td>
+        <td><code>Foo.Codeunit.al:52</code>, credit-limit boundary</td>
+        <td><code>&gt;=</code> → <code>&gt;</code></td>
+        <td>T-042#4</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
 ```
 
 `ID`: `M1`, `M2`, monotonic per task. `Site`: `<file>:<line>` plus one phrase in BC vocabulary (posting, dimension, ledger entry, document flow). `Operator`: mutation class name. `Expected killer`: `T-NNN#scenarioNumber` or `?` if the plan does not predict one.
+
+`/al-mutate` locates the block via `data-section="mutations-plan"` inside the parent `<details data-task="T-NNN">`. After processing, the entire `<section data-section="mutations-plan">` is removed.
 
 **DO NOT:**
 
@@ -69,8 +89,8 @@ Top-down by signal-per-minute. Pick the class that exercises decision logic. Nev
 
 ## Flow
 
-1. Resolve `tasks.md` per the rule above. Standalone if no match.
-2. Read the calling task ID + `**Mutations plan**` block when invoked from `/al-implement`; otherwise build a mutation plan from the requested target file or area.
+1. Resolve `tasks.html` per the rule above. Standalone if no match.
+2. Read the calling task ID + Mutations plan block when invoked from `/al-implement`; otherwise build a mutation plan from the requested target file or area.
 3. Run preflight.
 4. For each mutation in the plan, one at a time:
    - Apply the mutation to one site.
@@ -79,10 +99,10 @@ Top-down by signal-per-minute. Pick the class that exercises decision logic. Nev
    - Revert with `git checkout -- <file>`.
    - Verify revert by re-running `/al-build`. Baseline must return green. If not, abort and surface the broken revert.
 5. Write the report at `.output/mutation-report/<YYYYMMDD-HHMMSS>.md`.
-6. When invoked from `/al-implement`, update the calling task's `<details>` in `tasks.md`:
-   - Delete the `**Mutations plan**` block.
-   - Write the **Mutations** chip into the task's NOTE alert: `**Mutations**: N killed, M equivalent (reason: ...), K survivors.` Join with existing chips via ` · ` separator. Add the NOTE alert if the task does not have one.
-   - Regenerate the `## Summary` table; the `Mutations` cell for this task picks up the new chip value.
+6. When invoked from `/al-implement`, update the calling task's `<details>` in `tasks.html`:
+   - Delete the entire Mutations plan block (the element with `data-section="mutations-plan"`).
+   - Write the Mutations chip into the task's NOTE alert: `**Mutations**: N killed, M equivalent (reason: ...), K survivors.` Join with existing chips via ` · ` separator. Add the `<aside data-alert="note">` if the task does not have one (Edit anchored on `<details data-task="T-NNN">`).
+   - Regenerate the Summary table; locate the row via `<tr data-summary-row="T-NNN">` and update its Mutations cell to match the chip value.
 
 **Anti-pattern: batch multiple mutations per build.** You learn nothing about which site moved the signal. Queue them, run them one at a time.
 
@@ -128,37 +148,39 @@ Every survivor needs a decision before the report ships:
   - **Summary**: counts of killed / survived / build-failure.
   - **Surviving mutants**: actionable section. One row per survivor: site, class, classification, killer-test if written, or equivalence reason.
   - **Killed mutants**: table mapping mutation site to catching test.
-- **`tasks.md` NOTE chip** written to the calling task's NOTE alert only when invoked from `/al-implement`:
+- **`tasks.html` NOTE chip** written to the calling task's NOTE alert only when invoked from `/al-implement`:
   `**Mutations**: N killed, M equivalent (reason: ...), K survivors.`
-- **`tasks.md` Summary cell** updated when the Summary table is regenerated; cell value matches the chip value.
-- **`**Mutations plan**` block** deleted from the `<details>` block after the chip lands.
+- **`tasks.html` Summary cell** updated when the Summary table is regenerated; cell value matches the chip value.
+- **Mutations plan block** deleted from the task's `<details>` after the chip lands.
 
-## Voice when writing to `tasks.md`
+## Voice when writing to `tasks.html`
 
-The NOTE chip is bounded: one chip, the `**Mutations**: N killed, ...` shape above. Do not write operator-priority prose, selection rationale, walked-but-skipped paragraphs, or "Lesson:" entries to `tasks.md`. Those belong in the mutation report or stay in the session.
+The NOTE chip is bounded: one chip, the `**Mutations**: N killed, ...` shape above. Do not write operator-priority prose, selection rationale, walked-but-skipped paragraphs, or "Lesson:" entries to `tasks.html`. Those belong in the mutation report or stay in the session.
 
 Voice and chip-shape rules apply to the bounded chip. Full contracts:
 
 - `${CLAUDE_SKILL_DIR}/../../references/voice-contract.md`, voice rules, em-dash ban.
-- `${CLAUDE_SKILL_DIR}/../../references/notes-discipline.md`, per-task structure, NOTE alert chip rules, Summary regeneration rule.
+- `${CLAUDE_SKILL_DIR}/../../references/notes-discipline.md`, destination map for chips, alerts, Notes lines; Summary regeneration rule.
+- `${CLAUDE_SKILL_DIR}/../../references/html-spec-discipline.md`, data-attribute contract and surgical-edit discipline.
 
 ## Composition
 
 - `/al-build` runs every iteration. `-UnitTestOnly` for P-layer mutation gating when `unitTestApp` is configured.
 - `/al-research` when a survivor needs BaseApp behaviour verified.
-- `/al-refactor` consumes the standalone report, gaps drive new tests before any shape change.
+- `/al-refactor` consumes the standalone report; gaps drive new tests before any shape change.
 - `/grill-me` when a survivor's classification needs the user.
 
 **References** (`${CLAUDE_SKILL_DIR}/../../references/`):
 
 - `mutation-operators.md`, operator catalogue and selection heuristics; pre-flight self-report shape.
 - `al-runner.md`, Pure-layer mutation gating; ERROR / exit 2 ≠ survivor.
+- `html-spec-discipline.md`, data-attribute contract and surgical-edit discipline.
 
 ## Out of scope
 
 - No new behaviour. Mutate, classify, revert.
 - No code changes outside the mutate-revert cycle.
-- No `tasks.md` restructuring beyond writing the NOTE chip, regenerating the Summary row, and deleting the `**Mutations plan**` block. Survivors surface as the bounded chip value.
+- No `tasks.html` restructuring beyond writing the NOTE chip, regenerating the Summary row, and deleting the Mutations plan block. Survivors surface as the bounded chip value.
 - No fix-it edits in the report; that is `/al-refine` and `/al-implement`.
 - No mutating test code, generated `.rdlc`, generated `.xlf`, or captions.
 - No skipping preflight. Stop. Run `/al-build` until green, then retry.

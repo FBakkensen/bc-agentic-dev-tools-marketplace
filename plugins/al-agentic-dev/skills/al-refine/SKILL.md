@@ -1,36 +1,38 @@
 ---
 name: al-refine
-description: One task → numbered Gherkin scenarios for AL/Business Central. Reads architecture.md and the codebase to spec how the behaviour is tested, runs /grill-me when intent is fuzzy, confirms the per-scenario test layer, walks the seven replan triggers, then writes compressed Gherkin bullets onto that task's <details> block in tasks.md. Use after /al-scope places a bare task entry. Per task, not per feature.
+description: One task → numbered Gherkin scenarios for AL/Business Central. Reads architecture.html and the codebase to spec how the behaviour is tested, runs /grill-me when intent is fuzzy, confirms the per-scenario test layer, walks the seven replan triggers, then writes compressed Gherkin bullets into the task's Tests slot in tasks.html. Use after /al-scope places a bare task entry. Per task, not per feature.
 ---
 
 # /al-refine, Task to Gherkin
 
 > **Runtime gate.** Content inside `<claude-only>...</claude-only>` blocks applies only to Claude Code (which has an `advisor()` tool). Codex and other runtimes without it: skip the block contents and move on. No need to comment on what was skipped.
 
-Fill the `**Tests**` block for one task in `tasks.md`. Read `architecture.md`, walk the codebase, write numbered Gherkin in ZOMBIES order, confirm the test layer per scenario, gate against the seven replan triggers. One task per run. Stop, `/al-implement` consumes it next.
+Fill the Tests slot for one task in `tasks.html`. Read `architecture.html`, walk the codebase, write numbered Gherkin in ZOMBIES order, confirm the test layer per scenario, gate against the seven replan triggers. One task per run. Stop, `/al-implement` consumes it next.
 
 Drop articles, conjunctions, hedging on Gherkin bullets. Scenario titles are positional: `<Action><Subject><Qualifier>` PascalCase, no underscores.
 
-## Resolve `tasks.md`
+## Resolve `tasks.html`
 
-- Branch matches `^\d{3}-` → `specs/<branch>/tasks.md`. Otherwise `Stop.` Run `/al-design`.
-- Task is `[!]` → `Stop.` `T-X is [!], run /al-steer to clear the replan.`
-- `architecture.md` missing in spec folder → `Stop.` Run `/al-design`.
+- Branch matches `^\d{3}-` → `specs/<branch>/tasks.html`. Otherwise `Stop.` Run `/al-design`.
+- Task carries `data-status="blocked"` → `Stop.` `T-X is blocked, run /al-steer to clear the replan.`
+- `architecture.html` missing in spec folder → `Stop.` Run `/al-design`.
+- Legacy markdown spec (`tasks.md` present without `tasks.html`) → `Stop.` Legacy specs are frozen; hand-migrate before continuing.
 
-Read before writing to `tasks.md`:
+Read before writing to `tasks.html`:
 
 - `${CLAUDE_SKILL_DIR}/../../references/voice-contract.md`, voice rules, em-dash ban, one-line vs prose cadence map.
-- `${CLAUDE_SKILL_DIR}/../../references/notes-discipline.md`, per-task structure, NOTE/IMPORTANT alert rules, valid Notes-line shapes, Summary regeneration rule.
+- `${CLAUDE_SKILL_DIR}/../../references/notes-discipline.md`, destination map for chips, alerts, Notes lines, Summary regeneration rule.
+- `${CLAUDE_SKILL_DIR}/../../references/html-spec-discipline.md`, data-attribute contract, surgical-edit discipline.
 
 ## Flow
 
 Parallelise step 1 and step 2 in subagents.
 
-### 1. Read architecture.md
+### 1. Read architecture.html
 
 Module map. R → P → W boundary. Brownfield touchpoints. Family-level test layer covering this task. Note the default (Pure, E2E, or Both) and which scenario families the family-level decision covers.
 
-**Slice context.** Read the `## Slice(s) (Event Modeling)` paragraph that this task contributes to. For *wire* tasks (those crossing the slice's trigger), Gherkin scenarios must cross the trigger → state path of the slice. For *primitive / extract / fix / refactor* tasks, scenarios stay at the task's own scope; the slice is upstream context, not the per-task spec. Vertical slicing (tests + code together) is inherited from `/al-scope`.
+**Slice context.** Read the Slice(s) (Event Modeling) paragraph that this task contributes to. For *wire* tasks (those crossing the slice's trigger), Gherkin scenarios must cross the trigger → state path of the slice. For *primitive / extract / fix / refactor* tasks, scenarios stay at the task's own scope; the slice is upstream context, not the per-task spec. Vertical slicing (tests + code together) is inherited from `/al-scope`.
 
 ### 2. Walk the codebase
 
@@ -45,7 +47,7 @@ If you cannot point at the codeunit, table, field, or event, you cannot write th
 
 ### 3. Refine the description paragraph (optional)
 
-If the codebase walk surfaces specifics the scope-time description lacks (concrete `file:line` site, object IDs, sharpened invariants, ADR cites grounded in the code), rewrite the description paragraph inside the task's `<details>`. Keep it one to three sentences; normal prose voice; no em-dashes. The chip / alert / declared-edge lines above the paragraph are untouched.
+If the codebase walk surfaces specifics the scope-time description lacks (concrete `file:line` site, object IDs, sharpened invariants, ADR cites grounded in the code), rewrite the description paragraph inside the task block. Keep it one to three sentences; normal prose voice; no em-dashes. The chip / alert / declared-edge content above the paragraph is untouched.
 
 Skip when scope-time description is already accurate at the level the codebase confirms.
 
@@ -53,7 +55,7 @@ Skip when scope-time description is already accurate at the level the codebase c
 
 Trigger `/grill-me` when:
 
-- A domain rule is implicit; user says it but it is not in `architecture.md`.
+- A domain rule is implicit; user says it but it is not in `architecture.html`.
 - ZOMBIES surfaces a case the user must adjudicate: *Many* has no stated upper bound, *Boundary* falls between two contradicting rules, *Exception* has no agreed recovery.
 - Intent splits: *"validate"* could mean schema-check or business-rule-check.
 
@@ -67,7 +69,7 @@ Architecture set the family default. Override per scenario only when intent forc
 - **E2E**: composition or side effect unreproducible at the pure layer (posting, document flow, event chain). E2E block.
 - **Both**: intent splits cleanly; same behaviour at both layers buys distinct evidence. Pure block (one bullet; `/al-implement` produces tests at both layers).
 
-Scenario disagrees with family default → place the bullet in the override block and record the override on the **NOTE alert** chip: `**Layer**: <layer> (override; <reason>)`. If the task already has a NOTE alert, extend the chip line with ` · ` separator. If not, add a NOTE alert. **Do not write Layer overrides to `**Notes**` lines.**
+Scenario disagrees with family default → place the bullet in the override block and record the override on the NOTE alert chip: `**Layer**: <layer> (override; <reason>)`. If the task already has a NOTE alert, extend the chip line with ` · ` separator. If not, add a NOTE alert. **Do not write Layer overrides to Notes lines.**
 
 *Pure tag is intent. AL Runner verifies at `/al-implement` RED; the unit test app contract is PASS-or-FAIL. ERROR / exit 2 routes to the three-step resolution (review test → refactor production → reclassify) in `/al-implement` and `al-runner.md`.*
 
@@ -116,61 +118,69 @@ Reconcile each returned bullet, accept (update) or reject. Rejection rationale s
 
 Walk all seven triggers. Subjective triggers require a written verdict (one line stating what was checked). **No silent skip.** Code state untouched throughout.
 
-| # | Trigger | Detect | Action |
-|---|---|---|---|
-| 1 | Task too big | `>5` scenarios, or scenarios cluster around two distinct subjects | Soft-flag |
-| 2 | Hidden pre-req | Gherkin references a table, codeunit, or permission with no covering task | Hard-halt |
-| 3 | Wrong order | Bullet references behaviour a later task introduces | Hard-halt |
-| 4 | Sibling now wrong | This task's behaviour invalidates another task's description or scenarios | Hard-halt |
-| 5 | New behaviour emerges | Scenario specifies behaviour outside any current task's intent | Soft-flag |
-| 6 | Architecture decomposition wrong | Family-level layer or module boundary cannot house this scenario cleanly | Hard-halt |
-| 7 | Goal drift | Scenarios push past the feature `Goal` line | Soft-flag |
+Canonical trigger names, modes, and IMPORTANT alert shape: see `notes-discipline.md` *Replan triggers* and *Alert authoring rules*. Per-skill detection cues (refinement perspective):
 
-Hard-halt → set `[!]` in the `<summary>` line, add an **IMPORTANT alert** to the task block, stop, run `/al-steer`.
-Soft-flag → add an **IMPORTANT alert** to the task block, continue.
+| # | Trigger | Detect |
+|---|---|---|
+| 1 | Task too big | `>5` scenarios, or scenarios cluster around two distinct subjects |
+| 2 | Hidden pre-req | Gherkin references a table, codeunit, or permission with no covering task |
+| 3 | Wrong order | Bullet references behaviour a later task introduces |
+| 4 | Sibling now wrong | This task's behaviour invalidates another task's description or scenarios |
+| 5 | New behaviour emerges | Scenario specifies behaviour outside any current task's intent |
+| 6 | Architecture decomposition wrong | Family-level layer or module boundary cannot house this scenario cleanly |
+| 7 | Goal drift | Scenarios push past the feature Goal slot |
 
-IMPORTANT alert shape: `> [!IMPORTANT]\n> **Replan flag**: trigger #N, <one-line reason>.` **Do not write replan flags to `**Notes**` lines.** If the task already carries a soft-flag IMPORTANT alert and a new trigger fires that requires hard-halt, replace the alert with the hard-halt version (status `[!]`, new trigger reason).
+If the task already carries a soft-flag IMPORTANT alert and a new trigger fires that requires hard-halt, replace the alert body with the hard-halt version (status flipped to `blocked`, new trigger reason).
 
 ### 9. Write the block
 
-Update the task's `<details>` in this order:
+Surgical edits via the Edit tool, anchored on data attributes (see `html-spec-discipline.md`). Update the task block in this order:
 
-1. If you refined the description in step 3, replace the paragraph (chip / alert / edge lines above stay).
-2. If you added a Layer override in step 5, update the NOTE chip line (add the alert if absent).
+1. If you refined the description in step 3, replace the description paragraph (chip / alert / edge content above stay).
+2. If you added a Layer override in step 5, update the NOTE alert chip (add the alert if absent).
 3. If step 8 fired a replan flag, add the IMPORTANT alert.
-4. Write the `**Tests**` block: Pure sub-block first, E2E sub-block second, contiguous numbering across blocks. When the task has ≥6 scenarios, use nested `<details>` per scenario (see *Nested collapsibles* below).
-5. Regenerate the Summary table from current per-task NOTE chips plus scenario counts (see *Summary regeneration*).
+4. Fill the Tests slot: locate the empty element with `data-section="tests"` inside `<details data-task="T-NNN">`, replace its body with Pure sub-block first, E2E sub-block second, contiguous numbering across sub-blocks. When the task has ≥6 scenarios, use nested `<details>` per scenario (see *Nested collapsibles* below).
+5. Regenerate the Summary table from current per-task NOTE alert chips plus scenario counts (see *Summary regeneration*).
 
 `Stop.`
 
-## Canonical Gherkin block (inside the task `<details>`)
+## Canonical Gherkin block (inside the task's Tests slot)
 
+Aesthetic chooses heading style for the Pure / E2E sub-block labels (small caps, hairline rule, marginalia). The structure below shows slot identity and bullet shape, not a fixed render.
+
+```html
+<section data-section="tests">
+  <h4>Pure</h4>
+  <ol>
+    <li>
+      <strong>ScenarioTitle</strong>
+      <ul>
+        <li><strong>Given</strong> precondition</li>
+        <li><strong>When</strong> action</li>
+        <li><strong>Then</strong> outcome
+          <ul>
+            <li><strong>And</strong> invariant</li>
+            <li><strong>But</strong> exclusion</li>
+          </ul>
+        </li>
+      </ul>
+    </li>
+    <li>
+      <strong>ScenarioTitle</strong>
+      ...
+    </li>
+  </ol>
+  <h4>E2E</h4>
+  <ol start="3">
+    <li>
+      <strong>ScenarioTitle</strong>
+      ...
+    </li>
+  </ol>
+</section>
 ```
-**Tests**
 
-**Pure**
-
-1. **<ScenarioTitle>**
-   - **Given** <precondition>
-   - **When** <action>
-   - **Then** <outcome>
-     **And** <invariant>
-     **But** <exclusion>
-
-2. **<ScenarioTitle>**
-   - **Given** ...
-   - **When** ...
-   - **Then** ...
-
-**E2E**
-
-3. **<ScenarioTitle>**
-   - **Given** ...
-   - **When** ...
-   - **Then** ...
-```
-
-Pure or E2E sub-block may be absent when the task has no scenarios at that layer; the remaining sub-block stays. Numbering is contiguous across the present blocks.
+Pure or E2E sub-block may be absent when the task has no scenarios at that layer; the remaining sub-block stays. Numbering is contiguous across the present sub-blocks (use `start="N"` on the second `<ol>` to keep numbering visible).
 
 Title is the stable handle for grilling and commits (`T-007#3`); same intent as the `[SCENARIO]` comment `/al-implement` writes inside the AL `[Test]`. Numbering restarts per task. **And** / **But** extend a clause; do not split the scenario.
 
@@ -178,69 +188,59 @@ Title is the stable handle for grilling and commits (`T-007#3`); same intent as 
 
 When the task's total scenario count (Pure + E2E) is ≥6, replace the numbered-list scenario layout with nested `<details>` per scenario inside each sub-block:
 
-```
-**Tests**
-
-**Pure**
-
-<details>
-<summary>Scenario 1: <strong>ScenarioTitle</strong></summary>
-
-- **Given** ...
-- **When** ...
-- **Then** ...
-
-</details>
-
-<details>
-<summary>Scenario 2: <strong>ScenarioTitle</strong></summary>
-
-- **Given** ...
-- **When** ...
-- **Then** ...
-
-</details>
-
-**E2E**
-
-<details>
-<summary>Scenario 6: <strong>ScenarioTitle</strong></summary>
-
-- **Given** ...
-- **When** ...
-- **Then** ...
-
-</details>
+```html
+<section data-section="tests">
+  <h4>Pure</h4>
+  <details>
+    <summary>Scenario 1: <strong>ScenarioTitle</strong></summary>
+    <ul>
+      <li><strong>Given</strong> ...</li>
+      <li><strong>When</strong> ...</li>
+      <li><strong>Then</strong> ...</li>
+    </ul>
+  </details>
+  <details>
+    <summary>Scenario 2: <strong>ScenarioTitle</strong></summary>
+    ...
+  </details>
+  <h4>E2E</h4>
+  <details>
+    <summary>Scenario 6: <strong>ScenarioTitle</strong></summary>
+    ...
+  </details>
+</section>
 ```
 
-Blank lines around the nested `<details>` are required for GFM to render markdown inside. Preserve scenario shorthand (one-line "second call reuses") as-is inside the body; do not fabricate Given/When/Then expansions.
+Preserve scenario shorthand (one-line "second call reuses") as-is inside the body; do not fabricate Given/When/Then expansions.
 
-Scenario numbering continues contiguously across sub-blocks (the first E2E scenario number equals Pure-count + 1). The `<summary>` carries `Scenario N, <strong>Title</strong>`.
+Scenario numbering continues contiguously across sub-blocks (the first E2E scenario number equals Pure-count + 1). The nested `<summary>` carries `Scenario N: <strong>Title</strong>`.
 
 ## Summary regeneration
 
-After writing the `**Tests**` block, regenerate the `## Summary` table at the top of `tasks.md`. The table is a view over per-task `<details>` blocks; never edit it directly without re-reading the per-task data.
+After writing the Tests slot, regenerate the Summary table at the top of `tasks.html`. The table is a view over per-task blocks; never edit it without re-reading the per-task data.
 
-Regeneration rule, per row:
+Regeneration rule, per row (locate via `<tr data-summary-row="T-NNN">`):
 
 | Cell | Source |
 |---|---|
-| `Task` | `[T-NNN](#t-NNN)` derived from the task's anchor |
-| `Title` | The `<summary>` line title (everything after `T-NNN, `) |
-| `Tests` | Count of scenarios in the task's `**Tests**` block (Pure + E2E combined); right-aligned |
-| `Layer` | Value of `**Layer**` chip in the task's NOTE alert, or `-` if absent |
-| `Mutations` | Value of `**Mutations**` chip in the task's NOTE alert, or `-` if absent |
+| `Task` | `<a href="#t-NNN">T-NNN</a>` derived from the task's anchor |
+| `Title` | The task title from the `<summary>` line |
+| `Tests` | Count of scenarios in the task's Tests slot (Pure + E2E combined); right-aligned |
+| `Layer` | Value of the `**Layer**` chip in the task's NOTE alert, or `-` if absent |
+| `Mutations` | Value of the `**Mutations**` chip in the task's NOTE alert, or `-` if absent |
 
-**Drop any column whose values would be `-` for every row.** If no task carries Layer metadata, drop the Layer column. When the next write makes a column relevant, re-add it.
+**Drop any column whose values would be `-` for every row.** If no task carries Layer metadata, drop the Layer column from the rendered table. When the next write makes a column relevant, re-add it.
+
+Status does NOT appear in the Summary; it lives only on `data-status` of the task `<details>`. This avoids two-place edits on every status flip.
 
 ## Notes-line shapes valid for this skill
 
-Per `notes-discipline.md`, the `**Notes**` block is now strictly:
+Per `notes-discipline.md`, the Notes block is now strictly:
 
 - **Non-obvious BC constraint specific to this task** (hidden invariant, guard in an unexpected place, AL-language pitfall).
 - **Explicit deferred decision** (`Implementation choice: X vs Y, /al-implement decides`).
 
-DO NOT write Layer overrides (now NOTE chip), Replan flags (now IMPORTANT alert), or Mutations results (now NOTE chip plus Summary cell) as `**Notes**` lines. Single source of truth is the alert / chip.
+DO NOT write Layer overrides (now NOTE chip), Replan flags (now IMPORTANT alert), or Mutations results (now NOTE chip plus Summary cell) as Notes lines. Single source of truth is the alert / chip.
 
 One line max. No fixture mechanics, no implementation choices beyond explicit deferrals. Removing the note would not confuse `/al-implement` → do not write it.
 
@@ -260,7 +260,7 @@ One line max. No fixture mechanics, no implementation choices beyond explicit de
 
 ## Composition
 
-- `/al-scope`, precondition. A bare `<details>` block with anchor + description + empty Tests must exist before `/al-refine` runs.
+- `/al-scope`, precondition. A bare task block with `data-task` + description + empty `data-section="tests"` slot must exist before `/al-refine` runs.
 - `/grill-me`, call whenever intent ambiguous. Standalone-callable mid-flow.
 - `/al-grill-adr`, call standalone when a domain term is fuzzy and `CONTEXT.md` needs sharpening.
 - `/al-research`, non-trivial BC behaviour.
@@ -270,7 +270,7 @@ One line max. No fixture mechanics, no implementation choices beyond explicit de
 
 <claude-only>
 
-**Advisor checkpoint.** Call `advisor()` before writing the first scenario into the `**Tests**` block. Gherkin shape is hard to retract once `/al-implement` has consumed it; checking your refinement reasoning here is cheaper than re-running `/al-refine`.
+**Advisor checkpoint.** Call `advisor()` before writing the first scenario into the Tests slot. Gherkin shape is hard to retract once `/al-implement` has consumed it; checking your refinement reasoning here is cheaper than re-running `/al-refine`.
 
 </claude-only>
 
@@ -278,12 +278,13 @@ One line max. No fixture mechanics, no implementation choices beyond explicit de
 
 - `zombies-scenarios.md`, Z/O/M/B/I/E/S ordering rationale and naming examples.
 - `al-runner.md`, what `/al-build -UnitTestOnly` runs against; Pure tag is intent, AL Runner verifies.
+- `html-spec-discipline.md`, data-attribute contract and surgical-edit discipline.
 
 ## Out of scope
 
 - No code edits.
 - No fixture mechanics. `/al-implement` decides.
 - No mutation lists. Discovered during `/al-implement`, validated in `/al-mutate`.
-- No feature-level test strategy. That is `architecture.md` via `/al-design`.
+- No feature-level test strategy. That is `architecture.html` via `/al-design`.
 - No replan mutations. That is `/al-steer`.
 - No Resolved Questions or Cross-cutting Notes sections.

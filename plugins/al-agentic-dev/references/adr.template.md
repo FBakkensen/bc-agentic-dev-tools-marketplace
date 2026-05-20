@@ -61,7 +61,7 @@ When earned, render as a table (Option / Verdict / Reason). Apply even when ther
 
 **Consequences**.
 
-_When earned:_ a non-obvious downstream effect that `/al-design` must surface in a slot of `architecture.md` (Module map, Brownfield touchpoints, R→P→W, Test strategy) so downstream skills meet the constraint without re-reading the ADR. Examples: an AppSource compliance constraint, a migration step, an event-registration rule ("every new posting routine must register its events on the bridge").
+_When earned:_ a non-obvious downstream effect that `/al-design` must surface in a slot of `architecture.html` (Module map, Brownfield touchpoints, R→P→W, Test strategy) so downstream skills meet the constraint without re-reading the ADR. Examples: an AppSource compliance constraint, a migration step, an event-registration rule ("every new posting routine must register its events on the bridge").
 _Skip when:_ the consequence just paraphrases the lead.
 
 **Related**.
@@ -93,7 +93,7 @@ Scan `docs/adr/` for the highest existing number and increment by one. Zero-pad 
 All four must hold:
 
 1. **Hard to reverse**: the cost of changing your mind later is meaningful.
-2. **Surprising without context**: a future reader will look at the code or `architecture.md` and wonder *"why on earth did they do it this way?"*
+2. **Surprising without context**: a future reader will look at the code or `architecture.html` and wonder *"why on earth did they do it this way?"*
 3. **Result of a real trade-off**: there were genuine alternatives and you picked one for specific reasons.
 4. **Architectural, picks a point in the design space**: mechanism, module shape, pattern, seam placement, test layer. Domain rules belong to `/al-grill-adr`.
 

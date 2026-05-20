@@ -1,6 +1,6 @@
 # BC/AL design patterns
 
-Plugin-level catalogue cited by `architecture.md`, design ADRs, and the `/al-design` flow. Pick **one pattern per module**. If a pattern needs explaining, the module shape is wrong, reshape, don't rename.
+Plugin-level catalogue cited by `architecture.html`, design ADRs, and the `/al-design` flow. Pick **one pattern per module**. If a pattern needs explaining, the module shape is wrong, reshape, don't rename.
 
 Each entry follows the same shape: **What** / **When** / **When not** / **Structure** / **_Avoid_:** (named misuse → anti-pattern). Anti-patterns are named so reviews can call them by name.
 
@@ -172,4 +172,4 @@ Common at feature level: **Façade**, **Event Bridge**, **Generic Method**, **Te
 
 Specialised: **API Register Fieldset**, **Delegate API Operation** (API page design), **Command Queue** (in-memory sequencing), **Implementer Injection** (testability seam, brownfield refactor), **No. Series** (numbered records).
 
-Pick one per module. State the choice on the module line in `architecture.md`. If the module's responsibility doesn't match any pattern in this catalogue, the module shape is probably wrong, reshape before naming a pattern.
+Pick one per module. State the choice on the module line in `architecture.html`. If the module's responsibility doesn't match any pattern in this catalogue, the module shape is probably wrong, reshape before naming a pattern.

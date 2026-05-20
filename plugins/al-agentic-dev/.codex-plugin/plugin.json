@@ -1,7 +1,7 @@
 {
   "name": "al-agentic-dev",
-  "description": "Agentic AL/Business Central development: composable skills (al-steer, al-grill-adr, al-design, al-scope, al-refine, al-implement, al-refactor, al-mutate, al-second-opinion, al-research) with two persistent layers: repo-root memory (CONTEXT.md, docs/adr/, .out-of-scope/) and branch-scoped feature state (architecture.md + tasks.md). Replaces complex multi-agent workflows with focused single-purpose skills, standard BC vocabulary, and KISS/YAGNI principles. BREAKING in 0.12.0: tasks.md, architecture.md, and ADR formats reshaped for human readability (collapsibles, GFM alerts, Mermaid graphs, Considered Options table, em-dash ban). Mid-feature upgrades require regenerating tasks.md via /al-scope; finish in-flight work on the prior version, or convert manually.",
-  "version": "0.13.2",
+  "description": "Agentic AL/Business Central development: composable skills (al-steer, al-grill-adr, al-design, al-scope, al-refine, al-implement, al-refactor, al-mutate, al-second-opinion, al-research) with two persistent layers: repo-root memory (CONTEXT.md, docs/adr/, .out-of-scope/) and branch-scoped feature state (architecture.html + tasks.html). Replaces complex multi-agent workflows with focused single-purpose skills, standard BC vocabulary, and KISS/YAGNI principles. BREAKING in 0.14.0: architecture and tasks shift from markdown to self-contained HTML (Mermaid + Google Fonts via CDN), driven by a data-attribute contract (data-task, data-status, data-alert, data-section, data-summary-row, data-graph) and aesthetic discipline in references/html-spec-discipline.md. ADRs and CONTEXT.md stay markdown. Legacy markdown specs are frozen; new skills refuse to operate on them. No bilingual dispatch.",
+  "version": "0.14.0",
   "skills": "./skills/",
   "interface": {
     "displayName": "AL Agentic Dev",

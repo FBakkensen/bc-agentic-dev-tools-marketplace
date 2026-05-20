@@ -1,11 +1,11 @@
 # Legacy AL Refactor Plan, deepening shallow modules without a safety net
 
-Phased process for refactoring legacy AL code that ships **without sufficient tests**. Companion to `/al-refactor`. Use when there is no calling task and no `architecture.md`.
+Phased process for refactoring legacy AL code that ships **without sufficient tests**. Companion to `/al-refactor`. Use when there is no calling task and no `architecture.html`.
 
 ## When to use
 
 - **Standalone refactor of legacy code**: predates this plugin's TDD flow, lacks behaviour-verifying tests, or has tangled responsibilities.
-- **Not** for the post-green refactor inside `/al-implement`, that uses `/al-refactor`'s inline discipline (tests already exist, R→P→W boundary already drawn, brownfield touchpoints already named in `architecture.md`).
+- **Not** for the post-green refactor inside `/al-implement`, that uses `/al-refactor`'s inline discipline (tests already exist, R→P→W boundary already drawn, brownfield touchpoints already named in `architecture.html`).
 
 This plan complements `/al-refactor`'s inline discipline; it does not replace it.
 

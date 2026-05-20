@@ -66,7 +66,7 @@ If prior knowledge feels uncertain, default to verifying.
 | _Avoid_: | Sales posting validates blocked customers before inserting ledger entries. |
 | Use: | `Cust.TestField(Blocked, Cust.Blocked::" ")`, `Codeunit 80 "Sales-Post"`, `OnRun → CheckCustomerBlockage`. |
 
-Citations live in the return note only, never inline into durable artifacts. The caller decides what to persist; `architecture.md`, `tasks.md`, `CONTEXT.md`, ADRs cite by name. Stop browsing the moment an answer is actionable. Dispatch independent claims as parallel delegated research passes when the host supports subagents, one claim per pass.
+Citations live in the return note only, never inline into durable artifacts. The caller decides what to persist; `architecture.html`, `tasks.html`, `CONTEXT.md`, ADRs cite by name. Stop browsing the moment an answer is actionable. Dispatch independent claims as parallel delegated research passes when the host supports subagents, one claim per pass.
 
 _Avoid_:
 
@@ -76,14 +76,14 @@ _Avoid_:
 
 ## Output
 
-Findings note to the caller. Per finding: question, answer, source, one-line citation. No code edits. No `tasks.md` edits. No durable artifact writes.
+Findings note to the caller. Per finding: question, answer, source, one-line citation. No code edits. No `tasks.html` edits. No durable artifact writes.
 
 ## Composition
 
-`/grill-me` when the research question itself is unclear and needs framing. `/bc-standard-reference` is source #2, reachable directly when the question is purely BaseApp behaviour. Caller decides whether a finding earns a line in `architecture.md`, `CONTEXT.md`, or an ADR.
+`/grill-me` when the research question itself is unclear and needs framing. `/bc-standard-reference` is source #2, reachable directly when the question is purely BaseApp behaviour. Caller decides whether a finding earns a line in `architecture.html`, `CONTEXT.md`, or an ADR.
 
 ## Out of scope
 
-- No code edits, no test edits, no `tasks.md` edits, no ADR writes, no `CONTEXT.md` edits.
+- No code edits, no test edits, no `tasks.html` edits, no ADR writes, no `CONTEXT.md` edits.
 - No browsing for context, research is scoped, returns when actionable.
 - No design picks (`/al-design`), no grilling (`/al-grill-adr`, `/grill-me`).

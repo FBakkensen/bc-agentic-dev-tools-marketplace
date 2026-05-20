@@ -7,7 +7,7 @@ description: Refactor AL/Business Central production and test code while keeping
 
 Surface friction in AL code and reshape modules that earn their keep. Run `/al-build` between meaningful changes. Stop the moment a green test goes red.
 
-**Resolve `tasks.md`:** Branch matches `^\d{3}-`? Use `specs/<branch>/tasks.md`. Otherwise `Stop.`, run `/al-design` first. Calling task is `[!]`? `Stop.`, `T-X is [!], run /al-steer to clear the replan.`
+**Resolve `tasks.html`:** Branch matches `^\d{3}-`? Use `specs/<branch>/tasks.html`. Otherwise `Stop.`, run `/al-design` first. Calling task is `data-status="blocked"`? `Stop.`, `T-X is blocked, run /al-steer to clear the replan.` Legacy markdown spec (`tasks.md` without `tasks.html`) → frozen; hand-migrate before continuing.
 
 **Anti-pattern: refactor while red.** Refactor only against a green build. If `/al-build` is red, the work belongs in `/al-implement` (drive to green) or in a fresh red→green cycle, not here.
 
@@ -15,9 +15,10 @@ Surface friction in AL code and reshape modules that earn their keep. Run `/al-b
 
 Full discipline in `${CLAUDE_SKILL_DIR}/../../references/LANGUAGE.md`.
 
-Read before writing to `tasks.md`:
+Read before writing to `tasks.html`:
 - `${CLAUDE_SKILL_DIR}/../../references/voice-contract.md`, voice rules for the prose itself.
 - `${CLAUDE_SKILL_DIR}/../../references/notes-discipline.md`, what goes in a Notes line vs an ADR; trigger test; valid shapes.
+- `${CLAUDE_SKILL_DIR}/../../references/html-spec-discipline.md`, data-attribute contract and surgical-edit discipline.
 
 Use these terms exactly. Don't substitute "component," "service," "API," or "boundary." Consistent language is the point.
 
@@ -32,7 +33,7 @@ Use these terms exactly. Don't substitute "component," "service," "API," or "bou
 
 ## Flow
 
-1. **Plan.** Walk the changed area and write a refactor checklist, one bullet per real gap, grouped by category: *Smells*, *Reshape*, *Naming*, *AppSource*. Drop categories with no gap. Seed from `architecture.md` brownfield touchpoints when present.
+1. **Plan.** Walk the changed area and write a refactor checklist, one bullet per real gap, grouped by category: *Smells*, *Reshape*, *Naming*, *AppSource*. Drop categories with no gap. Seed from `architecture.html` brownfield touchpoints when present.
 2. **Second opinion (gate).** See below. **No silent skip.**
 3. **Refactor.** Apply the checklist inline. `/al-build` after every meaningful change. Production and tests are first-class, refactor both.
 4. **Replan check (gate).** See below.
@@ -82,7 +83,7 @@ Rename when the name lies. BC term over generic programming term. AL reads natur
 - **Procedures** PascalCase, verb-first. **Events:** `OnBefore{Action}{Object}`, `OnAfter{Action}{Object}`.
 - **Tests** PascalCase scenario name (`PostSalesOrderWithItemCharge`), not `GivenX_WhenY_ThenZ`.
 
-**Gherkin sync rule.** Renaming a test or editing `[SCENARIO]/[GIVEN]/[WHEN]/[THEN]`? Re-verify against the originating Gherkin bullet in `tasks.md`. If intent shifts, update the bullet alongside via `/al-refine`.
+**Gherkin sync rule.** Renaming a test or editing `[SCENARIO]/[GIVEN]/[WHEN]/[THEN]`? Re-verify against the originating Gherkin bullet in `tasks.html`. If intent shifts, update the bullet alongside via `/al-refine`.
 
 ## AppSource
 
@@ -107,13 +108,13 @@ Run after tests are green. Triggers in scope: #2 hidden pre-req, #4 sibling now 
 
 | # | Detect | Action |
 |---|---|---|
-| 2 | Refactor surfaces a table, codeunit, or permission with no covering task | Flip `<summary>` to `[!]`, add IMPORTANT alert `**Replan flag**: trigger #2, <reason>.`, regenerate Summary row, stop. |
-| 4 | Reshape invalidates another task's description or scenarios | Flip `<summary>` to `[!]`, add IMPORTANT alert `**Replan flag**: trigger #4, <reason>.`, regenerate Summary row, stop. |
-| 6 | R→P→W boundary cuts across tasks, or `architecture.md` is wrong | Flip `<summary>` to `[!]`, add IMPORTANT alert `**Replan flag**: trigger #6, <reason>.`, regenerate Summary row, stop. |
+| 2 | Refactor surfaces a table, codeunit, or permission with no covering task | Set `data-status="blocked"` on the task `<details>`, add IMPORTANT alert with body `**Replan flag**: trigger #2, <reason>.`, regenerate Summary row, stop. |
+| 4 | Reshape invalidates another task's description or scenarios | Set `data-status="blocked"`, add IMPORTANT alert `**Replan flag**: trigger #4, <reason>.`, regenerate Summary row, stop. |
+| 6 | R→P→W boundary cuts across tasks, or `architecture.html` is wrong | Set `data-status="blocked"`, add IMPORTANT alert `**Replan flag**: trigger #6, <reason>.`, regenerate Summary row, stop. |
 
-IMPORTANT alert shape: `> [!IMPORTANT]\n> **Replan flag**: trigger #N, <one-line reason>.` DO NOT write replan flags to `**Notes**` lines; the alert is the single source of truth (see `notes-discipline.md`).
+IMPORTANT alert shape: an `<aside data-alert="important">` whose body reads `**Replan flag**: trigger #N, <one-line reason>.` DO NOT write replan flags to Notes lines; the alert is the single source of truth (see `notes-discipline.md`).
 
-**Trivia exception** (precedes hard-halt). Missing scaffolding (permission set entry, object ID assignment, caption for a new object, BC-vocabulary rename) is not a replan trigger. Apply inline (≤3 lines), write the `**Absorbed**: <one line>` chip into the task's NOTE alert (joining with ` · ` if other chips exist; adding the alert if absent), re-run `/al-build`, continue. Cap: one absorption per task. Never absorbs schema changes, new event publishers, new codeunits, or test-outcome changes. DO NOT write Absorbed to a `**Notes**` line.
+**Trivia exception** (precedes hard-halt). Missing scaffolding (permission set entry, object ID assignment, caption for a new object, BC-vocabulary rename) is not a replan trigger. Apply inline (≤3 lines), write the `**Absorbed**: <one line>` chip into the task's NOTE alert (`<aside data-alert="note">`, joining with ` · ` if other chips exist; adding the alert if absent), re-run `/al-build`, continue. Cap: one absorption per task. Never absorbs schema changes, new event publishers, new codeunits, or test-outcome changes. DO NOT write Absorbed to a Notes line.
 
 Standalone refactors with no calling task: capture the replan condition in the session and run `/al-steer`. Code stays at green; the halt is on planning, not rollback. Replan venue is `/al-steer`.
 
@@ -122,7 +123,7 @@ Standalone refactors with no calling task: capture the replan condition in the s
 - **Anti-pattern: feature creep during refactor.** No new behaviour. New behaviour belongs in `/al-implement` (new task) or `/al-refine` (re-plan). The refactor diff should leave observable behaviour identical.
 - May add new tests when refactoring reveals uncovered branches, those tests must pass against the *current* code before the refactor proceeds.
 - If a hidden requirement or design flaw surfaces → stop, append a Notes line, route to `/al-design` or `/al-refine` via `/al-steer`. **No silent scope expansion.**
-- `tasks.md` Notes entries are forward-facing facts, each independently actionable by a future agent.
+- `tasks.html` Notes entries are forward-facing facts, each independently actionable by a future agent.
 - A comment earns its place only when WHY is non-obvious from BC vocabulary and the surrounding code. No comment churn.
 
   | | Comment |
@@ -139,6 +140,7 @@ Standalone refactors with no calling task: capture the replan condition in the s
 
 - `decoupling.md`, three-phase legacy refactor (extract internals → interface → inject); Phase 3 self-injection lands the seam without breaking callers.
 - `environment-interfaces.md`, three default seams (`IEnvironment`, `IApiRequest`, `IFinance`-family) plus temp-record alternative; name the pattern before extracting a fresh one.
+- `html-spec-discipline.md`, data-attribute contract and surgical-edit discipline for `tasks.html`.
 
 ## Out of scope
 

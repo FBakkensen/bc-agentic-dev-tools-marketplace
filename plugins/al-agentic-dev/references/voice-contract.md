@@ -19,7 +19,7 @@ Direct, opinionated, no padding. Same voice, every line you write to a durable a
 
 ## No em-dashes
 
-DO NOT use em-dashes (—) anywhere in any generated artifact. Includes `tasks.md`, `architecture.md`, ADRs, `CONTEXT.md`, `.out-of-scope/`, commit messages, PR bodies, and the SKILL.md files themselves.
+DO NOT use em-dashes (—) anywhere in any generated artifact. Includes `tasks.html`, `architecture.html`, ADRs, `CONTEXT.md`, `.out-of-scope/`, commit messages, PR bodies, and the SKILL.md files themselves.
 
 Substitute by job:
 
@@ -42,7 +42,7 @@ Worked examples (the `_Avoid_` line shows the forbidden em-dash; the `Use` line 
 
 ## Voice scope
 
-Two cadences inside a `tasks.md` task entry, picked by where the line lives.
+Two cadences inside a `tasks.html` task entry, picked by where the line lives.
 
 | Where | Cadence |
 |---|---|
