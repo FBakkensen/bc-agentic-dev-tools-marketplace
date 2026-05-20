@@ -74,11 +74,13 @@ Do not duplicate it in `-Body`.
 
 Body goes in a single-quoted here-string. Closing `'@` must be at column 0. The script handles role frame, dispatch, timeout, parse, and skip-line emission.
 
+Before running, substitute `<absolute path of this al-second-opinion skill directory>` with the actual filesystem path you loaded this `SKILL.md` from. Both Claude Code and Codex tell you that path at skill activation. DO NOT use `${CLAUDE_SKILL_DIR}` or `$env:CLAUDE_SKILL_DIR` here, PowerShell parses the first as an empty local variable and the second only resolves under Claude Code; both break the Codex branch.
+
 ```powershell
 $body = @'
 <artifact body - multiline OK, no escaping; closing '@ must be at column 0>
 '@
-& "${CLAUDE_SKILL_DIR}/scripts/Invoke-AlSecondOpinion.ps1" -Body $body
+& '<absolute path of this al-second-opinion skill directory>/scripts/Invoke-AlSecondOpinion.ps1' -Body $body
 ```
 
 Sandbox flags inside the script are the gate. DO NOT widen by passing extra `-c` overrides or environment variables that change the target CLI's sandbox posture. DO NOT add `--dangerously-bypass-approvals-and-sandbox` or `--dangerously-skip-permissions`. DO NOT edit the script to switch the codex sandbox to `workspace-write` or `danger-full-access`.
