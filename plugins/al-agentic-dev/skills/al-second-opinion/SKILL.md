@@ -76,6 +76,8 @@ Body goes in a single-quoted here-string. Closing `'@` must be at column 0. The 
 
 Before running, substitute `<absolute path of this al-second-opinion skill directory>` with the actual filesystem path you loaded this `SKILL.md` from. Both Claude Code and Codex tell you that path at skill activation. DO NOT use `${CLAUDE_SKILL_DIR}` or `$env:CLAUDE_SKILL_DIR` here, PowerShell parses the first as an empty local variable and the second only resolves under Claude Code; both break the Codex branch.
 
+DO NOT wrap this whole block inside another single-quoted here-string. The inner `'@` on the body's closing line sits at column 0 and will terminate the outer here-string early, cutting the block short. If you must embed the block inside an outer here-string (passing it to another tool, composing in a higher-order script), use the double-quoted outer form `@"..."@`, the inner `'@` does not terminate it.
+
 ```powershell
 $body = @'
 <artifact body - multiline OK, no escaping; closing '@ must be at column 0>
