@@ -64,7 +64,7 @@ After the green build, look for:
 
 ## Naming
 
-Rename when the name lies. BC term over generic programming term. AL reads naturally to AL developers. Apply your AL/BC vocabulary knowledge; read `CONTEXT.md` (`## Language` and `## Flagged ambiguities`) for project-specific terms and resolved aliases. `architecture.html`, ADRs under `docs/adr/`, and the existing codebase carry established conventions when `CONTEXT.md` is absent or thin. For multi-context repos, `CONTEXT-MAP.md` lists the contexts — pick the one covering the module under `src/<module>/`.
+Rename when the name lies. BC term over generic programming term. AL reads naturally to AL developers. Apply your AL/BC vocabulary knowledge; read `CONTEXT.md` (`## Language` and `## Flagged ambiguities`) for project-specific terms and resolved aliases. `architecture.html`, ADRs under `docs/adr/`, and the existing codebase carry established conventions when `CONTEXT.md` is absent or thin. For multi-context repos, `CONTEXT-MAP.md` lists the contexts; pick the one covering the module under `src/<module>/`.
 
 - **Objects:** `"Prefix Feature Suffix"`, suffixes `Impl`, `Card`, `List`, `Ext`, `Test`.
 - **Records** match the table name (`Customer`, `SalesHeader`). Primitives descriptive (`TotalBalance`, `IsBlocked`).

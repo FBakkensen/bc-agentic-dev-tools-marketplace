@@ -23,6 +23,24 @@ Read before writing to `tasks.html`:
 - `${CLAUDE_SKILL_DIR}/../../references/voice-contract.md`, voice rules, em-dash ban, one-line vs prose cadence map.
 - `${CLAUDE_SKILL_DIR}/../../references/notes-discipline.md`, destination map for chips, alerts, Notes lines, Summary regeneration rule.
 - `${CLAUDE_SKILL_DIR}/../../references/html-spec-discipline.md`, data-attribute contract, surgical-edit discipline.
+- `${CLAUDE_SKILL_DIR}/../../references/user-communication.md`, chat output shapes (Opener, Phase, Drafted scenarios, Second opinion, Replan, Close, Stop) and voice carve-outs from `voice-contract.md`.
+
+## User-facing chat
+
+The user invokes `/al-refine` without `tasks.html` open. Chat output must carry the task identity, the proposed Gherkin, and the state changes so the user can track progress and re-enter the flow without reading the file. Shapes defined in `user-communication.md`; this table maps them to flow steps.
+
+| Step | Shape |
+|---|---|
+| Pre-flight (resolve `tasks.html` guards) | **Stop (pre-flight)** on any halt: branch mismatch, blocked task, missing `architecture.html`, legacy markdown spec. |
+| Session start (after pre-flight, before Step 1) | **Opener** (`description-only` counts; quote the task description paragraph; "Reading architecture and walking codebase."). |
+| Steps 1-2 (parallel subagents) | **Phase boundary**: one acknowledgement line for parallel dispatch, one substantive line per phase as results return. |
+| Step 3 (refine description) | **Phase boundary** with one-line outcome if the description changed, omit if skipped. |
+| Step 4 (`/grill-me` when fuzzy) | `/grill-me` drives its own conversation; no chat shape from this skill while it runs. |
+| Step 5 (test layer per scenario) | Inline with step 6 output; no separate shape. |
+| Step 6 (drafted scenarios) | **Drafted scenarios** block echoed in chat before second opinion runs. |
+| Step 7 (second opinion) | **Second opinion** (aggregate outcome). |
+| Step 8 (replan check) | **Replan check** (pass or trigger fired). If hard-halt, **Stop (mid-flow)** with State / Next. |
+| Step 9 (write block) | **Close**. |
 
 ## Flow
 

@@ -71,6 +71,7 @@ Two tiers, on purpose.
 | `CONTEXT.template.md` | plugin-level | template materialised into the target repo's `CONTEXT.md` |
 | `adr.template.md` | plugin-level | template materialised into the target repo's `docs/adr/NNNN-<slug>.md` |
 | `voice-contract.md` | plugin-level | voice rules for prose; read by every skill that writes a durable artifact |
+| `user-communication.md` | plugin-level | chat output shapes (Opener / Phase / Per-bullet / Drafted scenarios / Second opinion / Replan / Close / Stop) and voice carve-outs from `voice-contract.md`; read by `/al-refine`, `/al-implement` |
 | `notes-discipline.md` | plugin-level | destination map for chips, alerts, Notes lines; Summary regeneration rule; read by every skill that writes `tasks.html` Notes or `.out-of-scope/` |
 | `html-spec-discipline.md` | plugin-level | aesthetic posture, data-attribute contract, Mermaid embedding, self-contained constraint, prior-spec consultation, surgical-edit discipline; read by `/al-design`, `/al-scope`, `/al-refine`, `/al-implement`, `/al-mutate`, `/al-steer` |
 | `cross-branch-numbering.md` | plugin-level | algorithm for picking `NNN` (spec folders) and `NNNN` (ADRs) across parallel branches; read by `/al-design`, `/al-grill-adr` |
@@ -100,6 +101,7 @@ references/                 # Plugin-level shared, read by ≥2 skills, or cited
 ├── LANGUAGE.md
 ├── bc-patterns.md
 ├── voice-contract.md       # Voice rules for prose
+├── user-communication.md   # Chat output shapes and voice carve-outs from voice-contract.md
 ├── notes-discipline.md     # Destination map for chips, alerts, Notes lines; Summary regeneration
 └── html-spec-discipline.md # Aesthetic posture, data-attribute contract, Mermaid, self-contained, prior-spec consultation
 skills/

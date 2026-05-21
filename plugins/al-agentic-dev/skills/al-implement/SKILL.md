@@ -18,6 +18,30 @@ Read before writing to `tasks.html`:
 - `${CLAUDE_SKILL_DIR}/../../references/voice-contract.md`, voice rules for the prose itself.
 - `${CLAUDE_SKILL_DIR}/../../references/notes-discipline.md`, what goes in a Notes line vs an ADR; trigger test; valid shapes.
 - `${CLAUDE_SKILL_DIR}/../../references/html-spec-discipline.md`, data-attribute contract and surgical-edit discipline.
+- `${CLAUDE_SKILL_DIR}/../../references/user-communication.md`, chat output shapes (Opener, Phase, Per-bullet, AL Runner ERROR, Second opinion, Replan, Close, Stop) and voice carve-outs from `voice-contract.md`.
+
+## User-facing chat
+
+The user invokes `/al-implement` without `tasks.html` open. The TDD loop is long; the user needs the task identity, each Gherkin bullet's body, named test and production output per RED / GREEN, and final state so they can track progress and re-enter without reading the file. Shapes defined in `user-communication.md`; this table maps them to flow steps.
+
+| Step | Shape |
+|---|---|
+| Pre-flight (resolve target paths and task input) | **Stop (pre-flight)** on any halt: branch mismatch, legacy markdown spec, blocked task, empty Tests slot. |
+| Step 1 (pick task + status flip) | **Opener** (`N Pure / M E2E` counts from the Tests slot; quote the task description paragraph; preview first bullet title). |
+| Step 2 (seam map) | **Phase boundary** with one-line seam in BC vocab. |
+| Step 3 (test layer per bullet) | Inline with per-bullet output; no separate shape. |
+| Step 4 (verify before transcribing) | **Phase boundary** if `/al-research` fires; no chat from this skill while research runs. |
+| Step 5 (tracer bullet) and Step 6 (scaffold) | **Phase boundary** for scaffold; first per-bullet output follows. |
+| Steps 7-9 (RED → GREEN per Gherkin bullet, cycle checklist) | **Per-bullet**: bullet header + Given/When/Then echoed + **RED** line (named test proc + codeunit + `/al-build` summary) + **GREEN** line (named production changes + `/al-build` summary). |
+| ERROR / exit 2 resolution inside the cycle | **AL Runner ERROR resolution** beat (not a Stop); one labelled line per resolution step taken. |
+| Step 10 (repeat 7-9) | One **Per-bullet** block per remaining bullet. |
+| Step 11 (`/al-refactor` mandatory full pass) | **Phase boundary** with one-line refactor outcome (renames, extracts, reshape). |
+| Step 12 (mutation plan) | **Phase boundary** when plan written, omit when skipped (logic unchanged). |
+| Step 13 (second opinion on mutations) | **Second opinion** (aggregate outcome), only when decision logic changed. |
+| Step 14 (commit WIP) | One short line naming the commit SHA. |
+| Step 15 (`/al-mutate`) | **Phase boundary** with one-line mutation outcome. |
+| Step 16 (replan check) | **Replan check** (pass or trigger fired). If hard-halt, **Stop (mid-flow)** with State / Next. |
+| Step 17 (close) | **Close**. |
 
 ## Philosophy
 
@@ -51,7 +75,7 @@ RIGHT (vertical):
   → /al-refactor (mandatory, full task diff) → /al-mutate
 ```
 
-Inline renames and obvious dedupe land inside GREEN as you write — substantive refactor (naming drift across bullets, project-vocab slip, reshape opportunities) lands at the per-task `/al-refactor` pass.
+Inline renames and obvious dedupe land inside GREEN as you write; substantive refactor (naming drift across bullets, project-vocab slip, reshape opportunities) lands at the per-task `/al-refactor` pass.
 
 ## Flow
 
@@ -64,14 +88,14 @@ Prefer parallel subagents for independent work and output-heavy steps.
 5. **Tracer bullet.** Pick the first Gherkin bullet that proves the seam end-to-end. Run cycle (steps 7–9). This bullet is the proof the path works.
 6. **Scaffold.** One-time per task. Create compilable stubs for the seam, interface declaration, procedure signatures, empty implementations, new test codeunit shell. Run `/al-build` to confirm green. Subsequent bullets reuse the scaffold. See `tdd-cycle.md`.
 7. **RED.** Transcribe one Gherkin bullet → AL test. Must compile and fail on **behaviour**, not on missing types. Run the gate (see *`/al-build`, the test gate*), confirm red.
-8. **GREEN.** Smallest production change that turns the test green. No speculative code, no anticipation of the next bullet. Rename obvious lies and dedupe inline as you write — substantive refactor lands at the per-task `/al-refactor` pass (step 11). Run the gate, confirm green.
+8. **GREEN.** Smallest production change that turns the test green. No speculative code, no anticipation of the next bullet. Rename obvious lies and dedupe inline as you write; substantive refactor lands at the per-task `/al-refactor` pass (step 11). Run the gate, confirm green.
 9. **Cycle checklist** (every red → green):
     - [ ] Test exercises the seam interface, `Access = Internal` for Pure bullets, public (page action, codeunit `Run`, event publisher) for E2E.
     - [ ] Test would survive a rename of any private procedure inside the unit.
     - [ ] Assertions read posting outcomes / ledger entries / document flow, not table shape or call order.
     - [ ] `[SCENARIO]` / `[GIVEN]` / `[WHEN]` / `[THEN]` restate the originating Gherkin bullet faithfully.
 10. **Repeat 7–9** for each remaining Gherkin bullet on the task.
-11. **`/al-refactor` (mandatory full pass).** All bullets green. Invoke `/al-refactor` against the whole task diff — every file touched by this task is in scope. Naming drift across bullets, project-vocabulary slip (per `CONTEXT.md`), duplication that only became visible after the second or third bullet, reshape opportunities — all surface here, not per-bullet. Mandatory before `/al-mutate`. Run the gate, must stay green.
+11. **`/al-refactor` (mandatory full pass).** All bullets green. Invoke `/al-refactor` against the whole task diff; every file touched by this task is in scope. Naming drift across bullets, project-vocabulary slip (per `CONTEXT.md`), duplication that only became visible after the second or third bullet, reshape opportunities: all surface here, not per-bullet. Mandatory before `/al-mutate`. Run the gate, must stay green.
 12. **Mutation plan.** If decision logic changed (see *When to mutate*), write a `**Mutations plan**` table inside the task block after the Tests slot per the *Canonical `**Mutations plan**` block* in `/al-mutate`: one row per mutation site in `/al-mutate` priority order, with an expected killer named pre-run. Otherwise write the `**Mutations**` chip directly to the task's NOTE alert with value `skipped, no decision logic changed.` and regenerate the Summary row.
 13. **Second opinion (gate)** on the mutation list, mandatory when decision logic changed.
 14. **Commit WIP.** Mandatory before `/al-mutate`. Its preflight requires `git status` empty so revert is `git checkout --` against a known-good baseline. Stage all task work (tests, production, scaffolding, `**Mutations plan**` block, `data-status="in-progress"`) and commit. Skip if `/al-mutate` is skipped.
