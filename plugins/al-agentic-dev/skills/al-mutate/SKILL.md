@@ -91,15 +91,16 @@ Top-down by signal-per-minute. Pick the class that exercises decision logic. Nev
 
 1. Resolve `tasks.html` per the rule above. Standalone if no match.
 2. Read the calling task ID + Mutations plan block when invoked from `/al-implement`; otherwise build a mutation plan from the requested target file or area.
-3. Run preflight.
+3. Run preflight. Baseline green = full `/al-build` passes.
 4. For each mutation in the plan, one at a time:
    - Apply the mutation to one site.
    - Run `/al-build` with tests. *P-layer mutations gate via `/al-build -UnitTestOnly` when `unitTestApp` is configured; AL Runner ERROR / exit 2 from a mutation means "broke runner contract", not a survivor: note and skip. See `al-runner.md`.*
    - Classify per the table below.
-   - Revert with `git checkout -- <file>`.
-   - Verify revert by re-running `/al-build`. Baseline must return green. If not, abort and surface the broken revert.
-5. Write the report at `.output/mutation-report/<YYYYMMDD-HHMMSS>.md`.
-6. When invoked from `/al-implement`, update the calling task's `<details>` in `tasks.html`:
+   - Revert with `git checkout -- .`.
+   - Verify revert with `git diff --quiet HEAD`. Working tree must match HEAD. If not, abort and surface the broken revert. *No `/al-build` here; the preflight + closing gates own baseline-green proof.*
+5. Closing gate: run full `/al-build`. Must be green. If not, abort and surface the broken state, do not write the report or update `tasks.html`.
+6. Write the report at `.output/mutation-report/<YYYYMMDD-HHMMSS>.md`.
+7. When invoked from `/al-implement`, update the calling task's `<details>` in `tasks.html`:
    - Delete the entire Mutations plan block (the element with `data-section="mutations-plan"`).
    - Write the Mutations chip into the task's NOTE alert: `**Mutations**: N killed, M equivalent (reason: ...), K survivors.` Join with existing chips via ` · ` separator. Add the `<aside data-alert="note">` if the task does not have one (Edit anchored on `<details data-task="T-NNN">`).
    - Regenerate the Summary table; locate the row via `<tr data-summary-row="T-NNN">` and update its Mutations cell to match the chip value.
