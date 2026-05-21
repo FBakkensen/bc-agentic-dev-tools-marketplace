@@ -49,6 +49,7 @@ Write-BuildMessage -Type Detail -Message "Username: $($config.ContainerUsername)
 Write-BuildMessage -Type Detail -Message "Authentication: $($config.ContainerAuth)"
 Write-BuildMessage -Type Detail -Message "Artifact Country: $($config.ArtifactCountry)"
 Write-BuildMessage -Type Detail -Message "Artifact Selection: $($config.ArtifactSelect)"
+Write-BuildMessage -Type Detail -Message "Memory Limit: $($config.MemoryLimit)"
 if ($config.ApplicationInsightsConnectionString) {
     Write-BuildMessage -Type Detail -Message "Application Insights: Enabled"
 } else {
@@ -82,7 +83,7 @@ $containerParams = @{
     includeTestLibrariesOnly = $true
     dns                   = '8.8.8.8'
     useBestContainerOS    = $true
-    memoryLimit           = '8g'
+    memoryLimit           = $config.MemoryLimit
     isolation             = 'process'
     updateHosts           = $true
 }

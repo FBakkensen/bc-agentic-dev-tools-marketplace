@@ -15,7 +15,7 @@
     Docker image to use. Defaults to container.imageName from al-build.json.
 
 .PARAMETER MemoryLimit
-    Memory limit for the container (default: 8g).
+    Memory limit for the container. Defaults to container.memoryLimit from al-build.json (or '8g' if omitted).
 
 .EXAMPLE
     pwsh -File new-agent-container.ps1
@@ -29,7 +29,7 @@
 param(
     [string]$AgentName,
     [string]$ImageName,
-    [string]$MemoryLimit = '8g'
+    [string]$MemoryLimit
 )
 
 Set-StrictMode -Version Latest
@@ -49,6 +49,7 @@ if (-not (Get-Module -Name $buildOpsModuleName)) {
 # Load configuration and apply defaults if parameters not provided
 $config = Get-BuildConfig
 if (-not $ImageName) { $ImageName = $config.ImageName }
+if (-not $MemoryLimit) { $MemoryLimit = $config.MemoryLimit }
 
 $Exit = Get-ExitCode
 

@@ -103,6 +103,7 @@ The plugin's `config/al-build.json` is a template, not the live config. Copy it 
 | `ALBT_BC_CONTAINER_PASSWORD` | Container password | `P@ssw0rd` |
 | `ALBT_BC_ARTIFACT_COUNTRY` | BC artifact country | `w1` |
 | `ALBT_BC_ARTIFACT_SELECT` | BC version selection | `Latest` |
+| `ALBT_BC_MEMORY_LIMIT` | Docker container memory limit | `8g` |
 
 ### Project config
 

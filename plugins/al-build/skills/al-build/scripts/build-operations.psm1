@@ -155,6 +155,7 @@ function Get-BuildConfig {
         ArtifactSelect                      = Resolve-ContainerValue 'artifactSelect' 'ALBT_BC_ARTIFACT_SELECT' 'Latest'
         GoldenContainerName                 = Resolve-ContainerValue 'name' 'ALBT_BC_GOLDEN_CONTAINER_NAME' 'bctest'
         ImageName                           = Resolve-ContainerValue 'imageName' 'ALBT_BC_IMAGE_NAME' 'bctest:snapshot'
+        MemoryLimit                         = Resolve-ContainerValue 'memoryLimit' 'ALBT_BC_MEMORY_LIMIT' '8g'
         Tenant                              = Resolve-Value 'tenant' 'ALBT_BC_TENANT' 'default'
         ValidateCurrent                     = Resolve-Value 'validateCurrent' 'ALBT_VALIDATE_CURRENT' '1'
         ApplicationInsightsConnectionString = Resolve-Value 'applicationInsightsConnectionString' 'ALBT_APPLICATION_INSIGHTS_CONNECTION_STRING' ''
@@ -189,6 +190,7 @@ function Set-BuildEnvironment {
     $env:ALBT_BC_ARTIFACT_SELECT = $Config.ArtifactSelect
     $env:ALBT_BC_GOLDEN_CONTAINER_NAME = $Config.GoldenContainerName
     $env:ALBT_BC_IMAGE_NAME = $Config.ImageName
+    $env:ALBT_BC_MEMORY_LIMIT = $Config.MemoryLimit
     $env:ALBT_BC_TENANT = $Config.Tenant
     $env:ALBT_VALIDATE_CURRENT = $Config.ValidateCurrent
     $env:ALBT_APPLICATION_INSIGHTS_CONNECTION_STRING = $Config.ApplicationInsightsConnectionString
