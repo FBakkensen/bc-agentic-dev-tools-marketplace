@@ -1,6 +1,6 @@
 ---
 name: al-refine
-description: One task → numbered Gherkin scenarios for AL/Business Central. Reads architecture.html and the codebase to spec how the behaviour is tested, runs /grill-me when intent is fuzzy, confirms the per-scenario test layer, walks the seven replan triggers, then writes compressed Gherkin bullets into the task's Tests slot in tasks.html. Use after /al-scope places a bare task entry. Per task, not per feature.
+description: One task → numbered Gherkin scenarios for AL/Business Central. Reads architecture.html, CONTEXT.md, and the codebase to spec how the behaviour is tested, runs /grill-me when intent is fuzzy, confirms the per-scenario test layer, walks the seven replan triggers, then writes compressed Gherkin bullets into the task's Tests slot in tasks.html. Use after /al-scope places a bare task entry. Per task, not per feature.
 ---
 
 # /al-refine, Task to Gherkin
@@ -32,7 +32,7 @@ The user invokes `/al-refine` without `tasks.html` open. Chat output must carry 
 | Step | Shape |
 |---|---|
 | Pre-flight (resolve `tasks.html` guards) | **Stop (pre-flight)** on any halt: branch mismatch, blocked task, missing `architecture.html`, legacy markdown spec. |
-| Session start (after pre-flight, before Step 1) | **Opener** (`description-only` counts; quote the task description paragraph; "Reading architecture and walking codebase."). |
+| Session start (after pre-flight, before Step 1) | **Opener** (`description-only` counts; quote the task description paragraph; "Reading architecture, CONTEXT.md, and walking codebase."). |
 | Steps 1-2 (parallel subagents) | **Phase boundary**: one acknowledgement line for parallel dispatch, one substantive line per phase as results return. |
 | Step 3 (refine description) | **Phase boundary** with one-line outcome if the description changed, omit if skipped. |
 | Step 4 (`/grill-me` when fuzzy) | `/grill-me` drives its own conversation; no chat shape from this skill while it runs. |
@@ -51,6 +51,8 @@ Parallelise step 1 and step 2 in subagents.
 Module map. R → P → W boundary. Brownfield touchpoints. Family-level test layer covering this task. Note the default (Pure, E2E, or Both) and which scenario families the family-level decision covers.
 
 **Slice context.** Read the Slice(s) (Event Modeling) paragraph that this task contributes to. For *wire* tasks (those crossing the slice's trigger), Gherkin scenarios must cross the trigger → state path of the slice. For *primitive / extract / fix / refactor* tasks, scenarios stay at the task's own scope; the slice is upstream context, not the per-task spec. Vertical slicing (tests + code together) is inherited from `/al-scope`.
+
+**Project vocabulary.** Resolve `CONTEXT.md` for this task. If `CONTEXT-MAP.md` exists at the target repo root, route via the architecture's module map: each `src/<module>/` this task touches points at the matching `src/<module>/CONTEXT.md`; read all of them. On vocabulary conflict between modules, prefer the module the slice trigger lives in. Otherwise read root `CONTEXT.md`. If neither exists, emit one chat line, *"CONTEXT.md not found; titles will use BC vocabulary only. Run `/al-grill-adr` to bootstrap project vocabulary."*, and proceed without vocabulary input. The `Language`, `Relationships`, and `Flagged ambiguities` sections feed scenario title naming (step 6) and the vocabulary axis of the second-opinion gate (step 7).
 
 ### 2. Walk the codebase
 
@@ -107,9 +109,13 @@ Title cadence: positional, BaseApp PascalCase, behaviour not implementation:
 |---|---|
 | _Avoid_: | `GivenEmptyCart_WhenCheckout_ThenError`, `Test_Cancel_Order_Works`, `should_post_invoice` |
 | _Avoid_: | `UsesCodeunit80ToPostSalesHeader` (names the implementation, not the behaviour) |
+| _Avoid_: | `CloseBatchWithEntries` when CONTEXT.md defines **Settlement Batch** and `_Avoid_:` lists `batch` |
 | Use: | `PostSalesOrderWithItemCharge`, `RuleSetCopyPreservesIntervals`, `BlockedCustomerCannotPostInvoice` |
+| Use: | `CloseSettlementBatchWithEntries` matching a CONTEXT.md `Language` term |
 
 **Anti-pattern: scenario title that names the implementation, not the behaviour.** The codeunit number, event name, or table accessor belongs in the body, not the title. Title survives refactors. Implementation does not.
+
+**Project terms over bare BC.** When a scenario touches a CONTEXT.md `Language` term, the title carries the project term. BC vocabulary stands only when the operation is BC-native and CONTEXT.md does not name a more specific term. CONTEXT.md `_Avoid_:` aliases are forbidden in titles. Missing CONTEXT.md (chat note from step 1) → BC vocabulary only.
 
 Scenario body cadence: drop articles, one-line per bullet. BC vocabulary is the compression. Field/codeunit/table names verbatim.
 
@@ -128,7 +134,7 @@ Mandatory for non-trivial. Cross-check Gherkin bullets via `/al-second-opinion`.
 
 Invoke `/al-second-opinion` with the prompt body below.
 
-**Prompt body shape:** task title + description paragraph + Gherkin bullets + *"what scenarios, negatives, or boundaries are missing or wrong? AND does this surface any of the seven replan triggers? Return a bulleted list."*
+**Prompt body shape:** task title + description paragraph + Gherkin bullets + CONTEXT.md `Language` excerpt if resolved in step 1 + *"what scenarios, negatives, or boundaries are missing or wrong? AND does this surface any of the seven replan triggers? AND do scenario titles use project vocabulary from CONTEXT.md `Language` where applicable, or have they drifted to bare BC or generic terms? Return a bulleted list."*
 
 Reconcile each returned bullet, accept (update) or reject. Rejection rationale stays in the session; DO NOT write it to Notes. If a rejection encodes a durable principle, escalate via `/al-steer` to `/al-grill-adr` or `/al-design`. `/grill-me` when judgement needs the user. If `/al-second-opinion` returns `Second opinion skipped: <reason>`, note it in session and proceed.
 
@@ -266,6 +272,7 @@ One line max. No fixture mechanics, no implementation choices beyond explicit de
 
 ```
 [ ] Title is positional PascalCase; no Given_When_Then; no implementation name
+[ ] Titles use CONTEXT.md `Language` terms where applicable; no `_Avoid_:` aliases
 [ ] Body cites real fields/codeunits/events; grep finds them
 [ ] ZOMBIES letters covered across the task (Pure + E2E combined) or explicitly skipped (Notes line)
 [ ] Both positive and negative where the letter admits
