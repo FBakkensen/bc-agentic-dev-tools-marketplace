@@ -1299,30 +1299,28 @@ function Unregister-AgentContainer {
 function Get-GitRepoIdentifier {
     <#
     .SYNOPSIS
-        Get a unique identifier for the current git repository
+        Get a unique identifier for the current git clone
     .DESCRIPTION
-        Returns a unique identifier for the repository that is consistent across
-        git worktrees. Uses the remote origin URL when available, falling back to
-        the repository root path (prefixed with 'local:') for local-only repos.
+        Returns the resolved path to the clone's common git directory, prefixed
+        with 'local:'. Consistent across linked worktrees of one clone (they
+        share the same .git/), distinct across separate clones of the same
+        remote (each has its own .git/). Returns $null when not in a git repo.
     .OUTPUTS
-        Remote origin URL, 'local:<repo-path>', or $null if not in a git repo
+        'local:<resolved-common-dir>' or $null
     #>
     [CmdletBinding()]
     param()
 
-    # Try remote origin URL first (shared across worktrees)
-    $remoteUrl = git config --get remote.origin.url 2>$null
-    if ($LASTEXITCODE -eq 0 -and $remoteUrl) {
-        return $remoteUrl.Trim()
+    $commonDir = git rev-parse --git-common-dir 2>$null
+    if ($LASTEXITCODE -ne 0 -or -not $commonDir) {
+        return $null
     }
 
-    # Fallback to repo root for local-only repos (no remote configured)
-    $repoRoot = git rev-parse --show-toplevel 2>$null
-    if ($LASTEXITCODE -eq 0 -and $repoRoot) {
-        # Prefix with 'local:' to distinguish from remote URLs
-        return "local:$($repoRoot.Replace('\', '/'))"
+    $resolved = Resolve-Path -LiteralPath $commonDir -ErrorAction SilentlyContinue
+    if ($resolved) {
+        return "local:$($resolved.Path.Replace('\', '/'))"
     }
-    return $null
+    return "local:$($commonDir.Replace('\', '/'))"
 }
 
 function Test-GitBranchExists {
