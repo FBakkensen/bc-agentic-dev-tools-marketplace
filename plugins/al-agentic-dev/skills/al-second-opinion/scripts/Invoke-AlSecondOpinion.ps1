@@ -43,6 +43,7 @@ $job = Start-Job {
                 --skip-git-repo-check `
                 --color never `
                 --json `
+                --enable fast_mode `
                 -c 'model_reasoning_effort="medium"' `
                 $using:prompt 2>&1
             $exit = $LASTEXITCODE
