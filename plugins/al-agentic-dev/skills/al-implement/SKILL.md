@@ -27,7 +27,7 @@ The user invokes `/al-implement` without `tasks.html` open. The TDD loop is long
 | Step | Shape |
 |---|---|
 | Pre-flight (resolve target paths and task input) | **Stop (pre-flight)** on any halt: branch mismatch, legacy markdown spec, blocked task, empty Tests slot. |
-| Step 1 (pick task + status flip) | **Opener** (`N Pure / M E2E` counts from the Tests slot; quote the task description paragraph; preview first bullet title). |
+| Step 1 (pick task + status flip) | **Opener** (chip line with title + status flip; two-column table with `Pure` / `E2E` counts from the Tests slot and `First` pointer to bullet 1). |
 | Step 2 (seam map) | **Phase boundary** with one-line seam in BC vocab. |
 | Step 3 (test layer per bullet) | Inline with per-bullet output; no separate shape. |
 | Step 4 (verify before transcribing) | **Phase boundary** if `/al-research` fires; no chat from this skill while research runs. |

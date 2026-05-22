@@ -32,7 +32,7 @@ The user invokes `/al-refine` without `tasks.html` open. Chat output must carry 
 | Step | Shape |
 |---|---|
 | Pre-flight (resolve `tasks.html` guards) | **Stop (pre-flight)** on any halt: branch mismatch, blocked task, missing `architecture.html`, legacy markdown spec. |
-| Session start (after pre-flight, before Step 1) | **Opener** (`description-only` counts; quote the task description paragraph; "Reading architecture, CONTEXT.md, and walking codebase."). |
+| Session start (after pre-flight, before Step 1) | **Opener** (chip line with title + status; two-column table with `Scenarios` state and `Next` pointer to the drafting phase). |
 | Steps 1-2 (parallel subagents) | **Phase boundary**: one acknowledgement line for parallel dispatch, one substantive line per phase as results return. |
 | Step 3 (refine description) | **Phase boundary** with one-line outcome if the description changed, omit if skipped. |
 | Step 4 (`/grill-me` when fuzzy) | `/grill-me` drives its own conversation; no chat shape from this skill while it runs. |
