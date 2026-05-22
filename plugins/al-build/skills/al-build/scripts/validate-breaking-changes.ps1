@@ -124,18 +124,31 @@ try {
     $probingPaths = Get-AlGoDependencyProbingPaths -WorkspaceRoot (Get-Location)
 
     foreach ($dependency in $probingPaths) {
-        $repo = Get-RepoFromUrl $dependency.repo
+        try {
+            $spec = Get-RepoFromUrl $dependency.repo
+        } catch {
+            Write-BuildMessage -Type Error -Message "Unparseable repo URL '$($dependency.repo)': $_"
+            exit $Exit.Contract
+        }
+
+        if (-not (Test-GhHostAuthentication -HostName $spec.HostName)) {
+            Write-BuildMessage -Type Error -Message "Not authenticated to $($spec.HostName). Run: gh auth login --hostname $($spec.HostName)"
+            exit $Exit.Contract
+        }
+
         $releaseTag = if ($dependency.version -eq 'latest' -or -not $dependency.version) { 'latest' } else { $dependency.version }
+        $repoDisplay = "$($spec.Owner)/$($spec.Repo)"
 
-        Write-BuildMessage -Type Step -Message "Downloading dependency: $repo ($releaseTag)"
+        Write-BuildMessage -Type Step -Message "Downloading dependency: $repoDisplay ($releaseTag) from $($spec.HostName)"
 
-        $depDir = Join-Path $tempDir "deps_$($repo.Replace('/', '_'))"
+        $depDir = Join-Path $tempDir ("deps_{0}_{1}_{2}" -f $spec.HostName.Replace('.', '_'), $spec.Owner, $spec.Repo)
         New-Item -ItemType Directory -Path $depDir -Force | Out-Null
 
-        $depApps = @(Get-ReleaseAppFiles -ReleaseTag $releaseTag -Repo $repo -OutputDir $depDir -ExcludeTest $true)
+        $repoArg = "$($spec.HostName)/$($spec.Owner)/$($spec.Repo)"
+        $depApps = @(Get-ReleaseAppFiles -ReleaseTag $releaseTag -Repo $repoArg -OutputDir $depDir -ExcludeTest $true)
 
         if ($depApps.Count -eq 0) {
-            Write-BuildMessage -Type Error -Message "No apps found in $repo"
+            Write-BuildMessage -Type Error -Message "No apps found in $repoDisplay on $($spec.HostName)"
             exit $Exit.Contract
         }
 

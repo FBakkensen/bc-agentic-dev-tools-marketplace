@@ -1,5 +1,5 @@
 {
   "name": "al-build",
   "description": "Build and test AL apps for Business Central. Compiles and runs tests locally using a local Docker container. Includes quality gate hook.",
-  "version": "3.1.1"
+  "version": "3.1.2"
 }

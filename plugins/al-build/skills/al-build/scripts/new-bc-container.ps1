@@ -171,11 +171,17 @@ Write-BuildHeader 'Installing AL-Go Dependencies'
 
 Write-BuildMessage -Type Step -Message "Checking for AL-Go dependencies..."
 $workspaceRoot = (Get-Location).Path
-$installedCount = Install-AlGoDependencies -ContainerName $containerName -Credential $credential -WorkspaceRoot $workspaceRoot
-if ($installedCount -gt 0) {
-    Write-BuildMessage -Type Success -Message "Installed $installedCount dependency app(s)"
-} else {
-    Write-BuildMessage -Type Detail -Message "No dependencies installed"
+$depResult = Install-AlGoDependencies -ContainerName $containerName -Credential $credential -WorkspaceRoot $workspaceRoot
+$installedCount = $depResult.Installed
+if ($depResult.Installed -gt 0) {
+    Write-BuildMessage -Type Success -Message "Installed $($depResult.Installed) dependency app(s)"
+}
+if ($depResult.Failed -gt 0) {
+    Write-BuildMessage -Type Error -Message "$($depResult.Failed) of $($depResult.ProbingPaths) AL-Go probing path(s) failed; see warnings above. Container will not be prepared for commit."
+    exit 1
+}
+if ($depResult.ProbingPaths -eq 0) {
+    Write-BuildMessage -Type Detail -Message "No dependencies configured"
 }
 
 Write-BuildHeader 'Summary'

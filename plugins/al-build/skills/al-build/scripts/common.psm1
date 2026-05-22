@@ -1846,22 +1846,58 @@ function Test-GhAuthentication {
     }
 }
 
+function Test-GhHostAuthentication {
+    <#
+    .SYNOPSIS
+        Check if GitHub CLI (gh) is authenticated to a specific host.
+    .PARAMETER HostName
+        Host to check (e.g. github.com, mytenant.ghe.com).
+    .OUTPUTS
+        $true if authenticated to that host, $false otherwise.
+    #>
+    param([Parameter(Mandatory)][string]$HostName)
+    try {
+        $null = gh auth status --hostname $HostName 2>&1
+        return $LASTEXITCODE -eq 0
+    } catch {
+        return $false
+    }
+}
+
 function Get-RepoFromUrl {
     <#
     .SYNOPSIS
-        Extract owner/repo from GitHub URL
+        Parse a Git repository URL into a structured spec.
+    .DESCRIPTION
+        Accepts HTTPS (github.com, *.ghe.com, custom hosts), SSH (git@host:owner/repo),
+        and bare owner/repo forms. A trailing .git is stripped. Bare form is treated as
+        github.com. Throws on unparseable input.
     .PARAMETER Url
-        Full GitHub URL (e.g., https://github.com/owner/repo) or owner/repo format
+        Repository URL or owner/repo slug.
     .OUTPUTS
-        String in format "owner/repo"
+        [pscustomobject] with HostName, Owner, Repo properties.
+    .EXAMPLE
+        Get-RepoFromUrl 'https://mytenant.ghe.com/acme/widget.git'
+        # HostName=mytenant.ghe.com  Owner=acme  Repo=widget
     #>
-    param([string]$Url)
+    param([Parameter(Mandatory)][string]$Url)
 
-    if ($Url -match 'github\.com[/:]([^/]+)/([^/]+?)(?:\.git)?$') {
-        return "$($Matches[1])/$($Matches[2])"
+    # SSH: git@HOST:OWNER/REPO[.git]
+    if ($Url -match '^git@([^:]+):([^/]+)/([^/]+?)(?:\.git)?$') {
+        return [pscustomobject]@{ HostName = $Matches[1]; Owner = $Matches[2]; Repo = $Matches[3] }
     }
-    # Already in owner/repo format
-    return $Url
+
+    # HTTPS: https?://HOST/OWNER/REPO[.git]
+    if ($Url -match '^https?://([^/]+)/([^/]+)/([^/]+?)(?:\.git)?$') {
+        return [pscustomobject]@{ HostName = $Matches[1]; Owner = $Matches[2]; Repo = $Matches[3] }
+    }
+
+    # Bare: OWNER/REPO[.git] -> assume github.com. Segments may contain dots (e.g. vscode.dev).
+    if ($Url -match '^([^/:@\s]+)/([^/:@\s]+?)(?:\.git)?$') {
+        return [pscustomobject]@{ HostName = 'github.com'; Owner = $Matches[1]; Repo = $Matches[2] }
+    }
+
+    throw "Unrecognized repository URL format: '$Url'"
 }
 
 function Get-ReleaseAppFiles {
@@ -1874,7 +1910,10 @@ function Get-ReleaseAppFiles {
     .PARAMETER ReleaseTag
         Release tag to download (e.g., "27.4.0" or "latest")
     .PARAMETER Repo
-        Repository in "owner/repo" format (optional, uses current repo if not specified)
+        Repository slug passed to `gh release download --repo`. Accepts both
+        two-segment "owner/repo" (assumed github.com) and three-segment
+        "host/owner/repo" (e.g. "mytenant.ghe.com/acme/widget") forms.
+        Optional; if omitted, gh uses the current repository.
     .PARAMETER OutputDir
         Directory to extract files to
     .PARAMETER ExcludeTest
@@ -2003,7 +2042,9 @@ function Install-AlGoDependencies {
     .DESCRIPTION
         Reads appDependencyProbingPaths from .AL-Go/settings.json, downloads release
         artifacts using GitHub CLI (gh), extracts .app files, and publishes them
-        to the specified BC container.
+        to the specified BC container. Supports github.com and *.ghe.com (and other
+        custom-host) probing paths in the same settings.json. Authentication is
+        checked per host so a gap on one host does not block the others.
     .PARAMETER ContainerName
         Name of the BC container
     .PARAMETER Credential
@@ -2011,7 +2052,8 @@ function Install-AlGoDependencies {
     .PARAMETER WorkspaceRoot
         Root directory of the workspace (defaults to current directory)
     .OUTPUTS
-        Count of successfully installed dependency apps
+        [pscustomobject] with Installed (apps published), Failed (probing paths
+        that failed at any stage), and ProbingPaths (total configured).
     #>
     param(
         [Parameter(Mandatory)]
@@ -2026,43 +2068,54 @@ function Install-AlGoDependencies {
     $probingPaths = Get-AlGoDependencyProbingPaths -WorkspaceRoot $WorkspaceRoot
     if (-not $probingPaths -or $probingPaths.Count -eq 0) {
         Write-BuildMessage -Type Detail -Message "No dependency probing paths configured"
-        return 0
-    }
-
-    # Check gh CLI authentication
-    if (-not (Test-GhAuthentication)) {
-        Write-BuildMessage -Type Warning -Message "GitHub CLI (gh) is not authenticated. Run 'gh auth login' to authenticate."
-        Write-BuildMessage -Type Warning -Message "Skipping dependency installation."
-        return 0
+        return [pscustomobject]@{ Installed = 0; Failed = 0; ProbingPaths = 0 }
     }
 
     $installedCount = 0
+    $failedCount = 0
     $tempDir = New-TemporaryDirectory
 
     try {
         foreach ($dependency in $probingPaths) {
-            $repo = Get-RepoFromUrl $dependency.repo
-            Write-BuildMessage -Type Step -Message "Processing dependency: $repo"
+            try {
+                $spec = Get-RepoFromUrl $dependency.repo
+            } catch {
+                Write-BuildMessage -Type Warning -Message "Unparseable repo URL '$($dependency.repo)': $_"
+                $failedCount++
+                continue
+            }
+
+            $repoDisplay = "$($spec.Owner)/$($spec.Repo)"
+            Write-BuildMessage -Type Step -Message "Processing dependency: $repoDisplay ($($spec.HostName))"
+
+            if (-not (Test-GhHostAuthentication -HostName $spec.HostName)) {
+                Write-BuildMessage -Type Warning -Message "Not authenticated to $($spec.HostName). Run: gh auth login --hostname $($spec.HostName) — skipping $repoDisplay"
+                $failedCount++
+                continue
+            }
 
             # Determine release tag based on version
             $releaseTag = if ($dependency.version -eq 'latest' -or -not $dependency.version) { 'latest' } else { $dependency.version }
 
-            # Download release assets matching *Apps*.zip pattern
-            $downloadDir = Join-Path $tempDir $repo.Replace('/', '_')
+            # Windows-safe download dir: host dots collapsed to underscores
+            $downloadDir = Join-Path $tempDir ("{0}_{1}_{2}" -f $spec.HostName.Replace('.', '_'), $spec.Owner, $spec.Repo)
             New-Item -ItemType Directory -Path $downloadDir -Force | Out-Null
 
             try {
-                Write-BuildMessage -Type Detail -Message "Downloading release '$releaseTag' from $repo"
+                Write-BuildMessage -Type Detail -Message "Downloading release '$releaseTag' from $repoDisplay"
 
-                # Use gh release download with pattern matching
-                $ghArgs = @('release', 'download', '--repo', $repo, '--pattern', '*Apps*.zip', '--dir', $downloadDir)
+                # Three-segment --repo routes gh to the named host (github.com, *.ghe.com, custom).
+                $repoArg = "$($spec.HostName)/$($spec.Owner)/$($spec.Repo)"
+                $ghArgs = @('release', 'download', '--repo', $repoArg, '--pattern', '*Apps*.zip', '--dir', $downloadDir)
                 if ($releaseTag -ne 'latest') {
                     $ghArgs += $releaseTag
                 }
 
                 $ghOutput = & gh @ghArgs 2>&1
                 if ($LASTEXITCODE -ne 0) {
-                    Write-BuildMessage -Type Warning -Message "Failed to download release from $repo : $ghOutput"
+                    $firstLine = ($ghOutput | Select-Object -First 1) -as [string]
+                    Write-BuildMessage -Type Warning -Message "gh release download failed for $repoDisplay on $($spec.HostName) (exit $LASTEXITCODE): $firstLine"
+                    $failedCount++
                     continue
                 }
 
@@ -2070,9 +2123,13 @@ function Install-AlGoDependencies {
                 $zipFiles = @(Get-ChildItem -Path $downloadDir -Filter '*.zip' -ErrorAction SilentlyContinue |
                               Where-Object { $_.Name -notlike '*TestApps*' })
                 if ($zipFiles.Count -eq 0) {
-                    Write-BuildMessage -Type Warning -Message "No *Apps*.zip assets found in release from $repo"
+                    Write-BuildMessage -Type Warning -Message "No *Apps*.zip assets found in release from $repoDisplay"
+                    $failedCount++
                     continue
                 }
+
+                $publishSucceeded = $false
+                $publishFailed = $false
 
                 # Extract and publish each zip
                 foreach ($zipFile in $zipFiles) {
@@ -2094,13 +2151,21 @@ function Install-AlGoDependencies {
 
                             Write-BuildMessage -Type Success -Message "Installed: $($appFile.Name)"
                             $installedCount++
+                            $publishSucceeded = $true
                         } catch {
-                            Write-BuildMessage -Type Warning -Message "Failed to publish $($appFile.Name): $_"
+                            Write-BuildMessage -Type Warning -Message "Failed to publish $($appFile.Name) from $repoDisplay : $_"
+                            $publishFailed = $true
                         }
                     }
                 }
+
+                # Count probing path as failed if any publish failed or nothing was installed.
+                if ($publishFailed -or -not $publishSucceeded) {
+                    $failedCount++
+                }
             } catch {
-                Write-BuildMessage -Type Warning -Message "Error processing dependency $repo : $_"
+                Write-BuildMessage -Type Warning -Message "Error processing dependency $repoDisplay : $_"
+                $failedCount++
             }
         }
     } finally {
@@ -2110,7 +2175,11 @@ function Install-AlGoDependencies {
         }
     }
 
-    return $installedCount
+    return [pscustomobject]@{
+        Installed    = $installedCount
+        Failed       = $failedCount
+        ProbingPaths = $probingPaths.Count
+    }
 }
 
 # =============================================================================
@@ -2549,6 +2618,7 @@ Export-ModuleMember -Function @(
 
     # GitHub CLI Integration
     'Test-GhAuthentication'
+    'Test-GhHostAuthentication'
     'Get-RepoFromUrl'
     'Get-ReleaseAppFiles'
 
