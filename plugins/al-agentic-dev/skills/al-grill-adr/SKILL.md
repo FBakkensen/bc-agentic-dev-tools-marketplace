@@ -5,102 +5,81 @@ description: Domain-aware grilling for AL/Business Central, sharpens BC vocabula
 
 # /al-grill-adr, Domain-aware grilling for AL/Business Central
 
-<what-to-do>
+Interview the user about domain intent, one question at a time, cross-referencing the codebase when the codebase can answer. The artifact's job: sharpen `CONTEXT.md` until BC vocabulary is unambiguous and offer domain ADRs when the constraint behind a choice is hard to reverse and worth preserving. Architectural picks belong to `/al-design`; this skill stays in the domain.
 
-Interview me relentlessly about every aspect of this plan until we reach a shared understanding. Walk down each branch of the design tree, resolving dependencies between decisions one-by-one. For each question, provide your recommended answer.
+`/al-design` reads the resulting `CONTEXT.md` and `docs/adr/` next.
 
-Ask the questions one at a time, waiting for feedback on each question before continuing.
+## Preconditions
 
-If a question can be answered by exploring the codebase, explore the codebase instead.
+- None hard. Run before `/al-design` to crystallise intent, or standalone mid-feature when a fuzzy term or hidden trade-off surfaces.
+- If `CONTEXT.md` is missing at the repo root, materialise it from `${CLAUDE_SKILL_DIR}/../../references/CONTEXT.template.md` on first term that resolves. If `docs/adr/` is missing, materialise the first ADR from `${CLAUDE_SKILL_DIR}/../../references/adr.template.md` on first accept. Templates are read, not edited here.
 
-</what-to-do>
+## What goes into CONTEXT.md and domain ADRs
 
-<supporting-info>
+What the durable artifacts need from you, expressed as questions you must have answers to before walking away:
 
-## Domain awareness
+- **Which BC term in this conversation is ambiguous, overloaded, or conflicts with `CONTEXT.md` as written?** Resolve to a canonical name. Standard Microsoft BC terms (`Sales Header`, `Customer`, `Posting Date`) are the baseline; record only what this project narrows, extends, or names that Microsoft doesn't.
+- **What concrete scenario forces the boundary between two concepts to be precise?** Partial posting, prepayment, reversal, dimension inheritance, multi-company, AppSource constraint. Stress the relationship until the user is precise about where one concept ends and the next begins.
+- **Where does the user's stated behaviour disagree with the code?** Surface the contradiction; do not paper over it. The right resolution is the user's call, but the conflict must be named.
+- **Is the slice's trigger, command, event, state, and view named clearly enough that `/al-design` can fill the slice without guessing?** Trigger source decides the slice pattern (Command / Automation / Translation / View); see `${CLAUDE_SKILL_DIR}/../../references/LANGUAGE.md` *Slice* entry. Filling the slice is `/al-design`'s job; making the inputs nameable is yours.
+- **Does any domain constraint surfaced here cross the four-of-four ADR bar?** If yes, offer the ADR inline.
 
-During codebase exploration, also look for existing documentation:
+If a question stays unanswerable, the grilling is not done. Keep going, or `/al-research` if the gap is BC behavioural fact rather than user intent.
 
-```
-/
-├── CONTEXT.md
-├── docs/
-│   └── adr/
-│       ├── 0001-partial-posting-policy.md
-│       └── 0002-no-direct-g-l-writes.md
-└── app/
-```
+## Disciplines
 
-Create files lazily, only when you have something to write. If no `CONTEXT.md` exists, materialise it from `${CLAUDE_SKILL_DIR}/../../references/CONTEXT.template.md` when the first term resolves. If no `docs/adr/` exists, materialise the first ADR from `${CLAUDE_SKILL_DIR}/../../references/adr.template.md` when one is needed. Templates are plugin-level shared resources; reference them, do not edit them here.
+### BC vocabulary alignment with `CONTEXT.md`
 
-Voice contract for everything this skill writes to `CONTEXT.md` and ADRs: `${CLAUDE_SKILL_DIR}/../../references/voice-contract.md`. Read it before writing.
+Every term the user uses gets challenged against `CONTEXT.md` and against canonical BC vocabulary. **Why**: domain confusion compounds. A fuzzy `Account` (Customer? G/L? Bank?) at grilling becomes a wrong-table query at `/al-implement`, then a wrong-test at `/al-mutate`. Resolve at the cheapest point. BC verbs (`Post` not `Submit`, `Ledger Entry` not `Transaction`); full canonical list in `${CLAUDE_SKILL_DIR}/../../references/LANGUAGE.md`. Update `CONTEXT.md` inline as terms resolve; don't queue. Don't couple `CONTEXT.md` to implementation details.
 
-Run `/al-research` before naming any BC term, before disambiguating against current BaseApp behaviour, and before writing an ADR that cites BC facts. AL/BC training data is thin and stale; verify first. If research fails, keep grilling, do not write the term or the ADR this session.
+### Codebase as the answer when it can be
 
-## During the session
+When a question can be answered by reading the code, read the code. **Why**: the user's stated model and the running code drift over time; the grilling's value is in surfacing that drift, not in asking the user to re-derive what already exists. Ask the user only what the code cannot tell you (intent, future direction, why a constraint exists).
 
-### Challenge against the glossary
+### Concrete scenarios over abstract definitions
 
-When I use a term that conflicts with the existing language in `CONTEXT.md`, call it out immediately. *"Your glossary defines `Posting` as the G/L commit step, but you seem to mean document release, which is it?"*
+Stress every domain relationship with a specific BC scenario, not a hypothetical. **Why**: BC's surface area (posting, prepayment, dimensions, multi-company, intercompany, AppSource) is the territory where abstract domain models break. The user discovers their own precision when the scenario forces a yes-or-no.
 
-### Sharpen fuzzy language
+### `/al-research` before naming any BC term
 
-When I use vague or overloaded BC terms, propose a precise canonical term. *"You're saying `Account`, do you mean the Customer, the G/L Account, or the Bank Account? Those are different tables."*
+Before writing a BC term into `CONTEXT.md` or citing BC behaviour in an ADR, verify against current BaseApp. **Why**: AL/BC training data is thin and stale. A renamed event, a removed procedure, a drifted signature lands in `CONTEXT.md` and corrupts every downstream skill that reads it. If research fails, keep grilling, do not write the term or the ADR this session.
 
-Use BC vocabulary, not generic programming terms, `Post` not `Submit`, `Ledger Entry` not `Transaction`. Full canonical list at `${CLAUDE_SKILL_DIR}/../../references/LANGUAGE.md`.
+### Domain ADR offer criteria
 
-### Discuss concrete scenarios
+Offer a domain ADR when **all four** are true:
 
-When domain relationships are being discussed, stress-test them with specific scenarios, partial posting, prepayment, reversal, dimension inheritance, multi-company, AppSource constraint. Force me to be precise about the boundaries between concepts.
+1. **Hard to reverse**: cost of changing the rule later is meaningful (shipped data, partner integrations, behavioural contracts).
+2. **Surprising without context**: a future reader will wonder why.
+3. **Real trade-off**: genuine alternatives, one picked for specific reasons.
+4. **Domain**: it is a rule about *what the business does*, not about *how the code is shaped*. "Partial posting allowed for service items only" is domain; "intercept via `OnBeforePostSalesDoc`" is architectural and belongs to `/al-design`. "Setup must be runtime-configurable per company" is domain; "singleton table vs enum" is architectural.
 
-### Cross-reference with code
+Three of four does not earn an ADR. **Why**: ADR inflation rots the index; every reader pays the cost of scanning past low-value entries. The Domain criterion is the discriminator from `/al-design`'s otherwise-identical bar. When a substantive question feels architectural, find the domain constraint behind it and grill that, the constraint is the ADR candidate, not the choice. If the question is a genuine architectural pick, say so once and route to `/al-design`.
 
-When I state how something works, check whether the code agrees. If you find a contradiction, surface it: *"Your code posts the entire Sales Header, but you just said partial posting is supported per line, which is right?"*
+Template: `${CLAUDE_SKILL_DIR}/../../references/adr.template.md`. Resolve `NNNN` per `${CLAUDE_SKILL_DIR}/../../references/cross-branch-numbering.md` (cross-branch scan, not a local-only scan of `docs/adr/`).
 
-### Update CONTEXT.md inline
+## Naming and BC vocabulary
 
-Update `CONTEXT.md` inline when a term resolves; don't queue. Use the format at `${CLAUDE_SKILL_DIR}/../../references/CONTEXT.template.md`.
+- **BC verbs.** Insert / Modify / Delete (records). Post (not Submit). Validate (not Check). Get / Find (not Fetch). Ledger Entry (not Transaction). No. (not ID). Procedure (not Method).
+- **Objects.** `"Prefix Feature Suffix"`, suffixes `Impl`, `Card`, `List`, `Ext`, `Test`.
+- **Records** match the table name (`Customer`, `SalesHeader`). Primitives are descriptive (`TotalBalance`, `IsBlocked`).
 
-Don't couple `CONTEXT.md` to implementation details. Standard Microsoft BC terms (`Sales Header`, `Customer`, `Posting Date`) are the canonical baseline, record only what this project narrows, extends, or names that Microsoft doesn't.
+Full vocabulary in `${CLAUDE_SKILL_DIR}/../../references/LANGUAGE.md`. **Names are the citation.** No inline `(see: file.al:120)` in `CONTEXT.md` or ADRs; the conversation transcript carries the trail.
 
-No inline citations in `CONTEXT.md`. Names are the citation; the conversation transcript carries the trail.
+## Voice contract
 
-### Sharpen the slice
-
-Before signaling the grilling done, ensure the trigger (page action, subscribed event, API call, install/upgrade hook, Job Queue), command, state change, and confirming view are clear enough that `/al-design` can fill an **Event Modeling slice** (Adam Dymitruk, eventmodeling.org), *trigger → command → event → state → view*, without guessing. If any of those is fuzzy, keep grilling. The slice itself is `/al-design`'s output; this skill's job is to ensure the inputs exist. The trigger source decides the slice pattern (Command / Automation / Translation / View), see `${CLAUDE_SKILL_DIR}/../../references/LANGUAGE.md` *Slice* entry.
-
-### Offer ADRs sparingly
-
-Only offer to create an ADR when **all three** are true:
-
-1. **Hard to reverse**: the cost of changing your mind later is meaningful.
-2. **Surprising without context**: a future reader will wonder *"why did they do it this way?"*
-3. **Real trade-off**: there were genuine alternatives and you picked one for specific reasons.
-
-If any gate fails, skip. Use the format at `${CLAUDE_SKILL_DIR}/../../references/adr.template.md`. Resolve `NNNN` per `${CLAUDE_SKILL_DIR}/../../references/cross-branch-numbering.md` (the cross-branch scan, not a local-only scan of `docs/adr/`).
-
-| Qualifies (domain ADR) | Defers to `/al-design` (architectural) |
-|---|---|
-| *"Partial posting allowed for service items only, inventory items must post in full."* | *"Intercept via `OnBeforePostSalesDoc`."* |
-| *"Setup must be runtime-configurable per company, compile-time enums unacceptable."* | *"Singleton table vs enum."* |
-| *"This module's public interface is a stable contract for partner customisations."* | *"Façade with one Implementer."* |
-
-When a design question feels substantive, find the domain constraint behind it and grill that, the constraint is the ADR candidate, not the choice. If the question is a genuine architectural pick, state once: *"That's `/al-design`'s call."* Do not engage further.
+Voice for everything written to `CONTEXT.md` and ADRs: `${CLAUDE_SKILL_DIR}/../../references/voice-contract.md`. Read it before writing.
 
 ## Composition
 
-`/grill-me` is the interview engine; this skill wraps it with BC domain awareness. `/al-research` mandatory before naming a BC term, disambiguating, or writing an ADR. `/bc-standard-reference` reachable directly when the question is purely BaseApp behaviour. `/al-design` consumes the resulting `CONTEXT.md` + ADRs and picks the architecture.
-
-**References** (`${CLAUDE_SKILL_DIR}/../../references/`):
-
-- `testability-pillars.md`, 7 pillars of agent-friendly code; useful when triaging "is this a domain rule or an architecture/testability concern?", testability concerns route to `/al-design`, not a domain ADR.
-- `cross-branch-numbering.md`, source-of-truth for picking `NNNN` (ADRs) across parallel branches.
+- `/grill-me`, the interview engine this skill wraps with BC domain awareness.
+- `/al-research`, mandatory before naming a BC term, disambiguating against BaseApp, or writing an ADR that cites BC facts.
+- `/bc-standard-reference`, when the question is purely BaseApp behaviour.
+- `/al-design`, consumes the resulting `CONTEXT.md` + ADRs next.
+- `${CLAUDE_SKILL_DIR}/../../references/testability-pillars.md`, useful when triaging "is this a domain rule or an architecture/testability concern?" Testability concerns route to `/al-design`, not a domain ADR.
 
 ## Out of scope
 
 - No code edits.
-- No design picks, mechanism, module shape, pattern, seam placement, test layer all belong to `/al-design`.
-- No architectural ADRs, only domain ADRs that pass all three gates. Architectural picks (mechanism, module shape, pattern, seam placement, test layer) defer to `/al-design`; the routing table above shows the split.
+- No design picks. Mechanism, module shape, pattern, seam placement, test layer all belong to `/al-design`.
+- No architectural ADRs. Only domain ADRs that pass all four gates.
 - No architecture writing (`/al-design`), task breakdown (`/al-scope`), branch creation (`/al-design`), or mutations (`/al-mutate`).
-
-</supporting-info>

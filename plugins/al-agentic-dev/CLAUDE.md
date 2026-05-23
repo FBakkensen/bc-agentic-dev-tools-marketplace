@@ -43,18 +43,19 @@ Skills compose by name. When you change a skill, scan the others for cross-refer
 
 ## Replan
 
-`/al-steer` is the canonical replan venue. The seven triggers: task too big, hidden pre-req, wrong order, sibling now wrong, new behaviour emerges, architecture decomposition wrong, goal drift. Replan-check gates in `/al-refine`, `/al-implement`, `/al-refactor` either hard-halt (set `data-status="blocked"`, stop) or soft-flag (add an `<aside data-alert="important">` callout containing `**Replan flag**: trigger #N` inside the task block, continue).
+`/al-steer` is the canonical replan venue. The seven triggers as named patterns to learn: task too big, hidden pre-req, wrong order, sibling now wrong, new behaviour emerges, architecture decomposition wrong, goal drift. Replan checks in `/al-refine`, `/al-implement`, `/al-refactor` map the trigger to response per situation: when the trigger means the plan is invalid as planned, flip `data-status` to `blocked` and route to `/al-steer`; when the trigger means new info that doesn't invalidate, note it inside the task and continue.
 
 ## Editing rules
 
 - **Each SKILL.md states naming and BC vocabulary inline.** Skills run in projects without this CLAUDE.md present. Do not lean on it.
 - **No inline citations in durable artifacts.** `(see: file.al:120)` is forbidden in `architecture.html`, `tasks.html`, `CONTEXT.md`, ADRs, `.out-of-scope/`. Names are the citation; `NALICFCopyDocSubscribers.OnAfterInsertToSalesLine` is the address. Future readers grep; the IDE gives line numbers for free.
-- **Diagrams are gates, not defaults.** Mermaid is permitted in `architecture.html` (`<div class="mermaid" data-graph="module-deps">` and / or `data-graph="flow">`, at most one structural and one behavioural) and in `tasks.html` (`<div class="mermaid" data-graph="task-deps">`, one task-dependency graph derived from declared edges). Each diagram is gated per the rules in the owning skill's SKILL.md. ADRs and every other markdown artifact stay text-only.
+- **Mermaid containers are for Mermaid to find graphs.** Permitted in `architecture.html` (`<div class="mermaid" data-graph="module-deps">` and / or `data-graph="flow">`) and in `tasks.html` (`<div class="mermaid" data-graph="task-deps">`). Whether a diagram earns its place per feature is the writing skill's call; this list just enumerates the container hooks Mermaid recognises. ADRs and every other markdown artifact stay text-only.
 - **HTML files are self-contained.** Inline `<style>`, Google Fonts via CDN `<link>`, Mermaid via CDN `<script>` pinned `@11`. No external CSS files, no JS bundles. Offline = broken docs is the accepted trade.
-- **`architecture.html` is reshape-only.** Written by `/al-design`, read by everyone downstream. Never edit in place; re-run `/al-design`.
-- **`tasks.html` is surgically edited.** Maintaining skills locate slots via the data-attribute contract (`data-task`, `data-status`, `data-alert`, `data-section`, `data-summary-row`) and edit via the Edit tool anchored on those attributes. Never anchor on visible text, CSS class, or position. See `references/html-spec-discipline.md`.
+- **`architecture.html` is reshape-only.** Written by `/al-design`, read by everyone downstream. Never edit in place; re-run `/al-design`. No surgical-edit contract beyond the Mermaid container hooks.
+- **`tasks.html` carries one surgical-edit contract.** Maintaining skills find a task by `<details data-task="T-NNN">` and flip its `data-status="ready | in-progress | done | blocked"`. Every other piece of structure (Tests slot shape, alert kinds, edge rendering, Summary layout, description placement) is the writing skill's call per feature. Inconsistency across features is fine and expected. See `references/html-spec-discipline.md`.
 - **No HTML for ADRs or `CONTEXT.md`.** Markdown. The HTML shift covers only `specs/<NNN>-<slug>/`.
-- **New skills need a stated gap.** _Avoid_: spinning up a skill that an existing one can absorb, or that fits as a Notes line, an `/al-research` finding, or a side-band reference. Propose only when no existing skill fits, and say so in one line.
+- **New skills need a stated gap.** _Avoid_: spinning up a skill that an existing one can absorb, or that fits as a brief note inside an existing task block, an `/al-research` finding, or a side-band reference. Propose only when no existing skill fits, and say so in one line.
+- **Express intent and rationale, not enumerated rules with skip conditions.** SKILLs and references state *why a discipline exists and what problem it solves*; the agent maps rationale to situation. Slot prescriptions, `_When earned:_` / `_Skip when:_` enumerations, and templates the agent must fill are rejected by name. The agent is capable of shaping output per feature.
 
 ## Reference layout
 
@@ -71,9 +72,9 @@ Two tiers, on purpose.
 | `CONTEXT.template.md` | plugin-level | template materialised into the target repo's `CONTEXT.md` |
 | `adr.template.md` | plugin-level | template materialised into the target repo's `docs/adr/NNNN-<slug>.md` |
 | `voice-contract.md` | plugin-level | voice rules for prose; read by every skill that writes a durable artifact |
-| `user-communication.md` | plugin-level | chat output shapes (Opener / Phase / Per-bullet / Drafted scenarios / Second opinion / Replan / Close / Stop) and voice carve-outs from `voice-contract.md`; read by `/al-refine`, `/al-implement` |
-| `notes-discipline.md` | plugin-level | destination map for chips, alerts, Notes lines; Summary regeneration rule; read by every skill that writes `tasks.html` Notes or `.out-of-scope/` |
-| `html-spec-discipline.md` | plugin-level | aesthetic posture, data-attribute contract, Mermaid embedding, self-contained constraint, prior-spec consultation, surgical-edit discipline; read by `/al-design`, `/al-scope`, `/al-refine`, `/al-implement`, `/al-mutate`, `/al-steer` |
+| `user-communication.md` | plugin-level | principles for chat output (names are the citation, lede first, terse, BC vocab, no em-dashes) and voice carve-outs from `voice-contract.md`; read by skills that emit interactive chat |
+| `notes-discipline.md` | plugin-level | what kinds of info live in the task block vs elsewhere (commit message, ADR, `.out-of-scope/`), what survives past `done`, what dies with the branch; read by skills that write `tasks.html` |
+| `html-spec-discipline.md` | plugin-level | aesthetic posture, the two-attribute floor (`data-task` + `data-status`), Mermaid embedding, self-contained constraint, prior-spec consultation, status-flip surgical-edit; read by `/al-design`, `/al-scope`, `/al-refine`, `/al-implement`, `/al-mutate`, `/al-steer` |
 | `cross-branch-numbering.md` | plugin-level | algorithm for picking `NNN` (spec folders) and `NNNN` (ADRs) across parallel branches; read by `/al-design`, `/al-grill-adr` |
 | `bc-patterns.md` | plugin-level | BC pattern catalogue cited by `architecture.html`, design ADRs, and `/al-design` |
 | `out-of-scope.template.md` | `/al-steer`-local | template materialised into `.out-of-scope/<concept>.md` |
@@ -89,7 +90,7 @@ Cross-skill paths within this plugin (when reaching into another skill's local r
 
 The two former agent-shaped workflows now live as skills:
 
-- **`skills/al-mutate/SKILL.md`**, preflight, canonical `**Mutations plan**` block, mutation classes, survivor classification, BC safety, output.
+- **`skills/al-mutate/SKILL.md`**, mutate-build-revert cycle, mutation kinds, survivor classification, BC safety.
 - **`skills/al-second-opinion/SKILL.md`** is the contract; **`skills/al-second-opinion/scripts/Invoke-AlSecondOpinion.ps1`** is the execution. Dispatched by runtime. `$env:CLAUDECODE -eq '1'` → `codex exec --sandbox read-only --skip-git-repo-check --color never --json -c model_reasoning_effort=medium`. Else → `claude -p --output-format json --no-session-persistence --disable-slash-commands --strict-mcp-config '{}'`. 600s timeout via `Start-Job` / `Wait-Job`. Skip lines name the target CLI. SKILL.md documents the sandbox flags so the security envelope stays visible without reading the script. **Windows-only**; `Start-Job` / `Wait-Job` targets pwsh on Windows; portability is a future concern.
 
 ## Layout
@@ -101,9 +102,9 @@ references/                 # Plugin-level shared, read by ≥2 skills, or cited
 ├── LANGUAGE.md
 ├── bc-patterns.md
 ├── voice-contract.md       # Voice rules for prose
-├── user-communication.md   # Chat output shapes and voice carve-outs from voice-contract.md
-├── notes-discipline.md     # Destination map for chips, alerts, Notes lines; Summary regeneration
-└── html-spec-discipline.md # Aesthetic posture, data-attribute contract, Mermaid, self-contained, prior-spec consultation
+├── user-communication.md   # Chat output principles and voice carve-outs from voice-contract.md
+├── notes-discipline.md     # What lives in the task block vs the commit / ADR / .out-of-scope/
+└── html-spec-discipline.md # Aesthetic posture, two-attribute floor, Mermaid, self-contained, prior-spec consultation
 skills/
 ├── al-design/SKILL.md
 ├── al-grill-adr/SKILL.md

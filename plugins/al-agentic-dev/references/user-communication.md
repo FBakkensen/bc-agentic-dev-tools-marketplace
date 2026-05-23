@@ -1,10 +1,12 @@
-# User communication contract
+# User communication
 
-Chat output rules for skills that run interactively in the user's terminal. The user reads chat to track which task is running, what is happening, and what landed. They do not always have `tasks.html` open.
+Principles and worked examples for chat output. The user reads chat to track which task is running, what is happening, and what landed. They do not always have `tasks.html` open.
+
+This file is for the *human reader*, not for agent-to-agent prompts. The shapes below earned their place because they let the user skim a long session without slow-reading prose. Apply each one where its rationale fits; the agent picks the shape that best serves the moment, not a template to walk.
 
 ## Scope
 
-Governs **chat output**: lines the runtime emits to the user during a skill session. Read by `/al-refine` and `/al-implement` today. Other skills may adopt later.
+Governs **chat output**: lines the runtime emits to the user during an interactive skill session. Skills that emit interactive output (currently `/al-refine`, `/al-implement`) consult this; others may adopt later.
 
 DO NOT confuse with `voice-contract.md`, which governs **durable artifacts** (`tasks.html`, `architecture.html`, ADRs, `CONTEXT.md`, `.out-of-scope/`, commit messages, PR bodies, SKILL.md files). Two different surfaces, two different cadences.
 
@@ -31,11 +33,13 @@ Most rules carry over verbatim. Two diverge:
 
 The artifact rules are unchanged. Both carve-outs apply only to chat output.
 
-## Canonical shapes
+## Common shapes
+
+Worked examples below. The agent reaches for the shape whose rationale fits the moment; nothing here is a state machine to walk in order. Each shape's *Why* paragraph names what it earns; if that rationale doesn't apply to the moment, the shape doesn't fit and the agent uses something else.
 
 ### Opener
 
-Fires once at session start, after the skill has resolved the target task.
+Use at session start, after the skill has resolved the target task. **Why**: the user wants to know which task is running and where it sits in the flow before any work output streams in.
 
 ```
 **T-NNN <Title>** · <status or status-change>
@@ -73,7 +77,7 @@ Worked example, `/al-implement`:
 
 ### Phase boundary
 
-Fires when crossing a major phase boundary. Adaptive shape:
+Use when crossing a major phase boundary. **Why**: phase transitions are where the user re-orients; a tight named beat beats a paragraph of narration. Adaptive shape:
 
 - **Single fact**: one line, bold prefix + one substantive clause.
 - **≥2 facts**: bold prefix on its own line + two-column borderless table.
@@ -119,7 +123,7 @@ Worked examples:
 
 ### Per-bullet (`/al-implement` only)
 
-Fires for each Gherkin bullet during the TDD inner loop. Three beats: bullet header, RED, GREEN.
+Use for each Gherkin bullet during the TDD inner loop. **Why**: the inner loop produces the highest-volume output of any session; landing it in three small named beats (bullet header → RED → GREEN) lets the user see each cycle complete without scanning prose. Three beats:
 
 ```
 **T-NNN#K <ScenarioTitle>** · <Pure | E2E | Both>
@@ -175,7 +179,7 @@ Worked example:
 
 ### AL Runner ERROR resolution
 
-Not a Stop. Surfaces as a beat inside the per-bullet flow when `/al-build -UnitTestOnly` returns ERROR / exit 2 on a Pure bullet. One row per resolution step actually taken. Stop adding rows after the first step whose outcome is PASS.
+Use when `/al-build -UnitTestOnly` returns ERROR / exit 2 on a Pure bullet. **Why**: the resolution sequence (review test → refactor production → reclassify) is the same cheapest-first order every time; rendering it as a step table lets the user see which step landed PASS and what the layer reclassification implied. Not a Stop; surfaces inside the per-bullet flow. One row per step actually taken; stop adding rows after the first PASS.
 
 ```
 **AL Runner ERROR on T-NNN#K.**
@@ -203,7 +207,7 @@ Then the bullet resumes at the new layer.
 
 ### Drafted scenarios (`/al-refine` only)
 
-Fires once after Gherkin drafting, before second opinion runs. Lets the user see the proposed scenarios in chat without opening `tasks.html`.
+Use after Gherkin drafting, before second opinion runs. **Why**: the user wants to see proposed scenarios in chat without opening `tasks.html`, especially before the second opinion gates them.
 
 ```
 **Proposed for T-NNN:**
@@ -232,7 +236,7 @@ Sub-block absent when the task has no scenarios at that layer. Numbering contigu
 
 ### Second opinion
 
-Fires after `/al-second-opinion` returns. Aggregate outcome only; per-bullet accept/reject reasoning stays in the session and never goes to chat or to artifacts (mirrors `voice-contract.md` rule on workflow chatter).
+Use after `/al-second-opinion` returns. **Why**: the user wants the aggregate outcome (no gaps, N gaps surfaced, or skipped + why) in one line; per-bullet accept/reject reasoning stays in the session and never goes to chat or to artifacts (mirrors `voice-contract.md` rule on workflow chatter).
 
 ```
 **Second opinion** via `/al-second-opinion`: <aggregate outcome>.
@@ -253,7 +257,7 @@ Worked examples:
 
 ### Replan check
 
-Fires after the seven-trigger walk. State the outcome.
+Use after the replan check completes. **Why**: the user wants to know whether any replan trigger fired and, if so, whether the skill is continuing or halting.
 
 ```
 **Replan check** <outcome>.
@@ -280,7 +284,7 @@ Worked examples:
 
 ### Close
 
-Fires once at the end of the session. Headline line + two-column borderless table.
+Use at end of session. **Why**: the user cannot read `tasks.html` to learn what landed; the Close is their artifact. The two-column table aligns the named outcomes vertically so the user scans down to the row they care about.
 
 `/al-refine` close:
 
@@ -338,7 +342,7 @@ Worked examples:
 
 ### Stop
 
-Two flavours by phase: pre-flight (nothing touched) and mid-flow (state landed before halt).
+Use when the skill halts before its normal Close. **Why**: the user needs to know what halted, what landed before the halt, and what to do next. Two flavours by phase: pre-flight (nothing touched) and mid-flow (state landed before halt).
 
 **Pre-flight Stop** (one-liner, B-shape):
 
@@ -455,5 +459,5 @@ Worked example (replan trigger fires after 2 bullets green):
 ## Composition
 
 - Inherits voice from `voice-contract.md` with the two carve-outs above.
-- Most multi-fact shapes (Opener, Phase multi-fact, Per-bullet RED/GREEN, Close, Stop mid-flow State) render as two-column borderless tables; AL Runner ERROR resolution renders as a three-column table; one-clause shapes (Phase single-fact, Second opinion, Replan check, Stop pre-flight, mid-flow `**Stop.**` / `**Next:**` lines) stay as single lines. Labeled bullets remain the right shape only for free-form Gherkin echoes (Given/When/Then) where each value is a sentence flow rather than a field.
-- Per-skill mapping (which shape fires at which flow step) lives in each SKILL.md's *User-facing chat* section; this reference holds shape definitions only.
+- Multi-fact shapes (Opener, Phase multi-fact, Per-bullet RED/GREEN, Close, Stop mid-flow) render well as two-column borderless tables; AL Runner ERROR resolution as a three-column table; one-clause shapes (Phase single-fact, Second opinion, Replan check, Stop pre-flight) as single lines. Labeled bullets work for free-form Gherkin echoes (Given/When/Then) where each value is sentence flow rather than a field. These mappings are the patterns that earned their place; the agent picks the shape that fits the moment, not from a per-flow lookup.
+- Per-skill mapping (which shape the skill reaches for at which moment) is the SKILL.md's call; this reference holds the shapes and their rationale.

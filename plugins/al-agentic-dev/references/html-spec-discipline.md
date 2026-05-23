@@ -19,29 +19,26 @@ Inherited from frontend-design discipline, restated for spec documents.
 
 Within a project, ride the prior spec's aesthetic for visual coherence across the monograph. Across projects, vary freely. Two `/al-design` runs in different repos should not converge on the same font pairing or palette.
 
-## Data-attribute contract
+## The two-attribute floor
 
-The maintaining skills surgically edit `tasks.html` slots. They locate slots via **data attributes**. Aesthetic markup around the attributes is free; the attributes themselves are the contract.
+`tasks.html` carries one surgical-edit contract. Maintaining skills find a task by its ID and flip its status. Everything else regenerates whole when it changes.
 
-`tasks.html` carries six hooks:
+The two hooks:
 
 | Hook | Locates | Used by |
 |---|---|---|
-| `<details data-task="T-NNN">` | The per-task block | every maintaining skill |
+| `<details data-task="T-NNN">` on each per-task block | The per-task block | every skill that touches a task |
 | `data-status="ready \| in-progress \| done \| blocked"` on the same `<details>` | The status, single source of truth | `/al-implement`, `/al-steer` |
-| `<aside data-alert="note \| important \| warning">` inside the `<details>` | NOTE / IMPORTANT / WARNING alerts | `/al-refine`, `/al-implement`, `/al-mutate`, `/al-steer` |
-| Element with `data-section="tests"` inside the `<details>` | The Tests slot `/al-refine` fills | `/al-refine` |
-| `<tr data-summary-row="T-NNN">` in the Summary table | Per-task row for Tests count and Mutations chip | `/al-mutate`, `/al-refine` |
-| `<div class="mermaid" data-graph="task-deps">` | The dependency graph | `/al-steer` (phase edits), `/al-scope` (regenerate) |
 
-`architecture.html` carries one hook only: `<div class="mermaid" data-graph="module-deps">` and / or `<div class="mermaid" data-graph="flow">` for Mermaid graphs. Maintaining skills do not surgical-edit `architecture.html`; `/al-design` reshapes it whole.
+**Why these two and nothing else.** Status flips happen often (every TDD cycle bump), so a stable attribute anchor avoids re-parsing prose to locate the right `<details>`. Two tasks with similar titles do not collide on the attribute. Every other slot (Tests area, alert kinds, edges block, Summary row, Mermaid container) is the writing skill's call per feature; if its shape needs to change, the skill regenerates that part of the task block whole. Anchors for things that change rarely are not anchors that earn their place.
 
-**Rules around the contract:**
+`architecture.html` carries no surgical-edit contract at all. Maintaining skills do not edit it; `/al-design` reshapes it whole on re-run. The only HTML hooks in `architecture.html` are Mermaid containers (`<div class="mermaid" data-graph="module-deps">` and / or `<div class="mermaid" data-graph="flow">`), and those exist so the Mermaid CDN library can find its graphs, not so the agent can find slots.
 
-- The visible status glyph (`[ ]`, `[~]`, `[x]`, `[!]`) is rendered from `data-status` via CSS pseudo-element, JS template, or duplicated `<span>`. Whatever `/al-design` and `/al-scope` choose. The agent flips only the attribute. Never the visible glyph.
-- The Summary table does NOT carry status. Status lives only on the `<details>`. The Summary is a "what was decided at scope / refine / mutate time" view, not a live progress board.
-- `<aside data-alert>` elements may appear anywhere in the task body. Multiple alerts of different kinds may coexist. Order is by recency of insert, not severity.
-- The Tests slot's element may be `<section>`, `<div>`, `<aside>`. The `data-section="tests"` attribute is what matters, not the tag.
+**Rules around the floor:**
+
+- The visible status marker (`[ ]`, `[~]`, `[x]`, `[!]`, badge, colour) renders from `data-status` via CSS pseudo-element, JS template, or duplicated `<span>`. Whatever `/al-design` and `/al-scope` choose per project. The agent flips only the attribute, never the visible marker.
+- Status lives only on the `<details>`. A second copy in a Summary row (or anywhere else) would require two-place edits on every flip, which is exactly what the floor avoids.
+- Where each kind of content lives inside the task block (Tests area, alert blocks, edges, scaffolding callouts) is the writing skill's call per task; see `notes-discipline.md` for what kinds of info belong inside the task block at all.
 - Mermaid graphs always use `class="mermaid"` so the CDN library can find them. `data-graph` distinguishes graph kinds when more than one is present in a file.
 
 ## Mermaid embedding
@@ -91,48 +88,27 @@ When generating, scan `specs/*/` for the most recently modified `architecture.ht
 
 ## Surgical-edit discipline
 
-Maintaining skills (`/al-refine`, `/al-implement`, `/al-mutate`, `/al-steer`) operate via the Edit tool, anchored on data attributes.
+`/al-implement` and `/al-steer` flip `data-status` via the Edit tool, anchored on the unique `data-task` + `data-status` pair.
 
-**Rule**: locate via data attribute, never via visible text or visual position.
-
-**How:**
-
-1. Grep the file for the unique data attribute of the slot you intend to change (e.g., `data-task="T-007"`, `data-summary-row="T-007"`, `data-graph="task-deps"`).
-2. Read the file with offset and limit scoped to the surrounding block. Loading the whole file per edit is wasteful; loading nothing and blind-editing is unsafe.
-3. Construct the Edit `old_string` so it contains the data attribute as part of the anchor. The attribute guarantees uniqueness within the file.
-4. Preserve every byte outside the anchor. The Edit tool replaces an exact substring; the surrounding markup is untouched.
-
-**Status flip example** (`/al-implement` from in-progress to done on T-007):
+**Status flip example** (`/al-implement` from `in-progress` to `done` on T-007):
 
 ```
 old_string: <details data-task="T-007" data-status="in-progress">
 new_string: <details data-task="T-007" data-status="done">
 ```
 
-One Edit, one attribute change, the visible glyph follows from CSS or whatever rendering `/al-design` / `/al-scope` wired up.
+One Edit, one attribute change. The visible marker follows from whatever rendering `/al-design` / `/al-scope` wired up.
 
-**Alert insertion example** (`/al-mutate` writing a Mutations chip):
+**Why anchor on the pair, not just `data-task`.** The pair makes the `old_string` unique within a file even when two tasks share status text in surrounding markup. It also catches a stale read: if you think the task is `in-progress` but the file says `ready`, the Edit fails fast rather than corrupting state.
 
-If a NOTE alert already exists in the task block, Edit anchored on `<aside data-alert="note">` plus a stable tail. If no NOTE alert exists, Edit anchored on the opening `<details data-task="T-NNN" data-status="...">` and prepend an `<aside data-alert="note">...</aside>` immediately after.
-
-**Tests fill example** (`/al-refine`):
-
-Edit anchored on the empty Tests slot (whatever `/al-scope` left). Replace its body with the Gherkin sub-blocks (Pure, then E2E). Preserve the outer element tag and `data-section="tests"` attribute.
-
-**Summary row update example** (`/al-mutate` writing the Mutations cell):
-
-Edit anchored on `<tr data-summary-row="T-007">` and the specific `<td>` for the Mutations column. Same shape: unique row anchor plus targeted cell.
-
-**Mermaid phase edit example** (`/al-steer` adding a new phase to task-deps):
-
-Edit anchored on the closing `</div>` of the `data-graph="task-deps"` block, after some preceding subgraph content. Insert the new subgraph block before the closing div. The Mermaid grammar is plain text inside the div; treat it as text, not as HTML.
+**Other writes regenerate, not surgical-edit.** When `/al-refine` fills the Tests area, `/al-mutate` writes a verdict, or `/al-implement` records a NOTE-style chip alongside the task, the writing skill regenerates that portion of the task block whole. Anchoring writes to slots that change rarely or whose shape is the writing skill's call would re-introduce the prescription the floor was set up to drop.
 
 **Forbidden:**
 
-- Blind Edit calls with no prior Read. Always Grep then Read with offset before editing.
-- Anchoring on visible text ("the heading that says T-007"), CSS class names, or visual position ("the third `<details>` in the file"). These break the first time `/al-design` regenerates the aesthetic.
-- Whole-file Read followed by whole-file Write. The Edit tool exists; use it. Whole-file rewrites lose bytes you forgot.
-- Editing through a markup ambiguity. If two task blocks share an attribute value (impossible by contract, but if it happens), halt and surface the duplicate.
+- Blind Edit calls with no prior Read. Read the relevant task block first; loading nothing and blind-editing is unsafe.
+- Anchoring status flips on visible text ("the heading that says T-007"), CSS class names, or visual position ("the third `<details>` in the file"). These break the first time `/al-design` or `/al-scope` regenerates the aesthetic.
+- Whole-file Read followed by whole-file Write for a status flip. The Edit tool exists; use it. Whole-file rewrites lose bytes you forgot.
+- Editing through a `data-task` collision. Task IDs are monotonic and never reused; if two task blocks share an ID (impossible by contract), halt and surface the duplicate.
 
 ## What this file does NOT prescribe
 
@@ -145,6 +121,6 @@ Edit anchored on the closing `</div>` of the `data-graph="task-deps"` block, aft
 ## Composition
 
 - Read by `/al-design` and `/al-scope` before generating any HTML artifact.
-- Read by `/al-refine`, `/al-implement`, `/al-mutate`, `/al-steer` before surgically editing `tasks.html`.
-- See `notes-discipline.md` for *when* each alert kind fires and what content it carries (semantic discipline); this file covers *how* alerts are written in HTML (`<aside data-alert>` hook) and *how* surgical edits locate them.
-- See `voice-contract.md` for prose voice (em-dash ban, declarative cadence) inside alert bodies, description paragraphs, and goal / problem / solution slots.
+- Read by `/al-implement` and `/al-steer` before flipping `data-status` on a task.
+- See `notes-discipline.md` for what kinds of info live inside the task block versus elsewhere (commit message, ADR, `.out-of-scope/`). This file covers HTML mechanics; that file covers destination.
+- See `voice-contract.md` for prose voice (em-dash ban, declarative cadence) throughout the artifact.

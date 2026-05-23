@@ -5,183 +5,106 @@ description: Validate AL/Business Central test rigor by mutation testing. Inject
 
 # /al-mutate, Test-rigor gate
 
-Mutate production code one site at a time. Build. Classify. Revert. Survivors are the point: each one is a coverage gap or a documented equivalent.
+Mutate production code one site at a time. Build. Classify. Revert. Survivors are the point: each one is a real coverage gap or a documented equivalence. The disciplines below are the substance you bring; how you shape the result write into `tasks.html` is your call per task.
 
-**Resolve `tasks.html`:** Branch matches `^\d{3}-` → `specs/<branch>/tasks.html`. Otherwise standalone, no `tasks.html` write, report only. If `tasks.md` is present without `tasks.html`, the spec is frozen legacy; standalone only.
+## Preconditions
 
-## Preflight (gate)
+- Tree clean. A dirty tree makes the revert step ambiguous and turns every survivor into a question mark.
+- Baseline `/al-build` green. A red baseline means survivors carry no signal.
+- Target is production code, not test code, not generated `.rdlc`, not generated `.xlf`, not captions / labels / tooltips. Surface and generated artifacts produce noise, not test-rigor signal.
+- A mutation plan exists. When invoked from `/al-implement` the plan rides in on the calling task block; standalone, build the plan from the requested file or area before the first mutation.
 
-Abort if any fails. Required Yes/No before mutating:
+If any precondition fails, **Stop** and surface the gap. Do not start mutating to "see what happens."
 
-| Check | Yes | No |
-|---|---|---|
-| Tree clean? | proceed | Stop. Commit or stash. |
-| Baseline green? | proceed | Stop. Hand back to `/al-build`. |
-| Site is production code? | proceed | Stop. Drop the mutation. |
-| Plan has ID, Site, Operator, Expected killer? | proceed | Stop. Build the plan first. |
+## What this pass produces
 
-**Anti-pattern: skip preflight.** A dirty tree or red baseline turns every survivor into a question mark.
+What the next reader needs from you, expressed as questions you must have answers to:
 
-## Where Mutations live in `tasks.html`
+- **Which sites were mutated, and what mutation at each?** One mutation per site, named by what it inverts (a boundary, a guard, an early exit). Site addressed by file + procedure or `file:line`, in BC vocabulary (posting, ledger entry, document flow), not generic CRUD.
+- **Did each mutation die, survive, or prove equivalent?** Killed means a specific test caught it. Survivor means a real coverage gap until proven otherwise. Equivalent means the mutated code is observably identical to the original, with a specific reason recorded, not "looks equivalent."
+- **For every survivor, what is the call?** Real gap routes to a killer test (`/al-refine` when inside `/al-implement`; write the test directly when standalone). Equivalence carries the reason. Unclear hands back to the caller, never guessed.
+- **Did the working tree return to baseline-green after the last revert?** Closing gate: full `/al-build` green, `git diff --quiet HEAD` clean. If not, the rigor verdict cannot ship.
+- **What goes back into the task block?** When invoked from `/al-implement`, write the result into the calling `<details data-task="T-NNN">`. The shape (chip, alert, prose line, table cell) is your call per task; what survives is the verdict and survivor count, not the deliberation.
 
-Two artifacts, distinct lifetimes:
+If a question cannot be answered, the pass is not done. Resolve via another mutation cycle, a survivor decision, or `/grill-me` when the classification call is the user's.
 
-- **Mutation plan** (transient): a `**Mutations plan**` table inside the task's `<details>` block, written by `/al-implement` after the second-opinion gate, just before WIP commit. `/al-mutate` reads this table, runs the mutations, then deletes the block.
-- **Mutation result** (durable): a `**Mutations**` chip inside the task's NOTE alert (`<aside data-alert="note">`), written by `/al-mutate` after the last mutation classifies. Same value lands in the Mutations column of the Summary table on the next Summary regeneration.
+## Disciplines
 
-No `Mutations` Notes line anywhere. The chip and the Summary cell are the single source of truth (see `notes-discipline.md`).
+These are how to think about mutation testing for BC. Apply where each one's *why* lands. The skills upstream trust that you ran these where they applied.
 
-## Canonical `**Mutations plan**` block
+### One mutation, one build, one revert
 
-Written by `/al-implement` to the calling task's `<details>` in `tasks.html`, after the Tests slot. One row per mutation site. `/al-mutate` reads it and replaces it with the NOTE chip plus Summary cell.
+Apply one mutation. Run `/al-build`. Classify. Revert with `git checkout -- .`. Verify the working tree matches `HEAD` before the next mutation. **Why**: batched mutations conflate signal; you cannot tell which site moved the build. Un-reverted mutations leave production poisoned and corrupt every subsequent classification.
 
-The block is a labelled table inside the task body. Aesthetic chooses the visible style; structural shape:
+### Survivors are the artifact
 
-```html
-<section data-section="mutations-plan">
-  <h4>Mutations plan</h4>
-  <table>
-    <thead>
-      <tr><th>ID</th><th>Site</th><th>Operator</th><th>Expected killer</th></tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td>M1</td>
-        <td><code>Foo.Codeunit.al:47</code>, guard against blocked customer</td>
-        <td>remove <code>not</code></td>
-        <td>T-042#3</td>
-      </tr>
-      <tr>
-        <td>M2</td>
-        <td><code>Foo.Codeunit.al:52</code>, credit-limit boundary</td>
-        <td><code>&gt;=</code> → <code>&gt;</code></td>
-        <td>T-042#4</td>
-      </tr>
-    </tbody>
-  </table>
-</section>
-```
+The pass exists to surface survivors, not to celebrate kills. **Why**: a green mutation pass with no survivors and no equivalences means either perfect tests or no decision logic worth mutating; the former is rare, the latter belongs in the plan, not the result. Every survivor is a coverage gap or an equivalence with a stated reason. Anything else is a deferred decision masquerading as completion.
 
-`ID`: `M1`, `M2`, monotonic per task. `Site`: `<file>:<line>` plus one phrase in BC vocabulary (posting, dimension, ledger entry, document flow). `Operator`: mutation class name. `Expected killer`: `T-NNN#scenarioNumber` or `?` if the plan does not predict one.
+### Equivalence needs a specific reason
 
-`/al-mutate` locates the block via `data-section="mutations-plan"` inside the parent `<details data-task="T-NNN">`. After processing, the entire `<section data-section="mutations-plan">` is removed.
+"The swapped branch sets the same field to the same value because both paths re-read from the source record before assignment." That is an equivalence reason. "Looks equivalent" is not. **Why**: a test that distinguishes equivalent code is testing implementation. Recording the reason is what protects future readers from chasing the un-killable mutant. Without a reason, the equivalence is indistinguishable from a survivor someone wanted to suppress.
 
-**DO NOT:**
+### Mutate decision logic, not surface
 
-- write narrative prose
-- put multiple classifications in one row
-- embed fix-it instructions inside cells
-- put semicolons inside a cell
-- reorder the canonical four columns
+Boundary flips (`<` / `<=`, `=` / `<>`, `>` / `>=`), predicate inversion (remove a `not`, swap a guard), off-by-one (`Count` / `Count - 1`), return-value swaps (`exit(true)` / `exit(false)`), statement removal (drop an early `exit`, `Validate`, `Modify`), `Validate()` bypass (`Rec.Field := X` skips the field trigger, a BC-specific behavioural shift). These are the kinds of mutation worth spotting; the decision per site is yours. **Why**: mutating captions, labels, or comments exercises rendering, not behaviour. Mutating decision logic exercises whether tests assert the contract or only the path.
 
-## Mutation Classes
+### Reachability before mutation
 
-Top-down by signal-per-minute. Pick the class that exercises decision logic. Never mutate surface.
+Confirm at least one test exercises the target line before mutating it. **Why**: a survivor on an unreached line is not a coverage gap, it is dead code or a missing scenario. The right response is `/al-refine` (add the scenario) or `/al-refactor` (delete the dead branch), not a killer test.
 
-- **Boundary flips**, `<` ↔ `<=`, `=` ↔ `<>`, `>` ↔ `>=`.
-- **Boolean swaps**, `true` ↔ `false`, `and` ↔ `or`, swap `if` / `else` bodies.
-- **Condition negation**: remove a `not`; invert a guard.
-- **Off-by-one**, `i := 1` ↔ `i := 0`, `Count` ↔ `Count - 1`.
-- **Return-value swaps**, `exit(true)` ↔ `exit(false)`, `Error` ↔ `exit`.
-- **Statement removal**: delete an early `exit`, `Error`, `Validate`, `Modify`.
+### Don't mutate during a refactor in flight
 
-**Anti-pattern: mutate while a refactor is in flight.** The shape is moving; classifications drift. Land the refactor green, commit, then mutate.
+Land the refactor green, commit, then mutate. **Why**: a shape that is still moving produces classifications that drift; survivor lists go stale before the report ships.
 
-## Flow
+### Single-line revert, verified
 
-1. Resolve `tasks.html` per the rule above. Standalone if no match.
-2. Read the calling task ID + Mutations plan block when invoked from `/al-implement`; otherwise build a mutation plan from the requested target file or area.
-3. Run preflight. Baseline green = full `/al-build` passes.
-4. For each mutation in the plan, one at a time:
-   - Apply the mutation to one site.
-   - Run `/al-build` with tests. *P-layer mutations gate via `/al-build -UnitTestOnly` when `unitTestApp` is configured; AL Runner ERROR / exit 2 from a mutation means "broke runner contract", not a survivor: note and skip. See `al-runner.md`.*
-   - Classify per the table below.
-   - Revert with `git checkout -- .`.
-   - Verify revert with `git diff --quiet HEAD`. Working tree must match HEAD. If not, abort and surface the broken revert. *No `/al-build` here; the preflight + closing gates own baseline-green proof.*
-5. Closing gate: run full `/al-build`. Must be green. If not, abort and surface the broken state, do not write the report or update `tasks.html`.
-6. Write the report at `.output/mutation-report/<YYYYMMDD-HHMMSS>.md`.
-7. When invoked from `/al-implement`, update the calling task's `<details>` in `tasks.html`:
-   - Delete the entire Mutations plan block (the element with `data-section="mutations-plan"`).
-   - Write the Mutations chip into the task's NOTE alert: `**Mutations**: N killed, M equivalent (reason: ...), K survivors.` Join with existing chips via ` · ` separator. Add the `<aside data-alert="note">` if the task does not have one (Edit anchored on `<details data-task="T-NNN">`).
-   - Regenerate the Summary table; locate the row via `<tr data-summary-row="T-NNN">` and update its Mutations cell to match the chip value.
+`git checkout -- .` then `git diff --quiet HEAD`. **Why**: a silent failed revert (file kept open, line-ending dance, EOL hook rewriting) leaves the next mutation stacked on top of the previous one. The verify step is the only thing that catches it before classifications corrupt.
 
-**Anti-pattern: batch multiple mutations per build.** You learn nothing about which site moved the signal. Queue them, run them one at a time.
+### Pure-layer gating routes through `/al-build -UnitTestOnly`
+
+When `unitTestApp` is configured, P-layer mutations gate via `-UnitTestOnly` (AL Runner) before the full pipeline. **Why**: the inner loop shrinks from minutes to seconds, and the rigor signal lands fast enough to keep the cycle one-at-a-time. AL Runner `ERROR` / exit 2 means "broke runner contract," not a survivor; note and skip per `${CLAUDE_SKILL_DIR}/../../references/al-runner.md`.
 
 ## Delegation
 
-Prefer a delegated worker when the host supports subagents. Mutation work is isolated, output-heavy, and context-expensive.
+Prefer a delegated worker when the host supports subagents. Mutation work is isolated, output-heavy, and context-expensive; the worker owns only the mutate-build-revert cycle and the report. **Why**: keeping the cycle out of the main session preserves the context for survivor classification, which is where judgement actually matters. Do not shadow a running worker. If delegation is unavailable, run the same flow inline.
 
-Give the worker the mutation plan, target files, and preflight rules. The worker owns only the mutate-build-revert cycle and the mutation report. DO NOT shadow the worker while it runs. If delegation is unavailable, run the same flow inline.
+## Floor
 
-## Situation To Action
+`tasks.html` carries two attributes the maintaining skills depend on: `data-task="T-NNN"` and `data-status`. `/al-mutate` does not flip status; it writes the verdict into the calling task block so the next reader knows the rigor pass ran and what it found. Shape (NOTE alert chip, prose line, structured block, table cell) is your call per task. Consistency across tasks is fine; identical shape across tasks is not required.
 
-| Situation | Action |
-|---|---|
-| Mutation survives baseline build | **Real gap**: write a killer test, or route to `/al-refine` when invoked from `/al-implement`. |
-| Mutation kills baseline build with compile error | Mutation class invalid for this code. Skip the row, no signal. |
-| Mutation passes all tests but is semantically dead | **Equivalent**: record a specific reason. "Looks equivalent" is not a reason. |
-| Build hangs | Revert. Reduce mutation scope. Retry once. Stop after the second hang. |
-| Multiple mutations queued | One at a time. Never batch. |
-| Survivor classification unclear | Defer to caller. Hand back via `/grill-me`. |
+**Names are the citation.** No inline `(see: file.al:120)` annotations in the verdict. Site addresses live in the report; the task block carries the outcome.
 
-## Survivor Classification
+## Report
 
-Every survivor needs a decision before the report ships:
-
-- **Real gap**: write a test that kills it when standalone, or route to `/al-refine` to add it when inside `/al-implement`; caller decides.
-- **Equivalent**: record the specific reason the mutated code is semantically identical, for example "the swapped branch sets the same field to the same value because both paths re-read from the source record".
-- **Unclear**: flag for the caller. Do not guess.
-
-**Anti-pattern: chase the killer of an equivalent mutant.** A test that distinguishes equivalent code is testing implementation. Record the equivalence and move on.
-
-## BC Safety
-
-- **`*.rdlc` generated files**, never mutate; they regenerate on build and the diff is noise.
-- **`*.xlf` non-source translation files**, generated; mutating them tests the translation pipeline, not the code.
-- **Captions, labels, tooltips**: surface. Out of scope.
-- **Docker recovery**, `/al-build`'s problem, not this skill's.
-
-**Anti-pattern: mutate captions, labels, or comments.** Surface, not behaviour.
-
-## Output
-
-- **Report** at `.output/mutation-report/<YYYYMMDD-HHMMSS>.md`:
-  - **Summary**: counts of killed / survived / build-failure.
-  - **Surviving mutants**: actionable section. One row per survivor: site, class, classification, killer-test if written, or equivalence reason.
-  - **Killed mutants**: table mapping mutation site to catching test.
-- **`tasks.html` NOTE chip** written to the calling task's NOTE alert only when invoked from `/al-implement`:
-  `**Mutations**: N killed, M equivalent (reason: ...), K survivors.`
-- **`tasks.html` Summary cell** updated when the Summary table is regenerated; cell value matches the chip value.
-- **Mutations plan block** deleted from the task's `<details>` after the chip lands.
-
-## Voice when writing to `tasks.html`
-
-The NOTE chip is bounded: one chip, the `**Mutations**: N killed, ...` shape above. Do not write operator-priority prose, selection rationale, walked-but-skipped paragraphs, or "Lesson:" entries to `tasks.html`. Those belong in the mutation report or stay in the session.
-
-Voice and chip-shape rules apply to the bounded chip. Full contracts:
-
-- `${CLAUDE_SKILL_DIR}/../../references/voice-contract.md`, voice rules, em-dash ban.
-- `${CLAUDE_SKILL_DIR}/../../references/notes-discipline.md`, destination map for chips, alerts, Notes lines; Summary regeneration rule.
-- `${CLAUDE_SKILL_DIR}/../../references/html-spec-discipline.md`, data-attribute contract and surgical-edit discipline.
+Write the durable report at `.output/mutation-report/<YYYYMMDD-HHMMSS>.md`. Survivors are the actionable section, one row per site with classification, killer test (when written) or equivalence reason. Killed mutants map site to catching test. The report is where deliberation lives; the task block carries the verdict.
 
 ## Composition
 
-- `/al-build` runs every iteration. `-UnitTestOnly` for P-layer mutation gating when `unitTestApp` is configured.
-- `/al-research` when a survivor needs BaseApp behaviour verified.
+- `/al-build` runs every iteration; `-UnitTestOnly` for P-layer gating when `unitTestApp` is configured.
+- `/al-research` when a survivor needs BaseApp behaviour verified before classification.
+- `/al-refine` consumes real-gap survivors when invoked from `/al-implement`; the gap becomes a new scenario.
 - `/al-refactor` consumes the standalone report; gaps drive new tests before any shape change.
 - `/grill-me` when a survivor's classification needs the user.
 
-**References** (`${CLAUDE_SKILL_DIR}/../../references/`):
+## Lazy reference reads
 
-- `mutation-operators.md`, operator catalogue and selection heuristics; pre-flight self-report shape.
-- `al-runner.md`, Pure-layer mutation gating; ERROR / exit 2 ≠ survivor.
-- `html-spec-discipline.md`, data-attribute contract and surgical-edit discipline.
+| Source (read-only) | Trigger |
+|---|---|
+| `${CLAUDE_SKILL_DIR}/../../references/mutation-operators.md` | when building the mutation plan |
+| `${CLAUDE_SKILL_DIR}/../../references/al-runner.md` | when P-layer gating via `-UnitTestOnly` |
+| `${CLAUDE_SKILL_DIR}/../../references/voice-contract.md` | before writing the verdict into `tasks.html` or the report |
+| `${CLAUDE_SKILL_DIR}/../../references/html-spec-discipline.md` | before writing HTML into `tasks.html` |
+
+## Naming and BC vocabulary
+
+- **BC verbs.** Insert / Modify / Delete (records). Post (not Submit). Validate (not Check). Get / Find (not Fetch). Ledger Entry (not Transaction). No. (not ID). Procedure (not Method).
+- **Sites** addressed in BC vocabulary (posting guard, dimension default, ledger entry write), not generic CRUD.
+- **Tests** referenced by their short PascalCase scenario name, matching BaseApp style.
 
 ## Out of scope
 
 - No new behaviour. Mutate, classify, revert.
 - No code changes outside the mutate-revert cycle.
-- No `tasks.html` restructuring beyond writing the NOTE chip, regenerating the Summary row, and deleting the Mutations plan block. Survivors surface as the bounded chip value.
-- No fix-it edits in the report; that is `/al-refine` and `/al-implement`.
+- No fix-it edits in the report or the task block; those are `/al-refine` and `/al-implement`.
 - No mutating test code, generated `.rdlc`, generated `.xlf`, or captions.
-- No skipping preflight. Stop. Run `/al-build` until green, then retry.
+- No status flips on `tasks.html`; that is `/al-implement` and `/al-steer`.

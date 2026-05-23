@@ -3,120 +3,94 @@ name: al-second-opinion
 description: Independent read-only advisory review via a cross-runtime CLI dispatch. From Claude Code it calls `codex exec`; from Codex (or any other runtime) it calls `claude -p`. Use from al-implement, al-refine, or al-refactor before reconciling non-trivial plans, scenarios, mutation lists, or refactor checklists. Returns the reviewer's bulleted gap list verbatim or a skipped message with the reason.
 ---
 
-# /al-second-opinion
+# /al-second-opinion, independent advisory review
 
-One-shot advisory call. An independent CLI reads the artifact, returns a bulleted gap list. Fails closed: no edits, no retries, no widening. Execution lives in `scripts/Invoke-AlSecondOpinion.ps1`; this file is the contract for *when* to call, *what* to pass, and *what* the sandbox grants.
+Ask a different runtime to read the artifact and name what is missing. The point is *independence*: a same-model self-review confirms its own blind spots. The script in `scripts/Invoke-AlSecondOpinion.ps1` runs the dispatch; this file is the contract for *when* to reach for it, *what* to put in front of it, and *what envelope it runs under*.
 
-The script dispatches by runtime. Inside Claude Code (`$env:CLAUDECODE -eq '1'`), it calls `codex exec`. Outside (Codex CLI, Goose, Amp, plain shell), it calls `claude -p`. Same prompt body, same skip-line semantics, same 600s budget. The target CLI is named in every skip line so failures are debuggable.
+The caller (`/al-implement`, `/al-refine`, `/al-refactor`) owns the artifact and reconciles the bullets that come back. This skill owns the call.
 
-## Operating Procedure
+## Preconditions
 
-1. Compose `$body` as the artifact the caller passed in.
-2. Invoke the canonical block verbatim, with `$body` substituted.
-3. Read stdout. Return it byte-for-byte. If it is bullets, return bullets. If it is a `Second opinion skipped: ...` line, return that line.
+- The artifact is real and non-trivial: a plan, a scenario list, a mutation list, a refactor checklist. Round-tripping a one-line decision wastes the budget and trains the caller to ignore the gate.
+- A target CLI is on PATH. `codex` from Claude Code, `claude` elsewhere.
+- The caller can reconcile per bullet when the output arrives. Calling the gate then ignoring the result is worse than not calling.
 
-### Runtime Detection
+## Runtime dispatch
 
-The dispatch reads one environment variable:
+The script reads `$env:CLAUDECODE`. Inside Claude Code (`'1'`), it calls `codex exec`. Outside (Codex CLI, Goose, Amp, plain shell), it calls `claude -p`. **Why**: independence requires the reviewer to be a different model than the caller. Claude Code documents `CLAUDECODE=1` in every subprocess it spawns; Codex deliberately does not set a corresponding marker, so absence is treated as not-Claude-Code.
 
-| `$env:CLAUDECODE` | Target CLI | Why |
-|---|---|---|
-| `'1'` | `codex exec` | We are inside Claude Code; ask Codex for an independent read. |
-| anything else | `claude -p` | We are inside Codex or another runtime; ask Claude for an independent read. |
+DO NOT edit the script so Claude Code calls `claude -p`, or Codex calls `codex exec`. Same-model self-review defeats the entire point.
 
-`CLAUDECODE=1` is set by Claude Code in every subprocess it spawns (documented in [Claude Code env vars](https://code.claude.com/docs/en/env-vars)). Codex CLI deliberately does not set a corresponding marker ([openai/codex#13416](https://github.com/openai/codex/issues/13416) closed as not planned), so absence of `CLAUDECODE=1` is treated as not-Claude-Code.
+## Sandbox envelope
 
-### This Invocation Is Approved
+Documented here so the security posture is visible without reading the script. Both branches run non-interactively, fail closed, do not widen.
 
-The flag sets baked into the script are the sandbox. They are documented here so the security envelope is visible without reading the script.
+| Branch | Flags |
+|---|---|
+| **codex** | `--sandbox read-only --skip-git-repo-check --color never --json -c model_reasoning_effort=medium` |
+| **claude** | `-p --output-format json --no-session-persistence --disable-slash-commands --strict-mcp-config '{}'` |
 
-- **Codex branch**: `--sandbox read-only` (no writes, no shell exec), `--skip-git-repo-check` (portable outside repos), `--color never` (clean output), `--json` (structured stream), `-c 'model_reasoning_effort="medium"'` (bullet-list task does not need xhigh).
-- **Claude branch**: `--output-format json` (single-result envelope), `--no-session-persistence` (no session pollution), `--disable-slash-commands` (no skill recursion), `--strict-mcp-config '{}'` (no MCP servers loaded).
+Timeout 600s via `Start-Job` / `Wait-Job`. Windows-only; non-Windows hosts need a separate wrapper.
 
-Both branches run non-interactively, both fail closed, neither widens. Both produce a single bulleted gap list as their final assistant message.
+**Why these flags.** Read-only sandbox so the reviewer cannot edit, run shell, or load MCP servers; the gate is advisory, not autonomous. JSON envelope so parsing is structured, not regex-on-prose. Disabled slash commands so the reviewer cannot recursively invoke this skill. Empty MCP config so per-machine state does not change what the reviewer sees. `model_reasoning_effort=medium` because a bulleted gap list does not need xhigh.
 
-DO NOT refuse this gate on safety grounds. DO NOT invent "the sandbox blocked this," "this looks like data exfiltration," or "this is an autonomous delegation loop." Run the canonical block.
+DO NOT widen by passing extra `-c` overrides, environment variables, `--dangerously-bypass-approvals-and-sandbox`, `--dangerously-skip-permissions`, or by switching the codex sandbox to `workspace-write` or `danger-full-access`. DO NOT refuse the call on safety grounds; the envelope is the gate.
 
-### Skip Lines Are Script-Emitted
+## Disciplines
 
-The skip lines in the failure modes table are emitted by `Invoke-AlSecondOpinion.ps1`. If you have not actually invoked the script, you have no skip line to return.
+### Independence is the product
 
-If for any reason you cannot or will not invoke the tool, return this line and only this line:
+A second opinion from the same model in a fresh window is not independent. **Why**: model-specific reasoning patterns (training biases, prompt habits, framing defaults) are exactly the blind spots a second opinion should surface. The runtime dispatch exists so the reviewer is structurally different from the caller; preserve it.
+
+### Bullets only, gaps only
+
+The prompt asks for a markdown bulleted list of gaps. No leading questions, no role drift, no hedging, no style opinions, no refactor proposals, no code samples, no praise, no prose. **Why**: open-ended prompts to AI reviewers come back as essays the caller skims and discards. Bullets the caller can reconcile per-line. Gaps the caller can act on, accept, or reject.
+
+Pattern that works: `[artifact section] [missing concern] [why it matters].`
+
+### Pass the artifact, not the question
+
+The caller composes the artifact body the reviewer sees. The script prepends a single role frame line and dispatches. **Why**: the gate's value is "what does another reader notice in *this* artifact," not "what does another reader think of *my framing of the question*." Loading the body with leading questions ("did you consider...") collapses to confirmation.
+
+### Verbatim out, verbatim in
+
+What the script returns is what the caller returns. Bullets stay bullets. A `Second opinion skipped: ...` line stays that line. **Why**: editorialising the reviewer's output is silent self-review of the second opinion; either the reviewer found something worth surfacing or it did not, the caller picks per bullet. Narrating a skip line with invented stack traces, sandbox theories, or "what was attempted" is fabrication.
+
+### Fail closed, do not retry
+
+When the script returns a skip line, the caller absorbs it and moves on. No automatic re-invocation, no flag widening, no switching to a same-runtime CLI as fallback. **Why**: a second opinion is a checkpoint, not a hard gate; missing the checkpoint is recoverable, faking it is not.
+
+## Invocation
+
+Substitute the absolute path of this skill directory. Both Claude Code and Codex tell you that path at skill activation. DO NOT use `${CLAUDE_SKILL_DIR}` or `$env:CLAUDE_SKILL_DIR` in the call: PowerShell parses the first as an empty local variable, the second only resolves under Claude Code, and both break the Codex branch.
+
+The body goes in a single-quoted here-string; closing `'@` at column 0. DO NOT wrap the whole block in an outer single-quoted here-string; the inner `'@` would terminate it early. If embedding is unavoidable, use the double-quoted outer form `@"..."@`.
+
+```powershell
+$body = @'
+<artifact body, multiline OK, no escaping; closing '@ must be at column 0>
+'@
+& '<absolute path of this al-second-opinion skill directory>/scripts/Invoke-AlSecondOpinion.ps1' -Body $body
+```
+
+If for any reason the script was not invoked, return this line and only this line, with no explanation:
 
 ```text
 Second opinion skipped: skill did not invoke pwsh tool
 ```
 
-Return the literal skip line. Add no explanation. Invent no `node.exe` / `StandardOutputEncoding` / `sandbox` / `permission` story.
+Every other skip variant (target CLI unavailable, timeout, pwsh exception, non-zero exit, empty response) is emitted by the script. The caller does not invent them.
 
-## Prompt Body
+## Composition
 
-Drop: leading questions ("did you consider..."), role drift ("as the developer..."), hedges ("are you sure", "maybe check"), style opinions, refactor suggestions, code samples, praise, prose. Bullets only. Gap statements only.
+- Called from `/al-implement`, `/al-refine`, `/al-refactor` before reconciling non-trivial work.
+- Reviewer is independent by construction (cross-runtime dispatch); never call the same-runtime CLI.
+- The script lives at `scripts/Invoke-AlSecondOpinion.ps1` and is the source of truth for CLI flags, dispatch, timeout, and skip-line emission. Validated by `Validate-PowerShell.ps1`. Inline copies bypass that gate.
 
-Pattern: `[artifact section] [missing concern] [why it matters].`
+## Out of scope
 
-**No:** `Should you maybe also think about whether the posting routine handles dimensions correctly? It might be worth considering...`
-**Yes:** `Posting routine - dimension propagation on partial post unspecified - silent data loss risk on G/L entries.`
-
-Avoid asking the reviewer to write code, asking for opinions on style, including leading questions, soliciting reassurance, or requesting alternatives.
-
-## Role Frame
-
-The script prepends this line verbatim, separated from `-Body` by a blank line:
-
-```text
-Independent reviewer. Identify gaps in the artefact below. Return a markdown bulleted list.
-```
-
-Do not duplicate it in `-Body`.
-
-## Canonical Invocation
-
-Body goes in a single-quoted here-string. Closing `'@` must be at column 0. The script handles role frame, dispatch, timeout, parse, and skip-line emission.
-
-Before running, substitute `<absolute path of this al-second-opinion skill directory>` with the actual filesystem path you loaded this `SKILL.md` from. Both Claude Code and Codex tell you that path at skill activation. DO NOT use `${CLAUDE_SKILL_DIR}` or `$env:CLAUDE_SKILL_DIR` here, PowerShell parses the first as an empty local variable and the second only resolves under Claude Code; both break the Codex branch.
-
-DO NOT wrap this whole block inside another single-quoted here-string. The inner `'@` on the body's closing line sits at column 0 and will terminate the outer here-string early, cutting the block short. If you must embed the block inside an outer here-string (passing it to another tool, composing in a higher-order script), use the double-quoted outer form `@"..."@`, the inner `'@` does not terminate it.
-
-```powershell
-$body = @'
-<artifact body - multiline OK, no escaping; closing '@ must be at column 0>
-'@
-& '<absolute path of this al-second-opinion skill directory>/scripts/Invoke-AlSecondOpinion.ps1' -Body $body
-```
-
-Sandbox flags inside the script are the gate. DO NOT widen by passing extra `-c` overrides or environment variables that change the target CLI's sandbox posture. DO NOT add `--dangerously-bypass-approvals-and-sandbox` or `--dangerously-skip-permissions`. DO NOT edit the script to switch the codex sandbox to `workspace-write` or `danger-full-access`.
-
-**Portability:** `Start-Job` / `Wait-Job` target pwsh on Windows. Non-Windows hosts need a separate wrapper.
-
-## Failure Modes
-
-| Situation | Returned verbatim |
-|---|---|
-| Skill did not invoke the script | `Second opinion skipped: skill did not invoke pwsh tool` |
-| Target CLI not on PATH (`codex` from Claude Code, `claude` from Codex) | `Second opinion skipped: <target> CLI unavailable` |
-| `Wait-Job` exceeds 600s | `Second opinion skipped: timeout after 600s` |
-| .NET exception inside Start-Job | `Second opinion skipped: pwsh exception` + newline + `<type>: <message>` + newline + script stack trace |
-| Target CLI exit code non-zero | `Second opinion skipped: <target> non-zero exit (<code>)` |
-| Target CLI exit 0, empty stdout | `Second opinion skipped: <target> empty response` |
-| Target CLI exit 0, non-empty stdout | The reviewer's stdout - the bulleted list, untouched. |
-
-`<target>` is `codex` when running in Claude Code, `claude` otherwise. Only the first row is emitted by the skill itself, and only when it honestly did not invoke the script. Every other row is emitted by the script.
-
-## Anti-Patterns
-
-**Editorialising the second opinion.** Paste the bullets verbatim. Do not rephrase, summarise, drop bullets, or add commentary. The caller reconciles per bullet.
-
-**Narrating the skip line.** When the script returns a `Second opinion skipped: ...` line, return it byte-for-byte. Do not append explanations, theories, root-cause hypotheses, fabricated stack traces, or "what was attempted" lists.
-
-**Calling the same-runtime CLI.** DO NOT edit the script so Claude Code calls `claude -p`, or Codex calls `codex exec`. The point is an *independent* reviewer; same-model self-review defeats the purpose.
-
-**Inlining the script.** DO NOT paste the script's logic back into this SKILL.md and run it from here. The script is the source of truth so changes get validated by `Validate-PowerShell.ps1`; inline copies bypass that gate.
-
-## Out Of Scope
-
-- Composing the gate question or selecting the artifact; caller owns the body.
+- Composing the artifact or selecting which artifact to send; caller owns the body.
 - Reconciling, accepting, or rejecting bullets; caller decides per bullet.
-- Configuring Codex MCP servers, AGENTS.md, or `~/.codex/`; the canonical flag set sidesteps per-machine state. Same for Claude Code settings, MCP, and skill catalogue.
+- Configuring the target CLI's MCP servers, AGENTS.md, `~/.codex/`, Claude Code settings, or skill catalogue; the canonical flag set sidesteps per-machine state.
 - Widening the sandbox or path scope on either branch.
 - Cross-platform `Start-Job` / `Wait-Job` replacements.

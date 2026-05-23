@@ -1,99 +1,65 @@
 # Notes discipline
 
-> **Runtime gate.** Content inside `<claude-only>...</claude-only>` blocks applies only to Claude Code (which has an `advisor()` tool). Codex and other runtimes without it: skip the block contents and move on. No need to comment on what was skipped.
+> **Runtime gate.** Content inside `<claude-only>...</claude-only>` blocks applies only to Claude Code (which has an `advisor()` tool). Codex and other runtimes without it: skip the block contents and move on.
 
-Destination rules for `tasks.html` content. What goes in a NOTE / IMPORTANT / WARNING alert, what goes in a Notes line, what gets rejected entirely. Format-agnostic; HTML hook syntax lives in `html-spec-discipline.md`.
+Destination map for content the skills generate. Answers one question per kind of content: *does this survive past `done`, and if so, where does it live?*
 
-Voice for the prose itself comes from `voice-contract.md`. This file is destination-only: *where* content lives, not how prose is shaped, not which tag carries it.
+Format-agnostic. HTML mechanics (`data-task`, `data-status`, Mermaid containers, surgical-edit) live in `html-spec-discipline.md`. Voice (em-dash ban, BC vocabulary, declarative cadence) lives in `voice-contract.md`. This file is destination only.
 
-## Where each piece of metadata lives
+## Two destinations, picked by lifetime
+
+- **Survives past `done`** → goes into a durable artifact outside the task block: `CONTEXT.md`, a domain ADR, a design ADR, `.out-of-scope/`, the commit message, the PR description, or a side-band reference. The task block is branch-scoped; it dies when the feature merges.
+- **Dies with the branch** → may live inside the task block (`<details data-task="T-NNN">`). Status flips, in-flight scaffolding, replan flags, mutation verdicts, deferred-decision notes the next agent on this branch needs.
+
+If you cannot tell which side a piece of content belongs on, ask the trigger test: *will this line be useful past `done`?* Yes → durable. No → inside-task or commit-only.
+
+## Destination map
 
 | Content | Destination | Owner |
 |---|---|---|
 | Status | `data-status` attribute on the task `<details>` | `/al-implement`, `/al-steer` |
-| Layer (override or explicit) | NOTE alert `**Layer**` chip | `/al-refine` (override at scenario level), `/al-design` (family default) |
-| Mutations result | NOTE alert `**Mutations**` chip + Summary table cell | `/al-mutate` |
-| Absorbed scaffolding | NOTE alert `**Absorbed**` chip | `/al-implement` (trivia exception), `/al-scope` (scaffolding-rides-with-object) |
-| Replan flag (hard-halt or soft-flag) | IMPORTANT alert | `/al-refine`, `/al-implement`, `/al-refactor`, `/al-steer` |
-| Critical hidden risk surfaced in task body | WARNING alert | `/al-scope`, `/al-refine`, `/al-implement` |
-| Declared task dependencies | edges block (`Depends on:`, `Refactors:`, `Fixes:`) inside the task | `/al-scope` |
-| Mutation plan (transient) | `**Mutations plan**` table inside the task | `/al-implement` writes; `/al-mutate` reads then deletes |
-| Non-obvious BC constraint specific to this task | Notes line | any writer |
-| Explicit deferred decision | Notes line | any writer |
+| In-flight scaffolding the next agent on this branch needs | inside the task block | the writing skill (shape is its call) |
+| Replan flag (the trigger fired; plan invalid or note added) | inside the task block (and `data-status="blocked"` when plan invalid) | `/al-refine`, `/al-implement`, `/al-refactor`, `/al-steer` |
+| Mutation verdict (kills / survivors / equivalence) | inside the task block | `/al-mutate` |
+| Critical hidden risk surfaced during refinement, implementation, or scope | inside the task block | `/al-scope`, `/al-refine`, `/al-implement` |
+| Architectural decision with cross-task or future-feature impact | design ADR (via `/al-design` or `/al-steer` re-routing) | `/al-design` |
+| BC vocabulary, business rule, cross-feature truth | domain ADR or `CONTEXT.md` (via `/al-grill-adr`) | `/al-grill-adr` |
+| Recurring scope rejection with substantive reason | `.out-of-scope/<concept>.md` | `/al-steer` |
+| Process IDs (issue / PR numbers, "the current fix") | commit message or PR description | the writing skill at commit time |
+| Environment lessons (`-Force` is mandatory here, container needs republishing) | `scripts/` or a local `CLAUDE.md` | the project, not this plugin |
+| Lessons learned, post-mortems, "Note for next time" | PR description (if cross-cutting) or a retrospective doc | the writing skill at PR time |
+| Session-internal reasoning (second-opinion accept/reject, reconciliation chatter) | stays in the session; the durable artifact carries the outcome, never the deliberation | the writing skill |
 
-The chip / alert is the single source of truth. The Summary table is regenerated from the chip values plus scenario counts on every write.
-
-For HTML hook syntax (`<aside data-alert="note">`, `<tr data-summary-row>`, `data-status` attribute, etc.) see `html-spec-discipline.md`. This file does not prescribe how alerts are written; only when they fire.
-
-## What a Notes line is now
-
-A Notes line is scaffolding for the next agent on the in-flight TDD cycle. Branch-scoped. Dies at `done`. Forward-facing fact, not a log of how it was reached.
-
-The valid shapes shrank when Layer / Mutations / Absorbed / Replan moved to chips and alerts. **Notes lines now carry only:**
-
-- **Non-obvious BC constraint specific to this task**: hidden invariant, guard in an unexpected place, table missing from an existing routine, AL-language pitfall (var-aliasing, type-coercion edge case).
-- **Explicit deferred decision**: `Implementation choice: X vs Y, /al-implement decides`. Delete the line once decided.
-
-Anything else fails the trigger test below.
-
-## Trigger test before writing a Notes line
-
-→ Will this line be useful past `done`?
-
-- **Yes** → DO NOT write to Notes. Halt. Take it to `/al-steer` to clear, then `/al-design` (architecture or design ADR) or `/al-grill-adr` (domain ADR or `CONTEXT.md`).
-- **No** → Is the content one of the two valid shapes above?
-  - **Yes** → Notes, one line.
-  - **No** → It belongs in a chip, alert, or structured line. Place it there.
-
-## Content that goes elsewhere, not Notes
-
-This is destination routing. Prose-form rules (declarative, no workflow chatter) live in `voice-contract.md`.
-
-- **Process IDs**: issue numbers, PR numbers, "the current fix", "this PR". Goes in the commit message and PR description, not the artifact.
-- **Environment lessons**: "`-Force` is mandatory on this workstation", "the container needs republishing". Goes in `scripts/` or a local `CLAUDE.md`, not the artifact.
-- **Lessons learned**: `Lesson:` entries, post-mortems, "Note for next time". Goes in the PR description if cross-cutting, or a retrospective doc. Never in `tasks.html` Notes.
-- **Session-internal reasoning**: second-opinion accept/reject lists, mutation rationale not selected. <claude-only>Also: `advisor()` cross-checks.</claude-only> Stays in the session; the durable artifact carries the outcome, not the deliberation.
+The *shape* the content takes inside the task block (chip, alert, callout, prose line, table cell, collapsible details) is the writing skill's call per task. This file does not prescribe shape; `voice-contract.md` governs the prose.
 
 ## Escalation routing
 
+When something surfaces inside an in-flight task but actually belongs to a durable destination:
+
 | Surface | Route to |
 |---|---|
-| Architectural decision with cross-task or future-feature impact | `/al-steer` → `/al-design` (architecture update or design ADR) |
+| Architectural decision with cross-task or future-feature impact | `/al-steer` → `/al-design` (architecture reshape or design ADR) |
 | BC vocabulary, business rule, cross-feature truth | `/al-steer` → `/al-grill-adr` (domain ADR or `CONTEXT.md`) |
-| Recurring scope rejection with substantive reason | `/al-steer` (`.out-of-scope/<concept>.md`) |
-| Branch-scoped scaffolding the next agent needs | Notes line, valid shape above |
+| Recurring scope rejection with substantive reason | `/al-steer` (writes `.out-of-scope/<concept>.md`) |
 
-## Alert authoring rules
-
-- **NOTE chip line**: leads with bold label, joins multiple chips with ` · ` separator. `**Layer**: component (override) · **Mutations**: 4 killed, 0 survivors · **Absorbed**: permission-set for "NALICF Comp. Line Variant Svc" inline`.
-- **IMPORTANT**: `**Replan flag**: trigger #N, <one-line reason>.` Quote the trigger number every time.
-- **WARNING**: lead with the consequence, then the fix in one line. `Without this clear, BC default cross-copy of Variant Code combined with SkipReseed := true silently overwrites the source Routing Header. Fix is a one-line clear at line 32.`
-- **CAUTION**: reserved for ADR supersession callouts. Not used in `tasks.html`.
-- **TIP**: reserved for `architecture.html`'s `## Solution` callout. Not used in `tasks.html`.
-
-Each alert body is normal prose under the voice contract, multi-sentence allowed, no em-dashes.
+`/al-steer` is the single replan venue; routing through it keeps the rejection knowledge base and the ADR queue coherent.
 
 ## Replan triggers
 
-Canonical names and modes. Cited by `/al-refine`, `/al-implement`, `/al-refactor` (each runs a Replan check gate before close); cleared by `/al-steer`.
+Seven named patterns the skills learn to spot. Cited by `/al-refine`, `/al-implement`, `/al-refactor` (each runs a replan check before close); cleared by `/al-steer`.
 
-| # | Trigger | Mode |
-|---|---|---|
-| 1 | Task too big | soft-flag |
-| 2 | Hidden pre-req | hard-halt |
-| 3 | Wrong order | hard-halt |
-| 4 | Sibling now wrong | hard-halt |
-| 5 | New behaviour emerges | soft-flag |
-| 6 | Architecture decomposition wrong | hard-halt |
-| 7 | Goal drift | soft-flag |
+| # | Trigger |
+|---|---|
+| 1 | Task too big |
+| 2 | Hidden pre-req |
+| 3 | Wrong order |
+| 4 | Sibling now wrong |
+| 5 | New behaviour emerges |
+| 6 | Architecture decomposition wrong |
+| 7 | Goal drift |
 
-- **Hard-halt**: flip task `data-status` to `blocked`, add an IMPORTANT alert with body `**Replan flag**: trigger #N, <one-line reason>.`, regenerate the Summary row, stop, run `/al-steer`.
-- **Soft-flag**: add the IMPORTANT alert, continue.
+The trigger ID survives as an address (so a flag inside one task can reference "trigger 4" and the next agent knows what pattern was seen). The response to a trigger is the writing skill's judgment per situation: when the trigger means the plan is invalid as planned, flip `data-status` to `blocked` and route to `/al-steer`; when the trigger means new info that doesn't invalidate the plan, note it inside the task and continue. Detection cues are skill-specific; each skill's replan check names what the cue looks like in its own work.
 
-Detection cues are skill-specific (the same trigger looks different from refinement, TDD, or queue triage). Each skill's Replan check section names its own cues.
+## What the Summary table is now
 
-## Summary regeneration
-
-After a chip is written or removed, regenerate the Summary table from the per-task NOTE alert chip values plus scenario counts. The Summary is a view; it is not edited directly. Status does NOT appear in the Summary (it lives on `data-status` of the task `<details>` and nowhere else, to avoid two-place edits on every status flip).
-
-Adaptive columns: if a column would carry the placeholder value for every row in the current state of `tasks.html`, omit the column from the rendered table. When the next write makes a column relevant, re-add it.
+If the writing skill chooses to render a Summary table in `tasks.html`, the Summary is a view derived from the per-task content; it is not the source of truth. Status lives only on `data-status` of the task `<details>`. Whether a Summary table earns its place in this feature is the writing skill's call per `tasks.html`; nothing in this file requires one.

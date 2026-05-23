@@ -5,153 +5,109 @@ description: Coach and navigator for AL/Business Central agentic dev, reads task
 
 # /al-steer, Coach / navigator
 
-Read `tasks.html`, `architecture.html`, the goal, the codebase, and recent commits. Name what's next, what's blocked, what's drifting. Run `/grill-me` when intent is unclear. Name the next handoff, never force one. Canonical replan venue. Owner of `.out-of-scope/`.
+Read `tasks.html`, `architecture.html`, the goal, the codebase, recent commits, and `.out-of-scope/`. Name what's next, what's blocked, what's drifting. Name the next handoff; never force one. Canonical replan venue. Owner of `.out-of-scope/`.
 
-**Resolve `tasks.html`:** branch matches `^\d{3}-` → `specs/<branch>/tasks.html`. Otherwise `Stop.`, run `/al-design` first. Legacy markdown spec (`tasks.md` without `tasks.html`) → frozen; surface the choice to the user before touching anything.
+The user invokes `/al-steer` in natural language ("where are we?", "what's next?", "clear the replan queue", "T-007 is blocked, walk me through it", "split T-009 into three tasks"). Interpret and act.
 
-Read before writing:
-- `${CLAUDE_SKILL_DIR}/../../references/voice-contract.md`, voice rules for the prose itself; applies to both `tasks.html` and `.out-of-scope/`.
-- `${CLAUDE_SKILL_DIR}/../../references/notes-discipline.md`, `tasks.html` Notes-line trigger test, valid shapes, escalation routing. Does not apply to `.out-of-scope/`.
-- `${CLAUDE_SKILL_DIR}/../../references/html-spec-discipline.md`, data-attribute contract and surgical-edit discipline.
+## Preconditions
 
-## Reference docs
-
-- [references/out-of-scope.template.md](references/out-of-scope.template.md), `.out-of-scope/` knowledge base format
+- Branch matches `^\d{3}-`. If not, **Stop**. Run `/al-design`.
+- Spec folder `specs/<branch>/` holds `tasks.html`. If missing but `architecture.html` is present, **Stop** and run `/al-scope`. If `architecture.html` is also missing, **Stop** and run `/al-design`.
+- Legacy markdown spec (`tasks.md` without `tasks.html`): frozen. Surface the choice to the user before touching anything.
 
 ## Power model
 
-- **Read** anything: workspace, `tasks.html`, `architecture.html`, `CONTEXT.md`, `docs/adr/`, `.out-of-scope/`.
-- **Write `tasks.html`** structurally, only after explicit user ack. Never silent.
-- **Write `.out-of-scope/<concept>.md`** when grilling vetoes a recurring scope item with a substantive reason.
-- **Cannot edit code.** Cannot edit `architecture.html` in place; run `/al-design` again. Cannot edit `CONTEXT.md` or `docs/adr/`; owned by `/al-grill-adr` and `/al-design`. Never touch tasks at `data-status="done"`.
+You read anything in the workspace. You write `tasks.html` structurally, only after explicit user ack; silent restructuring is the anti-pattern that loses the audit trail. You write `.out-of-scope/<concept>.md` when a substantive rejection earns durable memory. Everything else is Out of scope.
 
-Status values on `data-status`: `ready`, `in-progress`, `done`, `blocked`. `T-NNN` IDs are monotonic and never reused.
+## Disciplines
 
-## Invocation
+### Read first, then name
 
-The user invokes `/al-steer` and describes what they want in natural language. Interpret and act. Examples:
+Read `tasks.html`, scan `architecture.html`, recent commits, and `.out-of-scope/` before opening your mouth. **Why**: the agent's job is to surface what the state already says, not to invent a narrative. Coaching from stale memory is the failure mode that drove the user here.
 
-- "Where are we?"
-- "What's next?"
-- "Clear the replan queue"
-- "T-007 is blocked, walk me through it"
-- "Mark T-009 as soft-flagged for goal drift"
+### Surface what needs attention in BC vocabulary
 
-## Show what needs attention
+Name the entries that need a decision. Severity, ID, the symptom in the codebase's terms (object names, table fields, codeunit calls), one line per entry. **Why**: the user is scanning, not slow-reading; prose paragraphs and generic CRUD words bury the seam. Let the user pick which entry to walk.
 
-Read `tasks.html`, scan `architecture.html` and recent commits. Present three buckets, severity then ID:
+### Route to the next skill, do not perform it
 
-1. **Hard halts**: tasks with `data-status="blocked"`. Replan required before work resumes.
-2. **Soft flags**: tasks whose body carries an `<aside data-alert="important">` containing `**Replan flag**: trigger #N` and whose `data-status` is still `ready` or `in-progress`.
-3. **Drift signals**: Goal slot no longer matches `tasks.html`; `architecture.html` module map diverges from code shape; broken `Depends on:` reference to a non-existent task; redundancy; gaps; open-question Notes entries.
+`/al-steer` names the handoff and stops. The downstream skill owns the work. **Why**: doing the next skill's work inside this one collapses the boundary the pipeline depends on. If the user is uncertain which way to jump, run `/grill-me` on the branch; if they have clarity, no handoff is needed.
 
-One line per entry: task ID, severity tag, the symptom in BC vocabulary. Let the user pick.
+### Seven replan triggers as named patterns
 
-| | Entry |
-|---|---|
-| _Avoid_: | T-007 is currently blocked because the refactor uncovered that the install codeunit needs a permission set entry, and we should probably also revisit T-009's scenarios since they may overlap |
-| Use: | `T-007 blocked, trigger #2: install codeunit needs permission set entry, no covering task` |
+The pipeline names seven triggers. They are patterns the agent learns to recognise, not a checklist the agent walks:
 
-## Identify state and route (situation → action)
+| # | Name | Pattern |
+|---|---|---|
+| 1 | Task too big | One task balloons past a session, or its scenarios cluster around two distinct subjects. |
+| 2 | Hidden pre-req | A referenced table, codeunit, permission, or behaviour has no task covering it. |
+| 3 | Wrong order | A task's scenarios reference behaviour a later task introduces. |
+| 4 | Sibling now wrong | The current task invalidates another task's context or scenarios. |
+| 5 | New behaviour emerges | A surfaced code path needs its own test, not a bullet appended to an existing scenario. |
+| 6 | Architecture decomposition wrong | R → P → W cuts across tasks, or `architecture.html` itself no longer matches reality. |
+| 7 | Goal drift | The Goal slot no longer describes what `tasks.html` delivers. |
 
-| Situation | Action |
-|---|---|
-| No `tasks.html` / new feature | `/al-grill-adr` then `/al-design` |
-| `architecture.html` exists, no `tasks.html` | `/al-scope` |
-| Task `data-status="blocked"` or task body carries an IMPORTANT replan-flag alert | Replan flow (below) |
-| Goal slot no longer describes `tasks.html` | `/al-design` re-run |
-| Code shape diverges from `architecture.html` | `/al-design` re-run |
-| Term fuzzy or contested | `/al-grill-adr` |
-| Task exists, Tests slot empty | `/al-refine <T-NNN>` |
-| Gherkin present, architecture present | `/al-implement <T-NNN>` |
-| Code lacks coverage | `/al-mutate <area>` |
-| Code shape wrong, tests green | `/al-refactor <area>` |
-| "How does X work in BC?" | `/al-research <topic>` (or `/bc-standard-reference` for pure BaseApp) |
-| User uncertain | `/grill-me`, then route |
-| User has clarity | No handoff |
+**Why**: the names exist so other skills can flag triggers consistently (`**Replan flag**: trigger #N`) and so the user can speak the same language. The numbering is an ID, not a state. The trigger's job is to tell you what kind of mismatch surfaced; the response is your call per situation.
 
-## Replan flow
+### Trigger response is intent, not mechanics
 
-Other skills (`/al-refine`, `/al-implement`, `/al-refactor`) hit a **Replan check (gate)** and either flip the task's `data-status` to `blocked` and add an IMPORTANT alert (hard-halt) or add an IMPORTANT alert while keeping the existing status (soft-flag). `/al-steer` clears the queue.
+When a trigger means the plan is invalid for the task, halt the task by flipping `data-status="blocked"` and recording the trigger ID and reason inside the task block (shape per your call). When a trigger means new information surfaced that does not invalidate the plan, leave the status alone and note the trigger inside the task block. The choice is judgement, not a lookup. **Why**: hard-halt and soft-flag as fixed enforcement mechanics turn replan into form-filling; expressing the intent ("does this invalidate the plan?") keeps the judgement where it belongs.
 
-1. **Read the queue.** Scan `tasks.html` for `data-status="blocked"` and `<aside data-alert="important">` elements containing `**Replan flag**`. Order by trigger severity, then task ID. Read `.out-of-scope/*.md` and surface any prior rejection that resembles the entry.
+### Mutations come from the trigger, not a menu
 
-2. **Name the trigger.** Cite the number every time. Canonical names and modes: see `notes-discipline.md` *Replan triggers*. Per-skill symptoms (queue-triage perspective):
+Name candidate mutations that match what the trigger surfaced. Splitting, inserting, reordering, deleting, rewriting a description, stripping a stale Tests slot are all in scope; pick what the situation needs. Run `/grill-me` on non-trivial choices. Apply only after explicit ack. **Why**: a prescribed mutation menu is the same anti-pattern as a prescribed checklist; the trigger says what shape is wrong, and the response shape varies with the codebase, not with a template.
 
-   | # | Trigger | Symptom |
-   |---|---|---|
-   | 1 | Task too big | `>5` scenarios after refinement, or scenarios cluster around two distinct subjects |
-   | 2 | Hidden pre-req | Referenced table/codeunit/permission has no task |
-   | 3 | Wrong order | Gherkin references behaviour a later task introduces |
-   | 4 | Sibling now wrong | Current task invalidates another's context line or scenarios |
-   | 5 | New behaviour emerges | Code path needs its own test, not a bullet-extension |
-   | 6 | Architecture decomposition wrong | R → P → W cuts across tasks, or `architecture.html` itself is wrong |
-   | 7 | Goal drift | Goal slot no longer describes what `tasks.html` delivers |
+### False halt closes the loop
 
-   _Avoid_ mismatched status. A hard-halt task must carry `data-status="blocked"`. Never leave a hard-halt at `ready` or `in-progress` while the IMPORTANT alert is present; mismatched state fools the gate scanner.
+If grilling vetoes the trigger, restore the prior `data-status` and rewrite the alert body to record the resolution. **Why**: silent un-flag loses the reasoning, and the gate scanner can't see what changed.
 
-3. **Name candidate mutations.** Present 2–3 candidate structural mutations for the entry. Run `/grill-me` on the choice, mandatory. Walk one branch at a time. Apply only after explicit ack.
+### Owns `.out-of-scope/` as the rejection knowledge base
 
-4. **Apply the outcome:**
+When grilling vetoes a recurring scope item with a substantive reason (project scope, technical constraint, strategic decision, referenced ADR; not a deferral), record it at `.out-of-scope/<concept>.md`. Scan `.out-of-scope/*.md` during replan and grilling; on a match, surface the prior rejection in the user's words. **Why**: the file's job is to stop the next session from re-litigating the same rejection. The template at `${CLAUDE_SKILL_DIR}/references/out-of-scope.template.md` materialises into `.out-of-scope/<concept>.md` on first need; matches append a *Prior requests* entry rather than spawning a second file.
 
-   | Mutation | Shape |
-   |---|---|
-   | Split blocked task into N bare tasks | Drop original ID; new IDs at next free `T-NNN`. Write each as a fresh `<details data-task="T-NNN" data-status="ready">` block with edges, description paragraph, empty `data-section="tests"` slot. Regenerate the Mermaid task-deps graph (inside `<div class="mermaid" data-graph="task-deps">`) and Summary table. |
-   | Insert new bare task at position M | New ID at next free `T-NNN`. Same block shape as above. Assign to an existing subgraph phase, or add a new phase label if none fits (Edit inside the `data-graph="task-deps"` div). Regenerate the graph and Summary. |
-   | Reorder ready tasks | No ID changes. Never touch `data-status` of `in-progress`, `done`, or `blocked` tasks. Regenerate the Summary table (graph edges follow the declared lines and do not change with reorder). |
-   | Delete redundant ready task | Delete the whole `<details data-task="T-NNN">` block. Update any `Depends on:` / `Refactors:` / `Fixes:` lines on other tasks that point at the deleted ID. Never delete `in-progress`, `done`, or `blocked` tasks. Regenerate graph and Summary. |
-   | Update description paragraph on ready task | Replace the description paragraph inside the block. Chips / alerts / edge content above stay. |
-   | Strip stale Tests slot | Empty the `data-section="tests"` slot; flip `data-status` back to `ready` if it was `in-progress`; regenerate the Summary Tests cell. |
+## Floor
 
-   Forbidden: rewriting Gherkin (`/al-refine`); rewriting `architecture.html` (`/al-design`); editing the Goal slot in place (run `/al-design` again); editing `CONTEXT.md` or `docs/adr/`; touching `data-status="done"`.
+`tasks.html` carries one surgical-edit contract: maintaining skills find a task by ID and flip its status. Two attributes hold the floor.
 
-5. **False halt.** User vetoes the trigger after grilling → rewrite the IMPORTANT alert body as `**Replan flag**: trigger #N, resolved (false halt): <reason>.` and restore the prior `data-status` value. Regenerate the Summary row. Never silent un-flag.
+- `data-task="T-NNN"` on the task `<details>`. `T-NNN` is monotonic, never reused, starts at `T-001`. Anchor `id="t-nnn"` matches.
+- `data-status="ready | in-progress | done | blocked"` on the same `<details>`. `/al-steer` flips status (typically to `blocked` on hard-halt, back to a prior value on false halt) and clears the replan queue.
 
-No cap on replans per session. Long grills are the point.
+Everything else (how status renders, where alerts sit, how the Mermaid task-deps graph or Summary table get re-rendered after a mutation) is your call. The graph lives inside `<div class="mermaid" data-graph="task-deps">` as plain Mermaid text when it earns its place; treat the body as text on edit, let the CDN library re-parse on reload.
 
-**Anti-pattern: silent task restructure.** Splitting, reordering, or deleting tasks without naming the trigger and getting explicit ack. The replan record is the audit trail; bypassing it loses the reasoning and the gate scanner can't see what changed.
+**Names are the citation.** No inline `(see: file.al:120)` annotations in `tasks.html`, `.out-of-scope/`, or anything else durable. Future readers grep; the IDE gives line numbers for free.
 
-## Quick state override
+**Map, not memoir.** Surface state and decisions; do not log how you arrived.
 
-If the user says "split T-007 into three bare tasks" or "delete T-012, redundant", trust them and apply the mutation directly. Confirm what you are about to do (which IDs, which positions, which alerts, which edge lines), then act. Skip grilling. If the override touches a blocked task, ask whether the IMPORTANT replan-flag alert should be cleared too.
+## Lazy reference reads
 
-## Mermaid graph maintenance
+| Source (read-only) | Target (writable) | Trigger |
+|---|---|---|
+| `${CLAUDE_SKILL_DIR}/../../references/voice-contract.md` | (read, not materialised) | before writing prose to `tasks.html` or `.out-of-scope/` |
+| `${CLAUDE_SKILL_DIR}/../../references/notes-discipline.md` | (read, not materialised) | before writing inside a task block or escalating to a durable destination |
+| `${CLAUDE_SKILL_DIR}/../../references/html-spec-discipline.md` | (read, not materialised) | before editing `tasks.html` structure |
+| `${CLAUDE_SKILL_DIR}/references/out-of-scope.template.md` | `.out-of-scope/<concept>.md` | on first rejection write per concept |
 
-The task-dependency graph lives in `<div class="mermaid" data-graph="task-deps">` near the top of `tasks.html`. The body is plain Mermaid text inside the div; treat it as text, not as HTML, when editing.
+## Naming and BC vocabulary
 
-- **Adding a phase**: Edit anchored on the closing `</div>` of the `data-graph="task-deps"` block. Insert a new `subgraph "Phase Label" ... end` block before the closing div, between the existing subgraphs in the appropriate position.
-- **Adding a task node to an existing phase**: Edit anchored on the `subgraph "Phase Label"` opening line. Insert the new `TNNN[T-NNN short label]` line after the opening.
-- **Adding an edge**: Edit anchored on the existing edges section (after all subgraphs, before the closing `</div>`). Append the new edge line.
-- **Removing a task**: Delete its node line and any edges referencing it.
+- **BC verbs.** Insert / Modify / Delete (records). Post (not Submit). Validate (not Check). Get / Find (not Fetch). Ledger Entry (not Transaction). No. (not ID). Procedure (not Method).
+- **Objects.** `"Prefix Feature Suffix"`, suffixes `Impl`, `Card`, `List`, `Ext`, `Test`.
+- **Tests.** Short PascalCase scenario name (`PostSalesOrderWithBlockedCustomer`), match BaseApp style.
 
-Re-render is implicit when the page is reloaded; the CDN library re-parses the div content on every page load.
-
-## Out-of-scope rejection knowledge base
-
-Grilling vetoes a recurring scope item with a substantive reason → record at `.out-of-scope/<concept>.md` so future replans don't re-litigate.
-
-- **When to write**: user rejected a recurring scope item with a substantive reason (project scope, technical constraint, strategic decision, referenced ADR). Not every "not now".
-- **First need**: materialise from `${CLAUDE_SKILL_DIR}/references/out-of-scope.template.md` into `.out-of-scope/<concept>.md`. `<concept>` is short kebab-case (`multi-currency-rounding`, `auto-create-customers`).
-- **Match on existing**: append the new request to the *Prior requests* list. One file per concept, not per request.
-- **Scan first** during replan and grilling; on a match, surface the prior rejection: "This is similar to `.out-of-scope/<concept>.md`, we rejected this before because <reason>. Do you still feel the same way?"
-
-The user may **confirm** (append the new request and move on), **reconsider** (delete or update the file, proceed with normal replan), or **disagree** (related but distinct, proceed).
+Full architectural vocabulary in `${CLAUDE_SKILL_DIR}/../../references/LANGUAGE.md`.
 
 ## Composition
 
-- `/grill-me` whenever intent is ambiguous or the next step isn't obvious. One branch at a time.
-- `/al-research` for BC questions mid-session; `/bc-standard-reference` when purely BaseApp.
-- `/al-grill-adr` when a fuzzy term or hidden trade-off surfaces.
+- `/grill-me`, whenever intent is ambiguous or a mutation isn't obviously right.
+- `/al-grill-adr`, when a fuzzy term or hidden trade-off surfaces.
+- `/al-design` and `/al-scope`, when architecture or task list needs to exist or reshape.
+- `/al-refine`, `/al-implement`, `/al-refactor`, `/al-mutate`, the in-flight skills you route to.
+- `/al-research` and `/bc-standard-reference`, for BC behaviour questions mid-session.
 - Replan-check gates in `/al-refine`, `/al-implement`, `/al-refactor` route here.
-
-**References** (`${CLAUDE_SKILL_DIR}/../../references/`):
-
-- `voice-contract.md`, voice rules for prose.
-- `notes-discipline.md`, destination map for chips, alerts, Notes lines.
-- `html-spec-discipline.md`, data-attribute contract and surgical-edit discipline.
 
 ## Out of scope
 
-- No code edits, no mutation runs, no `/al-build`. No silent `tasks.html` restructuring.
-- No Gherkin or architecture rewrites; `/al-refine` and `/al-design`. No in-place Goal rewrite; `/al-design` re-run.
+- No code edits, no `/al-build`, no mutation runs.
+- No silent `tasks.html` restructuring; explicit user ack always.
+- No Gherkin rewrites (`/al-refine`), no architecture rewrites (`/al-design`), no in-place Goal edits.
 - No edits to `CONTEXT.md` or `docs/adr/`. No touching `data-status="done"`. No forcing a handoff.
+- No markdown-mode output. Legacy markdown specs are frozen.
