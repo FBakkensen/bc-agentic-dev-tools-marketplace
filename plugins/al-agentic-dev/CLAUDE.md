@@ -7,19 +7,22 @@ Composable skills for AL/Business Central agentic development.
 Two layers, on purpose.
 
 - **Repo-root, durable across features**, markdown: `CONTEXT.md`, `docs/adr/`, `.out-of-scope/`. Owners: `/al-grill-adr` (CONTEXT + domain ADRs), `/al-design` (design ADRs), `/al-steer` (out-of-scope).
-- **Branch-scoped, per in-flight feature**, HTML: `specs/<NNN>-<slug>/architecture.html` + `tasks.html`. Self-contained, Mermaid + Google Fonts via CDN. Slug matches the current git branch.
+- **Branch-scoped, per in-flight feature**, HTML: `specs/<NNN>-<slug>/event-model.html` (user-facing journey, present for user/API-facing features) + `architecture.html` + `tasks.html`. Self-contained, Mermaid + Google Fonts via CDN. Slug matches the current git branch.
 
 `tasks.html` is the per-feature task bus. Status lives on a `data-status` attribute on the task `<details>`: `ready`, `in-progress`, `done`, `blocked`. `T-NNN` IDs are monotonic and never reused.
+
+**Branch creation is shared between `/al-event-model` and `/al-design`.** The first per-feature skill to run from `main` creates the branch and `specs/<NNN>-<slug>/`. For user/API-facing features that runs `/al-event-model` first; pure-backend features skip `/al-event-model` and `/al-design` does it.
 
 **Legacy markdown specs** (`specs/*/architecture.md` + `tasks.md` from before 0.14.0) are frozen historical artifacts. The new skills refuse to operate on them; users hand-migrate if they need to reshape one.
 
 ## Pipeline
 
 ```
-/al-grill-adr  →  /al-design  →  /al-scope   →  /al-refine    →  /al-implement  →  /al-refactor  →  /al-mutate
-(CONTEXT, ADRs)   (architecture (tasks.html)    (per-task         (TDD per task)    (improve        (test-rigor
-                   .html,                       Gherkin)                            shape)          gate)
-                   branch)
+/al-grill-adr  →  /al-event-model    →  /al-design     →  /al-scope    →  /al-refine    →  /al-implement   →  /al-refactor  →  /al-mutate
+(CONTEXT,         (event-model.html,     (architecture     (tasks.html)    (per-task        (TDD per task)     (improve        (test-rigor
+ ADRs)             user/API-facing        .html, AL-shape                   Gherkin)                            shape)          gate)
+                   only — pure backend    only)
+                   skips this step)
 
 side-band: /al-research, /al-steer (replan venue + .out-of-scope)
 ```
@@ -30,7 +33,8 @@ side-band: /al-research, /al-steer (replan venue + .out-of-scope)
 |---|---|
 | `/al-steer` | Coach/navigator. Reads state, names next step, never edits code. Owns `.out-of-scope/`. |
 | `/al-grill-adr` | Domain-aware grilling. Sharpens BC vocabulary, updates `CONTEXT.md`, offers domain ADRs only. |
-| `/al-design` | Idea → feature architecture. Module map, BC patterns, R→P→W boundary, brownfield touchpoints, test strategy, parallel design-twice. Creates branch + `architecture.html`. |
+| `/al-event-model` | User-facing journey settlement. BC-vocabulary chains (Role / Action / Business Event / View / Status), one timeline per feature, Role swimlanes when more than one Role participates. Writes `event-model.html`. Optional, pure-backend features skip it. |
+| `/al-design` | Event-model.html → feature architecture. Module map, BC patterns, R→P→W boundary, brownfield touchpoints, test strategy, parallel design-twice. Writes `architecture.html`; creates branch when `/al-event-model` did not. |
 | `/al-scope` | `architecture.html` → bare task list in `tasks.html`. Goal + `T-NNN` entries in ZOMBIES order. No grilling, no branch creation. |
 | `/al-refine` | One task → numbered Gherkin scenarios. Per task, not per feature. |
 | `/al-implement` | Pick a Gherkin-ready task, run TDD: red → green → refactor → mutate. |
@@ -68,14 +72,14 @@ Two tiers, on purpose.
 
 | File | Tier | Notes |
 |---|---|---|
-| `LANGUAGE.md` | plugin-level | architectural vocabulary; read by `/al-design`, `/al-grill-adr`, `/al-refactor` |
+| `LANGUAGE.md` | plugin-level | architectural vocabulary; read by `/al-design`, `/al-grill-adr`, `/al-event-model`, `/al-refactor` |
 | `CONTEXT.template.md` | plugin-level | template materialised into the target repo's `CONTEXT.md` |
 | `adr.template.md` | plugin-level | template materialised into the target repo's `docs/adr/NNNN-<slug>.md` |
 | `voice-contract.md` | plugin-level | voice rules for prose; read by every skill that writes a durable artifact |
 | `user-communication.md` | plugin-level | principles for chat output (names are the citation, lede first, terse, BC vocab, no em-dashes) and voice carve-outs from `voice-contract.md`; read by skills that emit interactive chat |
 | `notes-discipline.md` | plugin-level | what kinds of info live in the task block vs elsewhere (commit message, ADR, `.out-of-scope/`), what survives past `done`, what dies with the branch; read by skills that write `tasks.html` |
-| `html-spec-discipline.md` | plugin-level | aesthetic posture, the two-attribute floor (`data-task` + `data-status`), Mermaid embedding, self-contained constraint, prior-spec consultation, status-flip surgical-edit; read by `/al-design`, `/al-scope`, `/al-refine`, `/al-implement`, `/al-mutate`, `/al-steer` |
-| `cross-branch-numbering.md` | plugin-level | algorithm for picking `NNN` (spec folders) and `NNNN` (ADRs) across parallel branches; read by `/al-design`, `/al-grill-adr` |
+| `html-spec-discipline.md` | plugin-level | aesthetic posture, the two-attribute floor (`data-task` + `data-status`), Mermaid embedding, self-contained constraint, prior-spec consultation, status-flip surgical-edit; read by `/al-design`, `/al-event-model`, `/al-scope`, `/al-refine`, `/al-implement`, `/al-mutate`, `/al-steer` |
+| `cross-branch-numbering.md` | plugin-level | algorithm for picking `NNN` (spec folders) and `NNNN` (ADRs) across parallel branches; read by `/al-design`, `/al-event-model`, `/al-grill-adr` |
 | `bc-patterns.md` | plugin-level | BC pattern catalogue cited by `architecture.html`, design ADRs, and `/al-design` |
 | `out-of-scope.template.md` | `/al-steer`-local | template materialised into `.out-of-scope/<concept>.md` |
 | `legacy-refactor-plan.md` | `/al-refactor`-local | reference plan for legacy code without tests |
@@ -107,6 +111,7 @@ references/                 # Plugin-level shared, read by ≥2 skills, or cited
 └── html-spec-discipline.md # Aesthetic posture, two-attribute floor, Mermaid, self-contained, prior-spec consultation
 skills/
 ├── al-design/SKILL.md
+├── al-event-model/SKILL.md
 ├── al-grill-adr/SKILL.md
 ├── al-implement/SKILL.md
 ├── al-mutate/SKILL.md

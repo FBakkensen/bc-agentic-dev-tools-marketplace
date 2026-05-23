@@ -5,14 +5,14 @@ description: Coach and navigator for AL/Business Central agentic dev, reads task
 
 # /al-steer, Coach / navigator
 
-Read `tasks.html`, `architecture.html`, the goal, the codebase, recent commits, and `.out-of-scope/`. Name what's next, what's blocked, what's drifting. Name the next handoff; never force one. Canonical replan venue. Owner of `.out-of-scope/`.
+Read `tasks.html`, `architecture.html`, `event-model.html` when present, the goal, the codebase, recent commits, and `.out-of-scope/`. Name what's next, what's blocked, what's drifting. Name the next handoff; never force one. Canonical replan venue. Owner of `.out-of-scope/`.
 
 The user invokes `/al-steer` in natural language ("where are we?", "what's next?", "clear the replan queue", "T-007 is blocked, walk me through it", "split T-009 into three tasks"). Interpret and act.
 
 ## Preconditions
 
-- Branch matches `^\d{3}-`. If not, **Stop**. Run `/al-design`.
-- Spec folder `specs/<branch>/` holds `tasks.html`. If missing but `architecture.html` is present, **Stop** and run `/al-scope`. If `architecture.html` is also missing, **Stop** and run `/al-design`.
+- Branch matches `^\d{3}-`. If not, **Stop**. Run `/al-event-model` (or `/al-design` for pure-backend features).
+- Spec folder `specs/<branch>/` holds `tasks.html`. If missing but `architecture.html` is present, **Stop** and run `/al-scope`. If `architecture.html` is also missing, **Stop** and run `/al-design` (or `/al-event-model` first for user/API-facing features).
 - Legacy markdown spec (`tasks.md` without `tasks.html`): frozen. Surface the choice to the user before touching anything.
 
 ## Power model
@@ -23,7 +23,7 @@ You read anything in the workspace. You write `tasks.html` structurally, only af
 
 ### Read first, then name
 
-Read `tasks.html`, scan `architecture.html`, recent commits, and `.out-of-scope/` before opening your mouth. **Why**: the agent's job is to surface what the state already says, not to invent a narrative. Coaching from stale memory is the failure mode that drove the user here.
+Read `tasks.html`, scan `architecture.html`, `event-model.html` when present, recent commits, and `.out-of-scope/` before opening your mouth. **Why**: the agent's job is to surface what the state already says, not to invent a narrative. Coaching from stale memory is the failure mode that drove the user here.
 
 ### Surface what needs attention in BC vocabulary
 
@@ -99,6 +99,7 @@ Full architectural vocabulary in `${CLAUDE_SKILL_DIR}/../../references/LANGUAGE.
 
 - `/grill-me`, whenever intent is ambiguous or a mutation isn't obviously right.
 - `/al-grill-adr`, when a fuzzy term or hidden trade-off surfaces.
+- `/al-event-model`, when a user-facing or API-facing fact (Role, Action, Business Event, View, Status) surfaced downstream invalidates the timeline; route here for reshape.
 - `/al-design` and `/al-scope`, when architecture or task list needs to exist or reshape.
 - `/al-refine`, `/al-implement`, `/al-refactor`, `/al-mutate`, the in-flight skills you route to.
 - `/al-research` and `/bc-standard-reference`, for BC behaviour questions mid-session.
@@ -108,6 +109,6 @@ Full architectural vocabulary in `${CLAUDE_SKILL_DIR}/../../references/LANGUAGE.
 
 - No code edits, no `/al-build`, no mutation runs.
 - No silent `tasks.html` restructuring; explicit user ack always.
-- No Gherkin rewrites (`/al-refine`), no architecture rewrites (`/al-design`), no in-place Goal edits.
+- No Gherkin rewrites (`/al-refine`), no architecture rewrites (`/al-design`), no event-model rewrites (`/al-event-model`), no in-place Goal edits.
 - No edits to `CONTEXT.md` or `docs/adr/`. No touching `data-status="done"`. No forcing a handoff.
 - No markdown-mode output. Legacy markdown specs are frozen.

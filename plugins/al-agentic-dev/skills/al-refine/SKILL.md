@@ -13,8 +13,9 @@ User-facing chat shapes (Opener, Phase, Drafted scenarios, Second opinion, Repla
 
 ## Preconditions
 
-- Branch matches `^\d{3}-`. If not, **Stop**. Run `/al-design`.
+- Branch matches `^\d{3}-`. If not, **Stop**. Run `/al-event-model` (or `/al-design` for pure-backend features).
 - Spec folder holds `architecture.html`. If not, **Stop**. Run `/al-design`.
+- For user/API-facing features, `event-model.html` is also present. Pure-backend features carry `architecture.html` only.
 - Task carries `data-status="blocked"` → **Stop**. Route to `/al-steer` to clear the replan.
 - Legacy markdown spec (`tasks.md` without `tasks.html`) → **Stop**. Legacy specs are frozen; hand-migrate before continuing.
 
@@ -31,7 +32,7 @@ The Tests area's job: spec how one task's behaviour is tested so `/al-implement`
 
 What the next reader needs from you, expressed as questions you must have answers to:
 
-- **What is the task actually delivering?** Resolve from the task block's description, the slice context in `architecture.html`, and the codebase. Wire tasks cross the slice's trigger → state path; primitive / extract / fix / refactor tasks stay at the task's own scope.
+- **What is the task actually delivering?** Resolve from the task block's description, the slice context in `architecture.html`, the user-facing journey in `event-model.html` when present, and the codebase. Wire tasks cross the slice's trigger → state path; primitive / extract / fix / refactor tasks stay at the task's own scope. When `event-model.html` is present, scenario titles and Gherkin bodies cite Roles, Business Events, and Views by their canonical names from there.
 - **What scenarios cover it?** ZOMBIES across the task: Zero, One, Many, Boundary, Interfaces, Exception, Simple. Both positive and negative where the letter admits.
 - **What is each scenario's test layer?** Pure by default. E2E when composition or a side effect is unreproducible at the pure layer (posting, document flow, event chain, table triggers, install / upgrade transitions, telemetry shape).
 - **What does the codebase actually expose?** Real codeunits, tables, fields, events on the boundary. Every precondition and outcome cites a symbol that exists.
@@ -98,6 +99,7 @@ Numbering is the execution order; `/al-implement` traverses bullets sequentially
 ## Composition
 
 - `/al-scope`, precondition. A task block with `data-task` and a description must exist.
+- `/al-event-model`, source of canonical Roles, Business Events, Views for user/API-facing features; scenarios cite from there.
 - `/grill-me`, when intent is fuzzy. Standalone-callable mid-flow.
 - `/al-grill-adr`, when a domain term is fuzzy and `CONTEXT.md` needs sharpening.
 - `/al-research`, for non-trivial BC behaviour.

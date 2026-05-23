@@ -56,6 +56,8 @@ One initiated behaviour expressed as **trigger → command → event → state �
 - **Translation** slice, API page, web service, webhook *(external-system-initiated)*.
 - **View** slice, page render, FlowField, report layout *(read-only)*.
 
+**Settlement is two-artifact for user/API-facing slices.** User-facing slots (Role, Action, Business Event, View, Status; BC vocabulary at external-observer altitude, no AL pub/sub) settle in `event-model.html` via `/al-event-model`. AL realisation (trigger object, command codeunit, publication or subscription, state mutation, view rendering) maps each user-facing slot to its AL home and settles in `architecture.html` via `/al-design`. Pure-backend slices (Job Queue, install / upgrade, scheduled task) skip `event-model.html`; the trigger-source slot carries them and AL realisation settles in `architecture.html` directly.
+
 The pattern qualifies the slice in `architecture.html`, `Slice (Automation): trigger ...`. _Avoid_: user story (too unstructured), use case (too OO), flow (already used for the diagram).
 
 **Vertical slicing** _(working principle, predates VSA, implicit in Kent Beck's TDD, 2002)_

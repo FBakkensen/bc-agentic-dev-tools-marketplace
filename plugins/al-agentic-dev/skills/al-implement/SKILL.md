@@ -13,8 +13,9 @@ Pick the next ready task from `tasks.html`, run TDD per Gherkin bullet, refactor
 
 ## Preconditions
 
-- Branch matches `^\d{3}-`. If not, **Stop**. Run `/al-design`.
+- Branch matches `^\d{3}-`. If not, **Stop**. Run `/al-event-model` (or `/al-design` for pure-backend features).
 - Spec folder `specs/<branch>/` holds `tasks.html` and `architecture.html`. If missing, **Stop**. Run `/al-design`.
+- For user/API-facing features, `event-model.html` is also present; test names and `[SCENARIO]` / `[GIVEN]` / `[WHEN]` / `[THEN]` comments cite Roles, Business Events, and Views by their canonical names from there.
 - Legacy markdown spec (`tasks.md` without `tasks.html`): **Stop**. Legacy specs are frozen; hand-migrate before continuing.
 - Target task carries `data-status="ready"` and a populated Tests area inside its block. Tests area empty, **Stop**, run `/al-refine <T-NNN>`. `data-status="blocked"`, **Stop**, run `/al-steer` to clear the replan.
 
@@ -107,7 +108,7 @@ Everything else this skill writes inside the task block (absorbed-scaffolding no
 
 ## Composition
 
-- `/al-design` precondition (`architecture.html`). `/al-refine` precondition (filled Tests slot).
+- `/al-design` precondition (`architecture.html`). `/al-event-model` precondition for user/API-facing features (`event-model.html` carries canonical Role / Action / Business Event / View names that `[SCENARIO]` comments and test names cite). `/al-refine` precondition (filled Tests slot).
 - `/al-research` for BC facts `architecture.html` does not cover. `/bc-standard-reference` for pure BaseApp questions.
 - `/al-build` after every RED and GREEN, after the `/al-refactor` pass, and before `done`. `-UnitTestOnly` for Pure inner loop; container precedes `done`.
 - `/al-refactor` once per task on the full task diff, mandatory before `/al-mutate`. Owns naming, project vocabulary, reshape, AppSource compliance.

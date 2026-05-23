@@ -1,13 +1,13 @@
 ---
 name: al-grill-adr
-description: Domain-aware grilling for AL/Business Central, sharpens BC vocabulary against CONTEXT.md, cross-references stated intent with the codebase, and offers domain ADRs only. Use before /al-design to crystallise shared understanding, or standalone mid-feature when a fuzzy term or hidden trade-off surfaces.
+description: Domain-aware grilling for AL/Business Central, sharpens BC vocabulary against CONTEXT.md, cross-references stated intent with the codebase, and offers domain ADRs only. Use before /al-event-model (or before /al-design for pure-backend features) to crystallise shared understanding, or standalone mid-feature when a fuzzy term or hidden trade-off surfaces.
 ---
 
 # /al-grill-adr, Domain-aware grilling for AL/Business Central
 
-Interview the user about domain intent, one question at a time, cross-referencing the codebase when the codebase can answer. The artifact's job: sharpen `CONTEXT.md` until BC vocabulary is unambiguous and offer domain ADRs when the constraint behind a choice is hard to reverse and worth preserving. Architectural picks belong to `/al-design`; this skill stays in the domain.
+Interview the user about domain intent, one question at a time, cross-referencing the codebase when the codebase can answer. The artifact's job: sharpen `CONTEXT.md` until BC vocabulary is unambiguous and offer domain ADRs when the constraint behind a choice is hard to reverse and worth preserving. User-facing journey settlement belongs to `/al-event-model`; architectural picks belong to `/al-design`; this skill stays in the domain.
 
-`/al-design` reads the resulting `CONTEXT.md` and `docs/adr/` next.
+`/al-event-model` reads the resulting `CONTEXT.md` and `docs/adr/` next (or `/al-design` directly for pure-backend features).
 
 ## Preconditions
 
@@ -21,7 +21,6 @@ What the durable artifacts need from you, expressed as questions you must have a
 - **Which BC term in this conversation is ambiguous, overloaded, or conflicts with `CONTEXT.md` as written?** Resolve to a canonical name. Standard Microsoft BC terms (`Sales Header`, `Customer`, `Posting Date`) are the baseline; record only what this project narrows, extends, or names that Microsoft doesn't.
 - **What concrete scenario forces the boundary between two concepts to be precise?** Partial posting, prepayment, reversal, dimension inheritance, multi-company, AppSource constraint. Stress the relationship until the user is precise about where one concept ends and the next begins.
 - **Where does the user's stated behaviour disagree with the code?** Surface the contradiction; do not paper over it. The right resolution is the user's call, but the conflict must be named.
-- **Is the slice's trigger, command, event, state, and view named clearly enough that `/al-design` can fill the slice without guessing?** Trigger source decides the slice pattern (Command / Automation / Translation / View); see `${CLAUDE_SKILL_DIR}/../../references/LANGUAGE.md` *Slice* entry. Filling the slice is `/al-design`'s job; making the inputs nameable is yours.
 - **Does any domain constraint surfaced here cross the four-of-four ADR bar?** If yes, offer the ADR inline.
 
 If a question stays unanswerable, the grilling is not done. Keep going, or `/al-research` if the gap is BC behavioural fact rather than user intent.
@@ -74,12 +73,14 @@ Voice for everything written to `CONTEXT.md` and ADRs: `${CLAUDE_SKILL_DIR}/../.
 - `/grill-me`, the interview engine this skill wraps with BC domain awareness.
 - `/al-research`, mandatory before naming a BC term, disambiguating against BaseApp, or writing an ADR that cites BC facts.
 - `/bc-standard-reference`, when the question is purely BaseApp behaviour.
-- `/al-design`, consumes the resulting `CONTEXT.md` + ADRs next.
+- `/al-event-model`, consumes the resulting `CONTEXT.md` + ADRs next for user/API-facing features.
+- `/al-design`, consumes the resulting `CONTEXT.md` + ADRs next for pure-backend features (or after `/al-event-model` for others).
 - `${CLAUDE_SKILL_DIR}/../../references/testability-pillars.md`, useful when triaging "is this a domain rule or an architecture/testability concern?" Testability concerns route to `/al-design`, not a domain ADR.
 
 ## Out of scope
 
 - No code edits.
+- No user-facing journey settlement (Role, Action, Business Event, View, Status). All `/al-event-model`.
 - No design picks. Mechanism, module shape, pattern, seam placement, test layer all belong to `/al-design`.
 - No architectural ADRs. Only domain ADRs that pass all four gates.
-- No architecture writing (`/al-design`), task breakdown (`/al-scope`), branch creation (`/al-design`), or mutations (`/al-mutate`).
+- No architecture writing (`/al-design`), event-model writing (`/al-event-model`), task breakdown (`/al-scope`), branch creation, or mutations (`/al-mutate`).

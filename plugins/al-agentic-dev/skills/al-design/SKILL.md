@@ -1,6 +1,6 @@
 ---
 name: al-design
-description: Idea → feature architecture for AL/Business Central. Names modules under src/, picks one BC pattern per module, draws the R → P → W boundary, lists brownfield touchpoints, decides test layer per scenario family, runs parallel design-twice for non-trivial calls, then creates the branch and writes architecture.html. Use after /al-grill-adr, before /al-scope. Per feature, not per task.
+description: Idea → feature architecture for AL/Business Central. Reads event-model.html when present (user/API-facing features) for the user-facing journey; settles AL-shape (module map under src/, BC pattern per module, R → P → W boundary, brownfield touchpoints, test layer per scenario family). Runs parallel design-twice for non-trivial calls. Writes architecture.html; creates branch and spec folder when /al-event-model did not. Use after /al-event-model for user/API-facing features, or after /al-grill-adr for pure-backend features. Per feature, not per task.
 ---
 
 # /al-design, Idea → feature architecture
@@ -14,7 +14,8 @@ Turn a sharpened idea into a feature-level architecture, then write `architectur
 ## Preconditions
 
 - `/al-grill-adr` ran for this idea. The grilling outcome sharpens intent and side-effects `CONTEXT.md` / domain ADRs. Without it, you cannot tell domain confusion from genuine architectural choice. **Stop** and run it first.
-- Must run from `main`. The branch this skill creates is the feature branch.
+- For user-facing or API-facing features, `/al-event-model` ran, producing `event-model.html` in the spec folder. Without it, this skill would re-litigate user-side picks inline and the entanglement the pipeline removes returns. If `event-model.html` is missing, run the missing-storm checkpoint: ask the user whether the feature is pure backend (no human, no API consumer, only internal batch work) or whether `/al-event-model` was forgotten. **Stop** unless the user confirms pure backend.
+- Branch creation is shared with `/al-event-model`. If on `main` (pure-backend feature, or first per-feature skill to run), this skill creates the branch and spec folder. If on a feature branch (`^\d{3}-`), `/al-event-model` already created it; this skill writes `architecture.html` into the existing spec folder.
 - If the spec folder already holds an `architecture.html`, you are reshaping; re-run with the user's awareness, not silently.
 - If the spec folder holds a legacy `architecture.md` without `architecture.html`, **Stop**. Legacy markdown specs are frozen historical artifacts; surface the choice (hand-migrate, or delete and reshape via this skill).
 
@@ -24,9 +25,7 @@ The artifact's job: tell the next skill (and the next agent, weeks later, fresh 
 
 What the next reader needs from you, expressed as questions you must have answers to:
 
-- **What user-visible outcome does this feature deliver?** Phrase as result, not work.
-- **What problem does it solve?** State the pain in the user's vocabulary, not the system's.
-- **What initiated behaviour(s) does the feature deliver?** Each one is a *slice* (Event Modeling): **trigger → command → event → state → view**, qualified by pattern (Command / Automation / Translation / View). See `${CLAUDE_SKILL_DIR}/../../references/LANGUAGE.md` *Slice* and Behavioural decomposition.
+- **Which user-facing slices does this feature deliver, and where do they come from?** When `event-model.html` is present, the user-facing slots of each slice (Role, Action, Business Event, View, Status) are settled there; this skill reads them, does not re-decide them, and qualifies each slice by its AL pattern (Command / Automation / Translation / View) based on trigger source. When `event-model.html` is absent (pure-backend feature confirmed), name the slice's trigger-source-only slot (Job Queue, install / upgrade, scheduled task); no user-facing slots apply. See `${CLAUDE_SKILL_DIR}/../../references/LANGUAGE.md` *Slice* entry.
 - **Which modules are added, extended, or touched?** A module is `src/<module>/`. Use CONTEXT.md vocabulary for the role; "the Settlement intake module," never "the FooBarHandler."
 - **Which BC pattern realises each module?** Pick from `${CLAUDE_SKILL_DIR}/../../references/bc-patterns.md`. Verify the pattern against current BaseApp via `/al-research` before committing.
 - **Where does the R → P → W boundary sit?** R = reads / inputs / events subscribed. P = pure procedure, no DB, no side effects, the unit-test surface. W = effects (Insert / Modify / Delete, telemetry, errors, events published).
@@ -51,9 +50,9 @@ A seam without two adapters is hypothetical. **Why**: one adapter is a tautology
 
 The split *is* the refactor, not annotation. **Why**: pulling pure decision logic out of read/write context is what makes unit testing possible without standing up DB state. P is the most load-bearing line in the design; it names what is testable without a real database.
 
-### Slice completeness
+### AL realisation per slice, no void slots
 
-Every slice fills **trigger → command → event → state → view**. **Why**: a void means the feature lacks observable confirmation, a real trigger, or a real command. Voids and what they mean: no trigger → internal-only (build / refactor / test work, not really a feature); no command → read-only View slice (confirm intended); no event → either subscribed-not-published (fine) or the BaseApp event you would subscribe to doesn't exist (run `/al-research`); no state → View again; no view → no observable confirmation, reconsider. Name the void in the artifact; do not silently fill or skip.
+Each slice in `architecture.html` names its AL realisation across the user-facing slots settled in `event-model.html` (or the trigger-source slot only, for pure-backend slices): the trigger object (page action, subscriber, Job Queue, install hook, API endpoint), the codeunit holding the command, the publication or subscription that moves the chain, the table or field carrying state, the page or factbox or API endpoint that renders the view. **Why**: a void here is a slot in the user-facing chain that has no implementation home, and `/al-implement` either invents one or stalls. Voids in the user-facing chain are caught earlier by `/al-event-model`; this discipline checks AL coverage. If `event-model.html` is absent for a non-pure-backend feature, the missing-storm checkpoint fires before this discipline applies.
 
 ### AppSource sanity
 
@@ -99,9 +98,9 @@ Each pass runs its own `/al-research` for any BC behavioural claim. Each receive
 
 ## Branch + folder + write
 
-If already on `^\d{3}-`: **Stop**. Must run from `main`.
+If already on `^\d{3}-`: `/al-event-model` ran first and created the branch and spec folder. Write `architecture.html` into the existing folder.
 
-Resolve `<NNN>` per `${CLAUDE_SKILL_DIR}/../../references/cross-branch-numbering.md` (cross-branch scan, not a local-only scan of `specs/`). Derive a 2–4-word kebab-case slug; do not ask the user. Announce the branch name and slug, then create branch `<NNN>-<slug>` and `specs/<NNN>-<slug>/`. If the branch exists locally or remotely: **Stop**, the user resolves.
+If on `main`: this skill is the first per-feature skill to run (pure-backend feature, or `/al-event-model` was skipped after the missing-storm checkpoint resolved to *pure backend*). Resolve `<NNN>` per `${CLAUDE_SKILL_DIR}/../../references/cross-branch-numbering.md` (cross-branch scan, not a local-only scan of `specs/`). Derive a 2–4-word kebab-case slug; do not ask the user. Announce the branch name and slug, then create branch `<NNN>-<slug>` and `specs/<NNN>-<slug>/`. If the branch exists locally or remotely: **Stop**, the user resolves.
 
 Then write `architecture.html`. Self-contained HTML, inline `<style>`, Google Fonts via CDN, Mermaid pinned `@11` via jsdelivr; full aesthetic and embedding constraints in `${CLAUDE_SKILL_DIR}/../../references/html-spec-discipline.md`. Voice contract in `${CLAUDE_SKILL_DIR}/../../references/voice-contract.md`. Both are mandatory reads before writing.
 
@@ -126,6 +125,7 @@ Every other piece of structure (section order, slot identities, alert blocks, ta
 | `${CLAUDE_SKILL_DIR}/../../references/voice-contract.md` | (read, not materialised) | before writing HTML |
 | `${CLAUDE_SKILL_DIR}/../../references/LANGUAGE.md` | (read, not materialised) | architectural vocabulary, throughout |
 | `${CLAUDE_SKILL_DIR}/../../references/bc-patterns.md` | (read, not materialised) | when picking a pattern per module |
+| `specs/<NNN>-<slug>/event-model.html` | (read, not materialised) | for user/API-facing features; settles the user-facing slots of each slice |
 | most recently modified prior spec under `specs/*/` | (read, not materialised) | before writing HTML, for visual coherence |
 
 ## Naming and BC vocabulary
@@ -140,6 +140,7 @@ Full architectural vocabulary in `LANGUAGE.md`. BC pattern catalogue in `bc-patt
 ## Composition
 
 - `/al-grill-adr`, precondition.
+- `/al-event-model`, precondition for user-facing or API-facing features; this skill reads `event-model.html` as input. Pure-backend features skip it (missing-storm checkpoint confirms).
 - `/al-research`, before any BC-specific claim (pattern, signature, event name).
 - `/bc-standard-reference`, when the question is purely BaseApp behaviour.
 - `/grill-me`, for ADR offers and design-twice reconciliation.

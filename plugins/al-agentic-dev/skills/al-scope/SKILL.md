@@ -11,15 +11,16 @@ The shape that serves that job per feature is yours. The disciplines below are t
 
 ## Preconditions
 
-- Branch matches `^\d{3}-`. If not, **Stop**. Run `/al-design`.
+- Branch matches `^\d{3}-`. If not, **Stop**. Run `/al-event-model` (or `/al-design` for pure-backend features).
 - Spec folder `specs/<branch>/` already holds `architecture.html`. If missing, **Stop**. Run `/al-design`.
+- For user/API-facing features, `event-model.html` is also present (settled by `/al-event-model`). Pure-backend features carry `architecture.html` only.
 - Spec folder holds a legacy `architecture.md` without `architecture.html`: **Stop**. Legacy markdown specs are frozen; hand-migrate or reshape via `/al-design`.
 
 ## What goes into tasks.html
 
 What the next reader needs from you, expressed as questions you must have answers to:
 
-- **What is the feature's Goal?** Take it from `architecture.html`'s user-visible outcome verbatim; do not re-derive.
+- **What is the feature's Goal?** Take it from `event-model.html`'s user-facing journey for user/API-facing features (one-line summary of the outcome the journey delivers); from `architecture.html`'s trigger-source description for pure-backend features. Do not re-derive.
 - **What tasks decompose the feature?** One imperative title plus a short description paragraph per task. Each task maps to a coherent slice of behaviour, typically a single scenario family from the test strategy. Use BC field, codeunit, and table names as compression.
 - **In what order?** ZOMBIES (Zero, One, Many, Boundary, Interfaces, Exception, Simple). Start with the simplest case that exercises the seam, layer complexity outward.
 - **What depends on what?** Per task, identify cross-task relationships in terms the agent and reader both understand. Three kinds: `Depends on:` (cannot land without those tasks already in place), `Refactors:` (reshapes code shipped by that task under an invariant), `Fixes:` (corrects a defect or wrong contract from that task). Omit any kind that does not apply.
@@ -78,6 +79,7 @@ One to three sentences. Normal prose voice. BC site first, then the invariant th
 | `${CLAUDE_SKILL_DIR}/../../references/voice-contract.md` | before writing prose |
 | `${CLAUDE_SKILL_DIR}/../../references/html-spec-discipline.md` | before writing HTML |
 | `${CLAUDE_SKILL_DIR}/../../references/LANGUAGE.md` | architectural vocabulary, throughout |
+| `specs/<NNN>-<slug>/event-model.html` | for user/API-facing features; source the Goal and align task vocabulary with Roles, Business Events, Views named there |
 | most recently modified prior spec under `specs/*/` | before writing HTML, for visual coherence |
 
 ## Naming and BC vocabulary
@@ -89,6 +91,7 @@ One to three sentences. Normal prose voice. BC site first, then the invariant th
 ## Composition
 
 - `/al-design` is the precondition; `architecture.html` must exist.
+- `/al-event-model` is also a precondition for user/API-facing features; `event-model.html` carries the Goal source.
 - `/al-research` for non-trivial BC areas before drafting.
 - `/bc-standard-reference` when grounding scope in BaseApp behaviour.
 - `/al-refine` consumes one task at a time next.
