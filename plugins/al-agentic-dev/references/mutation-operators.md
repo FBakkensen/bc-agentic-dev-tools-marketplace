@@ -4,9 +4,9 @@ Operator catalogue and selection heuristics for `/al-mutate`. Apply when a TDD c
 
 ## When mutation testing is mandatory
 
-Apply whenever a cycle changes decision logic: `if`/`case` branches, comparison operators, boolean guards, arithmetic, loop conditions.
+Apply whenever a cycle changes decision logic AND at least one site in the cycle's diff qualifies under the SKILL's "mutate where bugs hide" filters (code-side: detection cost or branch density; test-side: story-shaped arrange). Decision logic touched but no qualifying sites means the change is trivial in the senses those filters detect; no mutation pass is owed.
 
-Skip for: metadata-only edits, pure delegation (procedure that only calls another with no branching), property-only changes.
+Skip the pass entirely for: metadata-only edits, pure delegation (procedure that only calls another with no branching), property-only changes.
 
 ## Operator Catalogue
 
@@ -25,14 +25,13 @@ The `Validate()` skip is BC-specific, it bypasses trigger firing, which is a beh
 
 ## Selection Heuristics
 
-1. **Candidate list from the diff**: only mutate lines changed in the current cycle.
-2. **Priority order**: (1) conditionals and comparators on changed lines, (2) assignments to record fields / return values / error paths, (3) `Validate()` skips and lock calls, (4) constants last.
-3. **Skip equivalences**: `x >= 1` ↔ `x > 0` for integers, semantically identical, skip one.
-4. **Reachability first**: confirm at least one test exercises the target line before mutating.
-5. **Breadth before depth**: one mutation per operator class before any class gets a second site.
-6. **Stop when**: every behavioral line mutated by ≥ 1 operator AND new survivors duplicate prior survivors.
+1. **Candidate list from the filters**: sites qualifying under the SKILL's site-selection discipline ("mutate where bugs hide"). When invoked from `/al-implement`, the cycle's diff bounds candidates; standalone, the requested file or area does.
+2. **One operator per site**: pick the operator most likely to expose underassertion at that site. The catalogue above is the menu; the choice per site is the agent's. A second operator at the same site is justified only when a survivor might be equivalent and the second operator distinguishes equivalence from gap.
+3. **Skip obvious equivalences**: `x >= 1` ↔ `x > 0` for integers, semantically identical, skip one.
+4. **Reachability first**: confirm at least one test exercises the target line before mutating. An unreached line routes to `/al-refine` (add the scenario) or `/al-refactor` (delete the dead branch), not to a killer test.
+5. **Stop when**: every qualifying site mutated singleton; equivalence-exception second operators applied where needed; working tree matches `HEAD`.
 
-Pre-flight self-report before starting the loop: "Diff: N changed lines, M behavioral. Planning ~K mutations across J operator classes."
+Pre-flight self-report before starting the loop: "Candidates: K sites qualifying under the filters (J code-side, L test-side). Planning K mutations singleton, with potential equivalence-exception revisits."
 
 ## Revert Mechanism
 
