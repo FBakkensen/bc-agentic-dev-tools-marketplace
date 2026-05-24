@@ -50,9 +50,9 @@ Zero, One, Many, Boundary, Interfaces, Exception, Simple, ordered. **Why**: simp
 
 Pure (process layer, no DB) is the default. **Why**: Pure runs in seconds via AL Runner; iteration cost shapes test quantity. E2E earns its place per scenario when intent forces it (composition, side effect, event chain, table trigger, install / upgrade, telemetry shape). Family-level architecture set the default; per-scenario override is the exception, not the rule. When a scenario overrides the family default, record the override layer and the one-line reason inside the task block (shape per your call) so `/al-implement` reads it without re-deriving.
 
-### Ground every clause in a real symbol
+### Ground every clause in a real symbol, with citation chain in chat
 
-Test codeunit location, helpers, field constraints, table relations, validation triggers, BaseApp event publishers and signatures: walk the code before writing. **Why**: scenarios grounded in remembered or imagined APIs ship fiction. `/al-research` for non-trivial BC behaviour; `/bc-standard-reference` for BaseApp patterns. If you cannot point at the codeunit, table, field, or event, you cannot write the scenario.
+Test codeunit location, helpers, field constraints, table relations, validation triggers, BaseApp event publishers and signatures: walk the code before writing. **Why**: scenarios grounded in remembered or imagined APIs ship fiction. Before transcribing a BC-specific name into the Gherkin that doesn't already appear in the workspace, `architecture.html`, or `event-model.html`, declare in chat: `Researched: <name> → <source path / URL / topic id, verbatim one-liner>`. Route through `/al-research` for non-trivial BC behaviour; `/bc-standard-reference` for BaseApp verbatim quotes. **Why the chat binding**: a mention of `/al-research` reads as advice and gets skipped; a citation at transcription-time binds the gate to the scenario. The Gherkin stays clean (names are the citation); the chain lives in chat as the audit trail. If you cannot point at the codeunit, table, field, or event AND cannot cite it, you cannot write the scenario.
 
 ### Project vocabulary over bare BC
 

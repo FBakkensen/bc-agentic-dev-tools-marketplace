@@ -25,7 +25,7 @@ What the user needs from you, expressed as questions you must have answers to:
 
 - **Which task is in flight?** One `T-NNN`, named in the opener, status flipped `ready` → `in-progress` before the first RED.
 - **Where is the seam?** Read `architecture.html`'s R → P → W boundary, module map, brownfield touchpoints, family-level test strategy. Name the seam in BC vocabulary (the procedure to extract, the event to subscribe, the interface to implement). One line, before the first bullet.
-- **Does any Gherkin bullet rest on an AL/BC fact `architecture.html` does not cover?** If yes, run `/al-research` before transcribing. The compile loop catches hallucinated names; research catches silent-wrong-behaviour.
+- **Does any Gherkin bullet rest on an AL/BC fact `architecture.html` does not cover?** If yes, the per-bullet citation gate fires before that bullet's RED. See *Citation chain in chat, per Gherkin bullet before RED* below. The compile loop catches hallucinated names; the gate catches silent-wrong-behaviour.
 - **Did decision logic change?** If yes, mutation runs after refactor. If no, record the skipped-mutation outcome inside the task block (shape per your call) and `/al-mutate` does not run.
 - **What flips at the end?** `data-status` goes `in-progress` → `done`. Summary row regenerates. Final full `/al-build` (container) is green.
 
@@ -36,6 +36,10 @@ If a question is unanswerable, the task is not ready. Resolve via `/al-research`
 ### Vertical slice, one Gherkin bullet at a time
 
 RED → GREEN → gate, one bullet, then the next. **Why**: bulk-RED locks a test surface before the seam is understood. Tests written ahead verify imagined behaviour, go insensitive to real changes, and pass when behaviour breaks. Each cycle responds to what the last one taught you. The first bullet is the tracer; pick whichever proves the seam end-to-end.
+
+### Citation chain in chat, per Gherkin bullet before RED
+
+Before the first RED line of a bullet's cycle, declare in chat every BC-specific fact that bullet rests on that isn't already pointed-at in the workspace, `architecture.html`, `event-model.html`, or the Gherkin from `/al-refine`. Each: `Researched: <fact> → <source path / URL / topic id, verbatim one-liner>`. Route through `/al-research`; do not reach for the underlying tools directly. Empty citation list is acceptable (workspace and upstream cover the bullet); non-empty list halts RED until the citations are written. **Why**: test mechanics (`TransactionModel`, `HandlerFunctions`, `asserterror`, the handler attributes, `TestIsolation` / `RequiredTestIsolation` / `TestType`), Copilot APIs (`AzureOpenAI` codeunit, `PromptDialog` page type), and recent BC platform features are the highest-failure areas; training data shapes confidently-wrong claims that the compile loop only catches when the name is also wrong. **Why per-bullet, not per-task**: bullets reshape mid-task; front-loaded research goes stale, and a per-bullet gate ties research to what's actually being written next. **Why chat binding**: a mention of `/al-research` reads as advice and gets skipped; the citation declaration is the visible audit trail. The test code itself stays clean of inline citations (names are the citation); the chain lives in chat.
 
 ### Test the Process seam, not the implementation
 

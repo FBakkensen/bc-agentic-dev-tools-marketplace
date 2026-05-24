@@ -39,9 +39,9 @@ When a question can be answered by reading the code, read the code. **Why**: the
 
 Stress every domain relationship with a specific BC scenario, not a hypothetical. **Why**: BC's surface area (posting, prepayment, dimensions, multi-company, intercompany, AppSource) is the territory where abstract domain models break. The user discovers their own precision when the scenario forces a yes-or-no.
 
-### `/al-research` before naming any BC term
+### Citation chain in chat, before `CONTEXT.md` / ADR writes
 
-Before writing a BC term into `CONTEXT.md` or citing BC behaviour in an ADR, verify against current BaseApp. **Why**: AL/BC training data is thin and stale. A renamed event, a removed procedure, a drifted signature lands in `CONTEXT.md` and corrupts every downstream skill that reads it. If research fails, keep grilling, do not write the term or the ADR this session.
+Before writing a BC term into `CONTEXT.md` or citing BC behaviour in an ADR, declare the citation chain in chat: `Researched: <term> → <source path / URL / topic id, verbatim one-liner>` for each BC-specific name introduced. Route through `/al-research`; verify against current BaseApp. **Why**: AL/BC training data is thin and stale. A renamed event, a removed procedure, a drifted signature lands in `CONTEXT.md` and corrupts every downstream skill that reads it. **Why the chat binding**: a mention of `/al-research` reads as advice and gets skipped; a citation chain at write-time binds the gate to the artifact. `CONTEXT.md` and ADRs stay clean of inline citations (names are the citation); the chain lives in the session transcript as the audit trail. If research fails, keep grilling, do not write the term or the ADR this session.
 
 ### Domain ADR offer criteria
 

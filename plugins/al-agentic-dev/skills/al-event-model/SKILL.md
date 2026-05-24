@@ -53,9 +53,9 @@ When the user's journey starts (or passes through) BaseApp, include the BaseApp 
 
 Draft two candidate timelines that diverge on one structural decision; present both with a recommendation; after the user picks, name every leaf slot the agent had to invent (*"I picked Role Center notification for the View, email is an alternative, which?"*) and confirm each. **Why**: pure interrogation re-asks what the codebase or `CONTEXT.md` already answers and burns the user's time. Pure candidate-comparison settles structural shape but lets leaf-level guesses survive, which is the propagation bug at smaller scale. The hybrid keeps each posture in its lane.
 
-### `/al-research` before naming any BaseApp term
+### Citation chain in chat, before `event-model.html` writes
 
-Verify Role names, Action verbs, Business Event names, View page captions, Status value sets against current BaseApp before writing them. **Why**: BC training data is thin and stale. A renamed Role Center, a removed BusinessEvent, a drifted Status enum lands in `event-model.html` and corrupts every downstream skill that reads it. If research fails on a term, keep grilling or run `/al-research` deeper; do not write the term this session.
+Before writing `event-model.html`, every Role / Action verb / Business Event name / View page caption / Status value introduced gets a chat-declared citation: `Researched: <name> → <source path / URL / topic id, verbatim one-liner>`. Route through `/al-research`; verify against current BaseApp via cross-source (Microsoft Learn for Role Center taxonomy, `/bc-standard-reference` for verbatim BaseApp event and page names, `al-symbols-mcp` for the workspace's actual dependency surface). **Why**: BC training data is thin and stale. A renamed Role Center, a removed BusinessEvent, a drifted Status enum lands in `event-model.html` and corrupts every downstream skill that reads it. **Why the chat binding**: a mention of `/al-research` reads as advice and gets skipped; a citation chain at write-time binds the gate to the artifact. The artifact stays clean of inline citations (names are the citation); the chain lives in the transcript as the audit trail. If research fails on a term, keep grilling or run `/al-research` deeper; do not write the term this session.
 
 ### Names are the citation
 

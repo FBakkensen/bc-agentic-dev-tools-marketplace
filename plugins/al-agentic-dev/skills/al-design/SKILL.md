@@ -63,9 +63,9 @@ Two design-time risks bite at AppSource boundaries:
 
 Both are reshape triggers at design time. The per-task compliance details (IDs, permission sets, `DataClassification`, captions, install / upgrade) bite at `/al-implement`.
 
-### `/al-research` before BC-specific claims
+### Citation chain in chat, before `architecture.html` writes
 
-Pattern selection, R → P → W boundary calls, brownfield touchpoint lists: each rests on a current BaseApp fact. Verify before committing. **Why**: stale training knowledge for BC ships fiction (renamed events, removed procedures, signature drifts). One missed event signature corrupts the brownfield touchpoint list, which corrupts `/al-scope`, which corrupts every task downstream.
+Every BC-specific name (object, procedure, event, table, field, pattern) introduced in the artifact rests on a current BaseApp fact. Before `architecture.html` writes, each name not already pointed-at in the workspace or upstream `event-model.html` gets a chat-declared citation: `Researched: <name> → <source path / URL / topic id, verbatim one-liner>`. Route through `/al-research`; do not reach for the underlying tools directly. Names from `event-model.html` are already research-backed by `/al-event-model`; do not re-verify. **Why**: stale training knowledge for BC ships fiction (renamed events, removed procedures, signature drifts). One missed event signature corrupts the brownfield touchpoint list, which corrupts `/al-scope`, which corrupts every task downstream. **Why the chat binding**: a mention of `/al-research` in a Composition list reads as advice and gets skipped under time pressure. A citation chain at write-time binds the gate to the artifact, skipping research means skipping the declaration, which is visible in the transcript. The artifact stays clean of inline citations (names are the citation); the chain lives in chat as the audit trail.
 
 ### ADR offer criteria
 
