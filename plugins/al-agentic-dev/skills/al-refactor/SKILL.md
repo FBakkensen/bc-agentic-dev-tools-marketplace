@@ -1,6 +1,6 @@
 ---
 name: al-refactor
-description: Refactor AL/Business Central production and test code while keeping tests green. Spawns 3 parallel lens-focused sub-agents to identify reshape opportunities (simplify and dedup as primary, BC-specific best practices via bc-knowledge MCP, structural shape via R→P→W and depth/seams/rename), then applies changes one at a time with /al-build between each. Use after green inside /al-implement (mandatory full pass on whole task diff, once per task), or standalone on legacy code; may add tests when refactoring uncovers branches.
+description: Refactor AL/Business Central production and test code while keeping tests green. Spawns 4 parallel lens-focused sub-agents to identify reshape opportunities (simplify and dedup as primary, BC-specific best practices via bc-knowledge MCP, structural shape via R→P→W and depth/seams, naming via BC vocabulary + project terminology check), then applies changes one at a time with /al-build between each. Use after green inside /al-implement (mandatory full pass on whole task diff, once per task), or standalone on legacy code; may add tests when refactoring uncovers branches.
 ---
 
 # /al-refactor, Improve shape while green
@@ -35,15 +35,16 @@ Voice rules for any prose written into `tasks.html`: `${CLAUDE_SKILL_DIR}/../../
 
 ## Lenses
 
-Spawn 3 lens sub-agents in parallel on the task diff. Each lens has a narrow focused goal and returns reshape opportunities; the main session synthesises across lenses, dedupes overlap, and applies changes one at a time.
+Spawn 4 lens sub-agents in parallel on the task diff. Each lens has a narrow focused goal and returns reshape opportunities; the main session synthesises across lenses, dedupes overlap, and applies changes one at a time.
 
 | # | Lens | Focused goal |
 |---|---|---|
 | 1 | **Simplify / dedup** *(primary)* | Find duplication, dead code, redundant procedures, simplification opportunities, inline candidates. Modules that don't earn their keep dissolve; pass-throughs collapse into their call sites; primitives carrying meaning become small records or enums |
 | 2 | **BC-specific best practices** via bc-knowledge | Per `${CLAUDE_SKILL_DIR}/../../references/bc-knowledge-dispatch.md`: `ask_bc_expert(autonomous_mode=false)` per touched file with file-type-mapped specialist, fetch surfaced topics via `get_bc_topic`, apply each topic's `anti_pattern_indicators`. High relevance bar (around `>= 70`) keeps the cost down across every TDD cycle. MCP surfaces specifics; the lens applies. Don't pre-enumerate which BC patterns to look for; the MCP knows |
-| 3 | **Structural shape** | R → P → W boundary, depth over indirection, seam introduction, rename to AL/BC vocabulary. Existing disciplines below carry the substance |
+| 3 | **Structural shape** | R → P → W boundary, depth over indirection, seam introduction. Existing disciplines below carry the substance |
+| 4 | **Naming** | Objects, procedures, variables, fields, parameters use BC vocabulary AND project terminology per `CONTEXT.md`, ADRs, `architecture.html`, `event-model.html`. Names that lie get renamed. The rename discipline below carries the substance |
 
-Spawn pattern: launch all 3 lenses in one message so they run concurrently. Each lens returns its reshape opportunities; the main session merges them into a single ordered apply queue. Lens 1 typically dominates the queue (simplify and dedup are the largest source of wins); Lens 2 surfaces a small number of high-value BC-specific fixes; Lens 3 reshapes are usually fewer but load-bearing.
+Spawn pattern: launch all 4 lenses in one message so they run concurrently. Each lens returns its reshape opportunities; the main session merges them into a single ordered apply queue. Lens 1 typically dominates the queue (simplify and dedup are the largest source of wins); Lens 2 surfaces a small number of high-value BC-specific fixes; Lens 3 reshapes are usually fewer but load-bearing; Lens 4 finds the renames others miss because they read code without the BC-vocabulary lens.
 
 ## Apply discipline
 
@@ -98,13 +99,21 @@ A unit test reaching past `Access = Internal` is a signal that the responsibilit
 
 When extracting a seam in legacy code, the order is: extract internals behind a new interface → ship the interface → inject the adapter. **Why**: injecting first strands existing callers mid-refactor with a half-built seam; the build goes red and stays red across multiple commits. Full pattern in `${CLAUDE_SKILL_DIR}/../../references/decoupling.md`. The three default BC seams (`IEnvironment`, `IApiRequest`, `IFinance`-family) plus the temp-record alternative live in `${CLAUDE_SKILL_DIR}/../../references/environment-interfaces.md`; name an existing pattern before extracting a fresh one.
 
+## Disciplines, Lens 4 (naming)
+
 ### Rename to AL/BC vocabulary and project terminology
 
-Rename when the name lies. BC verbs over generic CRUD: Insert / Modify / Delete (records), Post (not Submit), Validate (not Check), Get / Find (not Fetch), Ledger Entry (not Transaction), No. (not ID), Procedure (not Method). Objects follow `"Prefix Feature Suffix"` with suffixes `Impl`, `Card`, `List`, `Ext`, `Test`. Records match the table name. Procedures PascalCase, verb-first. Events `OnBefore{Action}{Object}` / `OnAfter{Action}{Object}`. Tests short PascalCase scenario names (`PostSalesOrderWithItemCharge`), BaseApp style.
+Rename when the name lies. A name lies when it describes a generic operation while the body does a BC-specific one, when it uses CRUD vocabulary where the BC verb exists, or when the project's `CONTEXT.md` term has drifted out of the code.
 
-Project-specific terminology lives in `CONTEXT.md` (`## Language` and `## Flagged ambiguities`). For multi-context repos, `CONTEXT-MAP.md` lists contexts; pick the one covering `src/<module>/`. `architecture.html` and ADRs under `docs/adr/` carry conventions when `CONTEXT.md` is thin. For user/API-facing features, canonical Role / Action / Business Event / View names from `event-model.html` already live in code and tests via `/al-refine` and `/al-implement`; preserve them verbatim during rename passes. Do not retranslate from `event-model.html`; the in-tree names are the canonical form this skill consumes.
+**BC verbs over generic CRUD.** Insert / Modify / Delete (records), Post (not Submit), Validate (not Check), Get / Find (not Fetch), Ledger Entry (not Transaction), No. (not ID), Procedure (not Method). Objects follow `"Prefix Feature Suffix"` with suffixes `Impl`, `Card`, `List`, `Ext`, `Test`. Records match the table name. Procedures PascalCase, verb-first. Events `OnBefore{Action}{Object}` / `OnAfter{Action}{Object}`. Tests short PascalCase scenario names (`PostSalesOrderWithItemCharge`), BaseApp style. Variables PascalCase, descriptive primitives (`TotalBalance`, `IsBlocked`); record variables match the table name (`Customer`, `SalesHeader`).
 
-**Why**: AL reads naturally to AL developers only when it uses BC vocabulary; CRUD-vocabulary procedures and `Method` suffixes signal a developer who has not internalised the platform. Renaming a test or editing `[SCENARIO]/[GIVEN]/[WHEN]/[THEN]` triggers Gherkin re-verification against the originating bullet in `tasks.html`; if intent shifts, update the bullet via `/al-refine` in the same change.
+**Project terminology.** Lives in `CONTEXT.md` (`## Language` and `## Flagged ambiguities`). For multi-context repos, `CONTEXT-MAP.md` lists contexts; pick the one covering `src/<module>/`. `architecture.html` and ADRs under `docs/adr/` carry conventions when `CONTEXT.md` is thin. For user/API-facing features, canonical Role / Action / Business Event / View names from `event-model.html` already live in code and tests via `/al-refine` and `/al-implement`; preserve them verbatim during rename passes. Do not retranslate from `event-model.html`; the in-tree names are the canonical form this skill consumes.
+
+**Scope of the lens.** Objects (codeunits, tables, pages, enums, interfaces, reports, queries, xmlports, permission sets), procedures, parameters, local and global variables, record vars, table fields, page actions, event publishers, event subscribers, captions and labels. The lens reads what the rename pass would touch; nothing escapes by being a "small" name.
+
+**Why**: AL reads naturally to AL developers only when it uses BC vocabulary; CRUD-vocabulary procedures and `Method` suffixes signal a developer who has not internalised the platform. Drift between `CONTEXT.md` terms and in-tree names compounds: the next agent reading the code learns the drifted name as canonical, and the next refactor reinforces it. Catching naming as its own lens (not as one bullet inside structural reshape) gives it the dedicated attention the recurring problem demands.
+
+**Rename safety.** Renaming a test or editing `[SCENARIO]/[GIVEN]/[WHEN]/[THEN]` triggers Gherkin re-verification against the originating bullet in `tasks.html`; if intent shifts, update the bullet via `/al-refine` in the same change. AppSource compliance still applies (cross-cutting discipline below); never rename a shipped object, table field, page action, or procedure other extensions may bind to without an `ObsoleteState = Pending` migration alongside.
 
 ## Cross-cutting disciplines
 
