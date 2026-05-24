@@ -21,10 +21,11 @@ Two layers, on purpose.
 /al-grill-adr  →  /al-event-model    →  /al-design     →  /al-scope    →  /al-refine    →  /al-implement   →  /al-refactor  →  /al-mutate
 (CONTEXT,         (event-model.html,     (architecture     (tasks.html)    (per-task        (TDD per task)     (improve        (test-rigor
  ADRs)             user/API-facing        .html, AL-shape                   Gherkin)                            shape)          gate)
-                   only — pure backend    only)
+                   only, pure backend     only)
                    skips this step)
 
-side-band: /al-research, /al-steer (replan venue + .out-of-scope)
+gates: /al-code-review (user-invoked at task-done and feature-done; combines vanilla review + bc-knowledge MCP topic surfacing)
+side-band: /al-research, /al-steer (replan venue + .out-of-scope), /al-second-opinion
 ```
 
 ## Skills
@@ -38,7 +39,8 @@ side-band: /al-research, /al-steer (replan venue + .out-of-scope)
 | `/al-scope` | `architecture.html` → bare task list in `tasks.html`. Goal + `T-NNN` entries in ZOMBIES order. No grilling, no branch creation. |
 | `/al-refine` | One task → numbered Gherkin scenarios. Per task, not per feature. |
 | `/al-implement` | Pick a Gherkin-ready task, run TDD: red → green → refactor → mutate. |
-| `/al-refactor` | Improve shape while green. No new behaviour. |
+| `/al-refactor` | Improve shape while green. No new behaviour. Consults bc-knowledge MCP for structural anti-patterns (SetLoadFields placement, subscriber lifecycle, SIFT) at high relevance bar. |
+| `/al-code-review` | In-depth gate at task-done and feature-done boundaries. Vanilla review + bc-knowledge at lower bar + per-feature cross-file checks (perm set vs new table field, publisher vs subscriber signature, AppSource public-surface additions). Findings hand off to `/grill-me` for triage; materializes new tasks or notes on future tasks. Never routes via `/al-steer`. |
 | `/al-mutate` | Inject mutations to validate test rigor. Mandatory for non-trivial work. Owns the mutate-build-revert cycle. |
 | `/al-research` | Verify BC specifics from authoritative sources. |
 | `/al-second-opinion` | Cross-runtime read-only advisory gate for non-trivial scenarios, mutation lists, and refactor checklists. From Claude Code: `codex exec`. From Codex: `claude -p`. |
@@ -47,7 +49,7 @@ Skills compose by name. When you change a skill, scan the others for cross-refer
 
 ## Replan
 
-`/al-steer` is the canonical replan venue. The seven triggers as named patterns to learn: task too big, hidden pre-req, wrong order, sibling now wrong, new behaviour emerges, architecture decomposition wrong, goal drift. Replan checks in `/al-refine`, `/al-implement`, `/al-refactor` map the trigger to response per situation: when the trigger means the plan is invalid as planned, flip `data-status` to `blocked` and route to `/al-steer`; when the trigger means new info that doesn't invalidate, note it inside the task and continue.
+`/al-steer` is the canonical replan venue. The seven triggers as named patterns to learn: task too big, hidden pre-req, wrong order, sibling now wrong, new behaviour emerges, architecture decomposition wrong, goal drift. Replan checks in `/al-refine`, `/al-implement`, `/al-refactor`, `/al-code-review` map the trigger to response per situation: when the trigger means the plan is invalid as planned, flip `data-status` to `blocked` and route to `/al-steer`; when the trigger means new info that doesn't invalidate, note it inside the task and continue. `/al-code-review` findings themselves are NOT replan signals; they hand off to `/grill-me` for per-finding triage into new tasks or notes on future tasks.
 
 ## Editing rules
 
@@ -83,6 +85,7 @@ Two tiers, on purpose.
 | `design-system/` (folder) | plugin-level | the source of truth for spec artifact visuals; `gallery.html` + three populated `*.example.html` + `spec-styles.css` + `colors_and_type.css` + `README.md`. Read by every skill that generates or maintains HTML artifacts |
 | `cross-branch-numbering.md` | plugin-level | algorithm for picking `NNN` (spec folders) and `NNNN` (ADRs) across parallel branches; read by `/al-design`, `/al-event-model`, `/al-grill-adr` |
 | `bc-patterns.md` | plugin-level | BC pattern catalogue cited by `architecture.html`, design ADRs, and `/al-design` |
+| `bc-knowledge-dispatch.md` | plugin-level | correct call pattern for bc-knowledge MCP (`ask_bc_expert(autonomous_mode=false)` → topic recs → `get_bc_topic` → apply `anti_pattern_indicators`), specialist mapping per file type, thresholds per calling skill; read by `/al-refactor` and `/al-code-review` |
 | `out-of-scope.template.md` | `/al-steer`-local | template materialised into `.out-of-scope/<concept>.md` |
 | `legacy-refactor-plan.md` | `/al-refactor`-local | reference plan for legacy code without tests |
 
@@ -107,19 +110,21 @@ references/                 # Plugin-level shared, read by ≥2 skills, or cited
 ├── adr.template.md
 ├── LANGUAGE.md
 ├── bc-patterns.md
+├── bc-knowledge-dispatch.md # Correct call pattern for bc-knowledge MCP; specialist mapping; thresholds
 ├── voice-contract.md       # Voice rules for prose
 ├── user-communication.md   # Chat output principles and voice carve-outs from voice-contract.md
 ├── notes-discipline.md     # What lives in the task block vs the commit / ADR / .out-of-scope/
 ├── html-spec-discipline.md # Pointer to design-system/, two-attribute floor, Mermaid init, self-contained, surgical-edit
 └── design-system/          # Source of truth for spec artifact visuals
     ├── README.md           # Content fundamentals, visual foundations, iconography, voice
-    ├── gallery.html        # Component gallery — rendered + canonical HTML source per component
+    ├── gallery.html        # Component gallery, rendered + canonical HTML source per component
     ├── event-model.example.html
     ├── architecture.example.html
     ├── tasks.example.html
     ├── spec-styles.css     # Shared inline <style> block (inline an equivalent into each artifact)
     └── colors_and_type.css # Readable CSS variable reference
 skills/
+├── al-code-review/SKILL.md
 ├── al-design/SKILL.md
 ├── al-event-model/SKILL.md
 ├── al-grill-adr/SKILL.md

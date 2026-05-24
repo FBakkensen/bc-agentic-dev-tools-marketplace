@@ -1,13 +1,11 @@
 ---
 name: al-refactor
-description: Refactor AL/Business Central production and test code while keeping tests green, find deepening opportunities, apply Read → Process → Write, rename to AL/BC vocabulary and project terminology (per CONTEXT.md), extract real seams. Use after green inside /al-implement (mandatory full pass on whole task diff, once per task), or standalone on legacy code; may add tests when refactoring uncovers branches.
+description: Refactor AL/Business Central production and test code while keeping tests green. Spawns 3 parallel lens-focused sub-agents to identify reshape opportunities (simplify and dedup as primary, BC-specific best practices via bc-knowledge MCP, structural shape via R→P→W and depth/seams/rename), then applies changes one at a time with /al-build between each. Use after green inside /al-implement (mandatory full pass on whole task diff, once per task), or standalone on legacy code; may add tests when refactoring uncovers branches.
 ---
 
 # /al-refactor, Improve shape while green
 
-Reshape AL code so the modules that earn their keep deepen and the ones that don't dissolve. Observable behaviour does not change. The disciplines below are the substance you bring; nothing here is a numbered flow to walk.
-
-`/al-build` is the gate between meaningful changes. The moment a green test goes red, stop and recover before continuing.
+Reshape AL code so the modules that earn their keep deepen and the ones that don't dissolve. Observable behaviour does not change. The 3-lens identification structure is the substance you bring; the disciplines under each lens define what it looks for. Application is serial, one change at a time, `/al-build` between.
 
 ## Preconditions
 
@@ -35,17 +33,54 @@ Architectural vocabulary in `${CLAUDE_SKILL_DIR}/../../references/LANGUAGE.md`: 
 
 Voice rules for any prose written into `tasks.html`: `${CLAUDE_SKILL_DIR}/../../references/voice-contract.md`. Notes destination map: `${CLAUDE_SKILL_DIR}/../../references/notes-discipline.md`. Surgical-edit contract on `tasks.html`: `${CLAUDE_SKILL_DIR}/../../references/html-spec-discipline.md`.
 
-## Disciplines
+## Lenses
 
-These are how to think about reshape for BC. Apply where each one's *Why* lands. The agent maps rationale to the diff in front of it; no step ordering is implied.
+Spawn 3 lens sub-agents in parallel on the task diff. Each lens has a narrow focused goal and returns reshape opportunities; the main session synthesises across lenses, dedupes overlap, and applies changes one at a time.
 
-### R → P → W as reshape, not annotation
+| # | Lens | Focused goal |
+|---|---|---|
+| 1 | **Simplify / dedup** *(primary)* | Find duplication, dead code, redundant procedures, simplification opportunities, inline candidates. Modules that don't earn their keep dissolve; pass-throughs collapse into their call sites; primitives carrying meaning become small records or enums |
+| 2 | **BC-specific best practices** via bc-knowledge | Per `${CLAUDE_SKILL_DIR}/../../references/bc-knowledge-dispatch.md`: `ask_bc_expert(autonomous_mode=false)` per touched file with file-type-mapped specialist, fetch surfaced topics via `get_bc_topic`, apply each topic's `anti_pattern_indicators`. High relevance bar (around `>= 70`) keeps the cost down across every TDD cycle. MCP surfaces specifics; the lens applies. Don't pre-enumerate which BC patterns to look for; the MCP knows |
+| 3 | **Structural shape** | R → P → W boundary, depth over indirection, seam introduction, rename to AL/BC vocabulary. Existing disciplines below carry the substance |
 
-When a procedure mixes I/O and computation, splitting it along that line *is* the refactor. **Why**: pulling pure decision logic out of read/write context is what makes unit testing possible without standing up DB state. P is the most load-bearing line in the design; it names what is testable without a real database. Annotating the tangle "this part is the read, this part is the process" without splitting changes nothing.
+Spawn pattern: launch all 3 lenses in one message so they run concurrently. Each lens returns its reshape opportunities; the main session merges them into a single ordered apply queue. Lens 1 typically dominates the queue (simplify and dedup are the largest source of wins); Lens 2 surfaces a small number of high-value BC-specific fixes; Lens 3 reshapes are usually fewer but load-bearing.
+
+## Apply discipline
+
+After lenses return, apply changes one at a time:
+
+- One reshape, then `/al-build`. Green: continue. Red: revert that step, do not pile on. Recover before the next change.
+- Order matters: rename and seam-introduction touch many call sites at once and should land before dedup work to avoid merge conflicts with the dedup pass. Lens 1's dead-code removal can usually batch safely; structural reshape from Lens 3 lands one at a time.
+- `/al-second-opinion` when the apply queue is non-trivial; solo blindness on lists is real.
+
+## Disciplines, Lens 1 (simplify and dedup)
 
 ### Deletion test, on every module that smells shallow
 
 Imagine deleting the module. If complexity vanishes, the module was a pass-through; inline at call sites and remove it. If complexity reappears across N callers, the module earned its place and probably wants deepening. **Why**: pass-through modules add navigation cost without hiding anything; one-line wrappers around `SalesHeader.Modify` that add only a name are the canonical case. A posting validator orchestrating dimension checks, No. Series consumption, and ledger writes is the opposite. Does not apply when the seam is a published event with no in-tree callers.
+
+### Tests are first-class
+
+Production and tests refactor together. Tests survive internal refactors because they assert on observable outcomes through the interface (record state, ledger entries, error messages, returned values), not internal state. New tests appear when reshape uncovers an uncovered branch; those tests must pass against the *current* code before reshape proceeds, so the regression signal stays honest. Unit tests on modules that the refactor merges away get deleted, not layered; replace, do not stack.
+
+**Why**: tests-as-afterthought becomes tests-never-written, and tests that document a contract the module no longer has are a future maintainer's trap. The deletion test applies to test code too.
+
+## Disciplines, Lens 2 (BC-specific via bc-knowledge)
+
+Lens 2's substance lives in `${CLAUDE_SKILL_DIR}/../../references/bc-knowledge-dispatch.md`. Read the dispatch ref before spawning the lens. Key points the lens sub-agent honours:
+
+- `autonomous_mode=false` always. The mode returns persona priming + topic recommendations; the sub-agent applies the topics.
+- Threshold `>= 70`. This is the refactor pass, not the broader review; the high bar keeps cost per TDD cycle low.
+- Topic caching within the lens run: the same topic surfaces across multiple files; cache `get_bc_topic` responses within one lens invocation, fetch fresh across invocations.
+- Non-structural concerns the MCP surfaces (AppSource compliance, event subscriber/publisher contracts that go beyond structural reshape) belong to `/al-code-review`; the lens surfaces them as out-of-scope notes in the calling task block, does not act in this pass.
+
+**Why a separate lens.** Vanilla Claude reads `SetLoadFields("X")` after `SetRange(...)` as a syntactically-valid call and moves on; BC's query-execution order makes that call ineffective. The MCP names the topic; the lens applies it. Vanilla and structural lenses cannot replace this; the BC-specific lens is what catches them.
+
+## Disciplines, Lens 3 (structural shape)
+
+### R → P → W as reshape, not annotation
+
+When a procedure mixes I/O and computation, splitting it along that line *is* the refactor. **Why**: pulling pure decision logic out of read/write context is what makes unit testing possible without standing up DB state. P is the most load-bearing line in the design; it names what is testable without a real database. Annotating the tangle "this part is the read, this part is the process" without splitting changes nothing.
 
 ### Two adapters or no seam
 
@@ -71,11 +106,9 @@ Project-specific terminology lives in `CONTEXT.md` (`## Language` and `## Flagge
 
 **Why**: AL reads naturally to AL developers only when it uses BC vocabulary; CRUD-vocabulary procedures and `Method` suffixes signal a developer who has not internalised the platform. Renaming a test or editing `[SCENARIO]/[GIVEN]/[WHEN]/[THEN]` triggers Gherkin re-verification against the originating bullet in `tasks.html`; if intent shifts, update the bullet via `/al-refine` in the same change.
 
-### Tests are first-class
+## Cross-cutting disciplines
 
-Production and tests refactor together. Tests survive internal refactors because they assert on observable outcomes through the interface (record state, ledger entries, error messages, returned values), not internal state. New tests appear when reshape uncovers an uncovered branch; those tests must pass against the *current* code before reshape proceeds, so the regression signal stays honest. Unit tests on modules that the refactor merges away get deleted, not layered; replace, do not stack.
-
-**Why**: tests-as-afterthought becomes tests-never-written, and tests that document a contract the module no longer has are a future maintainer's trap. The deletion test applies to test code too.
+These apply across all lenses; they constrain how reshape lands regardless of which lens surfaced it.
 
 ### Comments earn their place
 
@@ -111,10 +144,12 @@ The diff leaves observable behaviour identical. New behaviour belongs to `/al-im
 ## Composition
 
 - `/al-build` after every meaningful change. Red after a step = revert that step, do not pile on.
-- `/al-second-opinion` when the checklist is non-trivial; solo blindness on refactor lists is real. Returns a bulleted gap list verbatim or `Second opinion skipped: <reason>`.
+- `/al-second-opinion` when the apply queue is non-trivial; solo blindness on lists is real. Returns a bulleted gap list verbatim or `Second opinion skipped: <reason>`.
 - `/al-mutate` runs after `/al-refactor` in the inner `/al-implement` loop to validate test rigor against the reshaped code.
 - `/bc-standard-reference` for BC patterns, event signatures, BaseApp behaviour.
 - `/al-research` when prior BC knowledge is uncertain.
+- bc-knowledge MCP per Lens 2; full call pattern in `${CLAUDE_SKILL_DIR}/../../references/bc-knowledge-dispatch.md`.
+- `/al-code-review` carries non-structural concerns (broader judgment lenses at gate boundaries); refactor surfaces them as out-of-scope notes when it sees them but does not act.
 - `/al-design` when standalone-on-legacy work surfaces real architecture that should land upfront.
 - `/grill-me` when a non-obvious trade-off needs the user.
 - `/al-steer` is the replan venue.
@@ -128,3 +163,5 @@ Standalone-on-legacy mode reads `${CLAUDE_SKILL_DIR}/references/legacy-refactor-
 - **No upfront architecture.** When standalone legacy work reveals real architecture, route to `/al-design` and re-enter through the normal pipeline.
 - **No Gherkin authoring.** `/al-refine`.
 - **No markdown-mode tasks.html.** Legacy spec folders (`tasks.md` without `tasks.html`) are frozen.
+- **No deterministic checks.** Linter territory belongs to `/al-build`'s linter pass.
+- **No broader review concerns.** Project compliance, full bug scan, AppSource public-surface addition, code-comment compliance, git history context all live in `/al-code-review`.

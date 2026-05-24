@@ -43,3 +43,6 @@ Desktop.ini
 
 # Local Settings
 .claude/settings.local.json
+
+# Throwaway eval material
+experiments/
