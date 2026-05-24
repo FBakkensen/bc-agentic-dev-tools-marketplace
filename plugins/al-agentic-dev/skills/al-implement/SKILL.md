@@ -15,7 +15,7 @@ Pick the next ready task from `tasks.html`, run TDD per Gherkin bullet, refactor
 
 - Branch matches `^\d{3}-`. If not, **Stop**. Run `/al-event-model` (or `/al-design` for pure-backend features).
 - Spec folder `specs/<branch>/` holds `tasks.html` and `architecture.html`. If missing, **Stop**. Run `/al-design`.
-- For user/API-facing features, `event-model.html` is also present; test names and `[SCENARIO]` / `[GIVEN]` / `[WHEN]` / `[THEN]` comments cite Roles, Business Events, and Views by their canonical names from there.
+- For user/API-facing features, `event-model.html` is also present. Canonical Role / Business Event / View names already live in the Gherkin via `/al-refine`; transcribe them faithfully into test names and `[SCENARIO]` / `[GIVEN]` / `[WHEN]` / `[THEN]` comments. Do not retranslate from `event-model.html`; the Gherkin is the canonical form this skill consumes.
 - Legacy markdown spec (`tasks.md` without `tasks.html`): **Stop**. Legacy specs are frozen; hand-migrate before continuing.
 - Target task carries `data-status="ready"` and a populated Tests area inside its block. Tests area empty, **Stop**, run `/al-refine <T-NNN>`. `data-status="blocked"`, **Stop**, run `/al-steer` to clear the replan.
 
