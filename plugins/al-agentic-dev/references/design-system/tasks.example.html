@@ -1,0 +1,439 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Tasks — Sales Charge Validation</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Inter+Tight:wght@500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Shared spec-artifact styles — inlined into each example HTML.
+   This file is a reference; the canonical copy lives inside each HTML. */
+
+:root {
+  --surface-0: #ffffff;
+  --surface-1: #fafafa;
+  --surface-2: #f4f4f5;
+  --surface-3: #e9e9ec;
+  --text-primary: #08090a;
+  --text-secondary: #51525c;
+  --text-muted: #8b8d98;
+  --border-subtle: #ebebed;
+  --border-strong: #d4d4d8;
+  --accent: #5e6ad2;
+  --accent-hover: #4d59c4;
+  --accent-fg: #ffffff;
+  --accent-tint: rgba(94, 106, 210, 0.08);
+  --status-ready: #6c6e76;
+  --status-ready-bg: #ececef;
+  --status-ready-border: #d4d4d8;
+  --status-in-progress: #b07a00;
+  --status-in-progress-bg: #fdf3d4;
+  --status-in-progress-border: #f0d97a;
+  --status-done: #2e8555;
+  --status-done-bg: #dbf0e2;
+  --status-done-border: #9bd4ae;
+  --status-blocked: #c0392b;
+  --status-blocked-bg: #fbe0db;
+  --status-blocked-border: #f0a89d;
+  --callout-note: var(--accent);
+  --callout-note-bg: var(--accent-tint);
+  --callout-warning: #b07a00;
+  --callout-warning-bg: #fdf3d4;
+  --callout-blocked: #c0392b;
+  --callout-blocked-bg: #fbe0db;
+  --callout-replan: #6f42c1;
+  --callout-replan-bg: #ede4f8;
+  --font-display: "Inter Tight", "Inter", system-ui, -apple-system, sans-serif;
+  --font-body: "Inter", system-ui, -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --fs-display: clamp(2.25rem, 1.8rem + 2vw, 3.25rem);
+  --fs-h1: 2rem;
+  --fs-h2: 1.5rem;
+  --fs-h3: 1.1875rem;
+  --fs-h4: 1rem;
+  --fs-body: 0.9375rem;
+  --fs-small: 0.8125rem;
+  --fs-micro: 0.75rem;
+  --lh-tight: 1.15;
+  --lh-snug: 1.35;
+  --lh-body: 1.65;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 64px;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 10px;
+  --measure: 68ch;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --dur-fast: 120ms;
+  --dur-base: 180ms;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --surface-0: #08090a;
+    --surface-1: #101113;
+    --surface-2: #1a1b1f;
+    --surface-3: #232428;
+    --text-primary: #f4f4f5;
+    --text-secondary: #a1a1a6;
+    --text-muted: #6c6e76;
+    --border-subtle: #1f2024;
+    --border-strong: #2d2e33;
+    --accent: #6e7aff;
+    --accent-hover: #818ce8;
+    --accent-fg: #ffffff;
+    --accent-tint: rgba(110, 122, 255, 0.14);
+    --status-ready: #a1a1a6;
+    --status-ready-bg: #1f2024;
+    --status-ready-border: #2d2e33;
+    --status-in-progress: #e5b547;
+    --status-in-progress-bg: #3a2e0e;
+    --status-in-progress-border: #6a531a;
+    --status-done: #4cb782;
+    --status-done-bg: #0f2a1e;
+    --status-done-border: #1f5239;
+    --status-blocked: #ff6b5e;
+    --status-blocked-bg: #3a1614;
+    --status-blocked-border: #6a2823;
+    --callout-note: var(--accent); --callout-note-bg: rgba(110, 122, 255, 0.10);
+    --callout-warning: #e5b547; --callout-warning-bg: rgba(229, 181, 71, 0.10);
+    --callout-blocked: #ff6b5e; --callout-blocked-bg: rgba(255, 107, 94, 0.10);
+    --callout-replan: #b58cff; --callout-replan-bg: rgba(181, 140, 255, 0.10);
+  }
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  font-family: var(--font-body);
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+  color: var(--text-primary);
+  background: var(--surface-0);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+::selection { background: var(--accent); color: var(--accent-fg); }
+a { color: var(--accent); text-decoration: none; border-bottom: 1px solid color-mix(in srgb, var(--accent) 35%, transparent); transition: color var(--dur-fast); }
+a:hover { color: var(--accent-hover); border-bottom-color: var(--accent-hover); }
+
+.page { max-width: 920px; margin: 0 auto; padding: var(--space-7) var(--space-6) var(--space-8); }
+
+.file-header { border-bottom: 1px solid var(--border-subtle); padding-bottom: var(--space-5); margin-bottom: var(--space-6); }
+.file-header__eyebrow { font-family: var(--font-mono); font-size: var(--fs-micro); text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); margin: 0 0 var(--space-2); }
+.file-header__title { font-family: var(--font-display); font-weight: 600; font-size: var(--fs-display); line-height: var(--lh-tight); letter-spacing: -0.025em; margin: 0 0 var(--space-3); color: var(--text-primary); max-width: 22ch; text-wrap: balance; }
+.file-header__lede { color: var(--text-secondary); max-width: var(--measure); font-size: var(--fs-h4); margin: 0 0 var(--space-3); }
+.meta-strip { display: flex; flex-wrap: wrap; gap: var(--space-4) var(--space-5); font-family: var(--font-mono); font-size: var(--fs-micro); color: var(--text-muted); background: var(--surface-1); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: var(--space-2) var(--space-4); }
+.meta-strip__item { display: flex; gap: var(--space-2); }
+.meta-strip__key { text-transform: uppercase; letter-spacing: 0.05em; }
+.meta-strip__val { color: var(--text-primary); }
+.xref { font-family: var(--font-mono); font-size: 0.875em; background: var(--surface-2); color: var(--accent); padding: 0.1em 0.45em; border-radius: var(--radius-sm); border: 1px solid var(--border-subtle); text-decoration: none; }
+.xref:hover { background: var(--accent-tint); border-color: var(--accent); }
+
+.prose { max-width: var(--measure); }
+.prose .display { font-family: var(--font-display); font-weight: 600; font-size: var(--fs-display); line-height: var(--lh-tight); letter-spacing: -0.025em; margin: 0 0 var(--space-4) 0; color: var(--text-primary); }
+.prose h1, .prose h2, .prose h3, .prose h4 { font-family: var(--font-display); font-weight: 600; color: var(--text-primary); letter-spacing: -0.015em; line-height: var(--lh-snug); }
+.prose h1 { font-size: var(--fs-h1); margin: var(--space-7) 0 var(--space-3); }
+.prose h2 { font-size: var(--fs-h2); margin: var(--space-6) 0 var(--space-3); }
+.prose h3 { font-size: var(--fs-h3); margin: var(--space-5) 0 var(--space-2); }
+.prose h4 { font-size: var(--fs-h4); margin: var(--space-4) 0 var(--space-2); text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-secondary); }
+.prose p { margin: 0 0 var(--space-4) 0; color: var(--text-primary); }
+.prose code { font-family: var(--font-mono); font-size: 0.875em; background: var(--surface-2); color: var(--text-primary); padding: 0.1em 0.35em; border-radius: var(--radius-sm); border: 1px solid var(--border-subtle); }
+.prose pre { font-family: var(--font-mono); font-size: var(--fs-small); background: var(--surface-1); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: var(--space-4); overflow-x: auto; line-height: 1.6; margin: 0 0 var(--space-4); }
+.prose pre code { background: transparent; padding: 0; border: 0; font-size: inherit; }
+.prose blockquote { border-left: 2px solid var(--border-strong); padding: 0 0 0 var(--space-4); margin: var(--space-4) 0; color: var(--text-secondary); font-style: italic; }
+.prose ul, .prose ol { padding-left: var(--space-5); margin: 0 0 var(--space-4); }
+.prose li { margin: var(--space-1) 0; }
+.prose table { width: 100%; border-collapse: collapse; font-size: var(--fs-small); margin: var(--space-3) 0 var(--space-4); }
+.prose th, .prose td { text-align: left; padding: var(--space-3) var(--space-3); border-bottom: 1px solid var(--border-subtle); vertical-align: top; }
+.prose th { font-weight: 600; font-size: var(--fs-micro); text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-secondary); border-bottom-color: var(--border-strong); }
+.prose aside.marginalia { font-size: var(--fs-small); color: var(--text-secondary); border-left: 2px solid var(--accent); padding: 0 0 0 var(--space-4); margin: var(--space-4) 0; }
+@media (min-width: 1100px) {
+  .prose aside.marginalia { float: right; clear: right; width: 220px; margin: 0 calc(-1 * var(--space-7)) var(--space-3) var(--space-5); border-left: 0; border-top: 1px solid var(--border-subtle); padding: var(--space-3) 0 0; }
+}
+
+.callout { border: 1px solid; border-radius: var(--radius-md); padding: var(--space-3) var(--space-4); display: grid; grid-template-columns: 22px 1fr; gap: var(--space-3); margin: var(--space-4) 0; font-size: var(--fs-small); line-height: var(--lh-snug); }
+.callout__icon { font-family: var(--font-mono); font-weight: 700; text-align: center; line-height: 1.5; }
+.callout__title { font-weight: 600; margin: 0 0 4px 0; font-size: var(--fs-small); }
+.callout p { margin: 0; }
+.callout--note     { background: var(--callout-note-bg);    border-color: color-mix(in srgb, var(--callout-note) 30%, transparent); }
+.callout--note .callout__icon, .callout--note .callout__title { color: var(--callout-note); }
+.callout--warning  { background: var(--callout-warning-bg); border-color: color-mix(in srgb, var(--callout-warning) 35%, transparent); }
+.callout--warning .callout__icon, .callout--warning .callout__title { color: var(--callout-warning); }
+.callout--blocked  { background: var(--callout-blocked-bg); border-color: color-mix(in srgb, var(--callout-blocked) 35%, transparent); }
+.callout--blocked .callout__icon, .callout--blocked .callout__title { color: var(--callout-blocked); }
+.callout--replan   { background: var(--callout-replan-bg);  border-color: color-mix(in srgb, var(--callout-replan) 35%, transparent); }
+.callout--replan .callout__icon, .callout--replan .callout__title { color: var(--callout-replan); }
+
+.swimlane { display: grid; grid-template-columns: 180px 1fr; border: 1px solid var(--border-subtle); border-radius: var(--radius-md); background: var(--surface-1); overflow: hidden; margin-bottom: var(--space-4); }
+.swimlane__role { padding: var(--space-4); background: var(--surface-2); border-right: 1px solid var(--border-subtle); display: flex; flex-direction: column; gap: var(--space-1); }
+.swimlane__role-name { font-family: var(--font-display); font-weight: 600; font-size: var(--fs-h4); letter-spacing: -0.005em; color: var(--text-primary); }
+.swimlane__role-meta { font-family: var(--font-mono); font-size: var(--fs-micro); color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+.swimlane__chain { padding: var(--space-3) var(--space-4); display: flex; flex-direction: column; gap: 0; }
+.event-row { display: grid; grid-template-columns: 16px 1fr; gap: var(--space-3); padding: var(--space-3) 0; position: relative; }
+.event-row + .event-row { border-top: 1px dashed var(--border-subtle); }
+.event-row__dot { width: 10px; height: 10px; border-radius: 50%; background: var(--surface-0); border: 2px solid var(--accent); margin-top: 6px; position: relative; z-index: 1; }
+.event-row::before { content: ""; position: absolute; left: 4px; top: 0; bottom: 0; width: 2px; background: var(--border-subtle); z-index: 0; }
+.event-row:first-child::before { top: 16px; }
+.event-row:last-child::before { bottom: calc(100% - 16px); }
+.event-row__fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: var(--space-3); }
+.event-field { display: flex; flex-direction: column; gap: 2px; }
+.event-field__label { font-family: var(--font-mono); font-size: var(--fs-micro); color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+.event-field__value { font-size: var(--fs-small); color: var(--text-primary); font-weight: 500; }
+.event-field__value--status { font-family: var(--font-mono); color: var(--accent); }
+
+.task { border: 1px solid var(--border-subtle); border-radius: var(--radius-md); background: var(--surface-1); margin-bottom: var(--space-3); overflow: hidden; transition: border-color var(--dur-fast); }
+.task[open] { border-color: var(--border-strong); }
+.task > summary { list-style: none; cursor: pointer; padding: var(--space-3) var(--space-4); display: grid; grid-template-columns: auto auto 1fr auto; gap: var(--space-3); align-items: center; font-weight: 500; font-size: var(--fs-body); color: var(--text-primary); user-select: none; }
+.task > summary::-webkit-details-marker { display: none; }
+.task > summary::before { content: ""; width: 12px; height: 12px; border-right: 1.5px solid var(--text-muted); border-bottom: 1.5px solid var(--text-muted); transform: rotate(-45deg); transition: transform var(--dur-fast) var(--ease-out); display: inline-block; margin-left: 2px; }
+.task[open] > summary::before { transform: rotate(45deg); }
+.task__id { font-family: var(--font-mono); font-size: var(--fs-small); color: var(--text-muted); font-weight: 500; }
+.task__title { color: var(--text-primary); }
+.task > summary::after { display: inline-flex; align-items: center; gap: 6px; height: 22px; padding: 0 8px; border-radius: 4px; font-size: var(--fs-micro); font-weight: 500; border: 1px solid transparent; line-height: 1; white-space: nowrap; }
+.task[data-status="ready"]       > summary::after { content: "● Ready";       color: var(--status-ready);       background: var(--status-ready-bg);       border-color: var(--status-ready-border); }
+.task[data-status="in-progress"] > summary::after { content: "● In progress"; color: var(--status-in-progress); background: var(--status-in-progress-bg); border-color: var(--status-in-progress-border); }
+.task[data-status="done"]        > summary::after { content: "● Done";        color: var(--status-done);        background: var(--status-done-bg);        border-color: var(--status-done-border); }
+.task[data-status="blocked"]     > summary::after { content: "● Blocked";     color: var(--status-blocked);     background: var(--status-blocked-bg);     border-color: var(--status-blocked-border); }
+.task__body { padding: 0 var(--space-4) var(--space-4); display: flex; flex-direction: column; gap: var(--space-4); border-top: 1px solid var(--border-subtle); padding-top: var(--space-4); }
+.task__body > p:first-child { margin-top: 0; }
+.task__body > *:last-child { margin-bottom: 0; }
+.task__deps { display: flex; align-items: center; gap: var(--space-2); font-family: var(--font-mono); font-size: var(--fs-small); color: var(--text-muted); flex-wrap: wrap; }
+.task__deps strong { font-weight: 500; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em; font-size: var(--fs-micro); }
+.task__deps a { color: var(--accent); border-bottom: 0; font-weight: 500; }
+.task__body p { margin: 0; }
+.task__body code { font-family: var(--font-mono); font-size: 0.875em; background: var(--surface-2); padding: 0.1em 0.35em; border-radius: var(--radius-sm); border: 1px solid var(--border-subtle); }
+
+.scenarios { display: flex; flex-direction: column; gap: var(--space-2); }
+.scenarios__heading { font-size: var(--fs-micro); text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-secondary); font-weight: 600; margin: 0 0 var(--space-1); }
+.scenario { border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); background: var(--surface-0); overflow: hidden; }
+.scenario > summary { list-style: none; cursor: pointer; padding: var(--space-2) var(--space-3); display: flex; align-items: center; gap: var(--space-2); font-size: var(--fs-small); font-weight: 500; color: var(--text-primary); }
+.scenario > summary::-webkit-details-marker { display: none; }
+.scenario > summary::before { content: "▸"; color: var(--text-muted); font-size: 10px; width: 12px; transition: transform var(--dur-fast); display: inline-block; }
+.scenario[open] > summary::before { transform: rotate(90deg); }
+.scenario__num { font-family: var(--font-mono); color: var(--text-muted); font-size: var(--fs-micro); margin-right: 4px; }
+.scenario__steps { padding: var(--space-3) var(--space-4); border-top: 1px solid var(--border-subtle); background: var(--surface-1); font-family: var(--font-mono); font-size: var(--fs-small); line-height: 1.7; white-space: pre-wrap; color: var(--text-primary); }
+.scenario__steps .step-kw { display: inline-block; width: 56px; color: var(--accent); font-weight: 600; }
+.scenario__steps code { font-family: var(--font-mono); font-size: 1em; background: var(--surface-2); padding: 0.05em 0.3em; border-radius: var(--radius-sm); border: 1px solid var(--border-subtle); }
+
+.goal { border: 1px solid var(--border-strong); border-radius: var(--radius-lg); background: var(--accent-tint); padding: var(--space-5) var(--space-6); margin: var(--space-4) 0 var(--space-6); display: grid; grid-template-columns: auto 1fr; gap: var(--space-5); align-items: start; }
+.goal__label { font-family: var(--font-mono); font-size: var(--fs-micro); text-transform: uppercase; letter-spacing: 0.08em; color: var(--accent); font-weight: 600; padding-top: 6px; white-space: nowrap; }
+.goal__text { font-family: var(--font-display); font-size: var(--fs-h3); line-height: var(--lh-snug); font-weight: 500; color: var(--text-primary); letter-spacing: -0.005em; margin: 0; max-width: 60ch; }
+
+.mermaid { background: var(--surface-1); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: var(--space-5); margin: var(--space-4) 0; text-align: center; overflow-x: auto; }
+.mermaid svg { max-width: 100%; height: auto; }
+
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="file-header">
+    <p class="file-header__eyebrow">tasks.html · feature/sales-charge-validation · 2026-05-24</p>
+    <h1 class="file-header__title">Sales Document Posting: Item Charge Allocation Validation</h1>
+    <div class="meta-strip">
+      <div class="meta-strip__item"><span class="meta-strip__key">Slug</span><span class="meta-strip__val">sales-charge-validation</span></div>
+      <div class="meta-strip__item"><span class="meta-strip__key">ADR</span><span class="meta-strip__val"><a class="xref" href="#">ADR-0007</a></span></div>
+      <div class="meta-strip__item"><span class="meta-strip__key">Event model</span><span class="meta-strip__val"><a class="xref" href="event-model.example.html">event-model.html</a></span></div>
+      <div class="meta-strip__item"><span class="meta-strip__key">Architecture</span><span class="meta-strip__val"><a class="xref" href="architecture.example.html">architecture.html</a></span></div>
+      <div class="meta-strip__item"><span class="meta-strip__key">Tasks</span><span class="meta-strip__val">5</span></div>
+    </div>
+  </div>
+
+  <div class="goal">
+    <span class="goal__label">Goal</span>
+    <p class="goal__text">Catch item charge allocation mismatches at posting time before the invoice posts, surface the cause inline on the document, and produce a deterministic audit trail tying each allocation back to its source line.</p>
+  </div>
+
+  <h2 style="font-family:var(--font-display);font-weight:600;font-size:var(--fs-h2);letter-spacing:-0.015em;margin:var(--space-6) 0 var(--space-3);">Task bus</h2>
+
+  <details class="task" id="T-001" data-task="T-001" data-status="done">
+    <summary><span class="task__id">T-001</span><span class="task__title">Read released sales order item charge assignments</span></summary>
+    <div class="task__body">
+      <p>Resolve all <code>Item Charge Assignment (Sales)</code> rows for a released <code>Sales Header</code>, grouped by source <code>Sales Line</code>. Reads only; no <code>Insert</code> or <code>Modify</code>.</p>
+      <div class="scenarios">
+        <p class="scenarios__heading">Scenarios</p>
+        <details class="scenario">
+          <summary><span class="scenario__num">01</span> Reading assignments on a released order with one charge</summary>
+          <div class="scenario__steps"><span class="step-kw">Given</span> a released <code>Sales Header</code> with <code>No.</code> "SO-1001"
+<span class="step-kw">And</span>   one <code>Item Charge Assignment (Sales)</code> against a freight charge line
+<span class="step-kw">When</span>  <code>Charge Validation</code> reads assignments for "SO-1001"
+<span class="step-kw">Then</span>  one assignment is returned
+<span class="step-kw">And</span>   it carries the source <code>Sales Line</code> reference</div>
+        </details>
+        <details class="scenario">
+          <summary><span class="scenario__num">02</span> Reading assignments on an order with no charges yields empty</summary>
+          <div class="scenario__steps"><span class="step-kw">Given</span> a released <code>Sales Header</code> with no <code>Item Charge Assignment (Sales)</code> rows
+<span class="step-kw">When</span>  <code>Charge Validation</code> reads assignments
+<span class="step-kw">Then</span>  the result is empty
+<span class="step-kw">And</span>   validation is short-circuited as balanced</div>
+        </details>
+      </div>
+    </div>
+  </details>
+
+  <details class="task" id="T-002" data-task="T-002" data-status="done">
+    <summary><span class="task__id">T-002</span><span class="task__title">Validate that allocated quantities sum to charge quantity</span></summary>
+    <div class="task__body">
+      <p>For each <code>Item Charge Assignment (Sales)</code>, verify that the sum of allocated quantities across receiving <code>Sales Line</code> rows equals the charge quantity. Both inequality directions count as mismatches.</p>
+      <div class="callout callout--replan">
+        <span class="callout__icon">↻</span>
+        <div>
+          <p class="callout__title">Replan trigger fired during refine</p>
+          <p>Original test only covered equality, refined to cover both inequality directions. Coverage now: sum equals, sum less than, sum greater than.</p>
+        </div>
+      </div>
+      <div class="scenarios">
+        <p class="scenarios__heading">Scenarios</p>
+        <details class="scenario">
+          <summary><span class="scenario__num">01</span> Sum equals charge quantity</summary>
+          <div class="scenario__steps"><span class="step-kw">Given</span> a charge of quantity 10
+<span class="step-kw">And</span>   allocations of 4 and 6 across two <code>Sales Line</code> rows
+<span class="step-kw">When</span>  <code>Charge Validation</code> validates
+<span class="step-kw">Then</span>  the result is balanced</div>
+        </details>
+        <details class="scenario">
+          <summary><span class="scenario__num">02</span> Sum less than charge quantity</summary>
+          <div class="scenario__steps"><span class="step-kw">Given</span> a charge of quantity 10
+<span class="step-kw">And</span>   allocations of 4 and 4 across two <code>Sales Line</code> rows
+<span class="step-kw">When</span>  <code>Charge Validation</code> validates
+<span class="step-kw">Then</span>  the result is <code>Mismatch</code> with shortfall 2</div>
+        </details>
+        <details class="scenario">
+          <summary><span class="scenario__num">03</span> Sum greater than charge quantity</summary>
+          <div class="scenario__steps"><span class="step-kw">Given</span> a charge of quantity 10
+<span class="step-kw">And</span>   allocations of 6 and 6 across two <code>Sales Line</code> rows
+<span class="step-kw">When</span>  <code>Charge Validation</code> validates
+<span class="step-kw">Then</span>  the result is <code>Mismatch</code> with overflow 2</div>
+        </details>
+      </div>
+    </div>
+  </details>
+
+  <details class="task" id="T-003" data-task="T-003" data-status="in-progress" open>
+    <summary><span class="task__id">T-003</span><span class="task__title">Subscribe to OnAfterCheckSalesDoc and route through validator</span></summary>
+    <div class="task__body">
+      <p>Add an event subscriber to <code>Sales-Post</code> codeunit 80 that delegates allocation validation to <code>Charge Validation</code> and propagates failures as posting errors. The subscriber must be defensive: a mismatch raises <code>Error</code> before any <code>Insert</code> or <code>Modify</code> on posting tables.</p>
+      <div class="task__deps"><strong>Depends on</strong> <a href="#T-001">T-001</a> <a href="#T-002">T-002</a></div>
+      <div class="scenarios">
+        <p class="scenarios__heading">Scenarios</p>
+        <details class="scenario">
+          <summary><span class="scenario__num">01</span> Validation fires before posting writes</summary>
+          <div class="scenario__steps"><span class="step-kw">Given</span> a released <code>Sales Header</code> with one valid <code>Item Charge Assignment (Sales)</code>
+<span class="step-kw">When</span>  the user calls <code>Post</code>
+<span class="step-kw">Then</span>  <code>Charge Validation</code> runs before <code>OnBeforePostSalesDoc</code>
+<span class="step-kw">And</span>   the <code>Posted Sales Invoice</code> is created with <code>Posting Date</code> matching the header</div>
+        </details>
+        <details class="scenario">
+          <summary><span class="scenario__num">02</span> Mismatch aborts posting with no partial writes</summary>
+          <div class="scenario__steps"><span class="step-kw">Given</span> a released <code>Sales Header</code> with a mismatched <code>Item Charge Assignment (Sales)</code>
+<span class="step-kw">When</span>  the user calls <code>Post</code>
+<span class="step-kw">Then</span>  posting halts with <code>Allocation Mismatch</code>
+<span class="step-kw">And</span>   no <code>Posted Sales Invoice</code> row is <code>Insert</code>ed</div>
+        </details>
+      </div>
+    </div>
+  </details>
+
+  <details class="task" id="T-004" data-task="T-004" data-status="ready">
+    <summary><span class="task__id">T-004</span><span class="task__title">Surface validation failure inline on Sales Order Card with allocation breakdown</span></summary>
+    <div class="task__body">
+      <p>When validation reports mismatch, render the allocation breakdown inline on the <code>Sales Order Card</code> — one row per receiving <code>Sales Line</code>, with allocated and required quantities side by side and the imbalance highlighted.</p>
+      <div class="task__deps"><strong>Depends on</strong> <a href="#T-003">T-003</a></div>
+      <div class="scenarios">
+        <p class="scenarios__heading">Scenarios</p>
+        <details class="scenario">
+          <summary><span class="scenario__num">01</span> Breakdown shows allocated vs required per line</summary>
+          <div class="scenario__steps"><span class="step-kw">Given</span> a mismatched assignment with allocations 6 and 6 against a charge of 10
+<span class="step-kw">When</span>  the user views the <code>Sales Order Card</code> after a failed <code>Post</code>
+<span class="step-kw">Then</span>  the breakdown lists both <code>Sales Line</code> rows with allocated and required quantities
+<span class="step-kw">And</span>   the overflow row is marked as the imbalance</div>
+        </details>
+        <details class="scenario">
+          <summary><span class="scenario__num">02</span> Breakdown clears when the user corrects the allocation</summary>
+          <div class="scenario__steps"><span class="step-kw">Given</span> a corrected allocation that sums to the charge quantity
+<span class="step-kw">When</span>  the user re-opens the <code>Sales Order Card</code>
+<span class="step-kw">Then</span>  the breakdown is hidden
+<span class="step-kw">And</span>   the <code>Validate</code> action reports balanced</div>
+        </details>
+        <details class="scenario">
+          <summary><span class="scenario__num">03</span> Breakdown survives navigation away and back</summary>
+          <div class="scenario__steps"><span class="step-kw">Given</span> a failed posting on "SO-1042" with a persisted mismatch
+<span class="step-kw">When</span>  the user navigates to another card and back to "SO-1042"
+<span class="step-kw">Then</span>  the breakdown is still rendered
+<span class="step-kw">And</span>   the most recent mismatch timestamp is shown</div>
+        </details>
+      </div>
+    </div>
+  </details>
+
+  <details class="task" id="T-005" data-task="T-005" data-status="blocked">
+    <summary><span class="task__id">T-005</span><span class="task__title">Persist allocation audit entries via Allocation Ledger Entry table</span></summary>
+    <div class="task__body">
+      <p>On every successful posting, <code>Insert</code> one ledger entry per resolved allocation: source <code>Sales Line</code>, receiving <code>Sales Line</code>, allocated quantity, <code>Posting Date</code>. The entry is the audit trail referenced by ADR-0007.</p>
+      <div class="callout callout--blocked">
+        <span class="callout__icon">×</span>
+        <div>
+          <p class="callout__title">Blocked</p>
+          <p>Awaiting decision on whether to extend existing <code>Allocation Account Entry</code> table or introduce new <code>Item Charge Allocation Ledger Entry</code> table. See <a class="xref" href="#">.out-of-scope/allocation-ledger-shape.md</a>.</p>
+        </div>
+      </div>
+      <div class="task__deps"><strong>Depends on</strong> <a href="#T-002">T-002</a></div>
+    </div>
+  </details>
+
+  <h2 style="font-family:var(--font-display);font-weight:600;font-size:var(--fs-h2);letter-spacing:-0.015em;margin:var(--space-7) 0 var(--space-3);">Dependencies</h2>
+
+  <div class="mermaid" data-graph="task-deps">
+flowchart TD
+  T1["T-001<br/>Read assignments"]
+  T2["T-002<br/>Validate sums"]
+  T3["T-003<br/>Subscribe & route"]
+  T4["T-004<br/>Surface breakdown"]
+  T5["T-005<br/>Persist ledger"]
+  T1 --> T3
+  T2 --> T3
+  T2 --> T5
+  T3 --> T4
+  </div>
+
+</div>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+<script>
+  mermaid.initialize({
+    startOnLoad: false,
+    theme: 'base',
+    themeVariables: {
+      background: 'transparent',
+      primaryColor: '#2d2e33',
+      primaryTextColor: '#f4f4f5',
+      primaryBorderColor: '#8b8d98',
+      secondaryColor: '#5e6ad2',
+      secondaryTextColor: '#ffffff',
+      secondaryBorderColor: '#8b8d98',
+      tertiaryColor: '#3c3d44',
+      tertiaryTextColor: '#f4f4f5',
+      tertiaryBorderColor: '#8b8d98',
+      lineColor: '#8b8d98',
+      textColor: '#c8c8cd',
+      mainBkg: '#2d2e33',
+      nodeBorder: '#8b8d98',
+      edgeLabelBackground: '#2d2e33',
+      clusterBkg: '#1f2024',
+      clusterBorder: '#8b8d98',
+      titleColor: '#c8c8cd',
+      fontFamily: '"Inter", system-ui, sans-serif',
+      fontSize: '14px'
+    }
+  });
+  mermaid.run();
+</script>
+</body>
+</html>

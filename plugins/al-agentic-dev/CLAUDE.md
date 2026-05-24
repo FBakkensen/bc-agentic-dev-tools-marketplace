@@ -55,8 +55,9 @@ Skills compose by name. When you change a skill, scan the others for cross-refer
 - **No inline citations in durable artifacts.** `(see: file.al:120)` is forbidden in `architecture.html`, `tasks.html`, `CONTEXT.md`, ADRs, `.out-of-scope/`. Names are the citation; `NALICFCopyDocSubscribers.OnAfterInsertToSalesLine` is the address. Future readers grep; the IDE gives line numbers for free.
 - **Mermaid containers are for Mermaid to find graphs.** Permitted in `architecture.html` (`<div class="mermaid" data-graph="module-deps">` and / or `data-graph="flow">`) and in `tasks.html` (`<div class="mermaid" data-graph="task-deps">`). Whether a diagram earns its place per feature is the writing skill's call; this list just enumerates the container hooks Mermaid recognises. ADRs and every other markdown artifact stay text-only.
 - **HTML files are self-contained.** Inline `<style>`, Google Fonts via CDN `<link>`, Mermaid via CDN `<script>` pinned `@11`. No external CSS files, no JS bundles. Offline = broken docs is the accepted trade.
+- **The design system at `references/design-system/` is the single source of truth for spec artifact visuals.** Class names, palette, typography, spacing, and component shape are prescribed by [`design-system/gallery.html`](./references/design-system/) and the populated `*.example.html` files. Per-feature aesthetic divergence is gone; pick content shape per feature, never visual shape. See `references/html-spec-discipline.md`.
 - **`architecture.html` is reshape-only.** Written by `/al-design`, read by everyone downstream. Never edit in place; re-run `/al-design`. No surgical-edit contract beyond the Mermaid container hooks.
-- **`tasks.html` carries one surgical-edit contract.** Maintaining skills find a task by `<details data-task="T-NNN">` and flip its `data-status="ready | in-progress | done | blocked"`. Every other piece of structure (Tests slot shape, alert kinds, edge rendering, Summary layout, description placement) is the writing skill's call per feature. Inconsistency across features is fine and expected. See `references/html-spec-discipline.md`.
+- **`tasks.html` carries one surgical-edit contract.** Maintaining skills find a task by `<details class="task" data-task="T-NNN">` and flip its `data-status="ready | in-progress | done | blocked"`. The visible badge renders from `data-status` via CSS (`::after { content: "● Ready" }` etc.); the agent flips only the attribute. See `references/html-spec-discipline.md`.
 - **No HTML for ADRs or `CONTEXT.md`.** Markdown. The HTML shift covers only `specs/<NNN>-<slug>/`.
 - **New skills need a stated gap.** _Avoid_: spinning up a skill that an existing one can absorb, or that fits as a brief note inside an existing task block, an `/al-research` finding, or a side-band reference. Propose only when no existing skill fits, and say so in one line.
 - **Express intent and rationale, not enumerated rules with skip conditions.** SKILLs and references state *why a discipline exists and what problem it solves*; the agent maps rationale to situation. Slot prescriptions, `_When earned:_` / `_Skip when:_` enumerations, and templates the agent must fill are rejected by name. The agent is capable of shaping output per feature.
@@ -78,7 +79,8 @@ Two tiers, on purpose.
 | `voice-contract.md` | plugin-level | voice rules for prose; read by every skill that writes a durable artifact |
 | `user-communication.md` | plugin-level | principles for chat output (names are the citation, lede first, terse, BC vocab, no em-dashes) and voice carve-outs from `voice-contract.md`; read by skills that emit interactive chat |
 | `notes-discipline.md` | plugin-level | what kinds of info live in the task block vs elsewhere (commit message, ADR, `.out-of-scope/`), what survives past `done`, what dies with the branch; read by skills that write `tasks.html` |
-| `html-spec-discipline.md` | plugin-level | aesthetic posture, the two-attribute floor (`data-task` + `data-status`), Mermaid embedding, self-contained constraint, prior-spec consultation, status-flip surgical-edit; read by `/al-design`, `/al-event-model`, `/al-scope`, `/al-refine`, `/al-implement`, `/al-mutate`, `/al-steer` |
+| `html-spec-discipline.md` | plugin-level | pointer to `design-system/` (source of truth), token summary, the two-attribute floor (`data-task` + `data-status`), Mermaid init block, self-contained constraint, status-flip surgical-edit; read by `/al-design`, `/al-event-model`, `/al-scope`, `/al-refine`, `/al-implement`, `/al-mutate`, `/al-steer` |
+| `design-system/` (folder) | plugin-level | the source of truth for spec artifact visuals; `gallery.html` + three populated `*.example.html` + `spec-styles.css` + `colors_and_type.css` + `README.md`. Read by every skill that generates or maintains HTML artifacts |
 | `cross-branch-numbering.md` | plugin-level | algorithm for picking `NNN` (spec folders) and `NNNN` (ADRs) across parallel branches; read by `/al-design`, `/al-event-model`, `/al-grill-adr` |
 | `bc-patterns.md` | plugin-level | BC pattern catalogue cited by `architecture.html`, design ADRs, and `/al-design` |
 | `out-of-scope.template.md` | `/al-steer`-local | template materialised into `.out-of-scope/<concept>.md` |
@@ -108,7 +110,15 @@ references/                 # Plugin-level shared, read by ≥2 skills, or cited
 ├── voice-contract.md       # Voice rules for prose
 ├── user-communication.md   # Chat output principles and voice carve-outs from voice-contract.md
 ├── notes-discipline.md     # What lives in the task block vs the commit / ADR / .out-of-scope/
-└── html-spec-discipline.md # Aesthetic posture, two-attribute floor, Mermaid, self-contained, prior-spec consultation
+├── html-spec-discipline.md # Pointer to design-system/, two-attribute floor, Mermaid init, self-contained, surgical-edit
+└── design-system/          # Source of truth for spec artifact visuals
+    ├── README.md           # Content fundamentals, visual foundations, iconography, voice
+    ├── gallery.html        # Component gallery — rendered + canonical HTML source per component
+    ├── event-model.example.html
+    ├── architecture.example.html
+    ├── tasks.example.html
+    ├── spec-styles.css     # Shared inline <style> block (inline an equivalent into each artifact)
+    └── colors_and_type.css # Readable CSS variable reference
 skills/
 ├── al-design/SKILL.md
 ├── al-event-model/SKILL.md
