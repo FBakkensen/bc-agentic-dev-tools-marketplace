@@ -40,6 +40,14 @@ Plugin name in `plugin.json` matches the folder name. Single-skill plugins put t
 
 Every `CLAUDE.md` in this repo — root and per-plugin — is **dev-time only**. They load when you're working in the marketplace repo (this session). Installed users never see them. Any rule the assistant needs at runtime in an end-user's session must live in `SKILL.md` or a `references/*.md` the SKILL explicitly reads — not in any `CLAUDE.md`.
 
+## Git workflow on this repo
+
+**Commit straight to `main`.** Do NOT create a feature branch. Do NOT open a PR. When the user says "commit and push", run `git add` + `git commit` + `git push origin main`. Skip `git checkout -b`. Skip `gh pr create`.
+
+**Why:** the marketplace is maintained solo. Feature branches add overhead with zero review benefit. This overrides the global CLAUDE.md rule "if on the default branch, branch first" — that rule applies to repos with PR review flows, not this one.
+
+**Exception:** the user explicitly asks for a branch or PR ("can you open a PR for this", "branch this off main", etc.). In that case follow the request; default is straight-to-main.
+
 Run before pushing:
 
 ```powershell
