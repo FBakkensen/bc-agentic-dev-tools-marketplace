@@ -40,19 +40,28 @@ Worked examples (the `_Avoid_` line shows the forbidden em-dash; the `Use` line 
 - _Avoid_: `Fix is a one-line clear at line 32 — before ConfToSalesLine.`
 - Use: `Fix is a one-line clear at line 32, before ConfToSalesLine.`
 
+## Artifacts get scanned, not slow-read
+
+A future reader lands to decide one task. They scan landing points top to bottom (IDs, statuses, ledes, labels, table rows), slow-read the one block that catches their eye.
+
+**Failure.** Dense `<p>` cramming 5 distinct facts. Reading sentence 1 leaves the reader knowing nothing about 2–5 → reader reads the whole wall or skips the whole task. Artifact loses.
+
+**Rule.** Multi-fact passage → one fact per landing line. Container is your call: bullets, sub-callouts, table rows, sub-`<details>`, separate paragraphs.
+
+**Check.** Read only the first line of each landing point in your output. If that vertical strip says what is there, ship. Else restructure.
+
 ## Voice scope
 
-Two cadences inside a `tasks.html` task entry, picked by where the line lives.
+Cadence inside a `tasks.html` task entry, picked by where the line lives.
 
 | Where | Cadence |
 |---|---|
 | `<summary>` line (`[x] T-NNN: Title`) | One-line. Title PascalCase. Status marker plus title; no metadata. |
 | Gherkin bullets inside `**Tests**` | One-line per bullet. Drop articles, conjunctions, hedging. BC vocabulary is the compression. |
 | Notes-line entries | One-line per shape. See `notes-discipline.md`. |
-| Description paragraph inside `<details>` | Normal prose. Multi-sentence allowed. Direct, opinionated, no padding. Semicolon-glue acceptable when it joins independent clauses with causal link. |
-| Alert bodies (NOTE / IMPORTANT / WARNING / CAUTION / TIP) | Normal prose. Lead with the label, then the body. |
+| Description, alert body, table cell | Apply *Artifacts get scanned*. Multi-fact → one fact per landing line; one or two facts → tight `<p>`, direct, opinionated, no padding. |
 
-The one-line cadence stops the bare entry from sprawling. The prose cadence keeps descriptions and alert bodies readable. Apply the right one to the right slot.
+The one-line cadence stops the bare entry from sprawling. The scan rule keeps descriptions and alert bodies landable.
 
 ## BC vocabulary
 

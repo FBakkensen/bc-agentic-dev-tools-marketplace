@@ -49,7 +49,7 @@ The spec artifacts are written for engineers. The voice is direct, declarative, 
 
 **No inline source citations.** Never write `(see: Codeunit80.al:120)`. Object and procedure names are the citation; readers grep.
 
-**Density.** Linear-style: dense that breathes. A paragraph is 2–4 sentences. A bullet list is 3–6 items. Tables for module maps, brownfield touchpoints, and any keyed inventory.
+**Density.** Linear-style: dense that breathes. A single-fact paragraph is 2–4 sentences. Multi-fact content takes structured shape — one fact per landing line per `voice-contract.md` *Artifacts get scanned*. Bullet lists 3–6 items. Tables for module maps, brownfield touchpoints, any keyed inventory.
 
 **No emoji.** No decorative iconography. The four callout glyphs (`i` / `!` / `×` / `↻`) are monospace ASCII so they survive every render path.
 

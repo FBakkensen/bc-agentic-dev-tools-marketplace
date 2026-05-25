@@ -66,9 +66,9 @@ How the status renders visually (glyph, colour, badge) is your call. Maintaining
 
 **Names are the citation.** No inline `(see: file.al:120)` annotations. Future readers grep; the IDE gives line numbers for free.
 
-## Description paragraph
+## Description
 
-One to three sentences. Normal prose voice. BC site first, then the invariant the task preserves or the contract it ships. Cite ADRs inline as `<a href="../../docs/adr/NNNN-slug.md">ADR-NNNN</a>`. No em-dashes; substitute per `${CLAUDE_SKILL_DIR}/../../references/voice-contract.md`.
+What the task delivers. Lede first: BC site (object, procedure, field) plus the invariant the task preserves or the contract it ships. Cite ADRs inline as `<a href="../../docs/adr/NNNN-slug.md">ADR-NNNN</a>`. Shape per `${CLAUDE_SKILL_DIR}/../../references/voice-contract.md`: tight `<p>` for one or two facts; one fact per landing line when content carries more (bullets, sub-callouts, table rows, separate paragraphs, your call).
 
 `/al-refine` may rewrite the description after walking the codebase, swapping in concrete `file:line` citations, object IDs from `/al-research`, or sharpened invariants the codebase walk surfaces.
 
