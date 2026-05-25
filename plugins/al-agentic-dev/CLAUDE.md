@@ -24,7 +24,7 @@ Two layers, on purpose.
                    only, pure backend     only)
                    skips this step)
 
-gates: /al-code-review (user-invoked at task-done and feature-done; combines vanilla review + bc-knowledge MCP topic surfacing)
+gates: /al-code-review (user-invoked at task-done and feature-done; combines vanilla review + bc-knowledge MCP topic surfacing; auto-runs /grill-me per surviving finding for triage)
 side-band: /al-research, /al-steer (replan venue + .out-of-scope), /al-second-opinion
 ```
 
@@ -40,7 +40,7 @@ side-band: /al-research, /al-steer (replan venue + .out-of-scope), /al-second-op
 | `/al-refine` | One task → numbered Gherkin scenarios. Per task, not per feature. |
 | `/al-implement` | Pick a Gherkin-ready task, run TDD: red → green → refactor → mutate. |
 | `/al-refactor` | Improve shape while green. No new behaviour. Consults bc-knowledge MCP for structural anti-patterns (SetLoadFields placement, subscriber lifecycle, SIFT) at high relevance bar. |
-| `/al-code-review` | In-depth gate at task-done and feature-done boundaries. Vanilla review + bc-knowledge at lower bar + per-feature cross-file checks (perm set vs new table field, publisher vs subscriber signature, AppSource public-surface additions). Findings hand off to `/grill-me` for triage; materializes new tasks or notes on future tasks. Never routes via `/al-steer`. |
+| `/al-code-review` | In-depth gate at task-done and feature-done boundaries. Vanilla review + bc-knowledge at lower bar + per-feature cross-file checks (perm set vs new table field, publisher vs subscriber signature, AppSource public-surface additions). Auto-runs `/grill-me` per surviving finding for triage (severity-ordered, one grill per finding, chrome-only chat); materializes new tasks or notes on future tasks. Never routes via `/al-steer`. |
 | `/al-mutate` | Inject mutations to validate test rigor. Mandatory for non-trivial work. Owns the mutate-build-revert cycle. |
 | `/al-research` | Verify BC specifics from authoritative sources. |
 | `/al-second-opinion` | Cross-runtime read-only advisory gate for non-trivial scenarios, mutation lists, and refactor checklists. From Claude Code: `codex exec`. From Codex: `claude -p`. |
@@ -49,7 +49,7 @@ Skills compose by name. When you change a skill, scan the others for cross-refer
 
 ## Replan
 
-`/al-steer` is the canonical replan venue. The seven triggers as named patterns to learn: task too big, hidden pre-req, wrong order, sibling now wrong, new behaviour emerges, architecture decomposition wrong, goal drift. Replan checks in `/al-refine`, `/al-implement`, `/al-refactor`, `/al-code-review` map the trigger to response per situation: when the trigger means the plan is invalid as planned, flip `data-status` to `blocked` and route to `/al-steer`; when the trigger means new info that doesn't invalidate, note it inside the task and continue. `/al-code-review` findings themselves are NOT replan signals; they hand off to `/grill-me` for per-finding triage into new tasks or notes on future tasks.
+`/al-steer` is the canonical replan venue. The seven triggers as named patterns to learn: task too big, hidden pre-req, wrong order, sibling now wrong, new behaviour emerges, architecture decomposition wrong, goal drift. Replan checks in `/al-refine`, `/al-implement`, `/al-refactor`, `/al-code-review` map the trigger to response per situation: when the trigger means the plan is invalid as planned, flip `data-status` to `blocked` and route to `/al-steer`; when the trigger means new info that doesn't invalidate, note it inside the task and continue. `/al-code-review` findings themselves are NOT replan signals; the skill auto-invokes `/grill-me` per finding for triage into new tasks or notes on future tasks.
 
 ## Editing rules
 
