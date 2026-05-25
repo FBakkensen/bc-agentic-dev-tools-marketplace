@@ -6,7 +6,7 @@ This file is for the *human reader*, not for agent-to-agent prompts. The shapes 
 
 ## Scope
 
-Governs **chat output**: lines the runtime emits to the user during an interactive skill session. Skills that emit interactive output (currently `/al-refine`, `/al-implement`) consult this; others may adopt later.
+Governs **chat output**: lines the runtime emits to the user during an interactive skill session. Read by every gate-style skill that emits chat at the user: `/al-event-model`, `/al-design`, `/al-scope`, `/al-refine`, `/al-implement`, `/al-refactor`, `/al-mutate`, `/al-code-review`, `/al-steer`. Conversational/pass-through skills (`/al-grill-adr`, `/al-second-opinion`, `/al-research`) don't apply this file's gate-report discipline; their output shape comes from their own SKILL.md.
 
 DO NOT confuse with `voice-contract.md`, which governs **durable artifacts** (`tasks.html`, `architecture.html`, ADRs, `CONTEXT.md`, `.out-of-scope/`, commit messages, PR bodies, SKILL.md files). Two different surfaces, two different cadences.
 
@@ -75,6 +75,44 @@ Worked example, `/al-implement`:
 > | **E2E**   | 2 |
 > | **First** | T-007#1 `BlockedCustomerCannotPostInvoice` |
 
+### Gate report
+
+Use when a gate event closes inside a chat-emitting skill: a scenario goes green in `/al-implement`, Gherkin lands in `/al-refine`, `architecture.html` lands in `/al-design`, a confidence-filtered finding closes in `/al-code-review`, a feature decomposes in `/al-scope`, an `event-model.html` lands in `/al-event-model`, a refactor pass lands standalone, a mutation pass lands standalone, the user asks "where are we" in `/al-steer`. The per-skill cadence (which event qualifies as a gate event for that skill) is named in each SKILL.md; this section defines the shape.
+
+**Why**: the user reads chat to evaluate the work the way a manager evaluates work, in terms of what the application now does for its user, the problem the change solved, how the change fits the app's shape, and whether a decision is theirs to make. The chat is the user's source of truth; they are not opening artifacts. Reports written at AL-implementation altitude (procedure names, codeunit numbers, mutant IDs, lens findings, RED/GREEN test rhythms, build counts) hide the application-level meaning the user came to evaluate. Those mechanics belong in the durable artifacts: commit messages, `tasks.html` task blocks, `.out-of-scope/`, the mutation report. The user pulls detail by asking.
+
+**The four answers, reached in prose when they apply**: what user-facing behavior the change enables (in BC user language: a Sales Order action, a Customer field's new behavior, an API consumer's now-visible Status, a Role Center cue), the problem it solves (with a concrete one-line scenario the user recognises from the application), how the change fits the app at BC-shape altitude (the module, the BC pattern chosen, the seam; names like `Sales-Post Impl` and `OnAfterInsertCustomer` belong here; procedure names, line numbers, lens findings, mutant IDs do not), and whether a decision is on the user. When the work did not touch structure, the "how this fits" answer collapses or disappears. When no decision is pending, the closing line is explicit: `Nothing. Ready for the next <scenario | task | feature>.`
+
+This is **intent prose**, not a slot template. DO NOT render `**What enabled**:` / `**Problem**:` / `**How this fits**:` / `**Your call?**:` as a fixed form. The discipline is reaching the four answers in natural prose, not filling labeled rows.
+
+Worked example, `/al-implement` closing one scenario:
+
+> Copying a customer in the configurator now reliably carries Description over. A salesperson duplicating "Acme Corp Special Pricing" into a new pricing tier keeps the descriptive text instead of getting a blank.
+>
+> Before, Description could silently blank under one of two copy paths. The salesperson would not notice until after save.
+>
+> This lives in a new `Configurator Copy Impl` codeunit under `src/Configurator/Copy/`, subscribing to `OnAfterInsertCustomer` rather than rewriting the standard Copy Customer flow, keeping the extension out of Microsoft's way when 26.x ships. R→P→W boundary lands at the subscriber: standard does the read and insert, the new codeunit layers the description copy as a follow-up write.
+>
+> Nothing. Ready for the next scenario.
+
+Same shape adapts per skill. `/al-design` gate report names the chosen BC pattern + R→P→W boundary as "how this fits"; the user's call is whether to greenlight `/al-scope`. `/al-refine` gate report describes what the Gherkin will exercise in app terms; the user's call is whether to greenlight `/al-implement`. `/al-steer` gate report answers "where are we": what's next, what's blocked, what's drifting, where the user needs to step in.
+
+**Out of chat, into artifacts**: every test name, codeunit number, procedure name, line number, mutant ID, refactor lens finding, build invocation, AL Runner verdict, second-opinion gap list. The audit trail lives in commits and the task block; the chat carries the meaning.
+
+**Anti-patterns** (forbidden in gate reports):
+
+> _Avoid:_ *"**RED** added `BlockedCustomerCannotPostInvoice` in `T-NALICF Sales Post Tests`. `/al-build -UnitTestOnly` → 1 failed, 0 passed. **GREEN** added `CheckCustomerBlocked` in `Sales-Post Impl`. `/al-build -UnitTestOnly` → 1 passed."*
+>
+> _Use:_ the worked example above. The scenario closing as one prose paragraph at app altitude, no per-cycle RED/GREEN beats.
+
+> _Avoid:_ *"Mutation testing complete: 12 mutants, 10 killed, 2 survived. M3 survived: field assignment on line 47 of codeunit 50100 was mutated from `Customer.Description := Source.Description` to `Customer.Description := ''`. Test suite did not catch this. Analysis: defensive code because BC version 25.3 changed how blank strings propagate. Recommendation: leave M3 as-is."*
+>
+> _Use:_ *"Description-on-copy is now under test. One soft spot remains: if the source customer has no description, the new one is also blank. By design, the tests do not cover it because there is nothing to assert. Nothing. Ready for the next scenario."*
+
+> _Avoid:_ a closing "Bullets / Refactor / Mutations / Status / Commit / Next ready" table that mechanically lists the inner-loop outcomes.
+>
+> _Use:_ a prose closing that states what the user-facing behavior of the task now is, what application problem the whole task solved, where it lives in the module map, and whether the next task is theirs to greenlight.
+
 ### Phase boundary
 
 Use when crossing a major phase boundary. **Why**: phase transitions are where the user re-orients; a tight named beat beats a paragraph of narration. Adaptive shape:
@@ -121,61 +159,9 @@ Worked examples:
 > | **Extract**      | `CheckCustomerBlocked` with `Access = Internal` (Pure) |
 > | **E2E surface**  | page-50 action `Post` |
 
-### Per-bullet (`/al-implement` only)
+### Per-bullet (superseded)
 
-Use for each Gherkin bullet during the TDD inner loop. **Why**: the inner loop produces the highest-volume output of any session; landing it in three small named beats (bullet header → RED → GREEN) lets the user see each cycle complete without scanning prose. Three beats:
-
-```
-**T-NNN#K <ScenarioTitle>** · <Pure | E2E | Both>
-
-- **Given** <precondition>
-- **When** <action>
-- **Then** <outcome>
-  - **And** <invariant>  (if present)
-  - **But** <exclusion>  (if present)
-
-**RED**
-
-| | |
-|---|---|
-| **Test**  | `<test procedure>` |
-| **In**    | `<test codeunit>` |
-| **Build** | `<build invocation>` → <count> failed, <count> passed |
-
-**GREEN**
-
-| | |
-|---|---|
-| **Change** | <named production change(s)> |
-| **Build**  | `<build invocation>` → <count> passed |
-```
-
-Echo the Given/When/Then bullets verbatim from the task's Tests slot. Build invocation is `/al-build -UnitTestOnly` for Pure, `/al-build` for E2E. When GREEN touches multiple files, add one `**Change**` row per file rather than comma-splicing.
-
-**`Both`-tagged bullets emit two sequential Per-bullet blocks**, not one combined block. Same `T-NNN#K` and `ScenarioTitle` repeat on both; the layer label in the header differs. First block: `· Pure` (full Pure cycle, gated by `/al-build -UnitTestOnly`). Second block: `· E2E` (E2E test exercising the same scenario through the public surface, gated by full `/al-build`). The user sees the same scenario landing twice at different layers, which is the intent.
-
-Worked example:
-
-> **T-007#1 BlockedCustomerCannotPostInvoice** · Pure
->
-> - **Given** Customer.Blocked = All
-> - **When** Codeunit 80 runs on Sales Header type Invoice
-> - **Then** error `Customer is blocked` raised; no Cust. Ledger Entry inserted
->
-> **RED**
->
-> | | |
-> |---|---|
-> | **Test**  | `BlockedCustomerCannotPostInvoice` |
-> | **In**    | `T-NALICF Sales Post Tests` |
-> | **Build** | `/al-build -UnitTestOnly` → 1 failed, 0 passed |
->
-> **GREEN**
->
-> | | |
-> |---|---|
-> | **Change** | added `CheckCustomerBlocked` in `Sales-Post Impl` |
-> | **Build**  | `/al-build -UnitTestOnly` → 1 passed |
+**Superseded by Gate report for gate events.** This shape prescribed a `T-NNN#K` header + Given/When/Then bullets + RED/GREEN tables with build counts after every TDD cycle. That cadence and altitude (per-bullet, implementation-mechanics) produced the transaction-altitude flood the Gate report discipline corrects. The TDD cycle (red, green, refactor, mutate) still happens internally, but does not emit per-bullet chat output; only the scenario-close gate event fires a Gate report. The old shape is preserved as an anti-pattern inside the Gate report section above.
 
 ### AL Runner ERROR resolution
 
@@ -282,63 +268,9 @@ Worked examples:
 
 > **Replan check** Trigger `5` soft-flag: bullet `3` specifies a new posting path. IMPORTANT alert added; continuing.
 
-### Close
+### Close (superseded)
 
-Use at end of session. **Why**: the user cannot read `tasks.html` to learn what landed; the Close is their artifact. The two-column table aligns the named outcomes vertically so the user scans down to the row they care about.
-
-`/al-refine` close:
-
-```
-**T-NNN refined.**
-
-| | |
-|---|---|
-| **Tests slot** | <N> Pure + <M> E2E (<N+M> scenarios) |
-| **Summary**    | regenerated |
-| **Status**     | stays `ready` |
-| **Next**       | `/al-implement T-NNN` or `/al-refine T-MMM` |
-```
-
-`/al-implement` close:
-
-```
-**T-NNN done.**
-
-| | |
-|---|---|
-| **Bullets**    | <count> green |
-| **Refactor**   | <one-line outcome> |
-| **Mutations**  | <one-line outcome> |
-| **Status**     | `in-progress` → `done` |
-| **Commit**     | `<short SHA>` |
-| **Next ready** | T-MMM <Title> |
-```
-
-Refactor outcome shapes: `clean` | `<N> renames, <M> extracts` | `<one-line summary of substantive reshape>`.
-
-Mutations outcome shapes: `skipped, no decision logic changed` | `<N> killed, 0 survived` | `<N> killed, <M> survived; <one-line summary>`.
-
-Worked examples:
-
-> **T-007 refined.**
->
-> | | |
-> |---|---|
-> | **Tests slot** | 4 Pure + 2 E2E (6 scenarios) |
-> | **Summary**    | regenerated |
-> | **Status**     | stays `ready` |
-> | **Next**       | `/al-implement T-007` or `/al-refine T-008` |
-
-> **T-007 done.**
->
-> | | |
-> |---|---|
-> | **Bullets**    | 6 green |
-> | **Refactor**   | 2 renames, 1 extract |
-> | **Mutations**  | 4 killed, 0 survived |
-> | **Status**     | `in-progress` → `done` |
-> | **Commit**     | `a3f5b2c` |
-> | **Next ready** | T-008 RuleSetCopyPreservesIntervals |
+**Superseded by Gate report for gate events.** This shape prescribed a mechanical Bullets / Refactor / Mutations / Status / Commit / Next ready table at task close. The rows count inner-loop outcomes (build greenness, mutation kills, refactor passes) instead of stating what the application now does for its user, which application problem the whole task solved, and where the new behavior lives in the module map. The Gate report discipline replaces both `/al-refine` close and `/al-implement` close with prose at app altitude; the durable mechanics (test counts, mutation verdicts, commit SHA, next task pointer) ride in the commit message and task block where the audit trail belongs. The old shape is preserved as an anti-pattern inside the Gate report section above.
 
 ### Stop
 
@@ -397,6 +329,8 @@ Worked example (replan trigger fires after 2 bullets green):
 > **Next:** Run `/al-steer` to clear the replan, then re-enter via `/al-implement T-007`.
 
 ## Anti-patterns
+
+> **For gate events** (scenario close, task close, feature close): the Gate report section above carries the canonical anti-patterns. The RED/GREEN table and the mechanical Close table that some `_Use:_` targets below point at are themselves superseded by the Gate report discipline for gate-event chat output. The "avoid prose narration" lessons still apply; treat the superseded table targets as historical reference only.
 
 > _Avoid:_ *"Now I'm going to read the architecture file to understand the module structure, and then I'll start walking the codebase to identify the relevant tables, codeunits, and events that this task depends on."*
 >
@@ -459,5 +393,6 @@ Worked example (replan trigger fires after 2 bullets green):
 ## Composition
 
 - Inherits voice from `voice-contract.md` with the two carve-outs above.
-- Multi-fact shapes (Opener, Phase multi-fact, Per-bullet RED/GREEN, Close, Stop mid-flow) render well as two-column borderless tables; AL Runner ERROR resolution as a three-column table; one-clause shapes (Phase single-fact, Second opinion, Replan check, Stop pre-flight) as single lines. Labeled bullets work for free-form Gherkin echoes (Given/When/Then) where each value is sentence flow rather than a field. These mappings are the patterns that earned their place; the agent picks the shape that fits the moment, not from a per-flow lookup.
-- Per-skill mapping (which shape the skill reaches for at which moment) is the SKILL.md's call; this reference holds the shapes and their rationale.
+- **Gate report** (the canonical end-of-gate-event shape for the nine gate-style skills) is prose at app altitude, not a table. The four answers are reached in natural prose, not slot-filled. See the section near the top.
+- Multi-fact status shapes (Opener, Phase multi-fact, Stop mid-flow) render well as two-column borderless tables; AL Runner ERROR resolution as a three-column table; one-clause shapes (Phase single-fact, Second opinion, Replan check, Stop pre-flight) as single lines. Labeled bullets work for free-form Gherkin echoes (Given/When/Then) where each value is sentence flow rather than a field. These mappings are the patterns that earned their place; the agent picks the shape that fits the moment, not from a per-flow lookup.
+- Per-skill mapping (which shape the skill reaches for at which moment) is the SKILL.md's call; this reference holds the shapes and their rationale. Per-skill cadence for the Gate report (which event qualifies as a gate event in that skill) lives inline in each gate-style SKILL.md.

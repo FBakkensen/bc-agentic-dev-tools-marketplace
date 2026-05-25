@@ -82,6 +82,10 @@ Prefer a delegated worker when the host supports subagents. Mutation work is iso
 
 Write the durable report at `.output/mutation-report/<YYYYMMDD-HHMMSS>.md`. Survivors are the actionable section, one row per site with classification, killer test (when written) or equivalence reason. Killed mutants map site to catching test. The report is where deliberation lives; the task block carries the verdict.
 
+## Gate event
+
+Standalone mode only: once when the mutation pass closes for a task. The Gate report states what test rigor the pass proved (or did not prove) for the user-facing behavior under test, names any soft spots that remain by design, and names the user's call. When invoked from `/al-implement`, this skill emits no own report; findings fold into the scenario's Gate report.
+
 ## Composition
 
 - `/al-build` runs every iteration; `-UnitTestOnly` for P-layer gating when `unitTestApp` is configured.
@@ -98,6 +102,7 @@ Write the durable report at `.output/mutation-report/<YYYYMMDD-HHMMSS>.md`. Surv
 | `${CLAUDE_SKILL_DIR}/../../references/al-runner.md` | when P-layer gating via `-UnitTestOnly` |
 | `${CLAUDE_SKILL_DIR}/../../references/voice-contract.md` | before writing the verdict into `tasks.html` or the report |
 | `${CLAUDE_SKILL_DIR}/../../references/html-spec-discipline.md` | before writing HTML into `tasks.html` |
+| `${CLAUDE_SKILL_DIR}/../../references/user-communication.md` | before any chat reply at a gate event |
 
 ## Naming and BC vocabulary
 

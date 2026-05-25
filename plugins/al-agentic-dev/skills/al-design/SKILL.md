@@ -127,6 +127,7 @@ Every other piece of structure (section order, slot identities, alert blocks, ta
 | `${CLAUDE_SKILL_DIR}/../../references/bc-patterns.md` | (read, not materialised) | when picking a pattern per module |
 | `specs/<NNN>-<slug>/event-model.html` | (read, not materialised) | for user/API-facing features; settles the user-facing slots of each slice |
 | most recently modified prior spec under `specs/*/` | (read, not materialised) | before writing HTML, for visual coherence |
+| `${CLAUDE_SKILL_DIR}/../../references/user-communication.md` | (read, not materialised) | before any chat reply at a gate event |
 
 ## Naming and BC vocabulary
 
@@ -136,6 +137,10 @@ Every other piece of structure (section order, slot identities, alert blocks, ta
 - **Procedures** PascalCase, verb-first. **Events:** `OnBefore{Action}{Object}`, `OnAfter{Action}{Object}`.
 
 Full architectural vocabulary in `LANGUAGE.md`. BC pattern catalogue in `bc-patterns.md`.
+
+## Gate event
+
+Once when `architecture.html` lands. The Gate report names the chosen BC pattern and the R→P→W boundary as 'how this fits', states the application problem the architecture solves, and names the user's call to greenlight `/al-scope`.
 
 ## Composition
 

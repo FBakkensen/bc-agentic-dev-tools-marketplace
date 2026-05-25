@@ -88,6 +88,7 @@ Every other piece of structure (section order, swimlane layout, where Status tra
 | `${CLAUDE_SKILL_DIR}/../../references/html-spec-discipline.md` | before writing HTML |
 | `${CLAUDE_SKILL_DIR}/../../references/voice-contract.md` | before writing HTML |
 | most recently modified prior spec under `specs/*/` | before writing HTML, for visual coherence |
+| `${CLAUDE_SKILL_DIR}/../../references/user-communication.md` | before any chat reply at a gate event |
 
 ## Naming and BC vocabulary
 
@@ -98,6 +99,10 @@ Every other piece of structure (section order, swimlane layout, where Status tra
 - **Status values.** BC's `Status` field vocabulary per table: *Open*, *Released*, *Pending Approval*, *Posted*, *Closed*.
 
 Full architectural vocabulary, including the *Slice* entry, in `LANGUAGE.md`.
+
+## Gate event
+
+Once when `event-model.html` lands. The Gate report describes the user-facing journey in BC vocabulary (Role, Action, Business Event, View, Status), names the application problem the journey addresses, and names the user's call to greenlight `/al-design`.
 
 ## Composition
 

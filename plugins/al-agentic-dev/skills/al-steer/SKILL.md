@@ -86,6 +86,7 @@ Everything else (how status renders, where alerts sit, how the Mermaid task-deps
 | `${CLAUDE_SKILL_DIR}/../../references/notes-discipline.md` | (read, not materialised) | before writing inside a task block or escalating to a durable destination |
 | `${CLAUDE_SKILL_DIR}/../../references/html-spec-discipline.md` | (read, not materialised) | before editing `tasks.html` structure |
 | `${CLAUDE_SKILL_DIR}/references/out-of-scope.template.md` | `.out-of-scope/<concept>.md` | on first rejection write per concept |
+| `${CLAUDE_SKILL_DIR}/../../references/user-communication.md` | (read, not materialised) | before any chat reply at a gate event |
 
 ## Naming and BC vocabulary
 
@@ -94,6 +95,10 @@ Everything else (how status renders, where alerts sit, how the Mermaid task-deps
 - **Tests.** Short PascalCase scenario name (`PostSalesOrderWithBlockedCustomer`), match BaseApp style.
 
 Full architectural vocabulary in `${CLAUDE_SKILL_DIR}/../../references/LANGUAGE.md`.
+
+## Gate event
+
+Per user question. The Gate report answers 'where are we' at app altitude: what feature is in flight, what is blocked, what is drifting, where the user needs to step in. The four-answer prose discipline applies; the dashboard reads the chat, not a tasks.html cell-by-cell dump.
 
 ## Composition
 

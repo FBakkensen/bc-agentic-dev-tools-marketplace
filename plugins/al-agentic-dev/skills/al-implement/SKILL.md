@@ -110,6 +110,10 @@ Everything else this skill writes inside the task block (absorbed-scaffolding no
 - **Positive and negative cases**, boundaries when relevant.
 - **BC vocabulary**: Insert / Modify / Delete (records), Post (not Submit), Validate (not Check), Get / Find (not Fetch), Ledger Entry (not Transaction), No. (not ID), Procedure (not Method). Objects: `"Prefix Feature Suffix"`, suffixes `Impl`, `Card`, `List`, `Ext`, `Test`.
 
+## Gate event
+
+Per Gherkin scenario closed (one TDD cycle complete: red, green, refactor, mutate, build green). The Gate report fires once per scenario, not per cycle beat. `/al-refactor` and `/al-mutate` findings within a scenario fold into that scenario's report rather than emitting their own. Always-fire override when a decision is on the user or the cycle is stuck mid-scenario.
+
 ## Composition
 
 - `/al-design` precondition (`architecture.html`). `/al-event-model` precondition for user/API-facing features (`event-model.html` carries canonical Role / Action / Business Event / View names that `[SCENARIO]` comments and test names cite). `/al-refine` precondition (filled Tests slot).

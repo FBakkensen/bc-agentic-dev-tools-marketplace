@@ -9,7 +9,7 @@ description: One task → numbered Gherkin scenarios for AL/Business Central. Re
 
 Fill the Tests area for one task in `tasks.html`. Read `architecture.html`, walk the codebase, draft Gherkin in ZOMBIES order, confirm the test layer per scenario, watch for the seven replan triggers. One task per run. `/al-implement` consumes it next.
 
-User-facing chat shapes (Opener, Phase, Drafted scenarios, Second opinion, Replan, Close, Stop) live in `${CLAUDE_SKILL_DIR}/../../references/user-communication.md`. Read it before opening the chat.
+User-facing chat shapes (Opener, Phase, Drafted scenarios, Second opinion, Replan, Gate report, Stop) live in `${CLAUDE_SKILL_DIR}/../../references/user-communication.md`. Read it before opening the chat.
 
 ## Preconditions
 
@@ -96,6 +96,10 @@ Numbering is the execution order; `/al-implement` traverses bullets sequentially
 
 **Names are the citation.** No inline `(see: file.al:120)` in the Gherkin. Field / codeunit / table / event names ARE the citation; future readers grep, the IDE gives line numbers for free.
 
+## Gate event
+
+Once when the Tests area for the task is filled and the second opinion (if any) is reconciled. The Gate report describes what the Gherkin will exercise in app terms and names the user's call to greenlight `/al-implement T-NNN`.
+
 ## Composition
 
 - `/al-scope`, precondition. A task block with `data-task` and a description must exist.
@@ -119,6 +123,7 @@ Numbering is the execution order; `/al-implement` traverses bullets sequentially
 - `zombies-scenarios.md`, Z/O/M/B/I/E/S ordering rationale and naming examples.
 - `al-runner.md`, what `/al-build -UnitTestOnly` runs against; Pure tag is intent, AL Runner verifies.
 - `html-spec-discipline.md`, data-attribute contract and surgical-edit discipline.
+- `user-communication.md`, chat output shapes and voice carve-outs. Read before any chat reply at a gate event.
 
 ## Out of scope
 

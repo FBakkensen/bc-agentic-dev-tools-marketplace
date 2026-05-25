@@ -138,6 +138,10 @@ No `architecture.html` edits. No `event-model.html` edits. No ADR writes. No `CO
 
 **Names are the citation.** Findings address files by path + line or path + procedure name; the IDE gives line numbers for free, future readers grep on the symbol.
 
+## Gate event
+
+Per finding decision landed via the auto-grill loop (a new task in tasks.html, a note on a future task, or a drop). The pre-loop opener and inter-grill chrome stay as currently specified; the Gate report shape supplies the prose for what would otherwise have been a mechanical closer.
+
 ## Composition
 
 - **`/al-build`** as the precondition gate. Red baseline = stop, surface, do not review. Linter pipeline runs here; review starts where it stops.
@@ -162,6 +166,7 @@ No `architecture.html` edits. No `event-model.html` edits. No ADR writes. No `CO
 | `${CLAUDE_SKILL_DIR}/../../references/notes-discipline.md` | before writing a new task or a note via grilling materialization |
 | `${CLAUDE_SKILL_DIR}/../../references/html-spec-discipline.md` | before any `tasks.html` write |
 | `${CLAUDE_SKILL_DIR}/../../references/LANGUAGE.md` | when a finding turns on architectural vocabulary (Module, Seam, Adapter, Depth) |
+| `${CLAUDE_SKILL_DIR}/../../references/user-communication.md` | before any chat reply at a gate event |
 
 ## Naming and BC vocabulary
 

@@ -152,6 +152,16 @@ The diff leaves observable behaviour identical. New behaviour belongs to `/al-im
 
 **Names are the citation.** No inline `(see: file.al:120)` annotations anywhere. Future readers grep; the IDE gives line numbers for free.
 
+## Lazy reference reads
+
+| Source (read-only) | Trigger |
+|---|---|
+| `${CLAUDE_SKILL_DIR}/../../references/user-communication.md` | before any chat reply at a gate event |
+
+## Gate event
+
+Standalone mode only: once when the refactor pass lands on the legacy area. The Gate report states what was reshaped at module / pattern / seam altitude (not procedure level), names the application invariant the reshape preserves, and names the user's call. When invoked inside `/al-implement`, this skill emits no own report; findings fold into the scenario's Gate report.
+
 ## Composition
 
 - `/al-build` after every meaningful change. Red after a step = revert that step, do not pile on.

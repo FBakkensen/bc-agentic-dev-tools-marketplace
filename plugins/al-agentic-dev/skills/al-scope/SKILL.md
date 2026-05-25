@@ -81,12 +81,17 @@ What the task delivers. Lede first: BC site (object, procedure, field) plus the 
 | `${CLAUDE_SKILL_DIR}/../../references/LANGUAGE.md` | architectural vocabulary, throughout |
 | `specs/<NNN>-<slug>/event-model.html` | for user/API-facing features; source the Goal and align task vocabulary with Roles, Business Events, Views named there |
 | most recently modified prior spec under `specs/*/` | before writing HTML, for visual coherence |
+| `${CLAUDE_SKILL_DIR}/../../references/user-communication.md` | before any chat reply at a gate event |
 
 ## Naming and BC vocabulary
 
 - **BC verbs.** Insert / Modify / Delete (records). Post (not Submit). Validate (not Check). Get / Find (not Fetch). Ledger Entry (not Transaction). No. (not ID). Procedure (not Method).
 - **Objects.** `"Prefix Feature Suffix"`, suffixes `Impl`, `Card`, `List`, `Ext`, `Test`.
 - **Tests** short PascalCase scenario name (`PostSalesOrderWithBlockedCustomer`), match BaseApp style.
+
+## Gate event
+
+Once when the task decomposition lands in `tasks.html`. The Gate report names the slice families decomposed and the dependency shape (linear chain or branching), states the feature Goal in user terms, and names the user's call to greenlight `/al-refine` on the first task.
 
 ## Composition
 
