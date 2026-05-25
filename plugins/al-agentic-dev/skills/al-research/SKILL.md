@@ -19,7 +19,7 @@ BC moves fast and training data is always behind a recent release: renamed event
 
 When the question is "does this signature exist in my dependency graph", the workspace's compiled symbols are the truth, not the docs. System Application, Base Application, and shipped libraries publish many overloads per release; the doc shows one signature, the symbol shows five, binding to the wrong one fails the build.
 
-For recent runtime features, new platform attributes, AI/Copilot APIs, AppSourceCop rule additions, and last-two-release behaviour, single-source is not enough. Cross against at least two of: Microsoft Learn, BaseApp source, workspace symbols, curated BC topic. Agreement across sources from different families is the verification.
+Single source is a draft, two families is verification. BC ships across release cadences and "old and stable" is your guess, not a fact; the agent's confidence about which areas have drifted is itself drift. Cross against a second source from a different family before returning a finding: Microsoft Learn, BaseApp via `/bc-standard-reference`, workspace symbols via `al-symbols-mcp`, curated BC topics via `bc-knowledge`. Agreement across families is the verification; pick which two by question shape. A single-source finding ships training-data fiction with a citation-shaped wrapper.
 
 ## Quote, do not paraphrase
 

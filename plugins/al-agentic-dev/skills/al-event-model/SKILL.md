@@ -24,6 +24,7 @@ Settle the journey at the altitude of what an external observer sees, before `/a
 - **View**: the surface plus its location (*Sales Order page → Status flips to Released*, *Pending Overrides cue increments*, *API response carries the Override decision*). Surface type settles here, the AL control name settles in `/al-design`.
 - **Status**: when a Business Event flips a field on the aggregate's record, name field and new value (*Sales Header Status → Override Pending*).
 - **BaseApp portions**: if the journey starts or passes through BaseApp, include those steps under canonical BaseApp names. The seam between BaseApp and our extension is named by the canonical names themselves.
+- **Which BC names did you verify this session?** Every Role / Action verb / Business Event name / View page caption / Status value landing in `event-model.html`: backed this session by an `al-symbols-mcp` or `grep` hit (Role Center pages, Status enums, BaseApp captions are all workspace-resolvable), or a `/al-research` citation. Recall does not satisfy. See *Citation chain in chat, before write* below.
 
 Unanswerable question → not ready for `/al-design`. Resolve via `/al-research`, `/al-grill-adr`, or `/grill-me`.
 
@@ -45,7 +46,7 @@ Draft two timelines diverging on one structural decision, present both with a re
 
 ## Citation chain in chat, before write
 
-Before writing `event-model.html`, declare every Role / Action verb / Business Event name / View page caption / Status value via `/al-research`: `Researched: <name> → <source path / URL / topic id>`. Renamed Role Centers, removed BusinessEvents, and drifted Status enums in training data will corrupt every downstream skill that reads the file.
+Before writing `event-model.html`, every Role / Action verb / Business Event name / View page caption / Status value either appears in an `al-symbols-mcp` or `grep` result you ran this session, or is cited via `/al-research`: `Researched: <name> → <source path / URL / topic id>`. The workspace lookup is the empirical anchor; memory of training data or past sessions is not. Renamed Role Centers, removed BusinessEvents, and drifted Status enums in training data will corrupt every downstream skill that reads the file. Your confidence about a Role Center's standard name or a Status enum's values is not evidence either is right.
 
 ## Branch + folder + write
 

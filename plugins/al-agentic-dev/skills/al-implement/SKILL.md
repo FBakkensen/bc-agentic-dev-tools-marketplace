@@ -21,6 +21,7 @@ Pick the next ready task from `tasks.html`. Run TDD per Gherkin bullet. Refactor
 - **Where is the seam?** Read `architecture.html`'s R → P → W boundary, module map, brownfield touchpoints. Name the seam in BC vocabulary (the procedure to extract, the event to subscribe, the interface to implement). One line.
 - **Did decision logic change?** If yes, mutation runs after refactor. If no, record skipped-mutation outcome inside the task block; `/al-mutate` does not run.
 - **What flips at the end?** `data-status` goes `in-progress` → `done`; final full `/al-build` (container) is green.
+- **Which BC names did you verify this session?** Every BC-specific name a Gherkin bullet rests on (procedure, event, table, field, codeunit, attribute): backed this session by an `al-symbols-mcp` or `grep` hit, or a `/al-research` citation. Recall does not satisfy. See *Citation chain in chat* below.
 
 Unanswerable question, task is not ready. Resolve via `/al-research`, `/al-refine`, or `/al-steer`.
 
@@ -32,7 +33,7 @@ RED → GREEN → gate, one bullet, then the next. Bulk-RED locks a test surface
 
 ### Citation chain in chat, per Gherkin bullet before RED
 
-Before the first RED of any Gherkin bullet resting on a BC-specific fact not already pointed at in the workspace, `architecture.html`, or `event-model.html`, declare the citation in chat via `/al-research`: `Researched: <fact> → <source path / URL / topic id>`. Test mechanics, Copilot APIs, and recent platform features are the highest-failure surfaces; training data ships confidently-wrong claims the compile loop only catches when the name is also wrong.
+Before the first RED of any Gherkin bullet, every BC-specific name in the bullet either appears in an `al-symbols-mcp` or `grep` result you ran this session, or is cited via `/al-research`: `Researched: <fact> → <source path / URL / topic id>`. The workspace lookup is the empirical anchor; memory of past sessions or training data is not. Test mechanics, Copilot APIs, and platform behaviour around triggers / subscribers / `Insert(false)` semantics are the highest-failure surfaces; training data ships confidently-wrong claims the compile loop only catches when the name is also wrong. Your confidence about a BC name is not evidence the name exists, signs the right way, or behaves as recalled.
 
 ### Test the Process seam, not the implementation
 

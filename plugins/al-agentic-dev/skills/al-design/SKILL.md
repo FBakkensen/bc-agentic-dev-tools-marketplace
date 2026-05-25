@@ -25,6 +25,7 @@ Turn a sharpened idea into a feature-level architecture, then write `architectur
 - **R → P → W boundary**: R = reads / inputs / events subscribed; P = pure procedure (no DB, no side effects, unit-test surface); W = effects (Insert / Modify / Delete, telemetry, errors, events published).
 - **Brownfield touchpoints**: objects, procedures, events, table fields the feature touches. Verify every name and signature via `/al-research`; stale memory ships fiction.
 - **Test layer per scenario family**: Pure is default. E2E earns its place when the behaviour is composition or a side effect that cannot be reproduced at the pure layer (event wiring, table triggers, telemetry shape, install / upgrade).
+- **Which BC names did you verify this session?** Every BC-specific name landing in `architecture.html` (pattern, event, codeunit, table, field, procedure): backed this session by an `al-symbols-mcp` or `grep` hit, including `grep` against `event-model.html` for upstream-cited names, or a `/al-research` citation. Recall does not satisfy. See *Citation chain in chat, before write* below.
 
 Unanswerable question → not ready for `/al-scope`. Resolve via `/al-research` (BC behaviour), `/al-grill-adr` (domain rule), or `/al-steer` (replan).
 
@@ -50,7 +51,7 @@ Two design-time risks bite at AppSource boundaries: **BaseApp modification** (in
 
 ## Citation chain in chat, before write
 
-Before writing any BC-specific name into `architecture.html` (pattern, event, codeunit, table, field, procedure), declare its citation in chat via `/al-research`: `Researched: <name> → <source path / URL / topic id>`. Training data for BC is stale fiction; the workspace and `/al-research` are the empirical anchor. Names already research-backed by `/al-event-model` upstream do not re-verify.
+Before writing any BC-specific name into `architecture.html` (pattern, event, codeunit, table, field, procedure), the name either appears in an `al-symbols-mcp` or `grep` result you ran this session, or is cited via `/al-research`: `Researched: <name> → <source path / URL / topic id>`. The workspace lookup is the empirical anchor; memory of training data or past sessions is not. Training data for BC is stale fiction; the workspace and `/al-research` are the empirical anchor. Names already research-backed by `/al-event-model` upstream count when `grep` against `event-model.html` returns the name this session, not when you recall they're there. Your confidence about a name, signature, or pattern label is not evidence any of those are right.
 
 ## ADR offer criteria
 

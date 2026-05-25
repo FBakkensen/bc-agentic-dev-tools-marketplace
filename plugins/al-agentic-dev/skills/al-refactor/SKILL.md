@@ -22,6 +22,7 @@ Reshape AL so modules that earn their keep deepen and the ones that don't dissol
 - **Which names lie?** A name lies when it describes a generic operation while the body does a BC-specific one, when it uses CRUD vocabulary where the BC verb exists, when the project's `CONTEXT.md` term has drifted out of the code.
 - **What crosses a published API?** Constrains rename, removal, signature change.
 - **Does reshape surface new behaviour or a hidden requirement?** If yes, route the discovery; do not absorb.
+- **Which BC names did you verify this session?** Every BC-specific name a rename pulls from outside the codebase (a verb picked because "Insert is right for Customer", a BaseApp subscriber signature, a System Application call): backed this session by an `al-symbols-mcp` or `grep` hit, or a `/al-research` citation. Recall does not satisfy. See *Lens 4 citation chain* below.
 
 Unanswerable from the diff, the area is not ready. Resolve via `/al-research`, `/al-grill-adr`, or `/al-steer`.
 
@@ -74,7 +75,7 @@ Scope: objects, procedures, parameters, variables, record vars, table fields, pa
 
 Rename safety: editing a test name or `[SCENARIO]/[GIVEN]/[WHEN]/[THEN]` triggers Gherkin re-verification; intent shift, update via `/al-refine` in the same change. `[HandlerFunctions('...')]` strings are invisible to symbol tools; grep before any test-procedure rename per [tdd.md](../../references/tdd.md).
 
-Citation chain: when a rename pulls a BC name from outside the codebase (a verb picked because "Insert is right for Customer", a BaseApp subscriber signature, a System Application call), declare in chat via `/al-research`: `Researched: <name> → <source>` before the rename lands. This is exactly where a confidently-wrong verb corrupts every downstream artifact.
+Citation chain: when a rename pulls a BC name from outside the codebase (a verb picked because "Insert is right for Customer", a BaseApp subscriber signature, a System Application call), the name either appears in an `al-symbols-mcp` or `grep` result you ran this session, or is cited via `/al-research`: `Researched: <name> → <source>` before the rename lands. The workspace lookup is the empirical anchor; memory of training data or past sessions is not. Your confidence about whether "Insert" or "Create" is the BC-correct verb is not evidence either is right. This is exactly where a confidently-wrong verb corrupts every downstream artifact.
 
 ## Cross-cutting
 
