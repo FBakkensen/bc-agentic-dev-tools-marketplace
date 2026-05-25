@@ -1,7 +1,7 @@
 {
   "name": "al-agentic-dev",
-  "description": "Composable AL/Business Central agentic skills: /al-steer, /al-grill-adr, /al-event-model, /al-design, /al-scope, /al-refine, /al-implement, /al-refactor, /al-mutate, /al-code-review, /al-research, /al-second-opinion. Two persistence layers: repo-root markdown (CONTEXT.md, docs/adr/, .out-of-scope/) and branch-scoped HTML specs (event-model.html + architecture.html + tasks.html). SKILLs express intent and rationale; the agent shapes output per situation. NEW in 0.24.0: SKILL.md and references rewritten in mattpocock style: rationale woven into the rule, no Why-paragraph blocks, plain-English section names. References consolidated: testability.md (three-phase decoupling + three seams + five doubles), tdd.md (cycle + ZOMBIES + mutation + invariants), voice-contract.md (absorbs chat shapes). Plugin prose cut by ~50%.",
-  "version": "0.24.0",
+  "description": "Composable AL/Business Central agentic skills: /al-steer, /al-grill-adr, /al-event-model, /al-design, /al-scope, /al-refine, /al-implement, /al-refactor, /al-mutate, /al-code-review, /al-research, /al-second-opinion. Two persistence layers: repo-root markdown (CONTEXT.md, docs/adr/, .out-of-scope/) and branch-scoped HTML specs (event-model.html + architecture.html + tasks.html). SKILLs express intent and rationale; the agent shapes output per situation. NEW in 0.25.0: /al-refine points the agent at `al-runner --guide` (the binary's own AI-targeted capability matrix) when the Pure-vs-E2E call is unclear. Hand-maintained references/al-runner.md retired in favour of the authoritative guide; /al-implement and /al-mutate ERROR-resolution paths now also direct readers to `--guide`.",
+  "version": "0.25.0",
   "skills": "./skills/",
   "interface": {
     "displayName": "AL Agentic Dev",

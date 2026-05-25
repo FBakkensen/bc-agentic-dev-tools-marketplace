@@ -84,7 +84,6 @@ Two tiers, on purpose.
 | `cross-branch-numbering.md` | plugin-level | algorithm for picking `NNN` (spec folders) and `NNNN` (ADRs) across parallel branches; read by `/al-design`, `/al-event-model`, `/al-grill-adr` |
 | `bc-patterns.md` | plugin-level | BC pattern catalogue; read by `/al-design` |
 | `bc-knowledge-dispatch.md` | plugin-level | bc-knowledge MCP call pattern, specialist mapping, thresholds; read by `/al-refactor` and `/al-code-review` |
-| `al-runner.md` | plugin-level | AL Runner contract, three pipeline outcomes, ERROR resolution; read by `/al-implement` and `/al-mutate` |
 | `LANGUAGE.md` | plugin-level | architectural vocabulary, testability pillars; read by `/al-design`, `/al-grill-adr`, `/al-event-model`, `/al-refactor` |
 | `CONTEXT.template.md` | plugin-level | template materialised into the target repo's `CONTEXT.md` |
 | `adr.template.md` | plugin-level | template materialised into the target repo's `docs/adr/NNNN-<slug>.md` |
@@ -114,7 +113,6 @@ references/                 # Plugin-level shared, read by ≥2 skills, or cited
 ├── LANGUAGE.md             # Architectural vocabulary, testability pillars
 ├── bc-patterns.md          # BC pattern catalogue (read by /al-design)
 ├── bc-knowledge-dispatch.md # bc-knowledge MCP call pattern, specialist mapping, thresholds
-├── al-runner.md            # AL Runner contract, three pipeline outcomes, ERROR resolution
 ├── notes-discipline.md     # What lives in the task block vs commit / ADR / .out-of-scope/, seven replan triggers
 ├── html-spec-discipline.md # Pointer to design-system/, two-attribute floor, Mermaid init, surgical-edit
 ├── cross-branch-numbering.md # NNN / NNNN picking algorithm across parallel branches

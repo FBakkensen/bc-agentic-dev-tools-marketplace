@@ -42,7 +42,7 @@ Tests target P (`Access = Internal` for Pure, public surface for E2E). Read and 
 
 Pure-tagged bullets gate with `/al-build -UnitTestOnly` (AL Runner, seconds). E2E-tagged bullets gate with full `/al-build` (container). Both-tagged bullets run a Pure cycle first to drive implementation, then an E2E cycle through the public surface to prove wiring. Final full `/al-build` precedes `done`.
 
-AL Runner ERROR / exit 2 routes cheapest-first: review the test (adjust to avoid the unsupported call), refactor production behind a seam so the unsupported call moves behind a stub, reclassify as E2E (note the override inside the task block). Reclassification is last because it grows container surface. See [al-runner.md](../../references/al-runner.md).
+AL Runner ERROR / exit 2 routes cheapest-first: review the test (adjust to avoid the unsupported call), refactor production behind a seam so the unsupported call moves behind a stub, reclassify as E2E (note the override inside the task block). Reclassification is last because it grows container surface. Run `al-runner --guide` when the unsupported feature is unclear.
 
 ### One `/al-refactor` pass on the full task diff, after all bullets green
 

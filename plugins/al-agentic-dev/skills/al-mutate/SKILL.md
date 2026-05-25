@@ -41,7 +41,7 @@ Unanswerable, the pass is not done. Resolve via another cycle, a survivor decisi
 
 **No mutation during a refactor in flight.** Land the refactor green, commit, then mutate. A shape still moving produces classifications that drift; survivor lists go stale before the report ships.
 
-**Pure-layer gating via `-UnitTestOnly`.** When `unitTestApp` is configured, P-layer mutations gate via `/al-build -UnitTestOnly` (AL Runner) before the full pipeline; the inner loop shrinks from minutes to seconds. AL Runner `ERROR` / exit 2 means "broke runner contract," not a survivor; note and skip per [al-runner.md](../../references/al-runner.md).
+**Pure-layer gating via `-UnitTestOnly`.** When `unitTestApp` is configured, P-layer mutations gate via `/al-build -UnitTestOnly` (AL Runner) before the full pipeline; the inner loop shrinks from minutes to seconds. AL Runner `ERROR` / exit 2 means "broke runner contract," not a survivor; note and skip, and run `al-runner --guide` if uncertain which features the runner supports.
 
 ## Delegation
 
