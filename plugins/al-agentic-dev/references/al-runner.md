@@ -1,6 +1,6 @@
 # AL Runner
 
-Fast pre-check for AL unit tests. Transpiles AL to C# in-memory and runs against in-memory mocks of BC runtime types, no BC service tier, no Docker, no SQL. Cited by `/al-implement` and `/al-mutate` for Pure-layer gating; cited by `tdd-cycle.md` and `mutation-operators.md` for `-UnitTestOnly` invocation.
+Fast pre-check for AL unit tests. Transpiles AL to C# in-memory and runs against in-memory mocks of BC runtime types, no BC service tier, no Docker, no SQL. Cited by `/al-implement` and `/al-mutate` for Pure-layer gating; cited by `tdd.md` for `-UnitTestOnly` invocation.
 
 Upstream: `https://github.com/StefanMaron/BusinessCentral.AL.Runner`. Coverage map: `docs/coverage.yaml`. Limitations: `docs/limitations.md`.
 
@@ -60,7 +60,7 @@ Auto-loaded, no stubs needed:
 | `StartSession` runs inline | None, design tests to assume serial execution. |
 | No UI rendering, page layout, field visibility, report rendering | Test the underlying procedures directly. |
 | Multi-dataitem queries, JOINs, aggregation | Single-dataitem queries work; restructure or move to E2E. |
-| `HttpClient.Send()` throws | Inject via AL interface, see `environment-interfaces.md` `IApiRequest`. |
+| `HttpClient.Send()` throws | Inject via AL interface, see `testability.md` `IApiRequest`. |
 | `XmlPort.Import()` / `Export()` throw | XmlPort variables compile and surrounding logic runs; move I/O to E2E. |
 
 If AL code fails for a reason not in `docs/limitations.md`, that is a runner gap, report upstream.
@@ -70,7 +70,7 @@ If AL code fails for a reason not in `docs/limitations.md`, that is a runner gap
 When a Pure-tagged bullet returns ERROR (exit 2) under `/al-build -UnitTestOnly`, work through these in order, cheapest first:
 
 1. **Review the test.** Was the test reaching for an unsupported feature unnecessarily (`HttpClient.Send` directly, multi-dataitem query, `Commit()`-dependent assertion)? Adjust the test to exercise the same behaviour without the unsupported feature.
-2. **Refactor production.** Extract a seam via `decoupling.md` (three-phase) so the test can inject a stub. The unsupported call moves behind the seam; the SUT becomes a unit-runnable shape.
+2. **Refactor production.** Extract a seam via `testability.md` (three-phase) so the test can inject a stub. The unsupported call moves behind the seam; the SUT becomes a unit-runnable shape.
 3. **Reclassify the bullet as E2E.** The bullet fundamentally needs a container (multi-dataitem query, real `XmlPort` import, real `Commit()` / `Rollback()` semantics). Move the test to a container test app. Last resort.
 
 ## Testability pattern
@@ -91,7 +91,7 @@ codeunit 50100 "Order Processor"
 end
 ```
 
-Greenfield: `environment-interfaces.md` for the three default seams. Legacy: `decoupling.md` for the three-phase extract.
+Greenfield: `testability.md` for the three default seams. Legacy: `testability.md` for the three-phase extract.
 
 ## Pipeline ordering
 

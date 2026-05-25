@@ -75,17 +75,19 @@ Two tiers, on purpose.
 
 | File | Tier | Notes |
 |---|---|---|
-| `LANGUAGE.md` | plugin-level | architectural vocabulary; read by `/al-design`, `/al-grill-adr`, `/al-event-model`, `/al-refactor` |
+| `voice-contract.md` | plugin-level | voice rules, em-dash ban, BC vocab, names-as-citation, lists-of-findings, tables-of-facts, chat carve-outs, 3 canonical chat shapes (Opener / Gate report / Stop); read by every skill that writes prose |
+| `testability.md` | plugin-level | three-phase decoupling, three default seams (IEnvironment / IApiRequest / IFinance), five-kind test-double taxonomy with AL code shapes; read by `/al-design`, `/al-implement`, `/al-refactor` |
+| `tdd.md` | plugin-level | three layers of trust, three laws, five phases, ZOMBIES ordering, mutation operators + revert cycle, no-touch invariants; read by `/al-refine`, `/al-implement`, `/al-mutate` |
+| `notes-discipline.md` | plugin-level | what lives in the task block vs commit / ADR / `.out-of-scope/`; the seven replan triggers as named patterns; read by skills that write `tasks.html` |
+| `html-spec-discipline.md` | plugin-level | pointer to `design-system/`, token summary, two-attribute floor (`data-task` + `data-status`), Mermaid init, self-contained constraint, status-flip surgical-edit; read by `/al-design`, `/al-event-model`, `/al-scope`, `/al-refine`, `/al-implement`, `/al-mutate`, `/al-steer` |
+| `design-system/` (folder) | plugin-level | source of truth for spec artifact visuals; read by every skill that generates or maintains HTML artifacts |
+| `cross-branch-numbering.md` | plugin-level | algorithm for picking `NNN` (spec folders) and `NNNN` (ADRs) across parallel branches; read by `/al-design`, `/al-event-model`, `/al-grill-adr` |
+| `bc-patterns.md` | plugin-level | BC pattern catalogue; read by `/al-design` |
+| `bc-knowledge-dispatch.md` | plugin-level | bc-knowledge MCP call pattern, specialist mapping, thresholds; read by `/al-refactor` and `/al-code-review` |
+| `al-runner.md` | plugin-level | AL Runner contract, three pipeline outcomes, ERROR resolution; read by `/al-implement` and `/al-mutate` |
+| `LANGUAGE.md` | plugin-level | architectural vocabulary, testability pillars; read by `/al-design`, `/al-grill-adr`, `/al-event-model`, `/al-refactor` |
 | `CONTEXT.template.md` | plugin-level | template materialised into the target repo's `CONTEXT.md` |
 | `adr.template.md` | plugin-level | template materialised into the target repo's `docs/adr/NNNN-<slug>.md` |
-| `voice-contract.md` | plugin-level | voice rules for prose; read by every skill that writes a durable artifact |
-| `user-communication.md` | plugin-level | principles for chat output (names are the citation, lede first, terse, BC vocab, no em-dashes) and voice carve-outs from `voice-contract.md`; read by skills that emit interactive chat |
-| `notes-discipline.md` | plugin-level | what kinds of info live in the task block vs elsewhere (commit message, ADR, `.out-of-scope/`), what survives past `done`, what dies with the branch; read by skills that write `tasks.html` |
-| `html-spec-discipline.md` | plugin-level | pointer to `design-system/` (source of truth), token summary, the two-attribute floor (`data-task` + `data-status`), Mermaid init block, self-contained constraint, status-flip surgical-edit; read by `/al-design`, `/al-event-model`, `/al-scope`, `/al-refine`, `/al-implement`, `/al-mutate`, `/al-steer` |
-| `design-system/` (folder) | plugin-level | the source of truth for spec artifact visuals; `gallery.html` + three populated `*.example.html` + `spec-styles.css` + `colors_and_type.css` + `README.md`. Read by every skill that generates or maintains HTML artifacts |
-| `cross-branch-numbering.md` | plugin-level | algorithm for picking `NNN` (spec folders) and `NNNN` (ADRs) across parallel branches; read by `/al-design`, `/al-event-model`, `/al-grill-adr` |
-| `bc-patterns.md` | plugin-level | BC pattern catalogue cited by `architecture.html`, design ADRs, and `/al-design` |
-| `bc-knowledge-dispatch.md` | plugin-level | correct call pattern for bc-knowledge MCP (`ask_bc_expert(autonomous_mode=false)` → topic recs → `get_bc_topic` → apply `anti_pattern_indicators`), specialist mapping per file type, thresholds per calling skill; read by `/al-refactor` and `/al-code-review` |
 | `out-of-scope.template.md` | `/al-steer`-local | template materialised into `.out-of-scope/<concept>.md` |
 | `legacy-refactor-plan.md` | `/al-refactor`-local | reference plan for legacy code without tests |
 
@@ -106,15 +108,18 @@ The two former agent-shaped workflows now live as skills:
 
 ```
 references/                 # Plugin-level shared, read by ≥2 skills, or cited by shared templates
+├── voice-contract.md       # Voice rules, em-dash ban, BC vocab, names-as-citation, 3 canonical chat shapes
+├── testability.md          # Three-phase decoupling, three default seams, five-kind test-double taxonomy
+├── tdd.md                  # Three layers, three laws, five phases, ZOMBIES, mutation operators, no-touch invariants
+├── LANGUAGE.md             # Architectural vocabulary, testability pillars
+├── bc-patterns.md          # BC pattern catalogue (read by /al-design)
+├── bc-knowledge-dispatch.md # bc-knowledge MCP call pattern, specialist mapping, thresholds
+├── al-runner.md            # AL Runner contract, three pipeline outcomes, ERROR resolution
+├── notes-discipline.md     # What lives in the task block vs commit / ADR / .out-of-scope/, seven replan triggers
+├── html-spec-discipline.md # Pointer to design-system/, two-attribute floor, Mermaid init, surgical-edit
+├── cross-branch-numbering.md # NNN / NNNN picking algorithm across parallel branches
 ├── CONTEXT.template.md
 ├── adr.template.md
-├── LANGUAGE.md
-├── bc-patterns.md
-├── bc-knowledge-dispatch.md # Correct call pattern for bc-knowledge MCP; specialist mapping; thresholds
-├── voice-contract.md       # Voice rules for prose
-├── user-communication.md   # Chat output principles and voice carve-outs from voice-contract.md
-├── notes-discipline.md     # What lives in the task block vs the commit / ADR / .out-of-scope/
-├── html-spec-discipline.md # Pointer to design-system/, two-attribute floor, Mermaid init, self-contained, surgical-edit
 └── design-system/          # Source of truth for spec artifact visuals
     ├── README.md           # Content fundamentals, visual foundations, iconography, voice
     ├── gallery.html        # Component gallery, rendered + canonical HTML source per component

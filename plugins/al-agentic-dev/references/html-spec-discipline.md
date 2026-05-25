@@ -1,10 +1,12 @@
 # HTML spec discipline
 
-> **Runtime gate.** Content inside `<claude-only>...</claude-only>` blocks applies only to Claude Code (which has an `advisor()` tool). Codex and other runtimes without it: skip the block contents and move on. No need to comment on what was skipped.
-
 `event-model.html`, `architecture.html`, and `tasks.html` are the reading surface. Not an intermediate, not a build artifact. This file is what `/al-design`, `/al-event-model`, and `/al-scope` consult before generating, and what every maintaining skill (`/al-refine`, `/al-implement`, `/al-mutate`, `/al-steer`) consults before editing.
 
 ADRs (`docs/adr/*.md`) and `CONTEXT.md` stay markdown. Only the per-feature artifacts under `specs/<NNN>-<slug>/` are HTML.
+
+<claude-only>
+Runtime gate. Content inside `<claude-only>...</claude-only>` blocks applies only to Claude Code (which has an `advisor()` tool). Codex and other runtimes without it skip the block contents and move on.
+</claude-only>
 
 ## Source of truth: the design system
 
@@ -22,7 +24,7 @@ The single source of truth for spec artifact visuals is [`design-system/`](./des
 
 **Before generating**, the writing skill opens [`gallery.html`](./design-system/gallery.html) (and the matching `*.example.html` for layout). Read the source block beside each rendered component; that is the contract.
 
-**Cross-links between sibling artifacts** drop the `.example` suffix — generated artifacts link to `event-model.html` / `architecture.html` / `tasks.html` inside the same `specs/<NNN>-<slug>/` folder. The `.example.html` suffix is demo-only.
+**Cross-links between sibling artifacts** drop the `.example` suffix: generated artifacts link to `event-model.html` / `architecture.html` / `tasks.html` inside the same `specs/<NNN>-<slug>/` folder. The `.example.html` suffix is demo-only.
 
 ## Tokens
 
@@ -52,7 +54,7 @@ Three families, all from Google Fonts via CDN `<link>`:
 - **Inter** for body (`--font-body`). Weights 400/500/600/700.
 - **JetBrains Mono** for code (`--font-mono`). Weights 400/500.
 
-Inline the canonical `<link>` block (see [`spec-styles.css`](./design-system/spec-styles.css) header comment, or any of the `*.example.html` `<head>`) into each generated artifact. Display titles use `letter-spacing: -0.025em`; H1–H3 use `-0.015em`; mono micro labels use `+0.05em` and `text-transform: uppercase`. No other type variations.
+Inline the canonical `<link>` block (see [`spec-styles.css`](./design-system/spec-styles.css) header comment, or any `*.example.html` `<head>`) into each generated artifact. Display titles use `letter-spacing: -0.025em`; H1–H3 use `-0.015em`; mono micro labels use `+0.05em` and `text-transform: uppercase`. No other type variations.
 
 ## The two-attribute floor
 
@@ -65,7 +67,7 @@ The two hooks:
 | `<details data-task="T-NNN" class="task">` on each per-task block | The per-task block | every skill that touches a task |
 | `data-status="ready \| in-progress \| done \| blocked"` on the same `<details>` | The status, single source of truth | `/al-implement`, `/al-steer` |
 
-**Why these two and nothing else.** Status flips happen often (every TDD cycle bump), so a stable attribute anchor avoids re-parsing prose to locate the right `<details>`. Two tasks with similar titles do not collide on the attribute. Every other slot (Tests area, callout kinds, edges block, Mermaid container) regenerates whole when its shape changes.
+Status flips happen often (every TDD cycle bump), so a stable attribute anchor avoids re-parsing prose to locate the right `<details>`. Two tasks with similar titles do not collide on the attribute. Every other slot (Tests area, callout kinds, edges block, Mermaid container) regenerates whole when its shape changes.
 
 `event-model.html` and `architecture.html` carry **no** surgical-edit contract. `/al-design` and `/al-event-model` reshape them whole on re-run. The Mermaid containers (`<div class="mermaid" data-graph="...">`) are the library's hook, not an agent-anchor.
 
@@ -117,7 +119,7 @@ One CDN script per document with diagrams, before `</body>`. Pinned major versio
 </script>
 ```
 
-**Why a single palette, not two themed via `prefers-color-scheme`.** Mermaid v11's `mermaid.initialize(...)` configures *future* diagrams; it does not re-theme SVGs already rendered. A naive `matchMedia` listener that re-initialises on theme change leaves existing diagrams untouched until page reload. The mid-tone fills (`#2d2e33` nodes, `#8b8d98` lines) read on both `--surface-0` light (`#ffffff`) and `--surface-0` dark (`#08090a`) without re-rendering.
+Mermaid v11's `mermaid.initialize(...)` configures *future* diagrams; it does not re-theme SVGs already rendered. A naive `matchMedia` listener that re-initialises on theme change leaves existing diagrams untouched until page reload. The mid-tone fills (`#2d2e33` nodes, `#8b8d98` lines) read on both `--surface-0` light (`#ffffff`) and `--surface-0` dark (`#08090a`) without re-rendering.
 
 Graph content inside `<div class="mermaid" data-graph="...">`:
 
@@ -143,7 +145,7 @@ new_string: <details class="task" data-task="T-007" data-status="done">
 
 One Edit, one attribute change. The visible badge re-renders from CSS.
 
-**Why anchor on the pair, not just `data-task`.** The pair makes the `old_string` unique within a file even when two tasks share status text in surrounding markup. It also catches a stale read: if you think the task is `in-progress` but the file says `ready`, the Edit fails fast rather than corrupting state.
+The pair makes the `old_string` unique within a file even when two tasks share status text in surrounding markup. It also catches a stale read: if you think the task is `in-progress` but the file says `ready`, the Edit fails fast rather than corrupting state.
 
 **Other writes regenerate, not surgical-edit.** When `/al-refine` fills the Tests area, `/al-mutate` writes a verdict, or `/al-implement` records a NOTE-style callout alongside the task, the writing skill regenerates that portion of the task block whole.
 
@@ -153,24 +155,3 @@ One Edit, one attribute change. The visible badge re-renders from CSS.
 - Anchoring status flips on visible text ("the heading that says T-007"), CSS class names alone (`.task[data-status="..."]` selectors are styling, not anchors), or visual position ("the third `<details>` in the file").
 - Whole-file Read followed by whole-file Write for a status flip. The Edit tool exists; use it. Whole-file rewrites lose bytes you forgot.
 - Editing through a `data-task` collision. Task IDs are monotonic and never reused; if two task blocks share an ID (impossible by contract), halt and surface the duplicate.
-
-## What this file does NOT prescribe
-
-The design system prescribes class names, palette, typography, spacing, and component visual shape. This discipline file covers contracts. The writing skill still decides, per feature:
-
-- Which Mermaid graphs (if any) earn their place in a given artifact.
-- Which architecture sections (Goal / Module map / R→P→W / Brownfield touchpoints / BC patterns / ADR refs / marginalia) appear, in what order, with what depth.
-- Whether a `tasks.html` includes a Summary row, an edges block, or a metadata strip below the goal.
-- Per-task callout kinds (note / warning / blocked / replan) and which Gherkin scenarios surface inside which task.
-- The Mermaid graph content itself (nodes, edges, branching).
-
-Per-feature variation in *content shape* is correct and expected. Per-feature variation in *visual shape* is not — the design system carries that.
-
-## Composition
-
-- Read by `/al-design`, `/al-event-model`, and `/al-scope` before generating any HTML artifact.
-- Read by `/al-implement` and `/al-steer` before flipping `data-status` on a task.
-- See [`design-system/`](./design-system/) for the visual source of truth — gallery + populated examples.
-- See `notes-discipline.md` for what kinds of info live inside the task block versus elsewhere (commit message, ADR, `.out-of-scope/`). This file covers HTML mechanics; that file covers destination.
-- See `voice-contract.md` for prose voice (em-dash ban, declarative cadence) throughout the artifact.
-- See [`design-system/README.md`](./design-system/README.md) for content fundamentals (tone, casing, identifier protocol).

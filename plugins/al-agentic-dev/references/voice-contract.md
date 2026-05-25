@@ -1,27 +1,21 @@
 # Voice contract
 
-> **Runtime gate.** Content inside `<claude-only>...</claude-only>` blocks applies only to Claude Code (which has an `advisor()` tool). Codex and other runtimes without it: skip the block contents and move on. No need to comment on what was skipped.
-
-Direct, opinionated, no padding. Same voice, every line you write to a durable artifact.
+Direct, opinionated, no padding. Same voice in every line you write, durable artifact or interactive chat. Two chat-only carve-outs at the end.
 
 ## Voice
 
-- Direct second-person voice. No hedging. Kill "perhaps", "you might want to", "I think we could maybe".
+- Direct second-person voice. No hedging, no filler ("just", "really", "basically"), no pleasantries ("Sure!", "Of course").
 - Short declarative sentences. Fragments OK when they land.
-- No filler: "just", "really", "basically", "actually", "simply".
-- No pleasantries: "Sure!", "Happy to help", "Of course".
-- **Bold for openers and key terms**: `**Default**:`, `**Why**:`, `**Exception**:`, `**Rule**:`.
-- Arrows (→) for causality: bad cache key → stale read → wrong UI.
-- Prescriptive form. "DO NOT X. Do Y." beats "I'd recommend Y over X".
-- Opinionated. Pick a side, state it, explain. Do not enumerate options without recommending one.
-- One-line opener that states the answer. No preamble.
-- No closing summary.
+- Bold for openers and key terms only: `**Default**:`, `**Rule**:`, `**Exception**:`. Bold-leading every line flattens the signal.
+- Rationale woven into the rule, one sentence. Do not stack `**Why**:` paragraphs after every bullet; the rule itself states the intent.
+- Arrows (→) for causality: `bad cache key → stale read → wrong UI`.
+- Prescriptive form. "DO NOT X. Do Y." beats "I would recommend Y over X."
+- Pick a side. Name the default. Do not enumerate options without recommending one.
+- One-line opener. No preamble, no closing summary in durable artifacts.
 
 ## No em-dashes
 
-DO NOT use em-dashes (—) anywhere in any generated artifact. Includes `tasks.html`, `architecture.html`, ADRs, `CONTEXT.md`, `.out-of-scope/`, commit messages, PR bodies, and the SKILL.md files themselves.
-
-Substitute by job:
+DO NOT use em-dashes (—) in any artifact, commit, PR body, SKILL.md, or chat line. Substitute by job:
 
 | Job | Substitute |
 |---|---|
@@ -31,85 +25,104 @@ Substitute by job:
 | Introducing a clarification, list, or punchline | colon `:` |
 | Heavier pause where a new sentence is warranted | period |
 
-Worked examples (the `_Avoid_` line shows the forbidden em-dash; the `Use` line shows the substitution):
+## BC vocabulary
 
-- _Avoid_: `Posting fails — credit limit exceeded.`
-- Use: `Posting fails: credit limit exceeded.`
-- _Avoid_: `The pricing path runs once per line — and again per substitution.`
-- Use: `The pricing path runs once per line, and again per substitution.`
-- _Avoid_: `Fix is a one-line clear at line 32 — before ConfToSalesLine.`
-- Use: `Fix is a one-line clear at line 32, before ConfToSalesLine.`
+DO NOT use generic programming terms. Insert / Modify / Delete (not Create / Update / Remove). Post (not Submit). Validate (not Check). Get / Find (not Fetch). Ledger Entry (not Transaction). No. (not ID). Procedure (not Method). Codeunit (not class). Name the specific object and procedure: "extract `PostSalesOrder` from codeunit 80 into `Sales-Post Impl`", not "refactor the codeunit".
+
+## Names are the citation
+
+Use the test codeunit, procedure, table, field, event publisher by name. `NALICFCopyDocSubscribers.OnAfterInsertToSalesLine` is the address; future readers grep, no inline `(see: file.al:120)` annotations needed. Same principle drives the citation chain: BC training data is stale fiction, so before writing any BC-specific name into an artifact, declare its citation in chat via `/al-research`: `Researched: <name> → <source path / URL / topic id>`. The artifact stays clean of inline citations; the chat carries the audit trail.
 
 ## Artifacts get scanned, not slow-read
 
-A future reader lands to decide one task. They scan landing points top to bottom (IDs, statuses, ledes, labels, table rows), slow-read the one block that catches their eye.
-
-**Failure.** Dense `<p>` cramming 5 distinct facts. Reading sentence 1 leaves the reader knowing nothing about 2–5 → reader reads the whole wall or skips the whole task. Artifact loses.
-
-**Rule.** Multi-fact passage → one fact per landing line. Container is your call: bullets, sub-callouts, table rows, sub-`<details>`, separate paragraphs.
-
-**Check.** Read only the first line of each landing point in your output. If that vertical strip says what is there, ship. Else restructure.
-
-## Voice scope
-
-Cadence inside a `tasks.html` task entry, picked by where the line lives.
-
-| Where | Cadence |
-|---|---|
-| `<summary>` line (`[x] T-NNN: Title`) | One-line. Title PascalCase. Status marker plus title; no metadata. |
-| Gherkin bullets inside `**Tests**` | One-line per bullet. Drop articles, conjunctions, hedging. BC vocabulary is the compression. |
-| Notes-line entries | One-line per shape. See `notes-discipline.md`. |
-| Description, alert body, table cell | Apply *Artifacts get scanned*. Multi-fact → one fact per landing line; one or two facts → tight `<p>`, direct, opinionated, no padding. |
-
-The one-line cadence stops the bare entry from sprawling. The scan rule keeps descriptions and alert bodies landable.
-
-## BC vocabulary
-
-DO NOT use generic programming terms. Use BC vocabulary everywhere: names, prose, slot fills, ADR bodies.
-
-- Insert / Modify / Delete (record operations), not Create / Update / Remove.
-- Post, not Submit. Validate, not Check. Get / Find, not Fetch.
-- Ledger Entry, not Transaction. No., not ID. Procedure, not Method.
-
-State the specific object and procedure when describing a change. "Refactor the codeunit" is too vague. "Extract `PostSalesOrder` from codeunit 80 into a new `Sales-Post Impl`" is right.
+The reader lands to decide one task. They scan landing points top to bottom (IDs, statuses, ledes, labels, table rows) and slow-read the one block that catches the eye. Multi-fact passages get one fact per landing line; container is your call (bullets, callouts, table rows, sub-`<details>`). Read only the first line of each landing point in your draft. If that vertical strip says what is there, ship.
 
 ## Lists of findings
 
-When you write a multi-item list where the reader has to decide which item to look at next (code review findings, replan analyses, audit results), write so they can skim, not slow-read.
+Multi-item lists where the reader picks one to act on (code review, audit, replan analysis): each item is multi-line with labeled lines, blank line between items, lede first, uniform shape across the list.
 
-- Each item multi-line, not a paragraph.
-- Blank line between multi-line items.
-- Every line has a leading label, including the headline.
-- Lede first: impact, not measurement or cause.
-- Uniform shape across items in the list.
-- **Bold + labels together**: `**Finding**:`, `**Where**:`, `**Action**:`, `**Note**:`.
+Default slots: `**Finding**:` (what) / `**Where**:` (file:line) / `**Action**:` (do) / `**Note**:` (severity, caveat). Allow `n/a` for inapplicable slots. Adapt slots to the list; uniform shape is the principle, not these specific labels.
 
-Default slot set: `Finding:` (what) / `Where:` (file:line or location) / `Action:` (what to do) / `Note:` (severity, effort, caveat). Adapt slots to the list; uniform shape is the principle, not these specific labels.
+## Tables of facts
 
-## No workflow chatter in artifact prose
+Fixed label/value rows (status recap, settings dump, structured summary): borderless two-column markdown table, no header row, bold labels left, values right.
 
-DO NOT write workflow-narrative prose into any durable artifact. The voice rule applies regardless of which file you are writing to.
+```
+| | |
+|---|---|
+| **Status**   | `running` → `done` |
+| **Items**    | 6 processed |
+```
 
-- DO NOT prefix lines with the agent that decided: `/al-implement decision (filter placement):`, `/al-refine second opinion:`.
-- DO NOT narrate TDD steps as prose: "bullet 1 went red on stub, green on body fill".
-- DO NOT cite second-opinion accept/reject reasoning or session-internal reconciliation.
+Three columns when the data is genuinely three-dimensional (step / action / outcome).
+
+## No workflow chatter in artifacts
+
+DO NOT prefix artifact lines with the agent that decided (`/al-implement decision:`). DO NOT narrate TDD steps as prose ("bullet 1 went red on stub, green on body fill"). DO NOT cite second-opinion or `advisor()` reconciliation. Workflow log belongs in the commit message; the artifact carries the forward-facing fact in declarative voice.
 
 <claude-only>
 
-**Claude Code only.** DO NOT cite `advisor()` cross-checks either; same rule.
+Claude Code only. The `<claude-only>` block is the single venue for `advisor()` checkpoints and other Claude-only gates. Place inline at the moment the gate fires, not as a top-of-file blockquote. Codex skips the block contents; no need to comment on what was skipped.
 
 </claude-only>
 
-Workflow log belongs in the commit message and PR description. The artifact carries the forward-facing fact in declarative voice.
+## Chat carve-outs
 
-## Anti-pattern: do not write this
+Most rules carry over verbatim into chat. Two diverge:
 
-> `/al-implement decision (filter placement): T-005 pre-filters TempSourceLink to sub-config edges; planner trusts caller-shaped input — no internal filter. Rationale: bullets do not exercise a planner-internal Comp. Type / Line Configuration No. filter, so a coverage gap would surface at /al-mutate.`
+| Rule | Chat carve-out |
+|---|---|
+| "No closing summary" | Chat **requires** a closing line stating what landed; the user has no `tasks.html` open. |
+| "DO NOT narrate TDD steps" | Workflow **markers** (`**RED**`, `**GREEN**`, `**Second opinion**`) permitted in chat. Workflow **narrative prose** still banned. |
 
-What is wrong, by voice rule: workflow-step prefix is process noise; walkthrough prose is not declarative; references the agent that decided rather than the forward-facing fact; multi-line for one fact is padding; em-dash inside the prose violates the no-em-dash rule.
+## Chat shapes
 
-## Right shape: write this
+Three canonical shapes with named defaults. SKILL-specific shapes (AL Runner ERROR table in `/al-implement`, Drafted scenarios in `/al-refine`, Second opinion line in `/al-second-opinion`) live in their owning SKILL.md.
 
-> `LoadConfigurationIntoTemps` stays generic. Deep-clone callers pre-filter `TempSourceLink` to sub-config edges before passing it to the planner, chosen over a planner-internal filter so the loader stays reusable across ADR-0007 future-import composition.
+### Opener (default at session start)
 
-Single declarative line. Names the decision and the hinge. No agent prefix. No archaeology. No em-dashes.
+Chip line carrying task + status, then a borderless two-column table with skill-specific rows (counts, next pointer).
+
+```
+**T-NNN <Title>** · `ready` → `in-progress`
+
+| | |
+|---|---|
+| **Pure**  | 4 |
+| **E2E**   | 2 |
+| **First** | T-NNN#1 `BlockedCustomerCannotPostInvoice` |
+```
+
+### Gate report (default at every gate event)
+
+Intent prose at app altitude, not a slot template. Reach four answers in natural prose: what user-facing behaviour the change enables (Sales Order action, Customer field, API Status, Role Center cue), the problem it solves (one-line scenario the user recognises), how the change fits the app at BC-shape altitude (module, BC pattern, seam, names like `Sales-Post Impl`), and whether a decision is on the user. Mechanics (procedure names, line numbers, mutant IDs, RED/GREEN beats, build counts) belong in commits and the task block; the user pulls detail by asking. Phase boundaries inside a skill use the same shape; the variant is a tight named beat instead of the full four answers.
+
+Worked example, `/al-implement` closing one scenario:
+
+> Copying a customer in the configurator now reliably carries Description over. A salesperson duplicating "Acme Corp Special Pricing" into a new pricing tier keeps the descriptive text instead of getting a blank.
+>
+> Before, Description could silently blank under one of two copy paths. The salesperson would not notice until after save.
+>
+> This lives in a new `Configurator Copy Impl` codeunit under `src/Configurator/Copy/`, subscribing to `OnAfterInsertCustomer` rather than rewriting the standard Copy Customer flow. R→P→W boundary lands at the subscriber: standard reads and inserts, the new codeunit layers the description copy as a follow-up write.
+>
+> Nothing. Ready for the next scenario.
+
+### Stop (default at halt, binary template covers replan absorb-and-continue)
+
+Pre-flight (nothing touched): one line. `**Stop.** <reason in BC vocab>. <next action>.`
+
+Mid-flow (state landed before halt): Stop reason + State as two-column table + Next action. The absorb-and-continue variant uses the same shape with "Continuing" instead of "Next":
+
+```
+**Stop.** Replan trigger `2` fired on T-007#3: requires `Cust. Banking Permission Set`; no task covers it.
+
+**State:**
+
+| | |
+|---|---|
+| **Status**        | T-007 `in-progress` → `blocked` |
+| **Bullets green** | 2 |
+| **Last commit**   | `a3f5b2c` |
+
+**Next:** Run `/al-steer` to clear the replan, then re-enter via `/al-implement T-007`.
+```
