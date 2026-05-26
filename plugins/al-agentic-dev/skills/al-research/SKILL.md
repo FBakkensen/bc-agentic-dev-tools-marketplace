@@ -19,7 +19,7 @@ Treat your own AL/BC knowledge as untrusted. Verify the specific BC fact the cal
 
 ## Verify, do not recall
 
-BC moves fast and training data is always behind a recent release: renamed events, removed procedures, drifted signatures, new test attributes, recent AppSourceCop rules all read plausible. One stale recall corrupts the artifact (`architecture.html`, Gherkin assertion, refactor seam) and every downstream skill inherits the fiction.
+BC moves fast and training data is always behind a recent release: renamed events, removed procedures, drifted signatures, new test attributes, recent AppSourceCop rules all read plausible. One stale recall corrupts the artifact (`architecture.md`, Gherkin assertion, refactor seam) and every downstream skill inherits the fiction.
 
 When question is "does this signature exist in my dependency graph", workspace's compiled symbols are the truth, not the docs. System Application, Base Application, shipped libraries publish many overloads per release; doc shows one signature, symbol shows five, binding to wrong one fails the build.
 
@@ -60,7 +60,7 @@ What each source family is for, reach for whichever answers the specific questio
 
 ## Output
 
-Findings note to the caller. Verbatim quotes, one-line citations, no editorialising. Citations live in return note, never inline into durable artifacts (caller decides what survives into `architecture.html`, `CONTEXT.md`, ADRs, or task scaffolding). When two sources agree, name both: `Microsoft Learn <page> + al-symbols-mcp <object>.<procedure> agree on <signature>`. When two disagree, return both quotes with citations and name the conflict; caller resolves.
+Findings note to the caller. Verbatim quotes, one-line citations, no editorialising. Citations live in return note, never inline into durable artifacts (caller decides what survives into `architecture.md`, `CONTEXT.md`, ADRs, or task scaffolding). When two sources agree, name both: `Microsoft Learn <page> + al-symbols-mcp <object>.<procedure> agree on <signature>`. When two disagree, return both quotes with citations and name the conflict; caller resolves.
 
 ## Composition
 

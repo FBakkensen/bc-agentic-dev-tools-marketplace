@@ -55,7 +55,7 @@ Prefer delegated worker when host supports subagents. Mutation work is isolated,
 
 Write durable report at `.output/mutation-report/<YYYYMMDD-HHMMSS>.md`. Survivors are actionable section, one row per site with classification, killer test (when written) or equivalence reason. Killed mutants map site to catching test. Report is where deliberation lives; task block carries verdict.
 
-`/al-mutate` does not flip status; it writes verdict into calling task block. Shape (NOTE alert chip, prose line, structured block, table cell) per task. See [html-spec-discipline.md](../../references/html-spec-discipline.md) and [voice-contract.md](../../references/voice-contract.md). Standalone mode emits Gate report once at pass close, naming rigor proved (or not) for user-facing behaviour under test, soft spots that remain by design, and user's call; inside `/al-implement`, findings fold into the scenario's Gate report.
+`/al-mutate` does not flip status; it writes verdict into calling task block. Shape (NOTE alert chip, prose line, structured block, table cell) per task. See [markdown-spec-discipline.md](../../references/markdown-spec-discipline.md) and [voice-contract.md](../../references/voice-contract.md). Standalone mode emits Gate report once at pass close, naming rigor proved (or not) for user-facing behaviour under test, soft spots that remain by design, and user's call; inside `/al-implement`, findings fold into the scenario's Gate report.
 
 ## Composition
 

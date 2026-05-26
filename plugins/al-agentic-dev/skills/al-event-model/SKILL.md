@@ -1,26 +1,26 @@
 ---
 name: al-event-model
-description: Settle the user-facing journey for AL/Business Central as `event-model.html` in BC vocabulary (Role / Action / Business Event / View / Status). Use after `/al-grill-adr` for user/API-facing features before `/al-design`; pure-backend features skip.
+description: Settle the user-facing journey for AL/Business Central as `event-model.md` in BC vocabulary (Role / Action / Business Event / View / Status). Use after `/al-grill-adr` for user/API-facing features before `/al-design`; pure-backend features skip.
 ---
 
 **Voice:** caveman. Drop articles, filler, hedging. Fragments OK. Arrows for causality. Technical terms exact, code unchanged, errors quoted exact.
 
 **Carve-outs:** drop caveman for confirm-before-destroy, user dialog turns (questions / grill rounds), numbered user-action steps, Stop block reason line.
 
-# /al-event-model, User-facing journey → event-model.html
+# /al-event-model, User-facing journey → event-model.md
 
 Settle the journey at altitude of what an external observer sees, before `/al-design` commits architecture. Event Modeling (Dymitruk) is the lineage; this skill settles user-facing slots (Role, Action, Business Event, View, Status) so `/al-design` consumes them and settles AL-shape without re-litigating user-side picks.
 
-`/al-design` reads `event-model.html` next.
+`/al-design` reads `event-model.md` next.
 
 ## Preconditions
 
 - `/al-grill-adr` ran for this idea; without sharpened `CONTEXT.md` and domain ADRs, fuzzy terms compound into wrong Role names or fictitious Business Events. **Stop**, run it first.
 - Feature has user or API surface. Pure-backend features (no human, no API consumer, internal batch only) skip this skill; `/al-design` runs its missing-storm checkpoint.
-- On `main`: this skill creates branch + spec folder (first per-feature skill to run). On feature branch: reshape `event-model.html` in place.
-- Existing `event-model.html` → reshaping; re-run with user's awareness.
+- On `main`: this skill creates branch + spec folder (first per-feature skill to run). On feature branch: reshape `event-model.md` in place.
+- Existing `event-model.md` → reshaping; re-run with user's awareness.
 
-## What goes into event-model.html
+## What goes into event-model.md
 
 - **Role**: BC Role Center name (Order Processor, Accountant, Warehouse Worker, Sales Manager) or external API consumer / publisher. Verify standard names via `/al-research`; renamed Role Centers ship fiction downstream.
 - **Action**: user-meaningful verb + object (*Release Sales Order*, *Approve Override*). Match BC's standard verb set where it overlaps BaseApp (Insert / Modify / Delete / Post / Validate / Release / Reopen / Apply / Reverse).
@@ -28,13 +28,13 @@ Settle the journey at altitude of what an external observer sees, before `/al-de
 - **View**: surface + its location (*Sales Order page → Status flips to Released*, *Pending Overrides cue increments*, *API response carries the Override decision*). Surface type settles here, AL control name settles in `/al-design`.
 - **Status**: when Business Event flips a field on aggregate's record, name field + new value (*Sales Header Status → Override Pending*).
 - **BaseApp portions**: if journey starts or passes through BaseApp, include those steps under canonical BaseApp names. Seam between BaseApp and our extension is named by canonical names themselves.
-- **Which BC names verified this session?** Every Role / Action verb / Business Event name / View page caption / Status value landing in `event-model.html`: backed this session by `al-symbols-mcp` / `grep` hit (Role Center pages, Status enums, BaseApp captions are all workspace-resolvable), or `/al-research` citation. Recall does not satisfy. See *Citation chain in chat, before write* below.
+- **Which BC names verified this session?** Every Role / Action verb / Business Event name / View page caption / Status value landing in `event-model.md`: backed this session by `al-symbols-mcp` / `grep` hit (Role Center pages, Status enums, BaseApp captions are all workspace-resolvable), or `/al-research` citation. Recall does not satisfy. See *Citation chain in chat, before write* below.
 
 Unanswerable → not ready for `/al-design`. Resolve via `/al-research`, `/al-grill-adr`, or `/grill-me`.
 
 ## User-facing voice only
 
-No AL pub/sub vocabulary (`OnAfter*`, `IntegrationEvent`, *Subscribes to*, *Publisher*), no page-extension idioms, no codeunit references; AL-shape belongs to `/al-design`'s `architecture.html` and mixing altitudes recreates the entanglement this skill exists to prevent. Reader who cannot tell what user experiences without consulting AL source → artifact has failed.
+No AL pub/sub vocabulary (`OnAfter*`, `IntegrationEvent`, *Subscribes to*, *Publisher*), no page-extension idioms, no codeunit references; AL-shape belongs to `/al-design`'s `architecture.md` and mixing altitudes recreates the entanglement this skill exists to prevent. Reader who cannot tell what user experiences without consulting AL source → artifact has failed.
 
 ## One timeline, swimlanes by Role
 
@@ -50,29 +50,29 @@ Draft two timelines diverging on one structural decision, present both with reco
 
 ## Citation chain in chat, before write
 
-Before writing `event-model.html`, every Role / Action verb / Business Event name / View page caption / Status value either appears in `al-symbols-mcp` / `grep` result you ran this session, or cited via `/al-research`: `Researched: <name> → <source path / URL / topic id>`. Workspace lookup is empirical anchor; memory of training data or past sessions is not. Renamed Role Centers, removed BusinessEvents, and drifted Status enums in training data corrupt every downstream skill that reads the file. Your confidence about a Role Center's standard name or a Status enum's values is not evidence either is right.
+Before writing `event-model.md`, every Role / Action verb / Business Event name / View page caption / Status value either appears in `al-symbols-mcp` / `grep` result you ran this session, or cited via `/al-research`: `Researched: <name> → <source path / URL / topic id>`. Workspace lookup is empirical anchor; memory of training data or past sessions is not. Renamed Role Centers, removed BusinessEvents, and drifted Status enums in training data corrupt every downstream skill that reads the file. Your confidence about a Role Center's standard name or a Status enum's values is not evidence either is right.
 
 ## Branch + folder + write
 
-On `^\d{3}-`: spec folder exists, reshape `event-model.html` in place. On `main`: first per-feature skill; resolve `<NNN>` per [cross-branch-numbering.md](../../references/cross-branch-numbering.md), derive 2–4-word kebab-case slug (do not ask), announce both, create branch `<NNN>-<slug>` + `specs/<NNN>-<slug>/`. Branch already exists locally or remotely → **Stop**.
+On `^\d{3}-`: spec folder exists, reshape `event-model.md` in place. On `main`: first per-feature skill; resolve `<NNN>` per [cross-branch-numbering.md](../../references/cross-branch-numbering.md), derive 2–4-word kebab-case slug (do not ask), announce both, create branch `<NNN>-<slug>` + `specs/<NNN>-<slug>/`. Branch already exists locally or remotely → **Stop**.
 
-Then write `event-model.html`. Self-contained HTML, inline `<style>`, Google Fonts via CDN; constraints in [html-spec-discipline.md](../../references/html-spec-discipline.md). Voice in [voice-contract.md](../../references/voice-contract.md). Both mandatory reads before writing. No surgical-edit contract; reshape via re-running. No Mermaid containers; swimlane timeline does not render as Mermaid sequence diagram, and `architecture.html`'s `data-graph="flow"` can render derived visual if wanted. Vocabulary in [LANGUAGE.md](../../references/LANGUAGE.md) (*Slice* entry). Pull visual coherence from most recently modified prior `specs/*/` artifact.
+Then write `event-model.md`. Pure markdown; constraints in [markdown-spec-discipline.md](../../references/markdown-spec-discipline.md). Voice in [voice-contract.md](../../references/voice-contract.md). Both mandatory reads before writing. Write telegraphic; drop articles, padding, hedges; fragments fine. Gherkin step content keeps sentence shape (no Gherkin in `event-model.md` itself; rule lands here for consistency across producer skills). No surgical-edit contract; reshape via re-running. No Mermaid fence; swimlane timeline does not render as Mermaid sequence diagram, and `architecture.md`'s flow graph can render derived visual if wanted. Vocabulary in [LANGUAGE.md](../../references/LANGUAGE.md) (*Slice* entry).
 
 ## Gate event
 
-Once when `event-model.html` lands. Gate report describes user-facing journey in BC vocabulary (Role, Action, Business Event, View, Status), names application problem the journey addresses, names user's call to greenlight `/al-design`.
+Once when `event-model.md` lands. Gate report describes user-facing journey in BC vocabulary (Role, Action, Business Event, View, Status), names application problem the journey addresses, names user's call to greenlight `/al-design`.
 
 ## Composition
 
 | | |
 |---|---|
 | **Runs after**     | `/al-grill-adr` (CONTEXT + domain ADRs settled) |
-| **Hands off to**   | `/al-design` (consumes `event-model.html`) |
+| **Hands off to**   | `/al-design` (consumes `event-model.md`) |
 | **Replan venue**   | `/al-steer` (downstream fact invalidates timeline) |
 | **Sidebands**      | `/al-research` (BaseApp Role / Action / Event / View / Status names), `/bc-standard-reference` (pure BaseApp behaviour), `/grill-me` (confess-your-guesses pass), `/al-second-opinion` (non-trivial timelines: multi-Role, branching, brownfield, integration) |
 
 <claude-only>
 
-**Advisor checkpoint.** Call `advisor()` before writing `event-model.html` for first time. Artifact is load-bearing for `/al-design`'s AL-shape decisions; drift caught here costs minutes, drift caught at `/al-design` costs a feature.
+**Advisor checkpoint.** Call `advisor()` before writing `event-model.md` for first time. Artifact is load-bearing for `/al-design`'s AL-shape decisions; drift caught here costs minutes, drift caught at `/al-design` costs a feature.
 
 </claude-only>

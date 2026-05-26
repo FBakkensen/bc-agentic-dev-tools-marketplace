@@ -1,6 +1,6 @@
 ---
 name: al-implement
-description: Pick a Gherkin-ready task from `tasks.html` and drive it through TDD for AL/Business Central. Use after `/al-refine`, one task per session, red to green per Gherkin bullet, then refactor and mutate with `/al-build` between.
+description: Pick a Gherkin-ready task from `tasks.md` and drive it through TDD for AL/Business Central. Use after `/al-refine`, one task per session, red to green per Gherkin bullet, then refactor and mutate with `/al-build` between.
 ---
 
 **Voice:** caveman. Drop articles, filler, hedging. Fragments OK. Arrows for causality. Technical terms exact, code unchanged, errors quoted exact.
@@ -9,23 +9,22 @@ description: Pick a Gherkin-ready task from `tasks.html` and drive it through TD
 
 # /al-implement, Pick a task, run TDD
 
-Pick next ready task from `tasks.html`. TDD per Gherkin bullet. Refactor full task diff once. Mutate where decisions live. Flip status. One task per session.
+Pick next ready task from `tasks.md`. TDD per Gherkin bullet. Refactor full task diff once. Mutate where decisions live. Flip status. One task per session.
 
 ## Preconditions
 
 - Branch matches `^\d{3}-`. If not: **Stop**. Run `/al-event-model` (or `/al-design` for pure-backend).
-- `specs/<branch>/` holds `tasks.html` + `architecture.html`. Missing → `/al-design`.
-- User/API-facing: `event-model.html` present, canonical Role / Business Event / View names from there already in Gherkin via `/al-refine`; transcribe verbatim into test names + `[SCENARIO]` / `[GIVEN]` / `[WHEN]` / `[THEN]` comments.
-- Legacy `tasks.md` without `tasks.html`: frozen. Hand-migrate first.
-- Target task `data-status="ready"`, populated Tests. Empty Tests → `/al-refine <T-NNN>`. `blocked` → `/al-steer`.
-- Target task `data-kind="verify"`: **Stop**, route to `/al-user-verification`. Verify tasks not TDD; this skill writes AL.
+- `specs/<branch>/` holds `tasks.md` + `architecture.md`. Missing → `/al-design`.
+- User/API-facing: `event-model.md` present, canonical Role / Business Event / View names from there already in Gherkin via `/al-refine`; transcribe verbatim into test names + `[SCENARIO]` / `[GIVEN]` / `[WHEN]` / `[THEN]` comments.
+- Target task `status=ready`, populated Tests. Empty Tests → `/al-refine <T-NNN>`. `blocked` → `/al-steer`.
+- Target task `kind=verify`: **Stop**, route to `/al-user-verification`. Verify tasks not TDD; this skill writes AL.
 
 ## What this session answers
 
 - **Which task in flight?** One `T-NNN`, named in opener, status flipped `ready` → `in-progress` before first RED.
-- **Where is the seam?** Read `architecture.html` R → P → W boundary, module map, brownfield touchpoints. Name seam in BC vocab (procedure to extract, event to subscribe, interface to implement). One line.
+- **Where is the seam?** Read `architecture.md` R → P → W boundary, module map, brownfield touchpoints. Name seam in BC vocab (procedure to extract, event to subscribe, interface to implement). One line.
 - **Did decision logic change?** Yes → mutation runs after refactor. No → record skipped-mutation outcome inside task block; `/al-mutate` skips.
-- **What flips at end?** `data-status` `in-progress` → `done`; final full `/al-build` (container) green. When this is slice's last technical task (all sibling `T-NNN` with same `data-slice` also `done`): flip slice's verify task `blocked` → `ready`, announce `/al-user-verification` as next handoff.
+- **What flips at end?** `status=` goes `in-progress` → `done` on the comment-anchor line, heading marker `[~]` → `[x]`; final full `/al-build` (container) green. When this is slice's last technical task (all sibling `T-NNN` with same `slice=` also `done`): flip slice's verify task `blocked` → `ready`, announce `/al-user-verification` as next handoff.
 - **Which BC names verified this session?** Every BC-specific name a Gherkin bullet rests on (procedure, event, table, field, codeunit, attribute): backed this session by `al-symbols-mcp` or `grep` hit, or `/al-research` citation. Recall does not satisfy. See *Citation chain in chat* below.
 
 Unanswerable question → task not ready. Resolve via `/al-research`, `/al-refine`, or `/al-steer`.
@@ -66,7 +65,7 @@ New objects get IDs via available allocator (never hand-pick). Shipped fields ne
 
 ### Replan halts planning, not code
 
-Eight triggers run as gate after mutation, before `done`. Trigger invalidates plan → flip `data-status="blocked"`, route to `/al-steer`. Trigger is new info plan absorbs → note inside task block and continue. Record trigger ID + one-line reason. Catalogue:
+Eight triggers run as gate after mutation, before `done`. Trigger invalidates plan → flip `status=blocked` on the comment-anchor line, route to `/al-steer`. Trigger is new info plan absorbs → note inside task block and continue. Record trigger ID + one-line reason. Catalogue:
 
 | # | Trigger | Detect |
 |---|---|---|
@@ -87,13 +86,20 @@ Before flipping task to `done`, call `advisor()`. Final correctness check on imp
 
 </claude-only>
 
-Flip surface: edit anchored on `<details data-task="T-NNN" data-status="...">`. Everything else inside task block (absorbed notes, mutation verdict, replan flag, layer overrides) is shape-per-task. See [notes-discipline.md](../../references/notes-discipline.md), [html-spec-discipline.md](../../references/html-spec-discipline.md), [voice-contract.md](../../references/voice-contract.md).
+Flip surface: Edit anchored on the comment line `<!-- task=T-NNN status=... slice=... kind=... -->`. Status flip swaps the `status=` value byte-exact:
+
+```
+old_string: <!-- task=T-007 status=in-progress slice=release-sales-order kind=technical -->
+new_string: <!-- task=T-007 status=done slice=release-sales-order kind=technical -->
+```
+
+Heading marker stays in sync (`[~]` → `[x]`) but is fallback rendering, not the anchor. Everything else inside task block (absorbed notes, mutation verdict, replan flag, layer overrides) is shape-per-task. See [notes-discipline.md](../../references/notes-discipline.md), [markdown-spec-discipline.md](../../references/markdown-spec-discipline.md), [voice-contract.md](../../references/voice-contract.md).
 
 ## Composition
 
 | | |
 |---|---|
-| **Runs after**     | `/al-refine` (filled Tests slot in `tasks.html`) |
+| **Runs after**     | `/al-refine` (filled Tests slot in `tasks.md`) |
 | **Hands off to**   | `/al-user-verification` when slice's verify task flips ready; else next ready technical task. `/al-code-review` fires at slice-done (after user verification) and feature-done. |
 | **Replan venue**   | `/al-steer` |
 | **Sidebands**      | `/al-research` (BC facts), `/al-debug-logging` (execution path unclear), `/grill-me` (judgement needs user), `/bc-standard-reference` (pure BaseApp questions) |

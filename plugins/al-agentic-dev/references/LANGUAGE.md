@@ -48,19 +48,19 @@ _Avoid_: treating R / P / W as a label slapped on an existing tangle. The split 
 The terms above describe static structure. The terms below describe behavioural decomposition: what the feature *does*, which trigger initiates each behaviour.
 
 **Slice** _(Event Modeling)_
-One initiated behaviour expressed as **trigger → command → event → state → view**. The unit of architectural decomposition at the funnel-top, sits between the Solution slot and the Module map slot in `architecture.html`. AL slices map to four canonical patterns:
+One initiated behaviour expressed as **trigger → command → event → state → view**. The unit of architectural decomposition at the funnel-top, sits between the Solution slot and the Module map slot in `architecture.md`. AL slices map to four canonical patterns:
 
 - **Command** slice: page action, report request *(user-initiated)*.
 - **Automation** slice: event subscriber, Job Queue, install/upgrade *(system-initiated)*. Most common AL pattern.
 - **Translation** slice: API page, web service, webhook *(external-system-initiated)*.
 - **View** slice: page render, FlowField, report layout *(read-only)*.
 
-Settlement is two-artifact for user/API-facing slices. User-facing slots (Role, Action, Business Event, View, Status; BC vocabulary at external-observer altitude, no AL pub/sub) settle in `event-model.html` via `/al-event-model`. AL realisation (trigger object, command codeunit, publication or subscription, state mutation, view rendering) settles in `architecture.html` via `/al-design`. Pure-backend slices (Job Queue, install / upgrade, scheduled task) skip `event-model.html`; the trigger-source slot carries them and AL realisation settles in `architecture.html` directly.
+Settlement is two-artifact for user/API-facing slices. User-facing slots (Role, Action, Business Event, View, Status; BC vocabulary at external-observer altitude, no AL pub/sub) settle in `event-model.md` via `/al-event-model`. AL realisation (trigger object, command codeunit, publication or subscription, state mutation, view rendering) settles in `architecture.md` via `/al-design`. Pure-backend slices (Job Queue, install / upgrade, scheduled task) skip `event-model.md`; the trigger-source slot carries them and AL realisation settles in `architecture.md` directly.
 
-The pattern qualifies the slice in `architecture.html`: `Slice (Automation): trigger ...`. _Avoid_: user story (too unstructured), use case (too OO), flow (already used for the diagram).
+The pattern qualifies the slice in `architecture.md`: `Slice (Automation): trigger ...`. _Avoid_: user story (too unstructured), use case (too OO), flow (already used for the diagram).
 
 **Vertical slicing** _(predates VSA, implicit in Kent Beck's TDD, 2002)_
-Per-task / per-PR rule: every task ships tests + production code together; never data-only, logic-only, or wire-up-only; always leaves the system green. Applies to every `T-NNN` in `tasks.html`. The opposite, *horizontal phasing*, is rejected by name. Lower-altitude than Vertical Slice Architecture; folder structure is VSA, per-task discipline is vertical slicing.
+Per-task / per-PR rule: every task ships tests + production code together; never data-only, logic-only, or wire-up-only; always leaves the system green. Applies to every `T-NNN` in `tasks.md`. The opposite, *horizontal phasing*, is rejected by name. Lower-altitude than Vertical Slice Architecture; folder structure is VSA, per-task discipline is vertical slicing.
 _Avoid_: horizontal phasing, layer-by-layer build, big-bang integration.
 
 ## Pillars
@@ -100,7 +100,7 @@ The architectural vocabulary maps onto AL constructs, but the AL construct is ne
 - **Depth is a property of the interface, not the implementation.** A deep module can be internally composed of small parts; they just are not part of the interface. A module has both an *external seam* (its interface, where callers cross) and *internal seams* (private to the implementation, used by its own unit tests).
 - **The deletion test.** Imagine deleting the module. If complexity vanishes, the module was not hiding anything (it was a pass-through; delete it). If complexity reappears across N callers, the module was earning its keep. Does not apply when the seam is a published event with no in-tree callers.
 - **The two-adapter rule.** One adapter means a hypothetical seam. Two adapters means a real one. Do not introduce a port (AL `interface` plus Implementer codeunit, or a publishable event plus its first subscriber) unless at least two adapters justify it (typically production + test, or two real production variants). One-adapter "interfaces for testability" are speculative bloat.
-- **Two test surfaces, both first-class.** Integration / E2E tests cross the external seam via `Access = Public`, exercising R and W. Unit tests live *inside* the module, calling internal procedures directly (especially the P layer). AL's `Access = Internal` is test-accessible from the same app; Microsoft's BaseApp tests do this throughout. Scenario test-layer choice (Pure / E2E / Both) in `architecture.html` decides which surface each scenario uses.
+- **Two test surfaces, both first-class.** Integration / E2E tests cross the external seam via `Access = Public`, exercising R and W. Unit tests live *inside* the module, calling internal procedures directly (especially the P layer). AL's `Access = Internal` is test-accessible from the same app; Microsoft's BaseApp tests do this throughout. Scenario test-layer choice (Pure / E2E / Both) in `architecture.md` decides which surface each scenario uses.
 - **Internal seams stay private.** Do not expose them through the module's external interface just because tests use them. When unit tests have to reach past `Access = Internal`, reshape: split the responsibility into a smaller internal codeunit, rather than weaken visibility for the test's sake.
 - **The interface is the test surface.** Callers and tests cross the same seam. If you want to test *past* the interface, the module is probably the wrong shape.
 - **"Class" for codeunit is wrong.** AL has no inheritance; codeunits are not classes. Say **codeunit**, or **adapter** when role is what matters.

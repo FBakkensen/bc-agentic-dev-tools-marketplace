@@ -15,8 +15,7 @@ Reshape AL so modules that earn their keep deepen and the ones that don't dissol
 
 - Build green. Refactor against red build is debug → belongs in `/al-implement`.
 - Called from `/al-implement` after green on current task, OR standalone on legacy code.
-- Standalone: branch matches `^\d{3}-` with `specs/<branch>/tasks.html`, OR pure legacy reshape with no calling task. Calling task `blocked` → run `/al-steer`.
-- Legacy spec folder (`tasks.md` without `tasks.html`): frozen.
+- Standalone: branch matches `^\d{3}-` with `specs/<branch>/tasks.md`, OR pure legacy reshape with no calling task. Calling task `blocked` → run `/al-steer`.
 - Legacy-code mode (no covering tests): write baseline tests first; reshape without regression signal is speculation. See [legacy-refactor-plan.md](references/legacy-refactor-plan.md).
 
 ## What you answer before reshape
@@ -41,7 +40,7 @@ Spawn 4 lens sub-agents in parallel on the task diff. Each returns reshape oppor
 | 1 | **Simplify / dedup** *(primary)* | Duplication, dead code, redundant procedures, simplification, inline candidates. Pass-throughs dissolve; primitives carrying meaning become small records or enums |
 | 2 | **BC best-practice** via bc-knowledge | Per [bc-knowledge-dispatch.md](../../references/bc-knowledge-dispatch.md): `ask_bc_expert(autonomous_mode=false)` per touched file, threshold `>= 70`, cache `get_bc_topic` within run. MCP names topics; lens applies `anti_pattern_indicators` |
 | 3 | **Structural shape** | R → P → W boundary, depth over indirection, seam introduction. Disciplines below carry substance |
-| 4 | **Naming** | Objects, procedures, variables, fields, parameters in BC vocabulary AND project terminology per `CONTEXT.md`, ADRs, `architecture.html`, `event-model.html` |
+| 4 | **Naming** | Objects, procedures, variables, fields, parameters in BC vocabulary AND project terminology per `CONTEXT.md`, ADRs, `architecture.md`, `event-model.md` |
 
 Lens 1 typically dominates queue; Lens 2 surfaces small number of high-value BC fixes; Lens 3 reshapes are fewer but load-bearing; Lens 4 finds renames the others miss because they read code without the BC-vocabulary lens.
 
@@ -73,7 +72,7 @@ One reshape at a time, `/al-build` after each. Red → revert that step; recover
 
 ## Lens 4, naming
 
-Rename when name lies. BC verbs over generic CRUD; objects `"Prefix Feature Suffix"`. Project terminology in `CONTEXT.md` (`## Language`, `## Flagged ambiguities`); multi-context repos consult `CONTEXT-MAP.md`. User/API-facing features: canonical Role / Action / Business Event / View names from `event-model.html` already live in code via `/al-refine` and `/al-implement`; preserve verbatim.
+Rename when name lies. BC verbs over generic CRUD; objects `"Prefix Feature Suffix"`. Project terminology in `CONTEXT.md` (`## Language`, `## Flagged ambiguities`); multi-context repos consult `CONTEXT-MAP.md`. User/API-facing features: canonical Role / Action / Business Event / View names from `event-model.md` already live in code via `/al-refine` and `/al-implement`; preserve verbatim.
 
 Scope: objects, procedures, parameters, variables, record vars, table fields, page actions, publishers, subscribers, captions, labels. Nothing escapes by being "small".
 
@@ -96,7 +95,7 @@ Citation chain: when rename pulls a BC name from outside codebase (verb picked b
 
 **No new behaviour.** Diff leaves observable behaviour identical. New behaviour belongs to `/al-implement` (new task) or `/al-refine` (re-plan).
 
-Standalone mode emits Gate report once at module / pattern / seam altitude (not procedure level), naming application invariant preserved and user's call; inside `/al-implement`, findings fold into the scenario's Gate report. `/al-refactor` does not edit `architecture.html` and writes no Notes by default; `tasks.html` touched only when an operational outcome demands it, surgical-edit contract is `data-task` + `data-status` per [html-spec-discipline.md](../../references/html-spec-discipline.md). See [voice-contract.md](../../references/voice-contract.md).
+Standalone mode emits Gate report once at module / pattern / seam altitude (not procedure level), naming application invariant preserved and user's call; inside `/al-implement`, findings fold into the scenario's Gate report. `/al-refactor` does not edit `architecture.md` and writes no Notes by default; `tasks.md` touched only when an operational outcome demands it, surgical-edit contract is the comment-line `task=` + `status=` keys per [markdown-spec-discipline.md](../../references/markdown-spec-discipline.md). See [voice-contract.md](../../references/voice-contract.md).
 
 ## Composition
 

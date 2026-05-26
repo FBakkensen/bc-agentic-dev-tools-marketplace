@@ -1,6 +1,6 @@
 # BC/AL design patterns
 
-Plugin-level catalogue cited by `architecture.html`, design ADRs, and the `/al-design` flow. Pick **one pattern per module**. If a pattern needs explaining, the module shape is wrong; reshape, do not rename.
+Plugin-level catalogue cited by `architecture.md`, design ADRs, and the `/al-design` flow. Pick **one pattern per module**. If a pattern needs explaining, the module shape is wrong; reshape, do not rename.
 
 Each entry follows the same shape: **What** / **When** / **When not** / **Structure** / **_Avoid_:** (named misuse). Anti-patterns are named so reviews can call them by name.
 

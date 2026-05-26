@@ -17,7 +17,7 @@ Slice-done is natural goldilocks. Per-task review (pre-0.27 cadence) reviewed ev
 
 ## Preconditions
 
-- Branch matches `^\d{3}-` and `specs/<branch>/tasks.html` exists; legacy `tasks.md` frozen, hand-migrate before reviewing.
+- Branch matches `^\d{3}-` and `specs/<branch>/tasks.md` exists.
 - `/al-build` green: linter pipeline (CodeCop, AppSourceCop, UICop, AppSource Validation) has already cleared deterministic concerns → review starts where linters stop. Red baseline stops the gate.
 - Tree state matches reviewer intent. Uncommitted reshape from unrelated work pollutes diff; confirm scope before proceeding.
 
@@ -25,9 +25,9 @@ Any precondition fails → stop, surface the gap. Do not review against uncertai
 
 ## Scope and diff
 
-Two modes, deduced from current state, recent `data-status` flips, working tree, and what user said: **per-slice** (every technical task in one `data-slice` is `done` and slice's verify task just flipped to `done`) or **per-feature** (full feature diff before merge). When inference uncertain (mid-stream WIP commits, mixed in-flight/done), ask with concrete options: "diff for slice `<slug>`?" / "full branch vs `main`?" / "uncommitted working tree?" / "SHA range you name?"
+Two modes, deduced from current state, recent `status=` flips, working tree, and what user said: **per-slice** (every technical task in one `slice=` is `done` and slice's verify task just flipped to `done`) or **per-feature** (full feature diff before merge). When inference uncertain (mid-stream WIP commits, mixed in-flight/done), ask with concrete options: "diff for slice `<slug>`?" / "full branch vs `main`?" / "uncommitted working tree?" / "SHA range you name?"
 
-Per-slice scope: union of diffs for every `T-NNN` carrying slice's `data-slice`, from each task's first commit through its `done` flip. Pure-backend features have no verify tasks; per-slice mode applies on best-effort basis when slices explicitly grouped in `architecture.html`, otherwise degenerates to per-feature.
+Per-slice scope: union of diffs for every `T-NNN` carrying slice's `slice=` value, from each task's first commit through its `done` flip. Pure-backend features have no verify tasks; per-slice mode applies on best-effort basis when slices explicitly grouped in `architecture.md`, otherwise degenerates to per-feature.
 
 Pipeline commits carry `T-NNN <verb>: <message>` prefixes that associate commits with tasks; `review:` commit or squash defeats the grep, which is when asking beats guessing.
 
@@ -37,12 +37,12 @@ Spawn all lenses in one message so they run concurrently. Each lens has narrow f
 
 | # | Lens | Focused goal | Mode |
 |---|---|---|---|
-| 1 | Project compliance + naming | Changes obey `CONTEXT.md`, design and domain ADRs under `docs/adr/`, module map and boundaries in `architecture.html`, originating task's Gherkin in `tasks.html`. Naming check: objects, procedures, variables, fields, parameters use BC vocabulary AND project terminology; names that lie surface even when code is otherwise correct | both |
+| 1 | Project compliance + naming | Changes obey `CONTEXT.md`, design and domain ADRs under `docs/adr/`, module map and boundaries in `architecture.md`, originating task's Gherkin in `tasks.md`. Naming check: objects, procedures, variables, fields, parameters use BC vocabulary AND project terminology; names that lie surface even when code is otherwise correct | both |
 | 2 | Bug scan | Shallow scan for large bugs the LLM catches cold on a fresh read. Correctness and obvious logic faults only; skip nitpicks, skip style, skip anything a linter catches | both |
 | 3 | BC-specific via bc-knowledge | Per `${CLAUDE_SKILL_DIR}/../../references/bc-knowledge-dispatch.md`: `ask_bc_expert(autonomous_mode=false)` per file with file-type-mapped specialist, fetch surfaced topics via `get_bc_topic`, apply each topic's `anti_pattern_indicators`. Lower relevance bar (`>= 50`) than `/al-refactor`'s `>= 70`; gate can afford broader sweep | both |
 | 4 | Code comments + git history | Code comments in modified files state guidance (invariants, "do not X" warnings); changes comply. Recent commit history surfaces context: previous fix the current change might re-break, deliberate decision being undone | both |
 | 5 | AppSource public-surface addition | New public procedure, public table field, or page action on shipped object locks public contract into AppSource. Linters fire on removal (AS0011) and rename (AS0007), not on addition; read changed object alongside `app.json` and judge intentional vs accidental lock-in | per-feature only |
-| 6 | Verify ↔ code alignment | Slice's verify task scenarios in `tasks.html` name surfaces, Roles, Status values; changed code under slice's `data-slice` actually exposes those surfaces with those names. Drift here means user verification just signed off on something other than what code does | per-slice only |
+| 6 | Verify ↔ code alignment | Slice's verify task scenarios in `tasks.md` name surfaces, Roles, Status values; changed code under slice's `slice=` actually exposes those surfaces with those names. Drift here means user verification just signed off on something other than what code does | per-slice only |
 
 Lenses state goals, not enumerated checklists. Specifics each lens catches depend on code and what `bc-knowledge` surfaces.
 
@@ -75,14 +75,14 @@ After confidence pass, skill spawns `/grill-me` per surviving finding automatica
 Per finding:
 
 - **Spawn**: `/grill-me` with finding body (Finding / Where / Source / Severity / Confidence / Slice when per-slice), lens proposal (its `Recommended next`), scope context.
-- **Contract**: three outcomes: new task in `tasks.html`, note on future task, drop.
-- **References**: pass `${CLAUDE_SKILL_DIR}/../../references/notes-discipline.md` and `${CLAUDE_SKILL_DIR}/../../references/html-spec-discipline.md` for writeback shape.
+- **Contract**: three outcomes: new task in `tasks.md`, note on future task, drop.
+- **References**: pass `${CLAUDE_SKILL_DIR}/../../references/notes-discipline.md` and `${CLAUDE_SKILL_DIR}/../../references/markdown-spec-discipline.md` for writeback shape.
 - **Exit**: when decision lands.
 
 Passing proposal (not raw finding) lets `/grill-me` stress-test whether proposal is right rather than invent one cold. Three outcomes:
 
-- **New task**: append `<details class="task" data-task="T-NNN+1" data-status="ready" data-slice="<slug>">`, title naming fix, body carrying `Where` and `Source` as seed for `/al-refine`. Slice slug is just-reviewed slice (per-slice mode) or slice the fix most naturally belongs to (per-feature mode); fix that re-opens closed slice flips that slice's verify task back to `blocked` and routes via `/al-steer`. Next `/al-implement` cycle picks it up.
-- **Note on future task**: identify not-yet-`done` task whose work touches area; regenerate its NOTE callout block whole (surgical-edit contract on `tasks.html` is `data-task` + `data-status` only).
+- **New task**: append a new `### T-NNN+1 [ ] — <title>` heading with `<!-- task=T-NNN+1 status=ready slice=<slug> kind=technical -->` underneath, body carrying `Where` and `Source` as seed for `/al-refine`. Slice slug is just-reviewed slice (per-slice mode) or slice the fix most naturally belongs to (per-feature mode); fix that re-opens closed slice flips that slice's verify task back to `blocked` and routes via `/al-steer`. Next `/al-implement` cycle picks it up.
+- **Note on future task**: identify not-yet-`done` task whose work touches area; regenerate its NOTE callout block whole (surgical-edit contract on `tasks.md` is the comment-line `task=` + `status=` keys only).
 - **Drop**: user accepts as known, not worth a task. Closer counts it.
 
 Abort on explicit `stop` / `end loop` / `cancel`, off-topic shift, or compaction: emit partial-summary closer and exit, no resume (queue is transient). Single-finding case: spawn one grill, skip progress chip, straight to closer. `/grill-me` stays generic; triage contract rides in via spawn prompt, no section added to `grill-me`'s `SKILL.md`.
@@ -91,7 +91,7 @@ Abort on explicit `stop` / `end loop` / `cancel`, off-topic shift, or compaction
 
 Findings carry slot set `Finding / Where / Source (lens name + topic id) / Severity / Confidence / Recommended next` per Lists-of-findings rule in `${CLAUDE_SKILL_DIR}/../../references/voice-contract.md`. Body rides into its `/grill-me` invocation in this shape; grill stress-tests it.
 
-`/al-code-review` does not write durable artifacts before triage. Per-grilling materialization writes to `tasks.html` only. No `architecture.html`, `event-model.html`, ADR, `CONTEXT.md`, or `.out-of-scope/` writes. Findings address files by path + line or path + procedure; future readers grep on the symbol.
+`/al-code-review` does not write durable artifacts before triage. Per-grilling materialization writes to `tasks.md` only. No `architecture.md`, `event-model.md`, ADR, `CONTEXT.md`, or `.out-of-scope/` writes. Findings address files by path + line or path + procedure; future readers grep on the symbol.
 
 ## Composition
 

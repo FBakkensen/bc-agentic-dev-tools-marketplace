@@ -1,6 +1,12 @@
 # Voice contract
 
-Voice rules live at the top of each SKILL.md as a 2-line inline declaration (caveman + four carve-outs). This file carries the non-voice disciplines: lexical, citation, shape, and artifact-vs-chat scoping. Disciplines below apply to durable artifacts (`event-model.html`, `architecture.html`, `tasks.html`, ADRs, `CONTEXT.md`, `.out-of-scope/`) and to chat output.
+Voice rules live at the top of each SKILL.md as a 2-line inline declaration (caveman + four carve-outs). This file carries the non-voice disciplines: lexical, citation, shape, and artifact-vs-chat scoping. Disciplines below apply to durable artifacts (`event-model.md`, `architecture.md`, `tasks.md`, ADRs, `CONTEXT.md`, `.out-of-scope/`) and to chat output.
+
+## Artifact content is telegraphic
+
+`event-model.md`, `architecture.md`, `tasks.md` drop articles, padding, hedges; fragments fine. Output tokens dominate the per-feature budget; same content read across re-runs and consumer skills (`/al-refine`, `/al-implement`, `/al-mutate`, `/al-code-review`) compounds the cost.
+
+Gherkin step content keeps `Given/When/Then` sentence shape so steps stay parseable for test-mapping tooling. Numbered user-action steps in verify tasks keep imperative sentence shape so a human can read them aloud and act.
 
 ## No em-dashes
 
@@ -84,7 +90,7 @@ Four caveman lines at app altitude. Mechanics (procedure names, line numbers, mu
 | **Fits:** | how the change fits the app at BC-shape altitude (module, BC pattern, seam, names like `Sales-Post Impl`) |
 | **Next:** | what is on the user, or nothing if the agent moves on |
 
-Verify-task variant (`/al-user-verification` closing a slice, `data-kind="verify"`): four answers shift altitude. **Did** = what the user just confirmed (not what the code does). **Was** = user-facing problem the slice solved. **Fits** = journey in `event-model.html` vocabulary (Role / Action / Business Event / View / Status, no AL names). **Next** = handoff. The verify task's point is that the user touched the surface; report cites their observation, not the implementation.
+Verify-task variant (`/al-user-verification` closing a slice, `kind=verify`): four answers shift altitude. **Did** = what the user just confirmed (not what the code does). **Was** = user-facing problem the slice solved. **Fits** = journey in `event-model.md` vocabulary (Role / Action / Business Event / View / Status, no AL names). **Next** = handoff. The verify task's point is that the user touched the surface; report cites their observation, not the implementation.
 
 ### Stop (halt)
 
@@ -110,4 +116,4 @@ SKILL-specific shapes (AL Runner ERROR table in `/al-implement`, Drafted scenari
 
 ## Chat carve-out
 
-Chat requires a closing line stating what landed (the user has no `tasks.html` open). Closing line is caveman-form; not a pleasantry. Workflow markers (`**RED**`, `**GREEN**`, `**Second opinion**`) permitted in chat; workflow narrative prose still banned.
+Chat requires a closing line stating what landed (the user has no `tasks.md` open). Closing line is caveman-form; not a pleasantry. Workflow markers (`**RED**`, `**GREEN**`, `**Second opinion**`) permitted in chat; workflow narrative prose still banned.

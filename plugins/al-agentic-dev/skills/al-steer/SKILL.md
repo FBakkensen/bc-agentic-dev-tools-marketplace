@@ -1,6 +1,6 @@
 ---
 name: al-steer
-description: Coach and navigator for AL/Business Central agentic dev. Reads tasks.html, the goal, the codebase, and recent commits, names what is next or blocked or drifting, owns .out-of-scope/, and is the canonical replan venue.
+description: Coach and navigator for AL/Business Central agentic dev. Reads tasks.md, the goal, the codebase, and recent commits, names what is next or blocked or drifting, owns .out-of-scope/, and is the canonical replan venue.
 ---
 
 **Voice:** caveman. Drop articles, filler, hedging. Fragments OK. Arrows for causality. Technical terms exact, code unchanged, errors quoted exact.
@@ -9,23 +9,22 @@ description: Coach and navigator for AL/Business Central agentic dev. Reads task
 
 # /al-steer, Coach / navigator
 
-Read `tasks.html`, `architecture.html`, `event-model.html` when present, the goal, codebase, recent commits, `.out-of-scope/`. Name what's next, blocked, drifting. Name next handoff; never force one. Canonical replan venue. Owner of `.out-of-scope/`.
+Read `tasks.md`, `architecture.md`, `event-model.md` when present, the goal, codebase, recent commits, `.out-of-scope/`. Name what's next, blocked, drifting. Name next handoff; never force one. Canonical replan venue. Owner of `.out-of-scope/`.
 
 User invokes `/al-steer` in natural language ("where are we?", "what's next?", "clear the replan queue", "T-007 is blocked, walk me through it", "split T-009 into three tasks"). Interpret and act.
 
 ## Preconditions
 
 - Branch matches `^\d{3}-`. If not: **Stop**. Run `/al-event-model` (or `/al-design` for pure-backend features).
-- Spec folder `specs/<branch>/` holds `tasks.html`. Missing but `architecture.html` present → **Stop**, run `/al-scope`. `architecture.html` also missing → **Stop**, run `/al-design` (or `/al-event-model` first for user/API-facing features).
-- Legacy markdown spec (`tasks.md` without `tasks.html`): frozen. Surface the choice to the user before touching anything.
+- Spec folder `specs/<branch>/` holds `tasks.md`. Missing but `architecture.md` present → **Stop**, run `/al-scope`. `architecture.md` also missing → **Stop**, run `/al-design` (or `/al-event-model` first for user/API-facing features).
 
 ## Power model
 
-Read anything in workspace. Write `tasks.html` structurally, only after explicit user ack; silent restructuring is the anti-pattern that loses the audit trail. Write `.out-of-scope/<concept>.md` when substantive rejection earns durable memory. Nothing else.
+Read anything in workspace. Write `tasks.md` structurally, only after explicit user ack; silent restructuring is the anti-pattern that loses the audit trail. Write `.out-of-scope/<concept>.md` when substantive rejection earns durable memory. Nothing else.
 
 ## Read first, then name
 
-Read `tasks.html`, scan `architecture.html`, `event-model.html` when present, recent commits, `.out-of-scope/` before opening your mouth. Surface what the state already says; coaching from stale memory is the failure mode that drove the user here. Name entries that need a decision: severity, ID, symptom in codebase's terms (object names, table fields, codeunit calls), one line per entry. Distinguish kinds explicitly: verify task (`data-kind="verify"`) ready or blocked is user-verification gate, not a TDD cycle; name it as such (*"slice `release-sales-order` is ready for user verification"*, *"slice `approve-override` verify is blocked, scenario `#3 Boundary` failed at step 4"*) so user picks right next skill. Prose paragraphs and generic CRUD words bury the seam; let user pick which entry to walk. See [voice-contract.md](../../references/voice-contract.md) for prose voice.
+Read `tasks.md`, scan `architecture.md`, `event-model.md` when present, recent commits, `.out-of-scope/` before opening your mouth. Surface what the state already says; coaching from stale memory is the failure mode that drove the user here. Name entries that need a decision: severity, ID, symptom in codebase's terms (object names, table fields, codeunit calls), one line per entry. Distinguish kinds explicitly: verify task (`kind=verify`) ready or blocked is user-verification gate, not a TDD cycle; name it as such (*"slice `release-sales-order` is ready for user verification"*, *"slice `approve-override` verify is blocked, scenario `#3 Boundary` failed at step 4"*) so user picks right next skill. Prose paragraphs and generic CRUD words bury the seam; let user pick which entry to walk. See [voice-contract.md](../../references/voice-contract.md) for prose voice.
 
 ## Route to next skill, do not perform it
 
@@ -42,13 +41,13 @@ Patterns the agent learns to recognise, not a checklist to walk. Other skills fl
 | 3 | Wrong order | Task's scenarios reference behaviour a later task introduces. |
 | 4 | Sibling now wrong | Current task invalidates another task's context or scenarios. |
 | 5 | New behaviour emerges | Surfaced code path needs its own test, not a bullet appended to an existing scenario. |
-| 6 | Architecture decomposition wrong | R → P → W cuts across tasks, or `architecture.html` itself no longer matches reality. |
-| 7 | Goal drift | Goal slot no longer describes what `tasks.html` delivers. |
+| 6 | Architecture decomposition wrong | R → P → W cuts across tasks, or `architecture.md` itself no longer matches reality. |
+| 7 | Goal drift | Goal slot no longer describes what `tasks.md` delivers. |
 | 8 | Verification failed | User-facing scenario in `/al-user-verification` does not match observed behaviour. Judgement call between defect (insert `Fixes:` task), wrong scenario (rewrite via `/al-refine`), or wrong slice boundary (split via `/al-scope`). |
 
 ## Trigger response is intent, not mechanics
 
-When trigger means plan is invalid for the task → halt by flipping `data-status="blocked"` and recording trigger ID + reason inside the task block. When trigger means new information surfaced that does not invalidate plan → leave status alone and note trigger inside task block. Choice is judgement; fixed enforcement mechanics turn replan into form-filling.
+When trigger means plan is invalid for the task → halt by flipping `status=blocked` on the comment-anchor line (sync heading marker to `[!]`) and recording trigger ID + reason inside the task block. When trigger means new information surfaced that does not invalidate plan → leave status alone and note trigger inside task block. Choice is judgement; fixed enforcement mechanics turn replan into form-filling.
 
 ## Mutations come from the trigger, not a menu
 
@@ -56,7 +55,7 @@ Name candidate mutations that match what the trigger surfaced. Splitting, insert
 
 ## False halt closes the loop
 
-Grilling vetoes the trigger → restore prior `data-status` and rewrite alert body to record resolution. Silent un-flag loses reasoning, and gate scanner can't see what changed.
+Grilling vetoes the trigger → restore prior `status=` value on the comment-anchor line (sync heading marker) and rewrite alert body to record resolution. Silent un-flag loses reasoning, and gate scanner can't see what changed.
 
 ## Owns `.out-of-scope/`
 

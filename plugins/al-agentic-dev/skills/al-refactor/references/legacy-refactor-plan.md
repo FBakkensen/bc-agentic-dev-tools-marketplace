@@ -1,6 +1,6 @@
 # Legacy AL refactor plan
 
-Phased process for legacy AL code that ships **without sufficient tests**. Use when there is no calling task and no `architecture.html`. Companion to `/al-refactor`; does not replace its inline discipline (which assumes tests already exist).
+Phased process for legacy AL code that ships **without sufficient tests**. Use when there is no calling task and no `architecture.md`. Companion to `/al-refactor`; does not replace its inline discipline (which assumes tests already exist).
 
 ## Preconditions
 
