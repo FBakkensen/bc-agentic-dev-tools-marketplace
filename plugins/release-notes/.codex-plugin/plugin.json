@@ -1,7 +1,7 @@
 {
   "name": "release-notes",
   "description": "Generate release notes from PR analysis.",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "skills": "./skills/",
   "interface": {
     "displayName": "Release Notes",

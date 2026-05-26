@@ -3,55 +3,59 @@ name: al-refine
 description: One task to numbered scenarios for AL/Business Central. Technical task → ZOMBIES-ordered Gherkin for /al-implement. Verify task → ZOMBIES-ordered user test plan for /al-user-verification. Reads architecture.html, event-model.html, CONTEXT.md, and the codebase, then writes into the task's Tests area in tasks.html.
 ---
 
+**Voice:** caveman. Drop articles, filler, hedging. Fragments OK. Arrows for causality. Technical terms exact, code unchanged, errors quoted exact.
+
+**Carve-outs:** drop caveman for confirm-before-destroy, user dialog turns (questions / grill rounds), numbered user-action steps, Stop block reason line.
+
 # /al-refine, Task to scenarios
 
-Fill the Tests area for one task in `tasks.html`. Branch by `data-kind`: technical tasks get Gherkin for `/al-implement`; verify tasks get a user test plan for `/al-user-verification`. Walk the codebase, draft scenarios in ZOMBIES order, watch for the eight replan triggers. One task per run.
+Fill Tests area for one task in `tasks.html`. Branch by `data-kind`: technical → Gherkin for `/al-implement`; verify → user test plan for `/al-user-verification`. Walk codebase, draft scenarios ZOMBIES order, watch the eight replan triggers. One task per run.
 
 ## Preconditions
 
-- Branch matches `^\d{3}-`. If not, **Stop**. Run `/al-event-model` (or `/al-design` for pure-backend features).
-- Spec folder holds `architecture.html`. If not, **Stop**. Run `/al-design`.
-- For user/API-facing features, `event-model.html` is also present.
-- Task carries `data-status="blocked"` → **Stop**. Route to `/al-steer` to clear the replan.
-- Verify task (`data-kind="verify"`) but no `event-model.html` in the spec folder → contract violation, **Stop** and route to `/al-steer`. Verify tasks only exist for user/API-facing features.
-- Legacy markdown spec (`tasks.md` without `tasks.html`) → **Stop**. Hand-migrate before continuing.
+- Branch matches `^\d{3}-`. If not: **Stop**. Run `/al-event-model` (or `/al-design` for pure-backend).
+- Spec folder holds `architecture.html`. Missing → **Stop**, run `/al-design`.
+- User/API-facing features: `event-model.html` also present.
+- Task `data-status="blocked"` → **Stop**, route to `/al-steer` to clear replan.
+- Verify task (`data-kind="verify"`) but no `event-model.html` → contract violation, **Stop**, route to `/al-steer`. Verify tasks only exist for user/API-facing features.
+- Legacy `tasks.md` without `tasks.html` → **Stop**, hand-migrate.
 
 ## Branch by data-kind
 
-Read the task's `data-kind` attribute. Absent or `technical` → write Gherkin scenarios for `/al-implement`. `verify` → write a user test plan for `/al-user-verification`. The disciplines below split where the two branches diverge.
+Read task's `data-kind`. Absent or `technical` → write Gherkin scenarios for `/al-implement`. `verify` → write user test plan for `/al-user-verification`. Disciplines below split where branches diverge.
 
 ## Technical task: Gherkin for /al-implement
 
-Spec how one task's behaviour is tested so `/al-implement` drives red → green per bullet without re-deriving intent. Shape per task is yours. Answer these before writing:
+Spec how one task's behaviour is tested so `/al-implement` drives red → green per bullet without re-deriving intent. Shape per task is yours. Answer before writing:
 
-- **What is the task delivering?** Resolve from the task description, slice context in `architecture.html`, the user-facing journey in `event-model.html` when present, and the codebase. Scenario titles cite Roles, Business Events, and Views from `event-model.html` by their canonical names.
-- **What scenarios cover it?** ZOMBIES across the task: Zero, One, Many, Boundary, Interfaces, Exception, Simple. Positive and negative where the letter admits. Simplest exercise of the seam first; complexity layered outward. Coverage is across the whole task; a `Z` at Pure satisfies the slot even when E2E has no `Z`. Edges live at the cheaper layer.
-- **What is each scenario's test layer?** Pure by default; AL Runner via `/al-build -UnitTestOnly` runs Pure in seconds, so iteration cost shapes test quantity. E2E earns its place per scenario when composition or a side effect is unreproducible at Pure (posting, document flow, event chain, table triggers, install / upgrade, telemetry shape). Family-level architecture sets the default; record per-scenario overrides inside the task block. When the supported / unsupported boundary is unclear for a scenario, run `al-runner --guide` for the authoritative capability matrix.
-- **What does the codebase actually expose?** Real codeunits, tables, fields, events on the boundary. Every precondition and outcome cites a symbol that exists.
-- **What vocabulary names the scenarios?** Project terms from `CONTEXT.md` `Language` where the scenario touches one; BC vocabulary otherwise. `_Avoid_:` aliases forbidden. Titles positional and PascalCase (`PostSalesOrderWithItemCharge`, not `GivenBlocked_WhenPost_ThenError`); implementation names belong in the body, not the title. Body drops articles, one line per bullet, field / codeunit / table names verbatim (`**Given** Customer.Blocked = All` over `**Given** the customer has been blocked`).
-- **Which BC names did you verify this session?** Every clause's BC-specific symbol (procedure, event, table, field, codeunit): backed this session by an `al-symbols-mcp` or `grep` hit, including `grep` against `architecture.html` / `event-model.html` for upstream-cited names, or a `/al-research` citation. Recall does not satisfy. See *Ground every clause in a real symbol* below.
+- **What is the task delivering?** Resolve from task description, slice context in `architecture.html`, user-facing journey in `event-model.html` when present, codebase. Scenario titles cite Roles, Business Events, Views from `event-model.html` by canonical names.
+- **What scenarios cover it?** ZOMBIES across the task: Zero, One, Many, Boundary, Interfaces, Exception, Simple. Positive and negative where the letter admits. Simplest exercise of seam first; complexity layered outward. Coverage is across whole task; a `Z` at Pure satisfies the slot even when E2E has no `Z`. Edges live at cheaper layer.
+- **What is each scenario's test layer?** Pure by default; AL Runner via `/al-build -UnitTestOnly` runs Pure in seconds → iteration cost shapes test quantity. E2E earns its place per scenario when composition or side effect unreproducible at Pure (posting, document flow, event chain, table triggers, install / upgrade, telemetry shape). Family-level architecture sets default; record per-scenario overrides inside task block. When supported / unsupported boundary unclear → `al-runner --guide`.
+- **What does codebase actually expose?** Real codeunits, tables, fields, events on boundary. Every precondition and outcome cites a symbol that exists.
+- **What vocabulary names the scenarios?** Project terms from `CONTEXT.md` `Language` where scenario touches one; BC vocabulary otherwise. `_Avoid_:` aliases forbidden. Titles positional + PascalCase (`PostSalesOrderWithItemCharge`, not `GivenBlocked_WhenPost_ThenError`); implementation names belong in body, not title. Body drops articles, one line per bullet, field / codeunit / table names verbatim (`**Given** Customer.Blocked = All` over `**Given** the customer has been blocked`).
+- **Which BC names verified this session?** Every clause's BC-specific symbol (procedure, event, table, field, codeunit): backed this session by `al-symbols-mcp` / `grep` hit, including `grep` against `architecture.html` / `event-model.html` for upstream-cited names, or `/al-research` citation. Recall does not satisfy. See *Ground every clause in a real symbol* below.
 
-If a question is unanswerable, you cannot write the scenario yet. Resolve via `/al-research` (BC behaviour), `/al-grill-adr` (domain rule), `/grill-me` (intent the user must adjudicate), or `/al-steer` (replan).
+Unanswerable → cannot write scenario yet. Resolve via `/al-research` (BC behaviour), `/al-grill-adr` (domain rule), `/grill-me` (intent the user must adjudicate), or `/al-steer` (replan).
 
 ## Verify task: user test plan for /al-user-verification
 
-Spec how a human (or API consumer) confirms the slice delivers its user-facing outcome end-to-end, so `/al-user-verification` walks each scenario without re-deriving intent. The user is the test runner; the plan is what they follow. Answer these before writing:
+Spec how a human (or API consumer) confirms slice delivers its user-facing outcome end-to-end, so `/al-user-verification` walks each scenario without re-deriving intent. User is test runner; plan is what they follow. Answer before writing:
 
-- **Which slice does this verify?** Read `data-slice` and resolve to the `event-model.html` timeline step. Title and description quote that step's Role, Action, Business Event, View, and Status verbatim. A verify task that names AL mechanics (codeunit, event, subscriber) instead of user-facing vocabulary has confused altitudes.
-- **What scenarios cover the slice?** ZOMBIES across the user-facing surface: Zero (empty / minimal state), One (the happy path), Many (multi-line / batch / repeated), Boundary (limits, off-by-ones, threshold values like credit limit exactly at threshold), Interfaces (cross-page navigation, API content negotiation, factbox / cue refresh), Exception (the user-facing failure path, error message text, posted-document rollback), Simple (any narrow simplification worth a separate confirmation). Not every letter applies to every slice; skip cleanly when the slice has no Z (e.g. a feature that only exists for non-empty state).
-- **What does each scenario's body look like?** Numbered user-action steps, one step per line, present tense. Each step names a surface the user touches (`Sales Order page action "Release"`, `Pending Overrides cue on Order Processor Role Center`, `POST /api/v2.0/companies({id})/salesOrders`) and the observable outcome (`Status flips to Released`, `cue increments by 1`, `response.status = "Posted"`). The final step of each scenario is the assertion; everything before is the setup.
-- **What is the exercise surface?** Page-based slices use the BC client; API-based slices use whichever client the consumer uses (curl, Postman, integration test harness). Name the surface inline so `/al-user-verification` does not have to guess; *"Exercise via: Postman collection at `tests/postman/sales-orders.json`"* or *"Exercise via: BC Web Client at `https://<sandbox-url>`"*.
-- **Which `event-model.html` slots did you cite this session?** Every Role / Action / Business Event / View / Status name in a scenario step: backed this session by `grep` against `event-model.html` or an `al-symbols-mcp` hit on the underlying page / API / table. Verify-task scenarios with hallucinated Role Centers or Status values fail loudly on first walk, the gate has worked; the cheaper path is verifying before writing.
+- **Which slice does this verify?** Read `data-slice`, resolve to `event-model.html` timeline step. Title + description quote that step's Role, Action, Business Event, View, Status verbatim. Verify task naming AL mechanics (codeunit, event, subscriber) instead of user-facing vocab → confused altitudes.
+- **What scenarios cover the slice?** ZOMBIES across user-facing surface: Zero (empty / minimal state), One (happy path), Many (multi-line / batch / repeated), Boundary (limits, off-by-ones, threshold values like credit limit exactly at threshold), Interfaces (cross-page navigation, API content negotiation, factbox / cue refresh), Exception (user-facing failure path, error message text, posted-document rollback), Simple (any narrow simplification worth separate confirmation). Skip cleanly when slice has no Z (e.g. feature that only exists for non-empty state).
+- **What does each scenario's body look like?** Numbered user-action steps, one step per line, present tense. Each step names a surface the user touches (`Sales Order page action "Release"`, `Pending Overrides cue on Order Processor Role Center`, `POST /api/v2.0/companies({id})/salesOrders`) and observable outcome (`Status flips to Released`, `cue increments by 1`, `response.status = "Posted"`). Final step of each scenario is the assertion; everything before is setup.
+- **What is the exercise surface?** Page-based slices → BC client; API-based → whichever client the consumer uses (curl, Postman, integration test harness). Name surface inline so `/al-user-verification` does not guess; *"Exercise via: Postman collection at `tests/postman/sales-orders.json`"* or *"Exercise via: BC Web Client at `https://<sandbox-url>`"*.
+- **Which `event-model.html` slots cited this session?** Every Role / Action / Business Event / View / Status name in a scenario step: backed this session by `grep` against `event-model.html` or `al-symbols-mcp` hit on underlying page / API / table. Verify-task scenarios with hallucinated Role Centers or Status values fail loudly on first walk; gate has worked but cheaper path is verifying before writing.
 
-If a question is unanswerable, you cannot write the verify scenario yet. Resolve via `/al-research` (BC surface behaviour), `/grill-me` (intent the user must adjudicate), or `/al-steer` (replan; verify task likely points at the wrong slice boundary).
+Unanswerable → cannot write verify scenario yet. Resolve via `/al-research` (BC surface), `/grill-me` (intent), or `/al-steer` (replan; verify task likely points at wrong slice boundary).
 
 ## Ground every clause in a real symbol
 
-Before writing any clause into a Gherkin scenario or step into a user test plan, every BC-specific symbol it rests on (procedure, event, table, field, codeunit, page, API endpoint, Role Center, Status enum value) either appears in an `al-symbols-mcp` or `grep` result you ran this session, or is cited via `/al-research`: `Researched: <name> → <source path / URL / topic id>`. The workspace lookup is the empirical anchor; memory of training data or past sessions is not. Names already cited by `/al-design` or `/al-event-model` upstream count when `grep` against the upstream file returns the name this session, not when you recall they're there. The scenarios stay clean; the chat carries the audit trail. Your confidence about a symbol's name, signature, or value set is not evidence any of those are right.
+Before writing any clause into a Gherkin scenario or step into a user test plan, every BC-specific symbol it rests on (procedure, event, table, field, codeunit, page, API endpoint, Role Center, Status enum value) either appears in `al-symbols-mcp` / `grep` result you ran this session, or cited via `/al-research`: `Researched: <name> → <source path / URL / topic id>`. Workspace lookup is empirical anchor; memory of training data or past sessions is not. Names already cited by `/al-design` or `/al-event-model` upstream count when `grep` against upstream file returns the name this session, not when you recall they're there. Scenarios stay clean; chat carries audit trail. Your confidence about a symbol's name, signature, or value set is not evidence any are right.
 
 ## Sharpen vague language inline
 
-When a domain rule is implicit, when ZOMBIES surfaces a case the user must adjudicate (`Many` with no stated upper bound, `Boundary` between contradicting rules, `Exception` with no agreed recovery), when intent splits (*validate* as schema-check or business-rule-check), run `/grill-me`. Fuzzy language shipped to `/al-implement` becomes fuzzy code; fuzzy steps shipped to `/al-user-verification` become *"yeah looks fine"* sign-offs. The cheapest place to sharpen is before bullets exist. Inline replacement: *"the order is processed"* → *"Sales Order is posted via Codeunit 80"* (technical) / *"the user clicks Post on the Sales Order page and the Status badge flips to Released"* (verify).
+When a domain rule is implicit, when ZOMBIES surfaces a case the user must adjudicate (`Many` with no stated upper bound, `Boundary` between contradicting rules, `Exception` with no agreed recovery), when intent splits (*validate* as schema-check or business-rule-check) → run `/grill-me`. Fuzzy language shipped to `/al-implement` → fuzzy code; fuzzy steps shipped to `/al-user-verification` → *"yeah looks fine"* sign-offs. Cheapest place to sharpen is before bullets exist. Inline replacement: *"the order is processed"* → *"Sales Order is posted via Codeunit 80"* (technical) / *"the user clicks Post on the Sales Order page and the Status badge flips to Released"* (verify).
 
 ## Second opinion on non-trivial scenarios
 
@@ -59,11 +63,11 @@ Cross-check via `/al-second-opinion`. Prompt body for technical tasks: task titl
 
 ## Numbering
 
-`/al-implement` and `/al-user-verification` both traverse bullets sequentially. Pure scenarios precede E2E in technical tasks so the inner loop runs first; verify scenarios have no layer split, ZOMBIES order is the only order. The `T-NNN#K` title is the stable handle for grilling, commits, and the `[SCENARIO]` comment `/al-implement` writes inside the AL `[Test]` (technical) or the step the user signs off on (verify). See [voice-contract.md](../../references/voice-contract.md) for prose voice and [html-spec-discipline.md](../../references/html-spec-discipline.md) for the surgical-edit contract.
+`/al-implement` and `/al-user-verification` both traverse bullets sequentially. Pure scenarios precede E2E in technical tasks so inner loop runs first; verify scenarios have no layer split, ZOMBIES order is the only order. The `T-NNN#K` title is the stable handle for grilling, commits, the `[SCENARIO]` comment `/al-implement` writes inside the AL `[Test]` (technical), or the step the user signs off on (verify). See [voice-contract.md](../../references/voice-contract.md) for prose voice and [html-spec-discipline.md](../../references/html-spec-discipline.md) for surgical-edit contract.
 
 <claude-only>
 
-**Advisor checkpoint.** Call `advisor()` before writing the first scenario into the Tests area. Scenario shape is hard to retract once `/al-implement` or `/al-user-verification` has consumed it; checking refinement reasoning here is cheaper than re-running `/al-refine`.
+**Advisor checkpoint.** Call `advisor()` before writing first scenario into Tests area. Scenario shape is hard to retract once `/al-implement` or `/al-user-verification` has consumed it; checking refinement reasoning here is cheaper than re-running `/al-refine`.
 
 </claude-only>
 

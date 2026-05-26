@@ -39,23 +39,23 @@ There is no provided codebase or Figma project. This system was bootstrapped fro
 
 ## Content fundamentals
 
-The spec artifacts are written for engineers. The voice is direct, declarative, and short.
+Spec artifacts written for engineers. Voice is direct, declarative, short. Same caveman voice as SKILL.md inline declarations: drop articles, filler, hedging. Technical names exact, code unchanged.
 
-**Tone and casing.** Sentence case for everything except identifiers. Identifiers (`Sales Header`, `OnAfterCheckSalesDoc`, `Item Charge Assignment (Sales)`) keep their canonical casing: they are quotations from the codebase, not headlines. Headings end without periods; body sentences end with them.
+**Tone and casing.** Sentence case for everything except identifiers. Identifiers (`Sales Header`, `OnAfterCheckSalesDoc`, `Item Charge Assignment (Sales)`) keep canonical casing: quotations from codebase, not headlines. Headings end without periods; body sentences end with them.
 
-**Person.** Third person and imperative. "The validator reads…", "Subscribe to `OnAfterCheckSalesDoc`…". Never "I", rarely "you"; "you" is reserved for instructions to the human reader, never as narrative voice.
+**Person.** Third person and imperative. "Validator reads…", "Subscribe to `OnAfterCheckSalesDoc`…". Never "I", rarely "you"; "you" reserved for instructions to human reader, never as narrative voice.
 
 **Identifier protocol.** Always quote object and procedure names exactly: `codeunit 80 "Sales-Post"`, `Item Charge Assignment (Sales)`, `OnBeforePostSalesDoc`. Always inline `<code>` for them. No prose paraphrases (write `Sales Header`, not "the sales header record").
 
 **Names are the citation.** Never write `(see: Codeunit80.al:120)`. `NALICFCopyDocSubscribers.OnAfterInsertToSalesLine` is the address; future readers grep, no inline annotations needed.
 
-**Density.** Linear-style: dense that breathes. A single-fact paragraph is 2 to 4 sentences. Multi-fact content takes structured shape: one fact per landing line per `voice-contract.md` *Artifacts get scanned*. Bullet lists 3 to 6 items. Tables for module maps, brownfield touchpoints, any keyed inventory.
+**Density.** Linear-style: dense that breathes. Single-fact paragraph is 2 to 4 sentences. Multi-fact content takes structured shape: one fact per landing line per `voice-contract.md` *Artifacts get scanned*. Bullet lists 3 to 6 items. Tables for module maps, brownfield touchpoints, any keyed inventory.
 
-**No emoji.** No decorative iconography. The four callout glyphs (`i` / `!` / `×` / `↻`) are monospace ASCII so they survive every render path.
+**No emoji.** No decorative iconography. Four callout glyphs (`i` / `!` / `×` / `↻`) are monospace ASCII so they survive every render path.
 
 **Examples of voice (good):**
 
-- "Reads sit on the released document. Processing builds an in-memory allocation graph. Writes go through the BaseApp posting routine; no direct table writes from feature code."
+- "Reads sit on released document. Processing builds in-memory allocation graph. Writes go through BaseApp posting routine; no direct table writes from feature code."
 - "Subscribers on `OnBeforePostSalesDoc` can run inside a transaction. Do not call long-running validators here."
 
 **Examples (bad):**

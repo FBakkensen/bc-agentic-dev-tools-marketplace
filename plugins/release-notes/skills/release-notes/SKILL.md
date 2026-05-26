@@ -3,18 +3,22 @@ name: release-notes
 description: Generate release notes from per-PR analysis of merged work since the last release. Use after producing .output/releases/release-analysis.jsonl when drafting release notes, summarising changes between releases, or preparing version documentation for an AL/Business Central app.
 ---
 
+**Voice:** caveman. Drop articles, filler, hedging. Fragments OK. Arrows for causality. Technical terms exact, code unchanged, errors quoted exact.
+
+**Carve-outs:** drop caveman for confirm-before-destroy, user dialog turns (questions / grill rounds), numbered user-action steps, Stop block reason line.
+
 # /release-notes — PR JSONL to release notes
 
-Turn `.output/releases/release-analysis.jsonl` into `.output/releases/RELEASE-NOTES-<VERSION>.md`. One PR at a time, classified into a single-line JSON record stored in a todo description, then folded into the final markdown. Main context holds the summary record and the final output — never the per-PR diffs.
+Turn `.output/releases/release-analysis.jsonl` into `.output/releases/RELEASE-NOTES-<VERSION>.md`. One PR at a time, classified into single-line JSON record stored in todo description, then folded into final markdown. Main context holds summary record and final output — never the per-PR diffs.
 
-Drop hedging. One fact per analysis line. BC vocabulary is the compression — name the page, codeunit, table, field, action.
+Drop hedging. One fact per analysis line. BC vocabulary is the compression → name the page, codeunit, table, field, action.
 
-Output markdown uses the canonical section emoji defined in [references/output-format.md](references/output-format.md) — an explicit exception to the no-emoji prose rule.
+Output markdown uses canonical section emoji defined in [references/output-format.md](references/output-format.md) — explicit exception to the no-emoji prose rule.
 
 ## Resolve inputs
 
-- **Analysis file** `.output/releases/release-analysis.jsonl` must exist. If missing, `Stop.` — run `scripts\Get-ReleaseAnalysis.ps1` from the skill folder.
-- **Output path** `.output/releases/RELEASE-NOTES-<VERSION>.md`. Version comes from `summary.appJsonDiff.version.new` or `summary.toVersion`. Downstream tooling reads this exact path — do not relocate.
+- **Analysis file** `.output/releases/release-analysis.jsonl` must exist. Missing → `Stop.` Run `scripts\Get-ReleaseAnalysis.ps1` from skill folder.
+- **Output path** `.output/releases/RELEASE-NOTES-<VERSION>.md`. Version comes from `summary.appJsonDiff.version.new` or `summary.toVersion`. Downstream tooling reads this exact path → do not relocate.
 
 ## Flow
 
@@ -28,40 +32,40 @@ Produces one `type == "summary"` record (release boundaries, totals, files-by-ca
 
 ### 2. Initialise
 
-- Verify the file: `Test-Path .output/releases/release-analysis.jsonl`.
-- Load the `type == "summary"` record. Hold version + BC compatibility in main context.
-- Build a PR list from `type == "pr"` records — number + title only.
-- Create a todo list:
+- Verify file: `Test-Path .output/releases/release-analysis.jsonl`.
+- Load `type == "summary"` record. Hold version + BC compatibility in main context.
+- Build PR list from `type == "pr"` records — number + title only.
+- Create todo list:
   - **Phase todos** — Initialise, Analyse PRs, Generate Notes.
-  - **One todo per PR** — title in the todo, single-line JSON result lands in the description.
+  - **One todo per PR** — title in todo, single-line JSON result lands in description.
 
 ### 3. Analyse each PR
 
 Mark "Analyse PRs" in progress.
 
-For each PR, apply the **PR Classification Protocol** in [references/pr-classification.md](references/pr-classification.md). Produce one single-line JSON record. Store it in that PR's todo description. Mark the todo `[x]`.
+For each PR, apply **PR Classification Protocol** in [references/pr-classification.md](references/pr-classification.md). Produce one single-line JSON record. Store in that PR's todo description. Mark todo `[x]`.
 
 **Per-PR analysis line — Yes/No.**
 
 - No: `{"pr":142,"type":"improvement","area":"Configuration","desc":"Updated logic","details":""}`
 - Yes: `{"pr":142,"type":"improvement","area":"Item Configurator List page","desc":"Bulk-copy configuration from one item to many in one action","details":"\"Copy Configuration\" action; target items selected via lookup"}`
 
-_Avoid_: `desc` is `Updated logic` — name the user-visible change. _Avoid_: `area` is `Configuration` — name the page, report, API, or workflow. _Avoid_: empty `details` on a user-facing PR — name the field, action, or page.
+_Avoid_: `desc` is `Updated logic` → name user-visible change. _Avoid_: `area` is `Configuration` → name page, report, API, or workflow. _Avoid_: empty `details` on user-facing PR → name the field, action, or page.
 
-**Anti-pattern: generic descriptions like 'Updated logic'.** Symptom of skipping the AL walk. Run the Deep Dive Protocol in [references/pr-classification.md](references/pr-classification.md) before retrying.
+**Anti-pattern: generic descriptions like 'Updated logic'.** Symptom of skipping AL walk. Run Deep Dive Protocol in [references/pr-classification.md](references/pr-classification.md) before retrying.
 
 ### 4. Quality check (gate)
 
-Sweep the todo descriptions. A PR fails the gate when any of these hold:
+Sweep todo descriptions. PR fails gate when any of these hold:
 
 | Symptom | Action |
 |---|---|
 | `desc` is generic ("Updated logic", "Fixed issue") | Deep Dive |
 | `area` is vague ("Configuration", "the page") | Deep Dive |
-| `details` empty on a user-facing PR | Deep Dive |
+| `details` empty on user-facing PR | Deep Dive |
 | User-facing PR marked `exclude` with no justification | Deep Dive |
 
-Re-run analysis on each failing PR via the Deep Dive Protocol in [references/pr-classification.md](references/pr-classification.md). Overwrite the todo description with the sharper line.
+Re-run analysis on each failing PR via Deep Dive Protocol in [references/pr-classification.md](references/pr-classification.md). Overwrite todo description with sharper line.
 
 ### 5. Generate the notes
 
@@ -79,9 +83,9 @@ Mark "Generate Notes" in progress.
 | `technical` | Technical Summary |
 | `exclude` | Omitted from output |
 
-- Render the markdown using [references/output-format.md](references/output-format.md).
+- Render markdown using [references/output-format.md](references/output-format.md).
 - Apply [references/content-guidelines.md](references/content-guidelines.md) for tone and phrasing.
-- Write the file to `.output/releases/RELEASE-NOTES-<VERSION>.md`.
+- Write file to `.output/releases/RELEASE-NOTES-<VERSION>.md`.
 
 ## Edge cases
 
@@ -89,8 +93,8 @@ Mark "Generate Notes" in progress.
 |---|---|
 | Zero PRs | Emit version header + `No changes in this release.` |
 | All PRs `exclude` | Emit version header + `This release contains only internal changes.` |
-| No user-facing PRs | Skip the User-Facing Changes section; render Technical Summary only |
-| No technical PRs | Skip the Technical Summary section |
+| No user-facing PRs | Skip User-Facing Changes section; render Technical Summary only |
+| No technical PRs | Skip Technical Summary section |
 
 ## Context management
 
@@ -98,11 +102,11 @@ Each PR diff can be 500+ lines. Loading ten PRs into main context burns 50K+ tok
 
 **Strategy:**
 
-- **Main context** holds the summary record, the todo list, and the final markdown.
+- **Main context** holds summary record, todo list, final markdown.
 - **Per-PR analysis** loads one `type == "pr"` record at a time and emits one single-line JSON record.
 - **Todo descriptions** are durable storage for every PR result across the run.
 
-**Anti-pattern: collapse all PR context into the main agent.** Reading every PR record into the main loop pushes the context past the point where the final markdown stays coherent — descriptions degrade to `Updated logic` and sections collide. The per-PR todo description is the load-bearing buffer; never bypass it.
+**Anti-pattern: collapse all PR context into main agent.** Reading every PR record into the main loop pushes context past the point where final markdown stays coherent → descriptions degrade to `Updated logic` and sections collide. Per-PR todo description is the load-bearing buffer; never bypass it.
 
 ## Per-PR cycle checklist
 
@@ -117,14 +121,14 @@ Each PR diff can be 500+ lines. Loading ten PRs into main context burns 50K+ tok
 
 ## Composition
 
-- `scripts\Get-ReleaseAnalysis.ps1` — precondition. Produces the JSONL the skill consumes.
+- `scripts\Get-ReleaseAnalysis.ps1` — precondition. Produces JSONL the skill consumes.
 - [references/pr-classification.md](references/pr-classification.md) — per-PR classification + Deep Dive Protocol.
 - [references/output-format.md](references/output-format.md) — final markdown template.
 - [references/content-guidelines.md](references/content-guidelines.md) — tone, phrasing, Good/Bad entries.
 
 ## Out of scope
 
-- No PR or issue links in the output — release notes are self-contained.
-- No re-running the analysis script mid-flow — fix the PR record by Deep Dive, not by regenerating the JSONL.
+- No PR or issue links in output — release notes are self-contained.
+- No re-running analysis script mid-flow — fix PR record by Deep Dive, not by regenerating JSONL.
 - No alternate output paths — `.output/releases/RELEASE-NOTES-<VERSION>.md` is fixed.
 - No multi-release synthesis — one version per run.

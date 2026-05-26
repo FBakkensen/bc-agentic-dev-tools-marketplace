@@ -3,39 +3,43 @@ name: al-design
 description: Settle the AL/Business Central feature architecture from idea or `event-model.html`. Use after `/al-event-model` for user/API-facing features, after `/al-grill-adr` for pure-backend features, or when the user asks to design an AL feature.
 ---
 
+**Voice:** caveman. Drop articles, filler, hedging. Fragments OK. Arrows for causality. Technical terms exact, code unchanged, errors quoted exact.
+
+**Carve-outs:** drop caveman for confirm-before-destroy, user dialog turns (questions / grill rounds), numbered user-action steps, Stop block reason line.
+
 # /al-design, Idea → feature architecture
 
-Turn a sharpened idea into a feature-level architecture, then write `architecture.html` so `/al-scope` picks it up cold. Shape per feature is yours; the disciplines below are the substance.
+Turn sharpened idea into feature-level architecture, then write `architecture.html` so `/al-scope` picks it up cold. Shape per feature is yours; disciplines below are the substance.
 
 `/al-scope` reads this file next and decomposes it into tasks.
 
 ## Preconditions
 
-- `/al-grill-adr` ran for this idea; without sharpened intent in `CONTEXT.md` / domain ADRs you cannot tell domain confusion from genuine architectural choice. **Stop** and run it first.
-- For user/API-facing features, `/al-event-model` ran and `event-model.html` is in the spec folder; without it this skill re-litigates user-side picks inline and the entanglement returns. If missing, run the missing-storm checkpoint: ask whether the feature is pure backend (no human, no API consumer) or whether `/al-event-model` was forgotten. **Stop** unless the user confirms pure backend.
-- Branch creation is shared with `/al-event-model`. On `^\d{3}-`, the branch and spec folder exist; write into them. On `main` (pure-backend, or first per-feature skill), this skill creates them.
-- Existing `architecture.html` means reshaping; re-run with the user's awareness.
-- Legacy `architecture.md` without `architecture.html` is frozen; **Stop** and hand-migrate or reshape via this skill.
+- `/al-grill-adr` ran for this idea; without sharpened intent in `CONTEXT.md` / domain ADRs you cannot tell domain confusion from genuine architectural choice. **Stop**, run it first.
+- User/API-facing: `/al-event-model` ran, `event-model.html` in spec folder; without it this skill re-litigates user-side picks inline and entanglement returns. Missing → run missing-storm checkpoint: ask whether feature is pure backend (no human, no API consumer) or whether `/al-event-model` was forgotten. **Stop** unless user confirms pure backend.
+- Branch creation shared with `/al-event-model`. On `^\d{3}-`: branch + spec folder exist, write into them. On `main` (pure-backend, or first per-feature skill): this skill creates them.
+- Existing `architecture.html` → reshaping; re-run with user's awareness.
+- Legacy `architecture.md` without `architecture.html` → frozen; **Stop**, hand-migrate or reshape via this skill.
 
 ## What goes into architecture.html
 
-- **Slices**: when `event-model.html` is present, its user-facing slots (Role, Action, Business Event, View, Status) are settled; read, do not re-decide, and qualify each slice by AL pattern (Command / Automation / Translation / View) based on trigger source. Pure-backend slices name the trigger-source slot only (Job Queue, install / upgrade, scheduled task); see [LANGUAGE.md](../../references/LANGUAGE.md) *Slice*.
+- **Slices**: when `event-model.html` present, its user-facing slots (Role, Action, Business Event, View, Status) are settled; read, do not re-decide, qualify each slice by AL pattern (Command / Automation / Translation / View) based on trigger source. Pure-backend slices name trigger-source slot only (Job Queue, install / upgrade, scheduled task); see [LANGUAGE.md](../../references/LANGUAGE.md) *Slice*.
 - **Module map**: modules under `src/<module>/`. Use CONTEXT.md vocabulary ("the Settlement intake module", never "the FooBarHandler").
 - **BC pattern per module**: pick from [bc-patterns.md](../../references/bc-patterns.md). Verify against current BaseApp via `/al-research` before committing.
 - **R → P → W boundary**: R = reads / inputs / events subscribed; P = pure procedure (no DB, no side effects, unit-test surface); W = effects (Insert / Modify / Delete, telemetry, errors, events published).
-- **Brownfield touchpoints**: objects, procedures, events, table fields the feature touches. Verify every name and signature via `/al-research`; stale memory ships fiction.
-- **Test layer per scenario family**: Pure is default. E2E earns its place when the behaviour is composition or a side effect that cannot be reproduced at the pure layer (event wiring, table triggers, telemetry shape, install / upgrade).
-- **Which BC names did you verify this session?** Every BC-specific name landing in `architecture.html` (pattern, event, codeunit, table, field, procedure): backed this session by an `al-symbols-mcp` or `grep` hit, including `grep` against `event-model.html` for upstream-cited names, or a `/al-research` citation. Recall does not satisfy. See *Citation chain in chat, before write* below.
+- **Brownfield touchpoints**: objects, procedures, events, table fields the feature touches. Verify every name + signature via `/al-research`; stale memory ships fiction.
+- **Test layer per scenario family**: Pure is default. E2E earns place when behaviour is composition or side effect that cannot reproduce at pure layer (event wiring, table triggers, telemetry shape, install / upgrade).
+- **Which BC names verified this session?** Every BC-specific name landing in `architecture.html` (pattern, event, codeunit, table, field, procedure): backed this session by `al-symbols-mcp` / `grep` hit, including `grep` against `event-model.html` for upstream-cited names, or `/al-research` citation. Recall does not satisfy. See *Citation chain in chat, before write* below.
 
-Unanswerable question → not ready for `/al-scope`. Resolve via `/al-research` (BC behaviour), `/al-grill-adr` (domain rule), or `/al-steer` (replan).
+Unanswerable → not ready for `/al-scope`. Resolve via `/al-research` (BC behaviour), `/al-grill-adr` (domain rule), or `/al-steer` (replan).
 
 ## Deletion test, every candidate module
 
-Imagine deleting the module: if complexity vanishes, it is a pass-through and does not earn the row; if complexity reappears across N callers, it earns its place. Doesn't apply when the seam is a published event with no in-tree callers.
+Imagine deleting the module: complexity vanishes → pass-through, does not earn the row; complexity reappears across N callers → earns place. Doesn't apply when seam is a published event with no in-tree callers.
 
 ## Two-adapter rule, every seam
 
-A seam without two adapters is hypothetical; one adapter is a tautology, the seam is one codeunit pretending to be flexible. Production + test counts; two real production variants counts; "interface for testability" with no fake actually written does not. Patterns implying a seam (Event Bridge, Template Method, Command Queue, AL `interface` Façade): name both adapters now or pick a different pattern.
+Seam without two adapters is hypothetical; one adapter is a tautology, the seam is one codeunit pretending to be flexible. Production + test counts; two real production variants counts; "interface for testability" with no fake actually written does not. Patterns implying a seam (Event Bridge, Template Method, Command Queue, AL `interface` Façade): name both adapters now or pick a different pattern.
 
 ## R → P → W as architectural choice
 
@@ -43,15 +47,15 @@ The split *is* the refactor, not annotation; pulling pure decision logic out of 
 
 ## AL realisation per slice, no void slots
 
-Each slice names its AL realisation across its slots: trigger object (page action, subscriber, Job Queue, install hook, API endpoint), the codeunit holding the command, the publication or subscription that moves the chain, the table or field carrying state, the page / factbox / API endpoint that renders the view. A void here is a slot with no implementation home, and `/al-implement` either invents one or stalls. User-facing voids are caught at `/al-event-model`; this discipline checks AL coverage.
+Each slice names its AL realisation across its slots: trigger object (page action, subscriber, Job Queue, install hook, API endpoint), codeunit holding the command, publication or subscription that moves the chain, table or field carrying state, page / factbox / API endpoint that renders the view. Void here = slot with no implementation home → `/al-implement` either invents one or stalls. User-facing voids caught at `/al-event-model`; this discipline checks AL coverage.
 
 ## AppSource sanity
 
-Two design-time risks bite at AppSource boundaries: **BaseApp modification** (intercept via published events, table extensions, or AL `interface` implementations; AppSource rejects modified-base-app extensions) and **shipped-field rename or removal** (`ObsoleteState: Pending → Removed` over the deprecation window; in-place rename breaks shipped data and shipped callers silently). Both are reshape triggers at design time. Per-task compliance details (IDs, permission sets, `DataClassification`, captions, install / upgrade) bite at `/al-implement`.
+Two design-time risks bite at AppSource boundaries: **BaseApp modification** (intercept via published events, table extensions, or AL `interface` implementations; AppSource rejects modified-base-app extensions) and **shipped-field rename or removal** (`ObsoleteState: Pending → Removed` over deprecation window; in-place rename breaks shipped data and shipped callers silently). Both are reshape triggers at design time. Per-task compliance details (IDs, permission sets, `DataClassification`, captions, install / upgrade) bite at `/al-implement`.
 
 ## Citation chain in chat, before write
 
-Before writing any BC-specific name into `architecture.html` (pattern, event, codeunit, table, field, procedure), the name either appears in an `al-symbols-mcp` or `grep` result you ran this session, or is cited via `/al-research`: `Researched: <name> → <source path / URL / topic id>`. The workspace lookup is the empirical anchor; memory of training data or past sessions is not. Training data for BC is stale fiction; the workspace and `/al-research` are the empirical anchor. Names already research-backed by `/al-event-model` upstream count when `grep` against `event-model.html` returns the name this session, not when you recall they're there. Your confidence about a name, signature, or pattern label is not evidence any of those are right.
+Before writing any BC-specific name into `architecture.html` (pattern, event, codeunit, table, field, procedure), the name either appears in `al-symbols-mcp` / `grep` result you ran this session, or cited via `/al-research`: `Researched: <name> → <source path / URL / topic id>`. Workspace lookup is empirical anchor; memory of training data or past sessions is not. Training data for BC is stale fiction; workspace + `/al-research` are the empirical anchor. Names already research-backed by `/al-event-model` upstream count when `grep` against `event-model.html` returns the name this session, not when you recall they're there. Your confidence about a name, signature, or pattern label is not evidence any are right.
 
 ## ADR offer criteria
 
@@ -62,11 +66,11 @@ Offer a design ADR when **all four** are true:
 3. **Real trade-off**: genuine alternatives, one picked for specific reasons.
 4. **Architectural**: mechanism, module shape, pattern, seam placement, test layer. Domain rules belong to `/al-grill-adr`, not here.
 
-Three of four does not earn an ADR; inflation rots the index. Template at [adr.template.md](../../references/adr.template.md). ADRs are markdown; the HTML shift covers only `specs/<NNN>-<slug>/`.
+Three of four does not earn an ADR; inflation rots the index. Template at [adr.template.md](../../references/adr.template.md). ADRs are markdown; HTML shift covers only `specs/<NNN>-<slug>/`.
 
 ## Parallel design-twice, non-trivial calls
 
-Non-trivial = multi-module, brownfield refactor, or novel pattern selection. When the host supports subagents, run three parallel delegated passes with divergent constraints:
+Non-trivial = multi-module, brownfield refactor, or novel pattern selection. When host supports subagents, run three parallel delegated passes with divergent constraints:
 
 | Pass | Constraint |
 |---|---|
@@ -74,17 +78,17 @@ Non-trivial = multi-module, brownfield refactor, or novel pattern selection. Whe
 | 2 | Maximise flexibility, many use cases, easy extension. |
 | 3 | Optimise the most common caller, default case trivial. |
 
-Each pass runs its own `/al-research` and receives BC vocabulary from `CONTEXT.md` plus architectural vocabulary from [LANGUAGE.md](../../references/LANGUAGE.md), so all three name things consistently. Output per pass: module map + per-module interface, named adapters at every seam, the one trade-off line that distinguishes this design. Present all three sequentially, compare along **depth** / **locality** / **seam placement**, pick one (or a hybrid) opinionatedly, run `/grill-me` when the choice is the user's call; `/al-second-opinion` reconciles non-trivial picks. Never silently skip the reconcile.
+Each pass runs its own `/al-research` and receives BC vocabulary from `CONTEXT.md` plus architectural vocabulary from [LANGUAGE.md](../../references/LANGUAGE.md) → all three name things consistently. Output per pass: module map + per-module interface, named adapters at every seam, the one trade-off line that distinguishes this design. Present all three sequentially, compare along **depth** / **locality** / **seam placement**, pick one (or hybrid) opinionatedly, run `/grill-me` when choice is user's call; `/al-second-opinion` reconciles non-trivial picks. Never silently skip the reconcile.
 
 ## Branch + folder + write
 
-On `^\d{3}-`: `/al-event-model` created the branch and spec folder; write `architecture.html` into the existing folder. On `main`: this is the first per-feature skill (pure-backend, or `/al-event-model` skipped after missing-storm resolved to *pure backend*). Resolve `<NNN>` per [cross-branch-numbering.md](../../references/cross-branch-numbering.md) (cross-branch scan, not local-only), derive a 2–4-word kebab-case slug (do not ask), announce both, then create branch `<NNN>-<slug>` and `specs/<NNN>-<slug>/`. Branch already exists locally or remotely: **Stop**.
+On `^\d{3}-`: `/al-event-model` created branch + spec folder; write `architecture.html` into existing folder. On `main`: this is first per-feature skill (pure-backend, or `/al-event-model` skipped after missing-storm resolved to *pure backend*). Resolve `<NNN>` per [cross-branch-numbering.md](../../references/cross-branch-numbering.md) (cross-branch scan, not local-only), derive a 2–4-word kebab-case slug (do not ask), announce both, create branch `<NNN>-<slug>` + `specs/<NNN>-<slug>/`. Branch already exists locally or remotely → **Stop**.
 
-Then write `architecture.html`. Self-contained HTML, inline `<style>`, Google Fonts via CDN, Mermaid pinned `@11` via jsdelivr; full constraints in [html-spec-discipline.md](../../references/html-spec-discipline.md). Voice in [voice-contract.md](../../references/voice-contract.md). Both are mandatory reads before writing. No surgical-edit contract; reshape via re-running. The only HTML hooks that survive are Mermaid containers when diagrams are present: `<div class="mermaid" data-graph="module-deps">` and / or `<div class="mermaid" data-graph="flow">`. Pull visual coherence from the most recently modified prior `specs/*/` artifact.
+Then write `architecture.html`. Self-contained HTML, inline `<style>`, Google Fonts via CDN, Mermaid pinned `@11` via jsdelivr; full constraints in [html-spec-discipline.md](../../references/html-spec-discipline.md). Voice in [voice-contract.md](../../references/voice-contract.md). Both mandatory reads before writing. No surgical-edit contract; reshape via re-running. Only HTML hooks that survive are Mermaid containers when diagrams present: `<div class="mermaid" data-graph="module-deps">` and / or `<div class="mermaid" data-graph="flow">`. Pull visual coherence from most recently modified prior `specs/*/` artifact.
 
 ## Gate event
 
-Once when `architecture.html` lands. The Gate report names the chosen BC pattern and the R → P → W boundary as 'how this fits', states the application problem the architecture solves, and names the user's call to greenlight `/al-scope`.
+Once when `architecture.html` lands. Gate report names chosen BC pattern + R → P → W boundary as 'how this fits', states application problem the architecture solves, names user's call to greenlight `/al-scope`.
 
 ## Composition
 
@@ -97,6 +101,6 @@ Once when `architecture.html` lands. The Gate report names the chosen BC pattern
 
 <claude-only>
 
-**Advisor checkpoint.** Call `advisor()` before writing `architecture.html` for the first time. The artifact is load-bearing for every downstream skill; drift caught here costs minutes, drift caught at `/al-implement` costs a feature.
+**Advisor checkpoint.** Call `advisor()` before writing `architecture.html` for first time. Artifact is load-bearing for every downstream skill; drift caught here costs minutes, drift caught at `/al-implement` costs a feature.
 
 </claude-only>
