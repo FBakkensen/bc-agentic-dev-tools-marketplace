@@ -1,5 +1,5 @@
 {
   "name": "al-agentic-dev",
-  "description": "Composable AL/Business Central agentic skills: /al-steer, /al-grill-adr, /al-event-model, /al-design, /al-scope, /al-refine, /al-implement, /al-user-verification, /al-refactor, /al-mutate, /al-code-review, /al-research, /al-second-opinion. Two persistence layers: repo-root markdown (CONTEXT.md, docs/adr/, .out-of-scope/) and branch-scoped HTML specs (event-model.html + architecture.html + tasks.html). SKILLs express intent and rationale; the agent shapes output per situation. NEW in 0.27.0: user-verification gates at every slice boundary. /al-scope groups tasks by `data-slice` (from event-model.html) and inserts one `data-kind=\"verify\"` task per slice; /al-refine bifurcates by data-kind (Gherkin for technical, user test plan for verify); new /al-user-verification walks the user through scenarios with pass/fail per step; /al-code-review fires at slice-done + feature-done (drops per-task); new replan trigger #8 \"verification failed\" routes failures through /al-steer.",
-  "version": "0.27.0"
+  "description": "Full AL/Business Central dev stack. Agentic flow: /al-steer, /al-grill-adr, /al-event-model, /al-design, /al-scope, /al-refine, /al-implement, /al-user-verification, /al-refactor, /al-mutate, /al-code-review, /al-research, /al-second-opinion. Build/test: /al-build. Telemetry probes: /al-debug-logging.",
+  "version": "0.30.0"
 }

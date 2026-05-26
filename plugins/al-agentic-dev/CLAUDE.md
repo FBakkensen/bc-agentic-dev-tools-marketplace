@@ -47,6 +47,8 @@ Slice cycle: `/al-implement` works through the slice's technical tasks (ZOMBIES 
 | `/al-mutate` | Inject mutations to validate test rigor. Mandatory for non-trivial work. Owns the mutate-build-revert cycle. |
 | `/al-research` | Verify BC specifics from authoritative sources. |
 | `/al-second-opinion` | Cross-runtime read-only advisory gate for non-trivial scenarios, mutation lists, and refactor checklists. From Claude Code: `codex exec`. From Codex: `claude -p`. |
+| `/al-build` | Build/test gate. Compile, publish, run tests, write results to `.output/TestResults/<dirName>/`. Called by `/al-implement`, `/al-refactor`, `/al-mutate` between steps; full gate before commit. |
+| `/al-debug-logging` | Temporary runtime probes. Inject `DEBUG-*` `FeatureTelemetry.LogUsage`, exercise the path, read `.output/TestResults/*/telemetry.jsonl`, remove probes. Final state: zero `DEBUG-*` in tree. |
 
 Skills compose by name. When you change a skill, scan the others for cross-references and update in lockstep.
 
@@ -66,6 +68,7 @@ Skills compose by name. When you change a skill, scan the others for cross-refer
 - **No HTML for ADRs or `CONTEXT.md`.** Markdown. The HTML shift covers only `specs/<NNN>-<slug>/`.
 - **New skills need a stated gap.** _Avoid_: spinning up a skill that an existing one can absorb, or that fits as a brief note inside an existing task block, an `/al-research` finding, or a side-band reference. Propose only when no existing skill fits, and say so in one line.
 - **Express intent and rationale, not enumerated rules with skip conditions.** SKILLs and references state *why a discipline exists and what problem it solves*; the agent maps rationale to situation. Slot prescriptions, `_When earned:_` / `_Skip when:_` enumerations, and templates the agent must fill are rejected by name. The agent is capable of shaping output per feature.
+- **`telemetry.jsonl` is a producer/consumer contract between `/al-build` and `/al-debug-logging`.** `/al-build`'s `test.ps1` produces `.output/TestResults/<dirName>/telemetry.jsonl`; `/al-debug-logging`'s Inspect step reads it. Path, per-app subfolder layout, and `FeatureTelemetry.LogUsage` JSON shape are coupled. Change one side, scan the other in the same edit. The coupling lives here because it crosses skill boundaries; per-skill CLAUDE.md cannot enforce it alone.
 
 ## Reference layout
 
@@ -130,7 +133,21 @@ references/                 # Plugin-level shared, read by ≥2 skills, or cited
     ├── spec-styles.css     # Shared inline <style> block (inline an equivalent into each artifact)
     └── colors_and_type.css # Readable CSS variable reference
 skills/
+├── al-build/
+│   ├── CLAUDE.md           # Skill-local dev-time rules (smoke tests, container recovery, config priority)
+│   ├── AGENTS.md           # Codex bridge to CLAUDE.md
+│   ├── SKILL.md
+│   ├── README.md           # Human-facing prerequisites + quick start
+│   ├── config/             # al-build.json template (the live copy lives in the consumer repo root)
+│   └── scripts/            # PowerShell 7.2+: init.ps1, provision.ps1, test.ps1, new-bc-container.ps1, ...
 ├── al-code-review/SKILL.md
+├── al-debug-logging/
+│   ├── CLAUDE.md           # Skill-local dev-time rules (same-publisher constraint, DEBUG- prefix, transient-only)
+│   ├── AGENTS.md           # Codex bridge to CLAUDE.md
+│   ├── SKILL.md
+│   └── references/
+│       ├── telemetry-workflow.md
+│       └── bc-event-subscriber-pattern.md
 ├── al-design/SKILL.md
 ├── al-event-model/SKILL.md
 ├── al-grill-adr/SKILL.md
@@ -154,4 +171,6 @@ skills/
 └── al-user-verification/SKILL.md
 ```
 
-No build scripts. Skill bodies and reference templates are the entire product.
+Tests live at repo root (`tests/<target>/*.Tests.ps1`), not inside any plugin. `plugins/` carries only deliverables.
+
+No build scripts. Skill bodies, reference templates, and PowerShell helpers under `skills/al-build/scripts/` are the entire product.
