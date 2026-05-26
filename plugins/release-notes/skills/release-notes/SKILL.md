@@ -3,9 +3,7 @@ name: release-notes
 description: Generate release notes from per-PR analysis of merged work since the last release. Use after producing .output/releases/release-analysis.jsonl when drafting release notes, summarising changes between releases, or preparing version documentation for an AL/Business Central app.
 ---
 
-**Voice:** caveman. Drop articles, filler, hedging. Fragments OK. Arrows for causality. Technical terms exact, code unchanged, errors quoted exact.
-
-**Carve-outs:** drop caveman for confirm-before-destroy, user dialog turns (questions / grill rounds), numbered user-action steps, Stop block reason line.
+**Style:** Drop articles, filler, hedging. Fragments OK. Arrows for causality. Technical terms exact, code unchanged, errors quoted exact. **Exception**: shift to prose where clarity or safety would be hurt.
 
 # /release-notes — PR JSONL to release notes
 

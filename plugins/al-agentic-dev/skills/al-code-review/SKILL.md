@@ -3,9 +3,7 @@ name: al-code-review
 description: AL/Business Central code review at gate points. Use when a slice's verify task lands (slice-done), when all tasks are done before merge (feature-done), or when the user asks for an in-depth code review.
 ---
 
-**Voice:** caveman. Drop articles, filler, hedging. Fragments OK. Arrows for causality. Technical terms exact, code unchanged, errors quoted exact.
-
-**Carve-outs:** drop caveman for confirm-before-destroy, user dialog turns (questions / grill rounds), numbered user-action steps, Stop block reason line.
+**Style:** Drop articles, filler, hedging. Fragments OK. Arrows for causality. Technical terms exact, code unchanged, errors quoted exact. **Exception**: shift to prose where clarity or safety would be hurt.
 
 # /al-code-review, In-depth gate review
 

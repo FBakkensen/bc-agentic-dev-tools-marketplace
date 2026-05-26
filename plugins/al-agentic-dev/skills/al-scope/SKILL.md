@@ -3,9 +3,7 @@ name: al-scope
 description: Decompose `architecture.md` into a slice-grouped, ZOMBIES-ordered task list in `tasks.md` for AL/Business Central, with one user verification task per slice when `event-model.md` is present. Use after `/al-design`, before `/al-refine` on the first task.
 ---
 
-**Voice:** caveman. Drop articles, filler, hedging. Fragments OK. Arrows for causality. Technical terms exact, code unchanged, errors quoted exact.
-
-**Carve-outs:** drop caveman for confirm-before-destroy, user dialog turns (questions / grill rounds), numbered user-action steps, Stop block reason line.
+**Style:** Drop articles, filler, hedging. Fragments OK. Arrows for causality. Technical terms exact, code unchanged, errors quoted exact. **Exception**: shift to prose where clarity or safety would be hurt.
 
 # /al-scope, architecture.md → task list
 

@@ -4,7 +4,7 @@
 
 Destination map for content the skills generate. Answers one question per kind of content: *does this survive past `done`, and if so, where does it live?*
 
-Format-agnostic. Markdown mechanics (`task=`, `status=`, `slice=`, `kind=` on the comment-anchor line, Mermaid fences, surgical-edit) live in `markdown-spec-discipline.md`. Voice (caveman, em-dash ban, BC vocabulary, declarative cadence) lives in `voice-contract.md` and per-SKILL.md inline declaration. This file is destination only.
+Format-agnostic. Markdown mechanics (`task=`, `status=`, `slice=`, `kind=` on the comment-anchor line, Mermaid fences, surgical-edit) live in `markdown-spec-discipline.md`. Style (Drop articles + filler + hedging, em-dash ban, BC vocabulary, declarative cadence) lives in `voice-contract.md` and per-SKILL.md inline declaration. This file is destination only.
 
 ## Two destinations, picked by lifetime
 

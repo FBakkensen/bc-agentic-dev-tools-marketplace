@@ -1,12 +1,6 @@
 # Voice contract
 
-Voice rules live at the top of each SKILL.md as a 2-line inline declaration (caveman + four carve-outs). This file carries the non-voice disciplines: lexical, citation, shape, and artifact-vs-chat scoping. Disciplines below apply to durable artifacts (`event-model.md`, `architecture.md`, `tasks.md`, ADRs, `CONTEXT.md`, `.out-of-scope/`) and to chat output.
-
-## Artifact content is telegraphic
-
-`event-model.md`, `architecture.md`, `tasks.md` drop articles, padding, hedges; fragments fine. Output tokens dominate the per-feature budget; same content read across re-runs and consumer skills (`/al-refine`, `/al-implement`, `/al-mutate`, `/al-code-review`) compounds the cost.
-
-Gherkin step content keeps `Given/When/Then` sentence shape so steps stay parseable for test-mapping tooling. Numbered user-action steps in verify tasks keep imperative sentence shape so a human can read them aloud and act.
+Style rule lives at the top of each SKILL.md as a one-line inline declaration. This file carries the non-style disciplines: lexical, citation, shape, and artifact-vs-chat scoping. Disciplines below apply to durable artifacts (`event-model.md`, `architecture.md`, `tasks.md`, ADRs, `CONTEXT.md`, `.out-of-scope/`) and to chat output.
 
 ## No em-dashes
 
@@ -63,7 +57,7 @@ Claude Code only. The `<claude-only>` block is the single venue for `advisor()` 
 
 ## Chat shape skeletons
 
-Caveman voice fills the shape; the skeleton stays. Three skeletons, named defaults.
+Style fills the shape; the skeleton stays. Three skeletons, named defaults.
 
 ### Opener (session start)
 
@@ -81,7 +75,7 @@ Chip line carrying task + status, then a borderless two-column table with skill-
 
 ### Gate report (every gate event)
 
-Four caveman lines at app altitude. Mechanics (procedure names, line numbers, mutant IDs, RED/GREEN beats, build counts) belong in commits and the task block; user pulls detail by asking.
+Four lines at app altitude. Mechanics (procedure names, line numbers, mutant IDs, RED/GREEN beats, build counts) belong in commits and the task block; user pulls detail by asking.
 
 | Line | Carries |
 |---|---|
@@ -112,8 +106,8 @@ Mid-flow (state landed before halt): Stop reason + State 2-col table + Next acti
 **Next:** Run `/al-steer` to clear the replan, then re-enter via `/al-implement T-007`.
 ```
 
-SKILL-specific shapes (AL Runner ERROR table in `/al-implement`, Drafted scenarios in `/al-refine`, Second opinion line in `/al-second-opinion`) live in their owning SKILL.md and follow the same rule: shape preserved, voice caveman.
+SKILL-specific shapes (AL Runner ERROR table in `/al-implement`, Drafted scenarios in `/al-refine`, Second opinion line in `/al-second-opinion`) live in their owning SKILL.md and follow the same rule: shape preserved, Style applies.
 
 ## Chat carve-out
 
-Chat requires a closing line stating what landed (the user has no `tasks.md` open). Closing line is caveman-form; not a pleasantry. Workflow markers (`**RED**`, `**GREEN**`, `**Second opinion**`) permitted in chat; workflow narrative prose still banned.
+Chat requires a closing line stating what landed (the user has no `tasks.md` open). Closing line follows the Style rule; not a pleasantry. Workflow markers (`**RED**`, `**GREEN**`, `**Second opinion**`) permitted in chat; workflow narrative prose still banned.

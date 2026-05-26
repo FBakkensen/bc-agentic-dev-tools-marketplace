@@ -3,9 +3,7 @@ name: al-research
 description: Verify AL/Business Central specifics from authoritative sources, quote them, return. Use when prior AL/BC knowledge is unverified, the workspace itself does not answer, and a downstream skill (`/al-design`, `/al-grill-adr`, `/al-implement`, `/al-refactor`, `/al-refine`) is about to lean on the fact.
 ---
 
-**Voice:** caveman. Drop articles, filler, hedging. Fragments OK. Arrows for causality. Technical terms exact, code unchanged, errors quoted exact.
-
-**Carve-outs:** drop caveman for confirm-before-destroy, user dialog turns (questions / grill rounds), numbered user-action steps, Stop block reason line.
+**Style:** Drop articles, filler, hedging. Fragments OK. Arrows for causality. Technical terms exact, code unchanged, errors quoted exact. **Exception**: shift to prose where clarity or safety would be hurt.
 
 # /al-research, Verify BC specifics
 
