@@ -77,7 +77,7 @@ Two tiers, on purpose.
 
 | File | Tier | Notes |
 |---|---|---|
-| `voice-contract.md` | plugin-level | non-voice rules: em-dash ban, BC vocab, names-as-citation, lists-of-findings, tables-of-facts, chat carve-out, no-workflow-chatter, 3 chat shape skeletons (Opener / Gate report / Stop); style itself lives at top of each SKILL.md as a one-line Style declaration; read by every skill that writes prose |
+| `voice-contract.md` | plugin-level | non-voice rules: BC vocab, names-as-citation, lists-of-findings, tables-of-facts, chat carve-out, no-workflow-chatter, 3 chat shape skeletons (Opener / Gate report / Stop); style itself lives at top of each SKILL.md as a one-line Style declaration; read by every skill that writes prose |
 | `testability.md` | plugin-level | three-phase decoupling, three default seams (IEnvironment / IApiRequest / IFinance), five-kind test-double taxonomy with AL code shapes; read by `/al-design`, `/al-implement`, `/al-refactor` |
 | `tdd.md` | plugin-level | three layers of trust, three laws, five phases, ZOMBIES ordering, mutation operators + revert cycle, no-touch invariants; read by `/al-refine`, `/al-implement`, `/al-mutate` |
 | `notes-discipline.md` | plugin-level | what lives in the task block vs commit / ADR / `.out-of-scope/`; the eight replan triggers as named patterns; read by skills that write `tasks.md` |

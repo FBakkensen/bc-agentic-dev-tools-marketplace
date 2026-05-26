@@ -2,18 +2,6 @@
 
 Style rule lives at the top of each SKILL.md as a one-line inline declaration. This file carries the non-style disciplines: lexical, citation, shape, and artifact-vs-chat scoping. Disciplines below apply to durable artifacts (`event-model.md`, `architecture.md`, `tasks.md`, ADRs, `CONTEXT.md`, `.out-of-scope/`) and to chat output.
 
-## No em-dashes
-
-DO NOT use em-dashes (—) anywhere. Substitute by job:
-
-| Job | Substitute |
-|---|---|
-| Mild pause or parenthetical mid-sentence | comma |
-| Parenthetical aside | parens `( ... )` |
-| Joining two independent clauses with causal link | semicolon `;` |
-| Introducing a clarification, list, or punchline | colon `:` |
-| Heavier pause where a new sentence is warranted | period |
-
 ## BC vocabulary
 
 Insert / Modify / Delete (not Create / Update / Remove). Post (not Submit). Validate (not Check). Get / Find (not Fetch). Ledger Entry (not Transaction). No. (not ID). Procedure (not Method). Codeunit (not class). Name the specific object and procedure: "extract `PostSalesOrder` from codeunit 80 into `Sales-Post Impl`", not "refactor the codeunit".
