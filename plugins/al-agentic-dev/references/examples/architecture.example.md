@@ -27,7 +27,7 @@ Reads sit on released document. `Charge Validation` opens `Sales Header` by `No.
 
 Processing is pure. `Allocation Resolver` takes read rows, produces in-memory graph mapping each charge to its receiving lines. No `Insert` or `Modify`. Returns value object. Reproducible from inputs.
 
-Writes go through BaseApp. `Posting Subscribers` subscribes to `OnAfterCheckSalesDoc` and `OnBeforePostSalesDoc` from `Sales-Post`. Calls validator. Success → posting proceeds; failure → `Error` aborts. Audit entries `Insert` into feature-owned table.
+Writes go through BaseApp. `Posting Subscribers` subscribes to `OnAfterCheckSalesDoc` and `OnBeforePostSalesDoc` from `Sales-Post`. Calls `Charge Validation` and `Allocation Resolver`, then writes through `Sales-Post`. Success → posting proceeds; failure → `Error` aborts. Audit entries `Insert` into feature-owned table.
 
 ## Brownfield touchpoints
 
@@ -43,33 +43,9 @@ Writes go through BaseApp. `Posting Subscribers` subscribes to `OnAfterCheckSale
 - Validation Codeunit
 - Posting Routine Extension
 
-## Module dependencies
-
-```mermaid
-flowchart TD
-  CV["Charge Validation<br/>(R → P)"]
-  AR["Allocation Resolver<br/>(P)"]
-  PS["Posting Subscribers<br/>(W)"]
-  SP["Sales-Post<br/>(BaseApp codeunit 80)"]
-  CV --> PS
-  AR --> PS
-  PS --> SP
-```
-
 ## Posting flow
 
-Four steps, one branch. Mismatch loops back to `Released Sales Order Card`; no partial document state written.
-
-```mermaid
-flowchart LR
-  R["Release<br/>Sales Order"]
-  I["Initiate<br/>Posting"]
-  V{"Validate<br/>Item Charges"}
-  P["Post<br/>Sales Invoice"]
-  R --> I --> V
-  V -- "balanced" --> P
-  V -- "mismatch" --> R
-```
+Posting routes through four steps: `Release Sales Order` → `Initiate Posting` → `Validate Item Charges` → `Post Sales Invoice`. Mismatch at `Validate Item Charges` loops back to `Released Sales Order Card`; no partial document state written.
 
 ## Cross-references
 

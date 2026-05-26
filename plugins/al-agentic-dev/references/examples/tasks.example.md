@@ -167,29 +167,3 @@ User-facing slice `audit-trail`: after successful `Post` on balanced allocation,
    3. **Expected:** three rows, each carrying source `Sales Line` reference and allocated quantity.
    4. **Expected:** summed `Allocated Quantity` across three rows equals 12.
 
-## Dependencies
-
-```mermaid
-flowchart TD
-  subgraph S1["slice: post-validates-allocation"]
-    T1["T-001<br/>Read assignments"]
-    T2["T-002<br/>Validate sums"]
-    T3["T-003<br/>Subscribe & route"]
-    T4["T-004<br/>Surface breakdown"]
-    T6(["T-006<br/>Verify slice"])
-  end
-  subgraph S2["slice: audit-trail"]
-    T5["T-005<br/>Persist ledger"]
-    T7(["T-007<br/>Verify slice"])
-  end
-  T1 --> T3
-  T2 --> T3
-  T3 --> T4
-  T1 --> T6
-  T2 --> T6
-  T3 --> T6
-  T4 --> T6
-  T2 --> T5
-  T6 --> T5
-  T5 --> T7
-```

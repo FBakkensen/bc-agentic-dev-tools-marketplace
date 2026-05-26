@@ -13,27 +13,12 @@ Three populated examples in [`examples/`](./examples/) carry the canonical shape
 | File | What it is |
 |---|---|
 | [`examples/event-model.example.md`](./examples/event-model.example.md) | User-facing journey, Role swimlanes, Action / Business Event / View / Status slots. |
-| [`examples/architecture.example.md`](./examples/architecture.example.md) | Module map, R → P → W boundary, brownfield touchpoints, Mermaid module-deps + flow. |
-| [`examples/tasks.example.md`](./examples/tasks.example.md) | Slice-grouped tasks with comment anchors, technical + verify, task-deps Mermaid. |
+| [`examples/architecture.example.md`](./examples/architecture.example.md) | Module map, R → P → W boundary, brownfield touchpoints. |
+| [`examples/tasks.example.md`](./examples/tasks.example.md) | Slice-grouped tasks with comment anchors, technical + verify. |
 
 Pattern-match against these before writing a feature's artifacts. Shape per feature is the writing skill's call within these constraints.
 
 **Cross-links between sibling artifacts** drop the `.example` suffix: generated artifacts link to `event-model.md` / `architecture.md` / `tasks.md` inside the same `specs/<NNN>-<slug>/` folder.
-
-## Mermaid in fenced code blocks
-
-Diagrams use markdown fences, not HTML wrappers:
-
-````markdown
-```mermaid
-flowchart LR
-  A --> B
-```
-````
-
-No CDN init block. No theme variables. Renderers that support Mermaid (GitHub, VS Code preview, mdBook, most static-site generators) parse the fence directly. Plain markdown viewers see the source.
-
-`architecture.md` may carry two graphs (module-deps + flow); `tasks.md` may carry one (task-deps). Whether a graph earns its place per feature is the writing skill's call.
 
 ## The surgical-edit floor
 

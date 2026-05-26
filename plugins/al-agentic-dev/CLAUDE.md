@@ -58,8 +58,8 @@ Skills compose by name. When you change a skill, scan the others for cross-refer
 
 - **Each SKILL.md states naming and BC vocabulary inline.** Skills run in projects without this CLAUDE.md present. Do not lean on it.
 - **No inline citations in durable artifacts.** `(see: file.al:120)` is forbidden in `architecture.md`, `tasks.md`, `CONTEXT.md`, ADRs, `.out-of-scope/`. Names are the citation; `NALICFCopyDocSubscribers.OnAfterInsertToSalesLine` is the address. Future readers grep; the IDE gives line numbers for free.
-- **Mermaid lives in fenced code blocks (` ```mermaid `).** Permitted in `architecture.md` (module-deps and/or flow) and in `tasks.md` (task-deps). Whether a diagram earns its place per feature is the writing skill's call. ADRs and every other markdown artifact stay text-only.
-- **Spec artifacts are pure markdown.** No inline `<style>`, no Google Fonts CDN, no Mermaid CDN init. Visual polish is a separate dev-server concern; the spec is text.
+- **Spec artifacts are text-only.** Name relationships in prose; gates in `Depends on:` lines on tasks. No mermaid fences; Claude Desktop's markdown preview and other viewers lack mermaid support, and a second encoding alongside text just drifts.
+- **Spec artifacts are pure markdown.** Visual polish is a separate dev-server concern; the spec is text.
 - **`architecture.md` is reshape-only.** Written by `/al-design`, read by everyone downstream. Never edit in place; re-run `/al-design`. No surgical-edit contract.
 - **`tasks.md` carries one surgical-edit contract.** Maintaining skills find a task by `<!-- task=T-NNN ... -->` and flip its `status=` value. `/al-scope` writes `slice=<slug>` on every task and `kind=verify` on per-slice verify tasks (technical tasks carry `kind=technical`); downstream skills read these but do not change them (a slice or kind change is replan work, routes through `/al-steer`). The heading `[ ]`/`[~]`/`[x]`/`[!]` marker is a visible fallback; the comment-line `status=` value is source of truth. The agent flips both; the comment-line attribute is the byte the Edit anchors on. See `references/markdown-spec-discipline.md`.
 - **New skills need a stated gap.** _Avoid_: spinning up a skill that an existing one can absorb, or that fits as a brief note inside an existing task block, an `/al-research` finding, or a side-band reference. Propose only when no existing skill fits, and say so in one line.
@@ -81,7 +81,7 @@ Two tiers, on purpose.
 | `testability.md` | plugin-level | three-phase decoupling, three default seams (IEnvironment / IApiRequest / IFinance), five-kind test-double taxonomy with AL code shapes; read by `/al-design`, `/al-implement`, `/al-refactor` |
 | `tdd.md` | plugin-level | three layers of trust, three laws, five phases, ZOMBIES ordering, mutation operators + revert cycle, no-touch invariants; read by `/al-refine`, `/al-implement`, `/al-mutate` |
 | `notes-discipline.md` | plugin-level | what lives in the task block vs commit / ADR / `.out-of-scope/`; the eight replan triggers as named patterns; read by skills that write `tasks.md` |
-| `markdown-spec-discipline.md` | plugin-level | pointer to `examples/`, Mermaid fence rule, surgical-edit floor (`task=` + `status=` + `slice=` + `kind=` on the comment-anchor line), status-flip Edit shape; read by `/al-design`, `/al-event-model`, `/al-scope`, `/al-refine`, `/al-implement`, `/al-user-verification`, `/al-mutate`, `/al-steer` |
+| `markdown-spec-discipline.md` | plugin-level | pointer to `examples/`, surgical-edit floor (`task=` + `status=` + `slice=` + `kind=` on the comment-anchor line), status-flip Edit shape; read by `/al-design`, `/al-event-model`, `/al-scope`, `/al-refine`, `/al-implement`, `/al-user-verification`, `/al-mutate`, `/al-steer` |
 | `examples/` (folder) | plugin-level | three populated `*.example.md` artifacts; pattern-match source for writing skills |
 | `cross-branch-numbering.md` | plugin-level | algorithm for picking `NNN` (spec folders) and `NNNN` (ADRs) across parallel branches; read by `/al-design`, `/al-event-model`, `/al-grill-adr` |
 | `bc-patterns.md` | plugin-level | BC pattern catalogue; read by `/al-design` |
@@ -116,7 +116,7 @@ references/                      # Plugin-level shared, read by ≥2 skills, or 
 ├── bc-patterns.md               # BC pattern catalogue (read by /al-design)
 ├── bc-knowledge-dispatch.md     # bc-knowledge MCP call pattern, specialist mapping, thresholds
 ├── notes-discipline.md          # What lives in the task block vs commit / ADR / .out-of-scope/, eight replan triggers
-├── markdown-spec-discipline.md  # Pointer to examples/, surgical-edit floor (task= + status= + slice= + kind= on comment line), Mermaid fence rule
+├── markdown-spec-discipline.md  # Pointer to examples/, surgical-edit floor (task= + status= + slice= + kind= on comment line)
 ├── cross-branch-numbering.md    # NNN / NNNN picking algorithm across parallel branches
 ├── CONTEXT.template.md
 ├── adr.template.md

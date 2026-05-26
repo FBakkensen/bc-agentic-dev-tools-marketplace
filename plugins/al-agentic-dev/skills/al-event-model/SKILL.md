@@ -54,7 +54,7 @@ Before writing `event-model.md`, every Role / Action verb / Business Event name 
 
 On `^\d{3}-`: spec folder exists, reshape `event-model.md` in place. On `main`: first per-feature skill; resolve `<NNN>` per [cross-branch-numbering.md](../../references/cross-branch-numbering.md), derive 2–4-word kebab-case slug (do not ask), announce both, create branch `<NNN>-<slug>` + `specs/<NNN>-<slug>/`. Branch already exists locally or remotely → **Stop**.
 
-Then write `event-model.md`. Pure markdown; constraints in [markdown-spec-discipline.md](../../references/markdown-spec-discipline.md). Voice in [voice-contract.md](../../references/voice-contract.md). Both mandatory reads before writing. Write telegraphic; drop articles, padding, hedges; fragments fine. Gherkin step content keeps sentence shape (no Gherkin in `event-model.md` itself; rule lands here for consistency across producer skills). No surgical-edit contract; reshape via re-running. No Mermaid fence; swimlane timeline does not render as Mermaid sequence diagram, and `architecture.md`'s flow graph can render derived visual if wanted. Vocabulary in [LANGUAGE.md](../../references/LANGUAGE.md) (*Slice* entry).
+Then write `event-model.md`. Pure markdown; constraints in [markdown-spec-discipline.md](../../references/markdown-spec-discipline.md). Voice in [voice-contract.md](../../references/voice-contract.md). Both mandatory reads before writing. Write telegraphic; drop articles, padding, hedges; fragments fine. Gherkin step content keeps sentence shape (no Gherkin in `event-model.md` itself; rule lands here for consistency across producer skills). No surgical-edit contract; reshape via re-running. Vocabulary in [LANGUAGE.md](../../references/LANGUAGE.md) (*Slice* entry).
 
 ## Gate event
 

@@ -81,7 +81,7 @@ Each pass runs its own `/al-research` and receives BC vocabulary from `CONTEXT.m
 
 On `^\d{3}-`: `/al-event-model` created branch + spec folder; write `architecture.md` into existing folder. On `main`: this is first per-feature skill (pure-backend, or `/al-event-model` skipped after missing-storm resolved to *pure backend*). Resolve `<NNN>` per [cross-branch-numbering.md](../../references/cross-branch-numbering.md) (cross-branch scan, not local-only), derive a 2–4-word kebab-case slug (do not ask), announce both, create branch `<NNN>-<slug>` + `specs/<NNN>-<slug>/`. Branch already exists locally or remotely → **Stop**.
 
-Then write `architecture.md`. Pure markdown; constraints in [markdown-spec-discipline.md](../../references/markdown-spec-discipline.md). Voice in [voice-contract.md](../../references/voice-contract.md). Both mandatory reads before writing. Write telegraphic; drop articles, padding, hedges; fragments fine. Gherkin step content (when present in diagram or example) keeps sentence shape. No surgical-edit contract; reshape via re-running. Mermaid graphs in fenced ` ```mermaid ` blocks when diagrams earn place (module-deps, flow).
+Then write `architecture.md`. Pure markdown; constraints in [markdown-spec-discipline.md](../../references/markdown-spec-discipline.md). Voice in [voice-contract.md](../../references/voice-contract.md). Both mandatory reads before writing. Write telegraphic; drop articles, padding, hedges; fragments fine. Gherkin step content (when present in example) keeps sentence shape. No surgical-edit contract; reshape via re-running. Name relationships (module deps, flow) in prose; no mermaid fences.
 
 ## Gate event
 
