@@ -128,7 +128,7 @@ The palette uses `#2d2e33` (mid-dark gray) for node fills and `#8b8d98` (mid gra
 
 1. The agent generating `event-model.html`, `architecture.html`, or `tasks.html` for a feature reads `gallery.html` to learn class names and data attributes.
 2. The agent inlines the equivalent of `spec-styles.css` (or a subset matching the artifact) into the file's `<style>` tag.
-3. For `tasks.html`, the agent enforces the two-attribute floor: `data-task` and `data-status` on `<details>`, never duplicated, visible status rendered by CSS.
+3. For `tasks.html`, the agent enforces the surgical-edit floor on each task `<details>`: `data-task`, `data-status`, `data-slice`, and `data-kind="verify"` on verify tasks (omitted on technical). Never duplicated. Visible status and verify badges rendered by CSS.
 4. For diagrams, the agent wraps each in `<div class="mermaid" data-graph="...">` and includes the canonical init script.
 
 The three `*.example.html` files cross-link to siblings as `*.example.html` for demo purposes. Generated artifacts cross-link without the `.example` suffix: `<a href="event-model.html">` etc., resolving inside the feature's `specs/<NNN>-<slug>/` folder.

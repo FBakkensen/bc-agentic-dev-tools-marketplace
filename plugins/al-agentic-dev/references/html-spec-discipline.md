@@ -17,7 +17,7 @@ The single source of truth for spec artifact visuals is [`design-system/`](./des
 | [`design-system/gallery.html`](./design-system/gallery.html) | Component gallery. Every component, rendered + canonical HTML source, light/dark toggle. **The authoritative class names and data attributes live here.** |
 | [`design-system/event-model.example.html`](./design-system/event-model.example.html) | Populated example. Pattern-match composition before writing a feature's `event-model.html`. |
 | [`design-system/architecture.example.html`](./design-system/architecture.example.html) | Populated example, long-form. Two Mermaid diagrams. |
-| [`design-system/tasks.example.html`](./design-system/tasks.example.html) | Populated example. Five tasks, one task-deps Mermaid graph. Honors the two-attribute floor. |
+| [`design-system/tasks.example.html`](./design-system/tasks.example.html) | Populated example. Technical and verify tasks across two slices, one task-deps Mermaid graph. Honors the surgical-edit floor (`data-task`, `data-status`, `data-slice`, `data-kind`). |
 | [`design-system/spec-styles.css`](./design-system/spec-styles.css) | The shared inline-style block. Inline an equivalent block into each generated artifact's `<style>` tag. |
 | [`design-system/colors_and_type.css`](./design-system/colors_and_type.css) | Readable CSS variable reference. The HTMLs inline equivalent tokens. |
 | [`design-system/README.md`](./design-system/README.md) | Content fundamentals, visual foundations, iconography, Mermaid theme, voice. |
@@ -56,24 +56,29 @@ Three families, all from Google Fonts via CDN `<link>`:
 
 Inline the canonical `<link>` block (see [`spec-styles.css`](./design-system/spec-styles.css) header comment, or any `*.example.html` `<head>`) into each generated artifact. Display titles use `letter-spacing: -0.025em`; H1–H3 use `-0.015em`; mono micro labels use `+0.05em` and `text-transform: uppercase`. No other type variations.
 
-## The two-attribute floor
+## The surgical-edit floor
 
 `tasks.html` carries one surgical-edit contract. Maintaining skills find a task by its ID and flip its status. Everything else regenerates whole when it changes.
 
-The two hooks:
+Four attribute hooks on each per-task `<details>`:
 
-| Hook | Locates | Used by |
-|---|---|---|
-| `<details data-task="T-NNN" class="task">` on each per-task block | The per-task block | every skill that touches a task |
-| `data-status="ready \| in-progress \| done \| blocked"` on the same `<details>` | The status, single source of truth | `/al-implement`, `/al-steer` |
+| Hook | Locates | Used by | Written by |
+|---|---|---|---|
+| `data-task="T-NNN"` | the per-task block | every skill that touches a task | `/al-scope` |
+| `data-status="ready \| in-progress \| done \| blocked"` | the status, single source of truth | `/al-implement`, `/al-user-verification`, `/al-steer` | `/al-scope` (`ready` for every technical task in the first slice, `blocked` for every other task); `/al-implement` flips technical tasks through `in-progress` → `done` and the slice's verify task `blocked` → `ready` when the last sibling lands; `/al-user-verification` flips the verify task `ready` → `in-progress` → `done` or `blocked` and on `done` flips next-slice technical tasks `blocked` → `ready`; `/al-steer` flips to `blocked` on replan triggers |
+| `data-slice="<slug>"` | slice membership; matches one `event-model.html` timeline step (user-facing) or `architecture.html` slice (pure-backend) | `/al-implement` (detect last technical task in slice → flip verify ready), `/al-steer` (group by slice when reporting), `/al-code-review` (per-slice diff scope) | `/al-scope` |
+| `data-kind="verify"` (omitted on technical tasks) | task kind; routes `/al-implement` vs `/al-user-verification` | `/al-implement` (stop on verify), `/al-refine` (branch by kind), `/al-user-verification` (precondition) | `/al-scope` |
 
 Status flips happen often (every TDD cycle bump), so a stable attribute anchor avoids re-parsing prose to locate the right `<details>`. Two tasks with similar titles do not collide on the attribute. Every other slot (Tests area, callout kinds, edges block, Mermaid container) regenerates whole when its shape changes.
+
+`data-slice` and `data-kind` are scope-time decisions; `/al-scope` writes them, downstream skills read them. A skill that needs to change `data-slice` (slice boundary moved) or `data-kind` (a task miscategorised as technical / verify) is doing replan work and routes through `/al-steer`, which re-runs `/al-scope` or reshapes the task block whole.
 
 `event-model.html` and `architecture.html` carry **no** surgical-edit contract. `/al-design` and `/al-event-model` reshape them whole on re-run. The Mermaid containers (`<div class="mermaid" data-graph="...">`) are the library's hook, not an agent-anchor.
 
 **Rules around the floor:**
 
 - The visible status marker (badge text, color, dot) renders from `data-status` via CSS `::after` with `content: "● Ready"` etc. per state. Inline labels match the gallery: `Ready` / `In progress` / `Done` / `Blocked`. The agent flips only the attribute, never the visible marker.
+- A separate verify-kind badge renders from `data-kind="verify"` via CSS, so a verify task carries two badges at a glance: its `data-kind` chip (*"Verify"*) and its `data-status` chip (*"Ready"* / *"Blocked"* / etc.). Technical tasks omit `data-kind`; CSS renders no kind chip for them.
 - Status lives only on the `<details>`. A second copy in a Summary row (or anywhere else) would require two-place edits on every flip, which is exactly what the floor avoids.
 - The text-fallback markers `[ ]` (ready) / `[~]` (in-progress) / `[x]` (done) / `[!]` (blocked) exist for low-color contexts (printed copies, grayscale screenshots). Visible labels stay primary; the markers are a courtesy fallback when CSS does not render.
 - Where each kind of content lives inside the task block (Tests area, callout blocks, edges, scaffolding callouts) is the writing skill's call per task; see `notes-discipline.md` for what kinds of info belong inside the task block at all.

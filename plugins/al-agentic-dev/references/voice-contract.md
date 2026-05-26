@@ -107,6 +107,18 @@ Worked example, `/al-implement` closing one scenario:
 >
 > Nothing. Ready for the next scenario.
 
+**Verify-task variant**, `/al-user-verification` closing a slice (`data-kind="verify"`). The four answers shift altitude: what the *user just confirmed* (not what the code does), the user-facing problem the slice solved, how it fits the journey in `event-model.html` vocabulary (Role / Action / Business Event / View / Status, no AL names), and the handoff. The point of the verify task is that the user touched the surface; the report cites their observation, not the implementation.
+
+Worked example, `/al-user-verification` closing slice `release-sales-order`:
+
+> An Order Processor can now release a Sales Order with an item charge allocation and see the Pending Overrides cue increment in the same session. You walked through five scenarios on `SO-1042` and confirmed each step matched.
+>
+> Before this slice, releasing a Sales Order with a charge allocation could silently skip the override queue; the override would land in a follow-up batch hours later or not at all.
+>
+> Slice covers the `Release Sales Order` action on the Order Processor Role Center: Status flips to `Released`, `Sales Order Released` Business Event fires, the Pending Overrides cue refreshes in the same UI tick. Cross-page navigation back to the Sales Order Card surfaces the same Status.
+>
+> `/al-code-review` per-slice on the just-verified diff, then `/al-implement` on the first task of slice `approve-override`.
+
 ### Stop (default at halt, binary template covers replan absorb-and-continue)
 
 Pre-flight (nothing touched): one line. `**Stop.** <reason in BC vocab>. <next action>.`

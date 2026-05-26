@@ -2,7 +2,7 @@ Marketplace of AI-assisted AL/Business Central development plugins for Claude Co
 
 Plugins live under `plugins/`:
 
-- `al-agentic-dev/` — feature-level agentic flow (design, scope, refine, implement, refactor, mutate)
+- `al-agentic-dev/` — feature-level agentic flow (event-model, design, scope, refine, implement, user-verification, refactor, mutate, code-review)
 - `al-build/` — AL build/test gate
 - `al-debug-logging/` — temporary runtime probes via FeatureTelemetry
 - `bc-standard-reference/` — BaseApp / System Application lookup

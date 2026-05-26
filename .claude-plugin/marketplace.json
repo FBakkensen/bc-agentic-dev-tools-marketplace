@@ -35,7 +35,7 @@
     {
       "name": "al-agentic-dev",
       "source": "./plugins/al-agentic-dev",
-      "description": "Agentic AL/Business Central development: composable skills (al-steer, al-grill-adr, al-event-model, al-design, al-scope, al-refine, al-implement, al-refactor, al-mutate, al-research, al-second-opinion) with persistent repo-root memory (CONTEXT.md, docs/adr/, .out-of-scope/) and branch-scoped feature state (event-model.html + architecture.html + tasks.html). SKILLs express intent and rationale; disciplines state why they exist and the agent shapes output per situation."
+      "description": "Agentic AL/Business Central development: composable skills (al-steer, al-grill-adr, al-event-model, al-design, al-scope, al-refine, al-implement, al-user-verification, al-refactor, al-mutate, al-code-review, al-research, al-second-opinion) with persistent repo-root memory (CONTEXT.md, docs/adr/, .out-of-scope/) and branch-scoped feature state (event-model.html + architecture.html + tasks.html). Per-slice user-verification gates: al-scope groups tasks by event-model timeline step and inserts a verify task per slice; al-user-verification walks the user through it; /al-code-review fires at slice-done + feature-done. SKILLs express intent and rationale; disciplines state why they exist and the agent shapes output per situation."
     }
   ]
 }

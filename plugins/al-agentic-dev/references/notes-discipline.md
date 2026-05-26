@@ -17,9 +17,12 @@ If you cannot tell which side a piece of content belongs on, ask the trigger tes
 
 | Content | Destination | Owner |
 |---|---|---|
-| Status | `data-status` attribute on the task `<details>` | `/al-implement`, `/al-steer` |
+| Status | `data-status` attribute on the task `<details>` | `/al-implement`, `/al-user-verification`, `/al-steer` |
+| Slice membership | `data-slice="<slug>"` attribute on the task `<details>` | `/al-scope` (write), every reader |
+| Task kind (verify vs technical) | `data-kind="verify"` on the verify task (technical tasks omit) | `/al-scope` (write), every reader |
 | In-flight scaffolding the next agent on this branch needs | inside the task block | the writing skill (shape is its call) |
-| Replan flag (the trigger fired; plan invalid or note added) | inside the task block (and `data-status="blocked"` when plan invalid) | `/al-refine`, `/al-implement`, `/al-refactor`, `/al-steer` |
+| Replan flag (the trigger fired; plan invalid or note added) | inside the task block (and `data-status="blocked"` when plan invalid) | `/al-refine`, `/al-implement`, `/al-refactor`, `/al-user-verification`, `/al-steer` |
+| Verification failure (scenario, step, observed vs expected) | inside the verify task block | `/al-user-verification` |
 | Mutation verdict (kills / survivors / equivalence) | inside the task block | `/al-mutate` |
 | Critical hidden risk surfaced during refinement, implementation, or scope | inside the task block | `/al-scope`, `/al-refine`, `/al-implement` |
 | Architectural decision with cross-task or future-feature impact | design ADR (via `/al-design` or `/al-steer` re-routing) | `/al-design` |
@@ -46,7 +49,7 @@ When something surfaces inside an in-flight task but actually belongs to a durab
 
 ## Replan triggers
 
-Seven named patterns the skills learn to spot. Cited by `/al-refine`, `/al-implement`, `/al-refactor` (each runs a replan check before close); cleared by `/al-steer`.
+Eight named patterns the skills learn to spot. Cited by `/al-refine`, `/al-implement`, `/al-refactor`, `/al-user-verification` (each runs a replan check before close); cleared by `/al-steer`.
 
 | # | Trigger |
 |---|---|
@@ -57,8 +60,9 @@ Seven named patterns the skills learn to spot. Cited by `/al-refine`, `/al-imple
 | 5 | New behaviour emerges |
 | 6 | Architecture decomposition wrong |
 | 7 | Goal drift |
+| 8 | Verification failed |
 
-The trigger ID survives as an address (so a flag inside one task can reference "trigger 4" and the next agent knows what pattern was seen). The response to a trigger is the writing skill's judgment per situation: when the trigger means the plan is invalid as planned, flip `data-status` to `blocked` and route to `/al-steer`; when the trigger means new info that doesn't invalidate the plan, note it inside the task and continue. Detection cues are skill-specific; each skill's replan check names what the cue looks like in its own work.
+The trigger ID survives as an address (so a flag inside one task can reference "trigger 4" and the next agent knows what pattern was seen). The response to a trigger is the writing skill's judgment per situation: when the trigger means the plan is invalid as planned, flip `data-status` to `blocked` and route to `/al-steer`; when the trigger means new info that doesn't invalidate the plan, note it inside the task and continue. Detection cues are skill-specific; each skill's replan check names what the cue looks like in its own work. Trigger #8 is special-cased to `/al-user-verification`: the gate is binary, so the response is always `data-status="blocked"` and a route to `/al-steer`; there is no "absorb and continue" variant for a failed user verification.
 
 ## What the Summary table is now
 

@@ -202,6 +202,8 @@ a:hover { color: var(--accent-hover); border-bottom-color: var(--accent-hover); 
 .task[data-status="in-progress"] > summary::after { content: "● In progress"; color: var(--status-in-progress); background: var(--status-in-progress-bg); border-color: var(--status-in-progress-border); }
 .task[data-status="done"]        > summary::after { content: "● Done";        color: var(--status-done);        background: var(--status-done-bg);        border-color: var(--status-done-border); }
 .task[data-status="blocked"]     > summary::after { content: "● Blocked";     color: var(--status-blocked);     background: var(--status-blocked-bg);     border-color: var(--status-blocked-border); }
+.task[data-kind="verify"] { border-left: 3px solid var(--accent); }
+.task[data-kind="verify"] > summary .task__id::after { content: " · Verify"; color: var(--accent); font-weight: 500; letter-spacing: 0.02em; }
 .task__body { padding: 0 var(--space-4) var(--space-4); display: flex; flex-direction: column; gap: var(--space-4); border-top: 1px solid var(--border-subtle); padding-top: var(--space-4); }
 .task__body > p:first-child { margin-top: 0; }
 .task__body > *:last-child { margin-bottom: 0; }
@@ -243,7 +245,8 @@ a:hover { color: var(--accent-hover); border-bottom-color: var(--accent-hover); 
       <div class="meta-strip__item"><span class="meta-strip__key">ADR</span><span class="meta-strip__val"><a class="xref" href="#">ADR-0007</a></span></div>
       <div class="meta-strip__item"><span class="meta-strip__key">Event model</span><span class="meta-strip__val"><a class="xref" href="event-model.example.html">event-model.html</a></span></div>
       <div class="meta-strip__item"><span class="meta-strip__key">Architecture</span><span class="meta-strip__val"><a class="xref" href="architecture.example.html">architecture.html</a></span></div>
-      <div class="meta-strip__item"><span class="meta-strip__key">Tasks</span><span class="meta-strip__val">5</span></div>
+      <div class="meta-strip__item"><span class="meta-strip__key">Tasks</span><span class="meta-strip__val">5 technical + 2 verify</span></div>
+      <div class="meta-strip__item"><span class="meta-strip__key">Slices</span><span class="meta-strip__val">post-validates-allocation, audit-trail</span></div>
     </div>
   </div>
 
@@ -254,7 +257,7 @@ a:hover { color: var(--accent-hover); border-bottom-color: var(--accent-hover); 
 
   <h2 style="font-family:var(--font-display);font-weight:600;font-size:var(--fs-h2);letter-spacing:-0.015em;margin:var(--space-6) 0 var(--space-3);">Task bus</h2>
 
-  <details class="task" id="T-001" data-task="T-001" data-status="done">
+  <details class="task" id="T-001" data-task="T-001" data-status="done" data-slice="post-validates-allocation">
     <summary><span class="task__id">T-001</span><span class="task__title">Read released sales order item charge assignments</span></summary>
     <div class="task__body">
       <p>Resolve all <code>Item Charge Assignment (Sales)</code> rows for a released <code>Sales Header</code>, grouped by source <code>Sales Line</code>. Reads only; no <code>Insert</code> or <code>Modify</code>.</p>
@@ -279,7 +282,7 @@ a:hover { color: var(--accent-hover); border-bottom-color: var(--accent-hover); 
     </div>
   </details>
 
-  <details class="task" id="T-002" data-task="T-002" data-status="done">
+  <details class="task" id="T-002" data-task="T-002" data-status="done" data-slice="post-validates-allocation">
     <summary><span class="task__id">T-002</span><span class="task__title">Validate that allocated quantities sum to charge quantity</span></summary>
     <div class="task__body">
       <p>For each <code>Item Charge Assignment (Sales)</code>, verify that the sum of allocated quantities across receiving <code>Sales Line</code> rows equals the charge quantity. Both inequality directions count as mismatches.</p>
@@ -317,7 +320,7 @@ a:hover { color: var(--accent-hover); border-bottom-color: var(--accent-hover); 
     </div>
   </details>
 
-  <details class="task" id="T-003" data-task="T-003" data-status="in-progress" open>
+  <details class="task" id="T-003" data-task="T-003" data-status="in-progress" data-slice="post-validates-allocation" open>
     <summary><span class="task__id">T-003</span><span class="task__title">Subscribe to OnAfterCheckSalesDoc and route through validator</span></summary>
     <div class="task__body">
       <p>Add an event subscriber to <code>Sales-Post</code> codeunit 80 that delegates allocation validation to <code>Charge Validation</code> and propagates failures as posting errors. The subscriber must be defensive: a mismatch raises <code>Error</code> before any <code>Insert</code> or <code>Modify</code> on posting tables.</p>
@@ -342,7 +345,7 @@ a:hover { color: var(--accent-hover); border-bottom-color: var(--accent-hover); 
     </div>
   </details>
 
-  <details class="task" id="T-004" data-task="T-004" data-status="ready">
+  <details class="task" id="T-004" data-task="T-004" data-status="ready" data-slice="post-validates-allocation">
     <summary><span class="task__id">T-004</span><span class="task__title">Surface validation failure inline on Sales Order Card with allocation breakdown</span></summary>
     <div class="task__body">
       <p>When validation reports mismatch, render the allocation breakdown inline on the <code>Sales Order Card</code> — one row per receiving <code>Sales Line</code>, with allocated and required quantities side by side and the imbalance highlighted.</p>
@@ -374,7 +377,39 @@ a:hover { color: var(--accent-hover); border-bottom-color: var(--accent-hover); 
     </div>
   </details>
 
-  <details class="task" id="T-005" data-task="T-005" data-status="blocked">
+  <details class="task" id="T-006" data-task="T-006" data-status="blocked" data-slice="post-validates-allocation" data-kind="verify">
+    <summary><span class="task__id">T-006</span><span class="task__title">Verify: Order Processor posts a sales document with a charge allocation and sees the mismatch surfaced inline</span></summary>
+    <div class="task__body">
+      <p>User-facing slice <code>post-validates-allocation</code>: the Order Processor releases and posts a <code>Sales Header</code> with an <code>Item Charge Assignment (Sales)</code>; balanced allocations post cleanly, mismatched allocations halt posting with the inline breakdown on the <code>Sales Order Card</code>.</p>
+      <div class="task__deps"><strong>Depends on</strong> <a href="#T-001">T-001</a> <a href="#T-002">T-002</a> <a href="#T-003">T-003</a> <a href="#T-004">T-004</a></div>
+      <div class="scenarios">
+        <p class="scenarios__heading">User test plan</p>
+        <details class="scenario">
+          <summary><span class="scenario__num">01</span> Posting a balanced allocation succeeds end-to-end</summary>
+          <div class="scenario__steps">1. Open <code>Sales Order Card</code> for <code>SO-1041</code> with a charge of quantity 10 and allocations of 4 and 6
+2. Click <code>Post</code> on the action bar
+3. Confirm the posting dialog
+4. Expected: a <code>Posted Sales Invoice</code> is created and the Sales Order Status flips to <code>Released</code></div>
+        </details>
+        <details class="scenario">
+          <summary><span class="scenario__num">02</span> Mismatched allocation halts posting with breakdown</summary>
+          <div class="scenario__steps">1. Open <code>Sales Order Card</code> for <code>SO-1042</code> with a charge of quantity 10 and allocations of 6 and 6
+2. Click <code>Post</code>
+3. Expected: posting halts with <code>Allocation Mismatch</code> message
+4. Expected: the breakdown shows both <code>Sales Line</code> rows with allocated and required quantities, overflow row highlighted</div>
+        </details>
+        <details class="scenario">
+          <summary><span class="scenario__num">03</span> Boundary at exact zero allocation</summary>
+          <div class="scenario__steps">1. Open <code>Sales Order Card</code> for <code>SO-1043</code> with a charge of quantity 10 and no allocations
+2. Click <code>Post</code>
+3. Expected: posting halts with <code>Allocation Mismatch</code> shortfall 10
+4. Expected: the breakdown is rendered with zero allocated</div>
+        </details>
+      </div>
+    </div>
+  </details>
+
+  <details class="task" id="T-005" data-task="T-005" data-status="blocked" data-slice="audit-trail">
     <summary><span class="task__id">T-005</span><span class="task__title">Persist allocation audit entries via Allocation Ledger Entry table</span></summary>
     <div class="task__body">
       <p>On every successful posting, <code>Insert</code> one ledger entry per resolved allocation: source <code>Sales Line</code>, receiving <code>Sales Line</code>, allocated quantity, <code>Posting Date</code>. The entry is the audit trail referenced by ADR-0007.</p>
@@ -382,10 +417,35 @@ a:hover { color: var(--accent-hover); border-bottom-color: var(--accent-hover); 
         <span class="callout__icon">×</span>
         <div>
           <p class="callout__title">Blocked</p>
-          <p>Awaiting decision on whether to extend existing <code>Allocation Account Entry</code> table or introduce new <code>Item Charge Allocation Ledger Entry</code> table. See <a class="xref" href="#">.out-of-scope/allocation-ledger-shape.md</a>.</p>
+          <p>Cross-slice gate: <a href="#T-006">T-006</a> (verify) must land before slice <code>audit-trail</code> opens. Independently awaiting decision on whether to extend existing <code>Allocation Account Entry</code> table or introduce new <code>Item Charge Allocation Ledger Entry</code> table; see <a class="xref" href="#">.out-of-scope/allocation-ledger-shape.md</a>.</p>
         </div>
       </div>
-      <div class="task__deps"><strong>Depends on</strong> <a href="#T-002">T-002</a></div>
+      <div class="task__deps"><strong>Depends on</strong> <a href="#T-002">T-002</a> <a href="#T-006">T-006</a></div>
+    </div>
+  </details>
+
+  <details class="task" id="T-007" data-task="T-007" data-status="blocked" data-slice="audit-trail" data-kind="verify">
+    <summary><span class="task__id">T-007</span><span class="task__title">Verify: Allocation Ledger Entry rows persist one row per resolved allocation after a successful posting</span></summary>
+    <div class="task__body">
+      <p>User-facing slice <code>audit-trail</code>: after a successful <code>Post</code> on a balanced allocation, the audit trail surfaces one <code>Allocation Ledger Entry</code> row per resolved allocation, queryable from the <code>Posted Sales Invoice</code>.</p>
+      <div class="task__deps"><strong>Depends on</strong> <a href="#T-005">T-005</a></div>
+      <div class="scenarios">
+        <p class="scenarios__heading">User test plan</p>
+        <details class="scenario">
+          <summary><span class="scenario__num">01</span> One allocation, one ledger entry</summary>
+          <div class="scenario__steps">1. Post <code>SO-1041</code> with a charge allocated against one <code>Sales Line</code>
+2. Open the resulting <code>Posted Sales Invoice</code>
+3. Drill into <code>Allocation Ledger Entries</code> from the fact box
+4. Expected: one row with the source <code>Sales Line</code>, allocated quantity, and the invoice <code>Posting Date</code></div>
+        </details>
+        <details class="scenario">
+          <summary><span class="scenario__num">02</span> Many allocations, one row per resolved allocation</summary>
+          <div class="scenario__steps">1. Post <code>SO-1044</code> with a charge of quantity 12 allocated as 4 + 4 + 4 across three <code>Sales Line</code> rows
+2. Open the <code>Posted Sales Invoice</code> and drill into <code>Allocation Ledger Entries</code>
+3. Expected: three rows, each carrying its source <code>Sales Line</code> reference and allocated quantity
+4. Expected: summed <code>Allocated Quantity</code> across the three rows equals 12</div>
+        </details>
+      </div>
     </div>
   </details>
 
@@ -393,15 +453,27 @@ a:hover { color: var(--accent-hover); border-bottom-color: var(--accent-hover); 
 
   <div class="mermaid" data-graph="task-deps">
 flowchart TD
-  T1["T-001<br/>Read assignments"]
-  T2["T-002<br/>Validate sums"]
-  T3["T-003<br/>Subscribe & route"]
-  T4["T-004<br/>Surface breakdown"]
-  T5["T-005<br/>Persist ledger"]
+  subgraph S1["slice: post-validates-allocation"]
+    T1["T-001<br/>Read assignments"]
+    T2["T-002<br/>Validate sums"]
+    T3["T-003<br/>Subscribe & route"]
+    T4["T-004<br/>Surface breakdown"]
+    T6(["T-006<br/>Verify slice"])
+  end
+  subgraph S2["slice: audit-trail"]
+    T5["T-005<br/>Persist ledger"]
+    T7(["T-007<br/>Verify slice"])
+  end
   T1 --> T3
   T2 --> T3
-  T2 --> T5
   T3 --> T4
+  T1 --> T6
+  T2 --> T6
+  T3 --> T6
+  T4 --> T6
+  T2 --> T5
+  T6 --> T5
+  T5 --> T7
   </div>
 
 </div>

@@ -1,11 +1,13 @@
 ---
 name: al-code-review
-description: AL/Business Central code review at gate points. Use when `/al-implement` marks a task done, when all tasks are done before merge, or when the user asks for an in-depth code review.
+description: AL/Business Central code review at gate points. Use when a slice's verify task lands (slice-done), when all tasks are done before merge (feature-done), or when the user asks for an in-depth code review.
 ---
 
 # /al-code-review, In-depth gate review
 
-A deliberate gate at task-done and feature-done boundaries, where the code is finished enough to judge whole. Parallel lens sub-agents run each with a narrow goal, a confidence pass suppresses noise, then findings auto-feed a per-finding `/grill-me` triage loop. The lens shape mirrors native `/code-review` but AL-shaped: lenses align with what trips AL reviewers, not generic ones.
+A deliberate gate at slice-done and feature-done boundaries, where the code is finished enough to judge whole *and* a user has confirmed the slice's user-facing outcome. Parallel lens sub-agents run each with a narrow goal, a confidence pass suppresses noise, then findings auto-feed a per-finding `/grill-me` triage loop. The lens shape mirrors native `/code-review` but AL-shaped: lenses align with what trips AL reviewers, not generic ones.
+
+Slice-done is the natural goldilocks. Per-task review (the pre-0.27 cadence) reviewed every TDD cycle's diff before the slice was end-to-end coherent, surfacing cross-task drift only after the slice closed anyway. Feature-done alone lets slice A's defects compound through slices B / C / D. Slice-done catches both: enough end-to-end shape to judge whole, small enough that defects don't ripple.
 
 `/al-refactor` (auto inside `/al-implement`) handles structural reshape at a high relevance bar every cycle. `/al-code-review` lowers the bar and adds judgment-level lenses the refactor pass cannot afford.
 
@@ -19,7 +21,9 @@ If any precondition fails, stop and surface the gap. Do not review against an un
 
 ## Scope and diff
 
-Two modes, deduced from current state, recent `data-status` flips, working tree, and what the user said: **per-task** (one just-completed task) or **per-feature** (full feature diff before merge). When inference is uncertain (mid-stream WIP commits, mixed in-flight/done), ask with concrete options: "diff for `T-NNN`?" / "full branch vs `main`?" / "uncommitted working tree?" / "SHA range you name?"
+Two modes, deduced from current state, recent `data-status` flips, working tree, and what the user said: **per-slice** (every technical task in one `data-slice` is `done` and the slice's verify task just flipped to `done`) or **per-feature** (full feature diff before merge). When inference is uncertain (mid-stream WIP commits, mixed in-flight/done), ask with concrete options: "diff for slice `<slug>`?" / "full branch vs `main`?" / "uncommitted working tree?" / "SHA range you name?"
+
+Per-slice scope: the union of diffs for every `T-NNN` carrying the slice's `data-slice`, from each task's first commit through its `done` flip. Pure-backend features have no verify tasks; per-slice mode applies on a best-effort basis when slices are explicitly grouped in `architecture.html`, otherwise it degenerates to per-feature.
 
 Pipeline commits carry `T-NNN <verb>: <message>` prefixes that associate commits with tasks; a `review:` commit or squash defeats the grep, which is when asking beats guessing.
 
@@ -34,6 +38,7 @@ Spawn all lenses in one message so they run concurrently. Each lens has a narrow
 | 3 | BC-specific via bc-knowledge | Per `${CLAUDE_SKILL_DIR}/../../references/bc-knowledge-dispatch.md`: `ask_bc_expert(autonomous_mode=false)` per file with file-type-mapped specialist, fetch surfaced topics via `get_bc_topic`, apply each topic's `anti_pattern_indicators`. Lower relevance bar (`>= 50`) than `/al-refactor`'s `>= 70`; the gate can afford the broader sweep | both |
 | 4 | Code comments + git history | Code comments in modified files state guidance (invariants, "do not X" warnings); changes comply. Recent commit history surfaces context: a previous fix the current change might re-break, a deliberate decision being undone | both |
 | 5 | AppSource public-surface addition | New public procedure, public table field, or page action on a shipped object locks public contract into AppSource. Linters fire on removal (AS0011) and rename (AS0007), not on addition; read the changed object alongside `app.json` and judge intentional vs accidental lock-in | per-feature only |
+| 6 | Verify ↔ code alignment | The slice's verify task scenarios in `tasks.html` name surfaces, Roles, and Status values; the changed code under the slice's `data-slice` actually exposes those surfaces with those names. Drift here means user verification just signed off on something other than what the code does | per-slice only |
 
 Lenses state goals, not enumerated checklists. The specifics each lens catches depend on the code and what `bc-knowledge` surfaces.
 
@@ -65,14 +70,14 @@ After the confidence pass, the skill spawns `/grill-me` per surviving finding au
 
 Per finding:
 
-- **Spawn**: `/grill-me` with the finding body (Finding / Where / Source / Severity / Confidence), the lens proposal (its `Recommended next`), and scope context.
+- **Spawn**: `/grill-me` with the finding body (Finding / Where / Source / Severity / Confidence / Slice when per-slice), the lens proposal (its `Recommended next`), and scope context.
 - **Contract**: three outcomes: new task in `tasks.html`, note on a future task, drop.
 - **References**: pass `${CLAUDE_SKILL_DIR}/../../references/notes-discipline.md` and `${CLAUDE_SKILL_DIR}/../../references/html-spec-discipline.md` for writeback shape.
 - **Exit**: when the decision lands.
 
 Passing a proposal (not raw finding) lets `/grill-me` stress-test whether the proposal is right rather than invent one cold. The three outcomes:
 
-- **New task**: append `<details class="task" data-task="T-NNN+1" data-status="ready">`, title naming the fix, body carrying `Where` and `Source` as seed for `/al-refine`. Next `/al-implement` cycle picks it up.
+- **New task**: append `<details class="task" data-task="T-NNN+1" data-status="ready" data-slice="<slug>">`, title naming the fix, body carrying `Where` and `Source` as seed for `/al-refine`. Slice slug is the just-reviewed slice (per-slice mode) or the slice the fix most naturally belongs to (per-feature mode); a fix that re-opens a closed slice flips that slice's verify task back to `blocked` and routes via `/al-steer`. Next `/al-implement` cycle picks it up.
 - **Note on future task**: identify a not-yet-`done` task whose work touches the area; regenerate its NOTE callout block whole (the surgical-edit contract on `tasks.html` is `data-task` + `data-status` only).
 - **Drop**: user accepts as known, not worth a task. The closer counts it.
 
@@ -88,7 +93,7 @@ Findings carry the slot set `Finding / Where / Source (lens name + topic id) / S
 
 | | |
 |---|---|
-| **Runs after**     | `/al-implement` (task done) or all tasks done (feature done) |
+| **Runs after**     | `/al-user-verification` (slice done) or all tasks done (feature done) |
 | **Hands off to**   | merge / next feature |
 | **Replan venue**   | n/a; findings auto-loop into `/grill-me` per finding, never via `/al-steer` (review findings are not replan signals) |
 | **Sidebands**      | `/al-second-opinion` (cross-runtime advisory on large findings lists), `/grill-me` (per-finding triage), `/al-research` (BaseApp behaviour or BC convention), `/bc-standard-reference` (BaseApp pattern correctness) |
