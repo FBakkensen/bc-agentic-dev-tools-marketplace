@@ -1,0 +1,47 @@
+# CANONICAL recorder output — BC platform 28.0.49873.0, CRONUS / Sales Order 101005.
+# Validates the DOCUMENT + LINES SUBPAGE locator nest on a real document:
+#   page -> part -> page(subform) -> repeater -> field
+# Also: role-center action navigate (action: SalesOrders), row Edit-invoke opening the document.
+name: Recording
+description: Test recording
+telemetryId: 3b17f48f-9dfa-4c84-82fd-ccdebcb053bc
+start:
+  profile: ORDER PROCESSOR
+steps:
+  - type: navigate
+    target:
+      - page: Order Processor Role Center
+      - action: SalesOrders
+    description: Navigate to <caption>Sales Orders</caption>
+  - type: page-shown
+    source:
+      page: Sales Order List
+    modal: false
+    runtimeId: b1ig
+    description: Page <caption>Sales Orders</caption> was shown.
+  - type: invoke
+    target:
+      - page: Sales Order List
+        runtimeRef: b1ig
+      - repeater: Control1
+    invokeType: Edit
+    parameters:
+      AlwaysCommit: false
+    description: Invoke row on <caption>Control1</caption>
+  - type: page-shown
+    source:
+      page: Sales Order
+    modal: false
+    runtimeId: b1s6
+    description: Page <caption>Sales Order</caption> was shown.
+  - type: copy-value                       # the Lines subpage nest: page -> part -> page(subform) -> repeater -> field
+    source:
+      - page: Sales Order
+        runtimeRef: b1s6
+      - part: SalesLines
+      - page: Sales Order Subform
+      - repeater: Control1
+      - field: Description
+    name: Sales Order Subform - Description
+    valueType: string
+    description: Copy value from <caption>Description</caption>
