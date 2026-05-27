@@ -35,6 +35,8 @@ Use this after changing the script contract or gate behavior.
 
 The smoke test must exercise the full gate. Do not use test-codeunit filtering. Run container tests sequentially — one branch/container at a time.
 
+**Drive the smoke from the main agent directly. NO subagent delegation.** Subagent reports summarise — smoke needs raw exit codes, stderr, BcContainerHelper output, container logs verbatim. Summary loses fidelity → false greens / false reds the main agent can't diagnose. Runtime usage of `/al-build` by callers still uses the SKILL.md subagent block (that's about containing verbose build output during normal development); smoke tests are different — the main agent is the diagnostician and needs everything.
+
 ## Smoke test: golden container with AL-Go dependencies
 
 Use this after changing dependency-install or gh-CLI dispatch in `new-bc-container.ps1`, `Install-AlGoDependencies`, `Get-ReleaseAppFiles`, or `Get-RepoFromUrl`. The standard smoke test above does not exercise `Install-AlGoDependencies` at all.

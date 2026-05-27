@@ -91,9 +91,9 @@ Abort on explicit `stop` / `end loop` / `cancel`, off-topic shift, or compaction
 
 Per-slice mode, no new tasks materialized in current slice: code-review owns the gate flip the slice depends on to advance.
 
-- **User-facing slice** (verify task exists in slice with `kind=verify`): flip its `status=` from `blocked` to `ready` on the comment-anchor line, sync heading marker to `[~]`. Announce `/al-user-verification` as next handoff.
+- **User-facing slice** (verify task exists in slice with `kind=verify`): flip its `status=` from `blocked` to `ready` on the comment-anchor line, sync heading marker to `[~]`. Next handoff is state-conditional on the verify task's Tests area and the slice's bc-replay recording at `pagescripts/recordings/<NNN>-<slug>__<slice>.yml`: empty Tests → `Next: /al-refine T-NNN`; Tests populated, `.yml` missing → `Next: /al-page-script T-NNN`; `.yml` exists → `Next: /al-user-verification T-NNN`.
 - **Pure-backend slice** (no verify task): flip the *next* slice's first technical task (slice whose first task carries `Depends on:` this slice's last technical task) from `blocked` to `ready`. Announce `/al-implement` (or `/al-refine` if the new-ready task's Tests slot is empty) as next handoff. If this was the feature's last slice (no next slice): announce `/al-code-review` per-feature as next handoff.
-- **Last user-facing slice**: still flip verify task ready; `/al-user-verification` then announces `/al-code-review` per-feature.
+- **Last user-facing slice**: still flip verify task ready; same state-conditional next handoff as any user-facing slice. `/al-user-verification` then announces `/al-code-review` per-feature.
 
 Edit shape for the user-facing flip:
 
@@ -117,7 +117,7 @@ Findings carry slot set `Finding / Where / Source (lens name + topic id) / Sever
 | | |
 |---|---|
 | **Runs after**     | `/al-implement` at slice-done (last technical task in slice flipped `done`) or at feature-done (last task in feature flipped `done`) |
-| **Hands off to**   | per-slice: `/al-implement` if grill loop added new tasks in current slice; else `/al-user-verification` (user-facing) or next slice's first technical task (pure-backend) after the gate flip; or `/al-code-review` per-feature if this was last slice and no `/al-user-verification` follows. per-feature: merge. |
+| **Hands off to**   | per-slice: `/al-implement` if grill loop added new tasks in current slice; else state-conditional after the gate flip — user-facing slice routes to `/al-refine` (empty Tests), `/al-page-script` (Tests populated, `.yml` missing), or `/al-user-verification` (`.yml` exists); pure-backend slice routes to next slice's first technical task; `/al-code-review` per-feature if this was last slice and no `/al-user-verification` follows. per-feature: merge. |
 | **Replan venue**   | n/a; findings auto-loop into `/grill-me` per finding, never via `/al-steer` (review findings are not replan signals) |
 | **Sidebands**      | `/al-second-opinion` (cross-runtime advisory on large findings lists), `/grill-me` (per-finding triage), `/al-research` (BaseApp behaviour or BC convention), `/bc-standard-reference` (BaseApp pattern correctness) |
 

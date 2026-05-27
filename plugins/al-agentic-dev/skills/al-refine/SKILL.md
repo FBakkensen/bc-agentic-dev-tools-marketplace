@@ -34,9 +34,9 @@ Spec how one task's behaviour is tested so `/al-implement` drives red → green 
 
 Unanswerable → cannot write scenario yet. Resolve via `/al-research` (BC behaviour), `/al-grill-adr` (domain rule), `/grill-me` (intent the user must adjudicate), or `/al-steer` (replan).
 
-## Verify task: user test plan for /al-user-verification
+## Verify task: user test plan for /al-page-script + /al-user-verification
 
-Spec how a human (or API consumer) confirms slice delivers its user-facing outcome end-to-end, so `/al-user-verification` walks each scenario without re-deriving intent. User is test runner; plan is what they follow. Answer before writing:
+Spec how a human (or API consumer) confirms slice delivers its user-facing outcome end-to-end. Two downstream consumers: `/al-page-script` reads each scenario's steps to generate the slice's bc-replay `.yml`; `/al-user-verification` then walks the scenarios with the human. Write so the surface, gestures, and assertions read identically for both — when a scenario captures an auto-assigned No. via the page's No. Series, prose says "Create a Sales Order, capture the No., assert No equals the captured value" (matching the `copy-value` + `=Clipboard.'name'` shape page-script will emit), not "Create Sales Order SO-1001". Answer before writing:
 
 - **Which slice does this verify?** Read `slice=` on the task's comment-anchor line, resolve to `event-model.md` timeline step. Title + description quote that step's Role, Action, Business Event, View, Status verbatim. Verify task naming AL mechanics (codeunit, event, subscriber) instead of user-facing vocab → confused altitudes.
 - **What scenarios cover the slice?** ZOMBIES across user-facing surface: Zero (empty / minimal state), One (happy path), Many (multi-line / batch / repeated), Boundary (limits, off-by-ones, threshold values like credit limit exactly at threshold), Interfaces (cross-page navigation, API content negotiation, factbox / cue refresh), Exception (user-facing failure path, error message text, posted-document rollback), Simple (any narrow simplification worth separate confirmation). Skip cleanly when slice has no Z (e.g. feature that only exists for non-empty state).
@@ -73,6 +73,6 @@ Cross-check via `/al-second-opinion`. Prompt body for technical tasks: task titl
 | | |
 |---|---|
 | **Runs after**     | `/al-scope` (task entry exists with `status=ready` and empty Tests area) |
-| **Hands off to**   | `/al-implement` for technical tasks, `/al-user-verification` for verify tasks |
+| **Hands off to**   | `/al-implement` for technical tasks, `/al-page-script` for verify tasks (page-script generates the slice's bc-replay `.yml` from the scenarios, then `/al-user-verification` walks them) |
 | **Replan venue**   | `/al-steer` |
 | **Sidebands**      | `/al-research` (BC facts), `/al-second-opinion` (non-trivial scenarios), `/al-grill-adr` (fuzzy domain term), `/grill-me` (fuzzy intent) |

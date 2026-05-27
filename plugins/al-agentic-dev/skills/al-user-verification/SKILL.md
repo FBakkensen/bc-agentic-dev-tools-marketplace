@@ -17,7 +17,24 @@ Skill facilitates; user is the runner. No AL writes, no `/al-build` run, no code
 - `specs/<branch>/tasks.md` holds `kind=verify` task with `status=ready` and populated Tests area. Empty Tests → run `/al-refine <T-NNN>`. Status `blocked` → run `/al-steer`. Status anything else (`in-progress` from prior session, `done`) → surface and ask before reopening.
 - Verify task `status=ready` means `/al-code-review` per-slice ran clean and flipped it from `blocked`. Still `blocked` → code-review has not run cleanly yet; re-enter via `/al-code-review` (or `/al-implement` if technical tasks are still open), not here.
 - `event-model.md` present alongside; verify tasks only exist for user/API-facing features. Verify task without `event-model.md` → contract violation, **Stop**, route to `/al-steer`.
-- Latest code published to verification environment. Skill does not run `/al-build`; user confirms publish before walking, or skill surfaces *"publish first via `/al-build`, then re-enter"* and stops. Verification against stale code signs off on wrong thing.
+- Latest code published to verification environment. Skill spawns its own fresh container per cycle (see *Container lifecycle* below); user does not need to publish manually. Skill does not run the inner `/al-build`-test loop; container spawn covers publish.
+- Slice's bc-replay recording exists at `pagescripts/recordings/<NNN>-<slug>__<slice>.yml`. Missing → **Stop**, `Next: /al-page-script T-NNN`. The pre-flight regression batch runs the slice's `.yml` plus every prior slice's `.yml` before the human walk; without a recording the regression net has a hole.
+
+## Container lifecycle
+
+Three `new-agent-container.ps1` spawns per cycle. Fresh-each-time discipline isolates verification from prior session state and leaves the next consumer with a clean container.
+
+**Spawn #1 (pre-flight).** `new-agent-container.ps1` → `publish-apps.ps1` → `pagescript-replay.ps1` (batch mode, every `pagescripts/recordings/*.yml`). Three explicit primitives: fresh container, publish all configured apps, run the regression batch. Catches both current-slice regressions and cross-slice collisions before the human walk. Green → continue. Red → flip verify task `status=blocked`, record transcript with `**Replan flag**: trigger #4 (sibling now wrong)` for any prior-slice `.yml` red, `**Replan flag**: trigger #8 (verification failed)` for current-slice red. Announce route to `/al-steer T-NNN`. Run spawn #3 for cleanup and exit.
+
+**Spawn #2 (pre-walk).** Only on pre-flight green. `new-agent-container.ps1` → `publish-apps.ps1` → surface the BC Web Client URL (`http://<container-name>/BC/`) for the user → human walks scenarios live against this container. Symmetric with spawn #1's first two primitives; no replay step (batch already greened on spawn #1; re-running is wasted work and a second chance to red on something the gate already cleared). Walk owns the rest of *Workflow* below.
+
+**Spawn #3 (exit).** Always runs at end of cycle, pass or fail. `new-agent-container.ps1` only — leaves a fresh container for the next consumer (next slice's `/al-implement`, or merge prep). Skill exits after spawn returns.
+
+Spawn invocations:
+- container spawn (any): `pwsh "${CLAUDE_SKILL_DIR}/../al-build/scripts/new-agent-container.ps1"`
+- publish all apps (spawn #1, #2): `pwsh "${CLAUDE_SKILL_DIR}/../al-build/scripts/publish-apps.ps1"`
+- batch replay (spawn #1): `pwsh "${CLAUDE_SKILL_DIR}/../al-build/scripts/pagescript-replay.ps1"`
+
 ## What this session answers
 
 - **Which slice in flight?** One `T-NNN` of `kind=verify`, named in opener with its `slice=` value and matching `event-model.md` timeline step.
@@ -39,9 +56,21 @@ Per step: read user-action line, ask *"what did you see?"*, record answer in cha
 
 Step's expected outcome is implicit (step says *"click Release"* and next step asserts the Status) → wait for asserting step to capture observation. Do not interrupt with *"and what was the Status?"* between an action step and its assertion; that's the next step's job.
 
-### Failure: stop the scenario, flip blocked, route
+### Pre-flight failure routing (spawn #1 red)
 
-First fail in any scenario: stop the walk. Do not continue to later steps in same scenario, do not move to later scenarios. Record inside task block:
+Pre-flight batch surfaces failures BEFORE the human walks. Two failure shapes; both route to `/al-steer` but the trigger names what `/al-steer` is being asked to triage.
+
+- **Current slice's `.yml` red.** The recording `/al-page-script` just generated and committed fails on a fresh container. `/al-page-script`'s scenario-by-scenario inner loop ran replay-validation per scenario, so a current-slice pre-flight red means the failure didn't surface inside that loop — likely a non-deterministic recording (timing-dependent assertion, flaky locator), or a real regression introduced between `/al-page-script`'s green and `/al-user-verification`'s entry (a hotfix commit, a CI republish of a different version). Flag `**Replan flag**: trigger #8 (verification failed)`. `/al-steer` triages: re-author the scenario step (rewrite via `/al-refine`) if the recording is fragile, or insert a `Fixes:` task in the current slice if a real defect surfaced.
+
+- **Prior slice's `.yml` red.** A recording from an earlier slice's verify task fails on the current slice's published code. Current slice introduced a change that broke the prior slice's user-facing surface — a renamed action, removed field, altered factbox refresh shape, changed Status-flip behaviour. Flag `**Replan flag**: trigger #4 (sibling now wrong)`. `/al-steer` triages: regenerate the prior slice's `.yml` via `/al-page-script` if the surface change was intentional (the prior recording is stale, not wrong), rewrite the prior slice's scenarios via `/al-refine` if the change invalidates the user-facing contract, or insert a `Fixes:` task in the current slice if the surface change was unintentional regression. Re-opening a prior slice's verify task is a `/al-steer` decision, not this skill's.
+
+Mixed-red (both current AND prior slices red) is one root cause more often than two; transcript names every failed `.yml`, both flags stamped, `/al-steer` picks one.
+
+Flip `status=blocked` on the comment-anchor line, sync heading marker to `[!]`. Run spawn #3 for cleanup before exiting.
+
+### Failure: stop the scenario, flip blocked, route (live-walk red)
+
+First fail in any scenario the human walks: stop the walk. Do not continue to later steps in same scenario, do not move to later scenarios. Record inside task block:
 
 - Which scenario (`T-NNN#K`) and which step (1-indexed within scenario).
 - Observed vs expected, in user's words.
@@ -54,7 +83,7 @@ old_string: <!-- task=T-NNN status=in-progress slice=<slug> kind=verify -->
 new_string: <!-- task=T-NNN status=blocked slice=<slug> kind=verify -->
 ```
 
-Announce route to `/al-steer` with task ID. `/al-steer` decides between defect (insert `Fixes:` task in same `slice=`), wrong scenario (rewrite via `/al-refine`), wrong slice boundary (split via `/al-scope`). This skill does not propose the fix; surface failure and stop.
+Announce route to `/al-steer T-NNN`. `/al-steer` decides between defect (insert `Fixes:` task in same `slice=`), wrong scenario (rewrite via `/al-refine`), wrong slice boundary (split via `/al-scope`). This skill does not propose the fix; surface failure and stop.
 
 ### Pass: continue to next scenario
 
@@ -74,9 +103,10 @@ Gate report on failure (flipping to `blocked`) is the Stop shape from [voice-con
 
 | | |
 |---|---|
-| **Runs after**     | `/al-code-review` per-slice ran clean for this slice and flipped verify task `blocked` → `ready` |
-| **Hands off to**   | next slice's first technical task (`/al-refine` if Tests empty, else `/al-implement`); or `/al-code-review` per-feature if this was last slice. `/al-steer` on failure (after `status=blocked`). |
-| **Replan venue**   | `/al-steer` (trigger #8 on failure) |
+| **Runs after**     | `/al-page-script` committed the slice's `.yml` at `pagescripts/recordings/<NNN>-<slug>__<slice>.yml` (which itself runs after `/al-code-review` per-slice flipped the verify task `blocked` → `ready`) |
+| **Hands off to**   | next slice's first technical task (`/al-refine` if Tests empty, else `/al-implement`); or `/al-code-review` per-feature if this was last slice. `/al-steer` on failure (after `status=blocked`, whether pre-flight red or live-walk red). |
+| **Uses**           | `new-agent-container.ps1` (three spawns per cycle), `pagescript-replay.ps1` (batch mode for spawn #1's pre-flight), `publish-apps.ps1` (spawn #2 publish before the human walk) |
+| **Replan venue**   | `/al-steer` — trigger #4 (pre-flight prior-slice red), trigger #8 (pre-flight current-slice red or live-walk fail) |
 | **Sidebands**      | `/grill-me` (user uncertain whether what they saw matches expected outcome), `/al-research` (BC surface behaviour user wants verified against documentation) |
 
 <claude-only>

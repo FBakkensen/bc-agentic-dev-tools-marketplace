@@ -19,7 +19,7 @@ Composable skills for AL/Business Central agentic development. One feature flows
 | **Shaping** (inside `/al-implement` or standalone on legacy) | `/al-refactor`, `/al-mutate`, `/al-page-script` |
 | **Meta** | `/al-agentic-dev-overview` (this skill) |
 
-Slice mechanics: `/al-implement` works through one slice's technical tasks, then `/al-code-review` fires automatically at slice-done. For user/API-facing slices, `/al-user-verification` walks the user through the slice's verify task before the next slice opens. Pure-backend slices skip user-verification and chain directly into the next slice. At feature-done (every task in feature `done`), `/al-code-review` fires per-feature before merge.
+Slice mechanics: `/al-implement` works through one slice's technical tasks, then `/al-code-review` fires automatically at slice-done. For user/API-facing slices, `/al-page-script` generates the slice's bc-replay recording from the verify task scenarios, then `/al-user-verification` pre-flights the recording batch against a fresh container and walks the user through the verify task before the next slice opens. Pure-backend slices skip page-script and user-verification, chaining directly into the next slice. At feature-done (every task in feature `done`), `/al-code-review` fires per-feature before merge.
 
 ## Skills
 
@@ -41,7 +41,7 @@ Slice mechanics: `/al-implement` works through one slice's technical tasks, then
 | `/al-steer` | Coach and navigator. Reads state, names next step, never edits code. Owns `.out-of-scope/`. Canonical replan venue. | "Where are we?", "what's next?", trigger fired in another skill. |
 | `/al-build` | Compile, publish, run tests; writes results to `.output/TestResults/<dirName>/`. | After modifying AL code or tests. Required gate before commit. |
 | `/al-debug-logging` | Temporary `DEBUG-*` `FeatureTelemetry.LogUsage` probes; read `telemetry.jsonl`; remove probes. Final state: zero `DEBUG-*` in tree. | Runtime behaviour diverges from source and tests can't reveal which path ran. |
-| `/al-page-script` | Author or validate a BC Page Scripting recording (`.yml` replayed by `@microsoft/bc-replay`). | Web-client UI smoke or regression recording needed. |
+| `/al-page-script` | Generate the slice's bc-replay recording (`.yml`) from the verify task's scenarios; scenario-by-scenario inner loop against a fresh container; commits the file on green. Produces the recording `/al-user-verification` pre-flights. | After `/al-code-review` per-slice flips the verify task to `ready` (user-facing slice only). |
 
 ## Persistence layers
 

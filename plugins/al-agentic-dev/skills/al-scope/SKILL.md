@@ -34,7 +34,7 @@ Two altitudes, on purpose.
 - **TDD-vertical**: every `T-NNN` ships tests + production code together; layer-only tasks (data without callers, logic without tests) leave system half-built and tests-as-afterthought becomes tests-never-written. Kind varies (primitive, extract, wire, fix, pure refactor); verticality at this altitude does not.
 - **User-vertical**: a slice is what the user can touch; one slice fans into a *wire* task crossing the slice's trigger plus *primitive / extract / fix* tasks composing into it. Single primitive task is TDD-vertical but invisible to user; closing wire task is what the user verifies. Forcing one slice to one task either bloats past a session or hides the seam under wrapper.
 
-Verify task at end of each slice is where user-vertical becomes a status flip. Carries no Gherkin and no AL writes; `/al-refine` fills its Tests area with a ZOMBIES-ordered user test plan (numbered user-action steps citing `event-model.md` slots), `/al-user-verification` walks the user through it.
+Verify task at end of each slice is where user-vertical becomes a status flip. Carries no Gherkin and no AL writes; `/al-refine` fills its Tests area with a ZOMBIES-ordered user test plan (numbered user-action steps citing `event-model.md` slots); `/al-page-script` generates the slice's bc-replay recording from those scenarios; `/al-user-verification` pre-flights the recording batch and walks the user through the scenarios.
 
 ## ZOMBIES inside slice, slice order from timeline
 
@@ -64,7 +64,7 @@ Each task block opens with an H3 heading + one HTML-comment line immediately und
 - `task=T-NNN`: monotonic, never reused across kinds, starts at `T-001`. Locator.
 - `status=ready | in-progress | done | blocked`: single source of truth for state. Scope writes `ready` for every technical task in **first** slice and `blocked` for every other task (later-slice technical tasks waiting on cross-slice gate; every slice's verify task waiting on in-slice cluster). `/al-implement` flips technical tasks `ready` → `in-progress` → `done`; does not touch verify tasks. `/al-code-review` per-slice on clean review flips the slice's verify task `blocked` → `ready` (user-facing slice) or the next slice's first technical task `blocked` → `ready` (pure-backend slice); new finding in current slice suppresses the flip. `/al-user-verification` flips verify task `ready` → `in-progress` → `done` (pass) or `blocked` (fail), and on `done` flips next slice's technical tasks `blocked` → `ready`. `/al-steer` flips anything to `blocked` on replan trigger. Multiple technical tasks within a slice can be `ready` simultaneously; ZOMBIES order in file plus in-slice `Depends on:` edges tell `/al-implement` which to pick first.
 - `slice=<slug>`: every task carries it. Slug kebab-case, derived from `event-model.md` timeline step or `architecture.md` slice.
-- `kind=technical | verify`: every task carries it. Routes downstream (technical → `/al-implement`, verify → `/al-user-verification`).
+- `kind=technical | verify`: every task carries it. Routes downstream (technical → `/al-implement`; verify → `/al-page-script` to generate the slice's `.yml`, then `/al-user-verification` to walk it).
 
 Heading marker (`[ ]`/`[~]`/`[x]`/`[!]`) is a visible courtesy fallback; the comment line is the byte the Edit anchors on. Writing skill keeps marker in sync on flip. Slice headings (`## Slice: <slug>`), section order, alert blocks, graph styling: your call per feature.
 

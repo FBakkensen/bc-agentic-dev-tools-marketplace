@@ -15,7 +15,7 @@ Pick next ready task from `tasks.md`. TDD per Gherkin bullet. Refactor full task
 - `specs/<branch>/` holds `tasks.md` + `architecture.md`. Missing → `/al-design`.
 - User/API-facing: `event-model.md` present, canonical Role / Business Event / View names from there already in Gherkin via `/al-refine`; transcribe verbatim into test names + `[SCENARIO]` / `[GIVEN]` / `[WHEN]` / `[THEN]` comments.
 - Target task `status=ready`, populated Tests. Empty Tests → `/al-refine <T-NNN>`. `blocked` → `/al-steer`.
-- Target task `kind=verify`: **Stop**, route to `/al-user-verification`. Verify tasks not TDD; this skill writes AL.
+- Target task `kind=verify`: **Stop**, route to `/al-page-script T-NNN`. Verify tasks not TDD; this skill writes AL. (`/al-page-script` generates the slice's bc-replay recording; `/al-user-verification` runs after the `.yml` exists.)
 
 ## What this session answers
 
