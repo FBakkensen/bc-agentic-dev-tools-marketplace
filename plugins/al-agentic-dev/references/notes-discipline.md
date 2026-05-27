@@ -17,7 +17,7 @@ Cannot tell which side a piece belongs on → ask trigger test: *will this line 
 
 | Content | Destination | Owner |
 |---|---|---|
-| Status | `status=` key on task comment-anchor line | `/al-implement`, `/al-user-verification`, `/al-steer` |
+| Status | `status=` key on task comment-anchor line | `/al-implement`, `/al-code-review`, `/al-user-verification`, `/al-steer` |
 | Slice membership | `slice=<slug>` key on task comment-anchor line | `/al-scope` (write), every reader |
 | Task kind (verify vs technical) | `kind=verify` or `kind=technical` on task comment-anchor line | `/al-scope` (write), every reader |
 | In-flight scaffolding the next agent on this branch needs | inside task block | writing skill (shape is its call) |

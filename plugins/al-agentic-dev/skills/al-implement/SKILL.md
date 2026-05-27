@@ -22,7 +22,7 @@ Pick next ready task from `tasks.md`. TDD per Gherkin bullet. Refactor full task
 - **Which task in flight?** One `T-NNN`, named in opener, status flipped `ready` → `in-progress` before first RED.
 - **Where is the seam?** Read `architecture.md` R → P → W boundary, module map, brownfield touchpoints. Name seam in BC vocab (procedure to extract, event to subscribe, interface to implement). One line.
 - **Did decision logic change?** Yes → mutation runs after refactor. No → record skipped-mutation outcome inside task block; `/al-mutate` skips.
-- **What flips at end?** `status=` goes `in-progress` → `done` on the comment-anchor line, heading marker `[~]` → `[x]`; final full `/al-build` (container) green. When this is slice's last technical task (all sibling `T-NNN` with same `slice=` also `done`): flip slice's verify task `blocked` → `ready`, announce `/al-user-verification` as next handoff.
+- **What flips at end?** `status=` goes `in-progress` → `done` on the comment-anchor line, heading marker `[~]` → `[x]`; final full `/al-build` (container) green. When this is slice's last technical task (all sibling `T-NNN` with same `slice=` also `done`): announce `/al-code-review` per-slice as next handoff. Do not touch the slice's verify task — `/al-code-review` owns the `blocked` → `ready` flip after clean review. When this is the feature's last task (every `T-NNN` across the feature `done`, no verify task pending): announce `/al-code-review` per-feature as next handoff.
 - **Which BC names verified this session?** Every BC-specific name a Gherkin bullet rests on (procedure, event, table, field, codeunit, attribute): backed this session by `al-symbols-mcp` or `grep` hit, or `/al-research` citation. Recall does not satisfy. See *Citation chain in chat* below.
 
 Unanswerable question → task not ready. Resolve via `/al-research`, `/al-refine`, or `/al-steer`.
@@ -98,6 +98,6 @@ Heading marker stays in sync (`[~]` → `[x]`) but is fallback rendering, not th
 | | |
 |---|---|
 | **Runs after**     | `/al-refine` (filled Tests slot in `tasks.md`) |
-| **Hands off to**   | `/al-user-verification` when slice's verify task flips ready; else next ready technical task. `/al-code-review` fires at slice-done (after user verification) and feature-done. |
+| **Hands off to**   | `/al-code-review` per-slice at slice-done; `/al-code-review` per-feature at feature-done; else next ready technical task. |
 | **Replan venue**   | `/al-steer` |
 | **Sidebands**      | `/al-research` (BC facts), `/al-debug-logging` (execution path unclear), `/grill-me` (judgement needs user), `/bc-standard-reference` (pure BaseApp questions) |

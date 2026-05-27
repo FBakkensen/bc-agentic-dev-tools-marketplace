@@ -22,7 +22,13 @@ Read anything in workspace. Write `tasks.md` structurally, only after explicit u
 
 ## Read first, then name
 
-Read `tasks.md`, scan `architecture.md`, `event-model.md` when present, recent commits, `.out-of-scope/` before opening your mouth. Surface what the state already says; coaching from stale memory is the failure mode that drove the user here. Name entries that need a decision: severity, ID, symptom in codebase's terms (object names, table fields, codeunit calls), one line per entry. Distinguish kinds explicitly: verify task (`kind=verify`) ready or blocked is user-verification gate, not a TDD cycle; name it as such (*"slice `release-sales-order` is ready for user verification"*, *"slice `approve-override` verify is blocked, scenario `#3 Boundary` failed at step 4"*) so user picks right next skill. Prose paragraphs and generic CRUD words bury the seam; let user pick which entry to walk. See [voice-contract.md](../../references/voice-contract.md) for prose voice.
+Read `tasks.md`, scan `architecture.md`, `event-model.md` when present, recent commits, `.out-of-scope/` before opening your mouth. Surface what the state already says; coaching from stale memory is the failure mode that drove the user here. Name entries that need a decision: severity, ID, symptom in codebase's terms (object names, table fields, codeunit calls), one line per entry. Distinguish kinds explicitly:
+
+- Verify task (`kind=verify`) `ready` or `blocked` is user-verification gate, not a TDD cycle (*"slice `release-sales-order` verify is ready"*, *"slice `approve-override` verify is blocked, scenario `#3 Boundary` failed at step 4"*).
+- Slice-done with no clean code-review yet (every technical task in a `slice=` is `done`, slice's verify task still `blocked`, or pure-backend slice's last task `done` with next slice's first task still `blocked`) is the `/al-code-review` per-slice gate (*"slice `release-sales-order` is code-review ready: 4 technical tasks done, verify still blocked"*).
+- Feature-done (every `T-NNN` in feature `done`, no merge yet) is the `/al-code-review` per-feature gate.
+
+Naming the gate by name lets user pick the right next skill. Prose paragraphs and generic CRUD words bury the seam; let user pick which entry to walk. See [voice-contract.md](../../references/voice-contract.md) for prose voice.
 
 ## Route to next skill, do not perform it
 
@@ -64,4 +70,4 @@ Grilling vetoes a recurring scope item with substantive reason (project scope, t
 | | |
 |---|---|
 | **Invoked from**     | any SKILL on replan trigger, or by user for "where are we" |
-| **Routes to**        | `/al-design` (architecture-decomposition trigger), `/al-refine` (scenario gap), `/al-implement` (next ready technical task), `/al-user-verification` (verify task ready), `.out-of-scope/` (durable rejection) |
+| **Routes to**        | `/al-design` (architecture-decomposition trigger), `/al-refine` (scenario gap), `/al-implement` (next ready technical task), `/al-code-review` (slice-done with no clean review yet, or feature-done), `/al-user-verification` (verify task ready — i.e. code-review already ran clean), `.out-of-scope/` (durable rejection) |

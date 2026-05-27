@@ -53,7 +53,7 @@ Per file under review:
 | Calling skill | Threshold | Why |
 |---|---|---|
 | `/al-refactor` | `relevance >= 70` | Refactor runs every TDD cycle. High bar keeps the MCP cost down and constrains findings to structural anti-patterns the agent should fix in the same pass. |
-| `/al-code-review` (per-task) | `relevance >= 50` | Gate runs once per task; can afford the broader sweep. Catches BC-specific concerns refactor's high bar skipped. |
+| `/al-code-review` (per-slice) | `relevance >= 50` | Gate runs once per slice; can afford the broader sweep. Catches BC-specific concerns refactor's high bar skipped. |
 | `/al-code-review` (per-feature) | `relevance >= 50` plus cross-file checks | End-of-spec gate; widest net. Cross-file checks (perm set vs new table field, publisher vs subscriber signature, AppSource public-surface additions) are this mode's responsibility, not single-file MCP calls. |
 
 Adjust per call when context demands. The threshold is a default, not a contract.

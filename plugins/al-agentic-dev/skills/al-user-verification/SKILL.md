@@ -1,13 +1,13 @@
 ---
 name: al-user-verification
-description: Walk a user through one slice's verify task in tasks.md for AL/Business Central. Use when a verify task (kind=verify) flips to ready, after its slice's technical tasks all hit done.
+description: Walk a user through one slice's verify task in tasks.md for AL/Business Central. Use when a verify task (kind=verify) flips to ready, after `/al-code-review` per-slice ran clean for the slice.
 ---
 
 **Style:** Drop articles, filler, hedging. Fragments OK. Arrows for causality. Technical terms exact, code unchanged, errors quoted exact. **Exception**: shift to prose where clarity or safety would be hurt.
 
 # /al-user-verification, Walk a slice's user test plan
 
-Pick a ready verify task. Walk each scenario's numbered steps with the user. Capture pass / fail per step. All pass → flip to `done`, hand off to `/al-code-review` at slice-done. Any fail → flip to `blocked`, record failure inline, route to `/al-steer` with trigger #8.
+Pick a ready verify task. Walk each scenario's numbered steps with the user. Capture pass / fail per step. All pass → flip to `done`, hand off to the next slice's first technical task (or `/al-code-review` per-feature if this was the last slice). Any fail → flip to `blocked`, record failure inline, route to `/al-steer` with trigger #8.
 
 Skill facilitates; user is the runner. No AL writes, no `/al-build` run, no codebase walk. Work is reading scenarios aloud, asking *"what did you see?"*, recording the answer.
 
@@ -15,6 +15,7 @@ Skill facilitates; user is the runner. No AL writes, no `/al-build` run, no code
 
 - Branch matches `^\d{3}-`. If not: **Stop**. Verify task only exists inside in-flight feature.
 - `specs/<branch>/tasks.md` holds `kind=verify` task with `status=ready` and populated Tests area. Empty Tests → run `/al-refine <T-NNN>`. Status `blocked` → run `/al-steer`. Status anything else (`in-progress` from prior session, `done`) → surface and ask before reopening.
+- Verify task `status=ready` means `/al-code-review` per-slice ran clean and flipped it from `blocked`. Still `blocked` → code-review has not run cleanly yet; re-enter via `/al-code-review` (or `/al-implement` if technical tasks are still open), not here.
 - `event-model.md` present alongside; verify tasks only exist for user/API-facing features. Verify task without `event-model.md` → contract violation, **Stop**, route to `/al-steer`.
 - Latest code published to verification environment. Skill does not run `/al-build`; user confirms publish before walking, or skill surfaces *"publish first via `/al-build`, then re-enter"* and stops. Verification against stale code signs off on wrong thing.
 ## What this session answers
@@ -65,7 +66,7 @@ Session interrupted mid-walk leaves verify task at `in-progress` with partial re
 
 ## Gate event
 
-Once when verify task flips to `done`. Gate report names slice (slug + `event-model.md` step), what user confirmed in BC vocabulary (Role action, Business Event, View state, Status value), next handoff: `/al-code-review` per-slice on just-verified slice's diff, then `/al-implement` on first technical task of next slice (or `/al-code-review` per-feature if this was last slice).
+Once when verify task flips to `done`. Gate report names slice (slug + `event-model.md` step), what user confirmed in BC vocabulary (Role action, Business Event, View state, Status value), next handoff: `/al-implement` on first technical task of next slice (or `/al-refine` if its Tests slot is empty), or `/al-code-review` per-feature if this was last slice.
 
 Gate report on failure (flipping to `blocked`) is the Stop shape from [voice-contract.md](../../references/voice-contract.md): one stop line naming scenario / step / observed-vs-expected, state table (verify task ID, scenarios completed, scenario blocked on), next action (route to `/al-steer`).
 
@@ -73,13 +74,13 @@ Gate report on failure (flipping to `blocked`) is the Stop shape from [voice-con
 
 | | |
 |---|---|
-| **Runs after**     | `/al-implement` flipped last technical task in slice to `done` and verify task to `ready` |
-| **Hands off to**   | `/al-code-review` (slice-done, after `status=done`) or `/al-steer` (failure, after `status=blocked`) |
+| **Runs after**     | `/al-code-review` per-slice ran clean for this slice and flipped verify task `blocked` → `ready` |
+| **Hands off to**   | next slice's first technical task (`/al-refine` if Tests empty, else `/al-implement`); or `/al-code-review` per-feature if this was last slice. `/al-steer` on failure (after `status=blocked`). |
 | **Replan venue**   | `/al-steer` (trigger #8 on failure) |
 | **Sidebands**      | `/grill-me` (user uncertain whether what they saw matches expected outcome), `/al-research` (BC surface behaviour user wants verified against documentation) |
 
 <claude-only>
 
-**Advisor checkpoint.** Call `advisor()` before flipping verify task to `done`. The flip greenlights `/al-code-review` and next slice; if user confirmations don't actually cover every scenario step the plan named, gate is theatre.
+**Advisor checkpoint.** Call `advisor()` before flipping verify task to `done`. The flip greenlights the next slice; if user confirmations don't actually cover every scenario step the plan named, gate is theatre.
 
 </claude-only>

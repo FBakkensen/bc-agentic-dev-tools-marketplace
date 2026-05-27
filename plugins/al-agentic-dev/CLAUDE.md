@@ -16,17 +16,17 @@ Two layers, on purpose.
 ## Pipeline
 
 ```
-/al-grill-adr  →  /al-event-model  →  /al-design     →  /al-scope                →  /al-refine    →  /al-implement   →  /al-refactor  →  /al-mutate  →  /al-user-verification
-(CONTEXT,         (event-model.md,    (architecture    (tasks.md, slices +         (per-task        (TDD per task)     (improve        (test-rigor    (user walks slice's
- ADRs)             user/API-facing     .md, AL-shape    technical + verify per     scenarios)                          shape)          gate)          verify task; flip done
-                   only, pure backend  only)            user/API-facing slice)                                                                         or blocked → /al-steer)
+/al-grill-adr  →  /al-event-model  →  /al-design     →  /al-scope                →  /al-refine    →  /al-implement   →  /al-code-review  →  /al-user-verification
+(CONTEXT,         (event-model.md,    (architecture    (tasks.md, slices +         (per-task        (TDD per task,     (slice-done +        (user walks slice's
+ ADRs)             user/API-facing     .md, AL-shape    technical + verify per     scenarios)        inner refactor +   feature-done         verify task; flip done
+                   only, pure backend  only)            user/API-facing slice)                       mutation cycles)   programmatic gate)   or blocked → /al-steer)
                    skips this step)
 
-gates: /al-code-review (user-invoked at slice-done after user verification, and at feature-done; combines vanilla review + bc-knowledge MCP topic surfacing; auto-runs /grill-me per surviving finding for triage)
+gates: /al-code-review (auto-announced at slice-done after `/al-implement`'s last technical task in slice, and at feature-done; combines vanilla review + bc-knowledge MCP topic surfacing; auto-runs /grill-me per surviving finding for triage; owns the slice gate flip — verify task `blocked` → `ready` for user-facing slices, next slice's first technical task `blocked` → `ready` for pure-backend slices)
 side-band: /al-research, /al-steer (replan venue + .out-of-scope), /al-second-opinion
 ```
 
-Slice cycle: `/al-implement` works through the slice's technical tasks (ZOMBIES inside the slice); when the last technical task lands, the slice's verify task flips `ready`; `/al-user-verification` walks it with the user; on pass, `/al-code-review` runs per-slice and the next slice's first task becomes ready; on fail, the verify task flips `blocked` and `/al-steer` routes (trigger #8). Pure-backend features have no `event-model.md` and skip verify tasks entirely.
+Slice cycle: `/al-implement` works through the slice's technical tasks (ZOMBIES inside the slice); when the last technical task lands, `/al-code-review` runs per-slice. If its `/grill-me` auto-loop materializes new technical tasks in the same slice, the slice re-opens (gate flip suppressed) and `/al-implement` continues until code-review re-runs clean. On clean review, code-review flips the slice's verify task `blocked` → `ready` (user-facing) or the next slice's first technical task `blocked` → `ready` (pure-backend). For user-facing slices `/al-user-verification` then walks the verify task with the user; on pass, next slice's first technical task flips `ready` and the loop continues; on fail, verify task flips `blocked` and `/al-steer` routes (trigger #8). Feature-done invokes `/al-code-review` per-feature before merge. Pure-backend features have no `event-model.md` and skip the user-verification step entirely; the chain becomes implement → code-review → next slice.
 
 ## Skills
 
@@ -38,10 +38,10 @@ Slice cycle: `/al-implement` works through the slice's technical tasks (ZOMBIES 
 | `/al-design` | `event-model.md` → feature architecture. Module map, BC patterns, R→P→W boundary, brownfield touchpoints, test strategy, parallel design-twice. Writes `architecture.md`; creates branch when `/al-event-model` did not. |
 | `/al-scope` | `architecture.md` → slice-grouped task list in `tasks.md`. Goal + technical `T-NNN`s with `slice=<slug>` + one verify `T-NNN` per slice (user/API-facing features only). Slices follow event-model timeline order; ZOMBIES inside each slice. |
 | `/al-refine` | One task → numbered scenarios. Technical task → ZOMBIES Gherkin for `/al-implement`. Verify task → ZOMBIES user test plan (numbered user-action steps citing event-model slots) for `/al-user-verification`. |
-| `/al-implement` | Pick a Gherkin-ready technical task, run TDD: red → green → refactor → mutate. Stops on `kind=verify` and routes to `/al-user-verification`. Flips the slice's verify task `ready` when its last technical sibling lands. |
-| `/al-user-verification` | Walk a slice's verify task with the user. ZOMBIES scenarios with numbered user-action steps; per-step pass/fail capture. All pass → `done`, hand off to `/al-code-review` at slice-done. Any fail → `blocked`, route to `/al-steer` with trigger #8. |
+| `/al-implement` | Pick a Gherkin-ready technical task, run TDD: red → green → refactor → mutate. Stops on `kind=verify` and routes to `/al-code-review`. At slice-done (last technical task in slice flips `done`) announces `/al-code-review` per-slice; at feature-done announces `/al-code-review` per-feature. Does not touch verify tasks. |
+| `/al-user-verification` | Walk a slice's verify task with the user. ZOMBIES scenarios with numbered user-action steps; per-step pass/fail capture. All pass → `done`, flip next slice's first technical task `ready`, hand off to `/al-implement` (or `/al-refine` if Tests empty), or `/al-code-review` per-feature if last slice. Any fail → `blocked`, route to `/al-steer` with trigger #8. |
 | `/al-refactor` | Improve shape while green. No new behaviour. Consults bc-knowledge MCP for structural anti-patterns (SetLoadFields placement, subscriber lifecycle, SIFT) at high relevance bar. |
-| `/al-code-review` | In-depth gate at slice-done (after user verification) and feature-done boundaries. Vanilla review + bc-knowledge at lower bar + per-slice verify ↔ code alignment + per-feature cross-file checks (perm set vs new table field, publisher vs subscriber signature, AppSource public-surface additions). Auto-runs `/grill-me` per surviving finding for triage; materialises new tasks or notes on future tasks. Never routes via `/al-steer`. |
+| `/al-code-review` | In-depth gate at slice-done (auto-announced by `/al-implement`'s last technical task) and feature-done boundaries. Runs *before* `/al-user-verification` for user-facing slices. Vanilla review + bc-knowledge at lower bar + per-slice verify ↔ code alignment + per-feature cross-file checks (perm set vs new table field, publisher vs subscriber signature, AppSource public-surface additions). Auto-runs `/grill-me` per surviving finding for triage; materialises new tasks or notes on future tasks. On clean per-slice review: flips verify task `blocked` → `ready` (user-facing) or next slice's first technical task `blocked` → `ready` (pure-backend). New task in current slice suppresses the flip and routes to `/al-implement`. Never routes via `/al-steer`. |
 | `/al-mutate` | Inject mutations to validate test rigor. Mandatory for non-trivial work. Owns the mutate-build-revert cycle. |
 | `/al-research` | Verify BC specifics from authoritative sources. |
 | `/al-second-opinion` | Cross-runtime read-only advisory gate for non-trivial scenarios, mutation lists, and refactor checklists. From Claude Code: `codex exec`. From Codex: `claude -p`. |
@@ -81,7 +81,7 @@ Two tiers, on purpose.
 | `testability.md` | plugin-level | three-phase decoupling, three default seams (IEnvironment / IApiRequest / IFinance), five-kind test-double taxonomy with AL code shapes; read by `/al-design`, `/al-implement`, `/al-refactor` |
 | `tdd.md` | plugin-level | three layers of trust, three laws, five phases, ZOMBIES ordering, mutation operators + revert cycle, no-touch invariants; read by `/al-refine`, `/al-implement`, `/al-mutate` |
 | `notes-discipline.md` | plugin-level | what lives in the task block vs commit / ADR / `.out-of-scope/`; the eight replan triggers as named patterns; read by skills that write `tasks.md` |
-| `markdown-spec-discipline.md` | plugin-level | pointer to `examples/`, surgical-edit floor (`task=` + `status=` + `slice=` + `kind=` on the comment-anchor line), status-flip Edit shape; read by `/al-design`, `/al-event-model`, `/al-scope`, `/al-refine`, `/al-implement`, `/al-user-verification`, `/al-mutate`, `/al-steer` |
+| `markdown-spec-discipline.md` | plugin-level | pointer to `examples/`, surgical-edit floor (`task=` + `status=` + `slice=` + `kind=` on the comment-anchor line), status-flip Edit shape; read by `/al-design`, `/al-event-model`, `/al-scope`, `/al-refine`, `/al-implement`, `/al-code-review`, `/al-user-verification`, `/al-mutate`, `/al-steer` |
 | `examples/` (folder) | plugin-level | three populated `*.example.md` artifacts; pattern-match source for writing skills |
 | `cross-branch-numbering.md` | plugin-level | algorithm for picking `NNN` (spec folders) and `NNNN` (ADRs) across parallel branches; read by `/al-design`, `/al-event-model`, `/al-grill-adr` |
 | `bc-patterns.md` | plugin-level | BC pattern catalogue; read by `/al-design` |

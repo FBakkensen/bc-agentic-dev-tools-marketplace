@@ -44,7 +44,7 @@ A primitive used by two slices belongs to first slice that needs it. Later slice
 
 ## Edges declared at scope
 
-Source `Depends on:` / `Refactors:` / `Fixes:` edges from architecture's slice, module map, brownfield touchpoints now; `/al-refine` or `/al-implement` cannot guess them from titles alone weeks later. Verify tasks always carry `Depends on:` naming every technical `T-NNN` in slice; dependency closure plus matching `slice=` tells `/al-implement` when to flip verify task from blocked-pending-deps to `ready`.
+Source `Depends on:` / `Refactors:` / `Fixes:` edges from architecture's slice, module map, brownfield touchpoints now; `/al-refine` or `/al-implement` cannot guess them from titles alone weeks later. Verify tasks always carry `Depends on:` naming every technical `T-NNN` in slice; dependency closure plus matching `slice=` plus clean per-slice `/al-code-review` tells the pipeline when to flip the verify task from blocked-pending-deps to `ready`. Pure-backend slices have no verify task; the cross-slice gate is on the next slice's first technical task carrying `Depends on:` this slice's last technical task.
 
 ## Replan check before writing
 
@@ -62,7 +62,7 @@ Each task block opens with an H3 heading + one HTML-comment line immediately und
 ```
 
 - `task=T-NNN`: monotonic, never reused across kinds, starts at `T-001`. Locator.
-- `status=ready | in-progress | done | blocked`: single source of truth for state. Scope writes `ready` for every technical task in **first** slice and `blocked` for every other task (later-slice technical tasks waiting on cross-slice gate; every slice's verify task waiting on in-slice cluster). `/al-implement` flips technical tasks `ready` → `in-progress` → `done`, flips slice's verify task `blocked` → `ready` when last technical sibling lands. `/al-user-verification` flips verify task `ready` → `in-progress` → `done` (pass) or `blocked` (fail), and on `done` flips next slice's technical tasks `blocked` → `ready`. `/al-steer` flips anything to `blocked` on replan trigger. Multiple technical tasks within a slice can be `ready` simultaneously; ZOMBIES order in file plus in-slice `Depends on:` edges tell `/al-implement` which to pick first.
+- `status=ready | in-progress | done | blocked`: single source of truth for state. Scope writes `ready` for every technical task in **first** slice and `blocked` for every other task (later-slice technical tasks waiting on cross-slice gate; every slice's verify task waiting on in-slice cluster). `/al-implement` flips technical tasks `ready` → `in-progress` → `done`; does not touch verify tasks. `/al-code-review` per-slice on clean review flips the slice's verify task `blocked` → `ready` (user-facing slice) or the next slice's first technical task `blocked` → `ready` (pure-backend slice); new finding in current slice suppresses the flip. `/al-user-verification` flips verify task `ready` → `in-progress` → `done` (pass) or `blocked` (fail), and on `done` flips next slice's technical tasks `blocked` → `ready`. `/al-steer` flips anything to `blocked` on replan trigger. Multiple technical tasks within a slice can be `ready` simultaneously; ZOMBIES order in file plus in-slice `Depends on:` edges tell `/al-implement` which to pick first.
 - `slice=<slug>`: every task carries it. Slug kebab-case, derived from `event-model.md` timeline step or `architecture.md` slice.
 - `kind=technical | verify`: every task carries it. Routes downstream (technical → `/al-implement`, verify → `/al-user-verification`).
 
