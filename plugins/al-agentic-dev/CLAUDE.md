@@ -15,40 +15,15 @@ Two layers, on purpose.
 
 ## Pipeline
 
-```
-/al-grill-adr  →  /al-event-model  →  /al-design     →  /al-scope                →  /al-refine    →  /al-implement   →  /al-code-review  →  /al-user-verification
-(CONTEXT,         (event-model.md,    (architecture    (tasks.md, slices +         (per-task        (TDD per task,     (slice-done +        (user walks slice's
- ADRs)             user/API-facing     .md, AL-shape    technical + verify per     scenarios)        inner refactor +   feature-done         verify task; flip done
-                   only, pure backend  only)            user/API-facing slice)                       mutation cycles)   programmatic gate)   or blocked → /al-steer)
-                   skips this step)
-
-gates: /al-code-review (auto-announced at slice-done after `/al-implement`'s last technical task in slice, and at feature-done; combines vanilla review + bc-knowledge MCP topic surfacing; auto-runs /grill-me per surviving finding for triage; owns the slice gate flip — verify task `blocked` → `ready` for user-facing slices, next slice's first technical task `blocked` → `ready` for pure-backend slices)
-side-band: /al-research, /al-steer (replan venue + .out-of-scope), /al-second-opinion
-```
+User-facing pipeline diagram, skills catalogue, and cold-start guidance live in [`references/overview.md`](references/overview.md). That file is the single source of truth, emitted verbatim by `/al-agentic-dev-overview`. The slice-cycle prose below carries dev-time editing depth (gate flip mechanics, suppression rules) not duplicated in the tour.
 
 Slice cycle: `/al-implement` works through the slice's technical tasks (ZOMBIES inside the slice); when the last technical task lands, `/al-code-review` runs per-slice. If its `/grill-me` auto-loop materializes new technical tasks in the same slice, the slice re-opens (gate flip suppressed) and `/al-implement` continues until code-review re-runs clean. On clean review, code-review flips the slice's verify task `blocked` → `ready` (user-facing) or the next slice's first technical task `blocked` → `ready` (pure-backend). For user-facing slices `/al-user-verification` then walks the verify task with the user; on pass, next slice's first technical task flips `ready` and the loop continues; on fail, verify task flips `blocked` and `/al-steer` routes (trigger #8). Feature-done invokes `/al-code-review` per-feature before merge. Pure-backend features have no `event-model.md` and skip the user-verification step entirely; the chain becomes implement → code-review → next slice.
 
 ## Skills
 
-| Skill | Role |
-|---|---|
-| `/al-steer` | Coach/navigator. Reads state, names next step, never edits code. Owns `.out-of-scope/`. |
-| `/al-grill-adr` | Domain-aware grilling. Sharpens BC vocabulary, updates `CONTEXT.md`, offers domain ADRs only. |
-| `/al-event-model` | User-facing journey settlement. BC-vocabulary chains (Role / Action / Business Event / View / Status), one timeline per feature, Role swimlanes when more than one Role participates. Writes `event-model.md`. Optional, pure-backend features skip it. |
-| `/al-design` | `event-model.md` → feature architecture. Module map, BC patterns, R→P→W boundary, brownfield touchpoints, test strategy, parallel design-twice. Writes `architecture.md`; creates branch when `/al-event-model` did not. |
-| `/al-scope` | `architecture.md` → slice-grouped task list in `tasks.md`. Goal + technical `T-NNN`s with `slice=<slug>` + one verify `T-NNN` per slice (user/API-facing features only). Slices follow event-model timeline order; ZOMBIES inside each slice. |
-| `/al-refine` | One task → numbered scenarios. Technical task → ZOMBIES Gherkin for `/al-implement`. Verify task → ZOMBIES user test plan (numbered user-action steps citing event-model slots) for `/al-user-verification`. |
-| `/al-implement` | Pick a Gherkin-ready technical task, run TDD: red → green → refactor → mutate. Stops on `kind=verify` and routes to `/al-code-review`. At slice-done (last technical task in slice flips `done`) announces `/al-code-review` per-slice; at feature-done announces `/al-code-review` per-feature. Does not touch verify tasks. |
-| `/al-user-verification` | Walk a slice's verify task with the user. ZOMBIES scenarios with numbered user-action steps; per-step pass/fail capture. All pass → `done`, flip next slice's first technical task `ready`, hand off to `/al-implement` (or `/al-refine` if Tests empty), or `/al-code-review` per-feature if last slice. Any fail → `blocked`, route to `/al-steer` with trigger #8. |
-| `/al-refactor` | Improve shape while green. No new behaviour. Consults bc-knowledge MCP for structural anti-patterns (SetLoadFields placement, subscriber lifecycle, SIFT) at high relevance bar. |
-| `/al-code-review` | In-depth gate at slice-done (auto-announced by `/al-implement`'s last technical task) and feature-done boundaries. Runs *before* `/al-user-verification` for user-facing slices. Vanilla review + bc-knowledge at lower bar + per-slice verify ↔ code alignment + per-feature cross-file checks (perm set vs new table field, publisher vs subscriber signature, AppSource public-surface additions). Auto-runs `/grill-me` per surviving finding for triage; materialises new tasks or notes on future tasks. On clean per-slice review: flips verify task `blocked` → `ready` (user-facing) or next slice's first technical task `blocked` → `ready` (pure-backend). New task in current slice suppresses the flip and routes to `/al-implement`. Never routes via `/al-steer`. |
-| `/al-mutate` | Inject mutations to validate test rigor. Mandatory for non-trivial work. Owns the mutate-build-revert cycle. |
-| `/al-research` | Verify BC specifics from authoritative sources. |
-| `/al-second-opinion` | Cross-runtime read-only advisory gate for non-trivial scenarios, mutation lists, and refactor checklists. From Claude Code: `codex exec`. From Codex: `claude -p`. |
-| `/al-build` | Build/test gate. Compile, publish, run tests, write results to `.output/TestResults/<dirName>/`. Called by `/al-implement`, `/al-refactor`, `/al-mutate` between steps; full gate before commit. |
-| `/al-debug-logging` | Temporary runtime probes. Inject `DEBUG-*` `FeatureTelemetry.LogUsage`, exercise the path, read `.output/TestResults/*/telemetry.jsonl`, remove probes. Final state: zero `DEBUG-*` in tree. |
+User-facing catalogue (17 skills, role + when-to-invoke) lives in [`references/overview.md`](references/overview.md). Edit it in lockstep when adding, removing, renaming, or repurposing a skill.
 
-Skills compose by name. When you change a skill, scan the others for cross-references and update in lockstep.
+Skills compose by name. When you change a skill, scan the others for cross-references and update in lockstep. Cross-skill orchestration depth (gate flip mechanics, replan triggers, slice-cycle suppression rules) lives in the owning skill's `SKILL.md` and in the dev-time slice-cycle paragraph above; the user-facing overview stays tour-shape.
 
 ## Replan
 
@@ -77,6 +52,7 @@ Two tiers, on purpose.
 
 | File | Tier | Notes |
 |---|---|---|
+| `overview.md` | plugin-level | user-facing tour: pipeline diagram, 17-skill catalogue (role + when-to-invoke), persistence layers paragraph, cold-start guidance, pointer to `/al-steer` for state-aware nav; emitted verbatim by `/al-agentic-dev-overview`; edit in lockstep with any skill addition / removal / rename |
 | `voice-contract.md` | plugin-level | non-voice rules: BC vocab, names-as-citation, lists-of-findings, tables-of-facts, chat carve-out, no-workflow-chatter, 3 chat shape skeletons (Opener / Gate report / Stop); style itself lives at top of each SKILL.md as a one-line Style declaration; read by every skill that writes prose |
 | `testability.md` | plugin-level | three-phase decoupling, three default seams (IEnvironment / IApiRequest / IFinance), five-kind test-double taxonomy with AL code shapes; read by `/al-design`, `/al-implement`, `/al-refactor` |
 | `tdd.md` | plugin-level | three layers of trust, three laws, five phases, ZOMBIES ordering, mutation operators + revert cycle, no-touch invariants; read by `/al-refine`, `/al-implement`, `/al-mutate` |
@@ -109,6 +85,7 @@ The two former agent-shaped workflows now live as skills:
 
 ```
 references/                      # Plugin-level shared, read by ≥2 skills, or cited by shared templates
+├── overview.md                  # User-facing tour: pipeline + 17-skill catalogue + persistence + cold-start; emitted by /al-agentic-dev-overview
 ├── voice-contract.md            # Non-voice rules + 3 chat shape skeletons; voice declared inline at top of each SKILL.md
 ├── testability.md               # Three-phase decoupling, three default seams, five-kind test-double taxonomy
 ├── tdd.md                       # Three layers, three laws, five phases, ZOMBIES, mutation operators, no-touch invariants
@@ -126,6 +103,7 @@ references/                      # Plugin-level shared, read by ≥2 skills, or 
     ├── architecture.example.md
     └── tasks.example.md
 skills/
+├── al-agentic-dev-overview/SKILL.md  # Reads ../../references/overview.md, emits verbatim
 ├── al-build/
 │   ├── CLAUDE.md                # Skill-local dev-time rules (smoke tests, container recovery, config priority)
 │   ├── AGENTS.md                # Codex bridge to CLAUDE.md
@@ -146,6 +124,7 @@ skills/
 ├── al-grill-adr/SKILL.md
 ├── al-implement/SKILL.md
 ├── al-mutate/SKILL.md
+├── al-page-script/SKILL.md
 ├── al-refactor/
 │   ├── SKILL.md
 │   └── references/
