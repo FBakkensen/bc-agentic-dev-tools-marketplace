@@ -21,7 +21,6 @@ Pick next ready task from `tasks.md`. TDD per Gherkin bullet. Refactor full task
 
 - **Which task in flight?** One `T-NNN`, named in opener, status flipped `ready` → `in-progress` before first RED.
 - **Where is the seam?** Read `architecture.md` R → P → W boundary, module map, brownfield touchpoints. Name seam in BC vocab (procedure to extract, event to subscribe, interface to implement). One line.
-- **Did decision logic change?** Yes → mutation runs after refactor. No → record skipped-mutation outcome inside task block; `/al-mutate` skips.
 - **What flips at end?** `status=` goes `in-progress` → `done` on the comment-anchor line, heading marker `[~]` → `[x]`; final full `/al-build` (container) green. When this is slice's last technical task (all sibling `T-NNN` with same `slice=` also `done`): announce `/al-code-review` per-slice as next handoff. Do not touch the slice's verify task — `/al-code-review` owns the `blocked` → `ready` flip after clean review. When this is the feature's last task (every `T-NNN` across the feature `done`, no verify task pending): announce `/al-code-review` per-feature as next handoff.
 - **Which BC names verified this session?** Every BC-specific name a Gherkin bullet rests on (procedure, event, table, field, codeunit, attribute): backed this session by `al-symbols-mcp` or `grep` hit, or `/al-research` citation. Recall does not satisfy. See *Citation chain in chat* below.
 
@@ -51,9 +50,9 @@ AL Runner ERROR / exit 2 routes cheapest-first: review test (adjust to avoid uns
 
 Mandatory before mutation. Inline renames + obvious dedupe land inside GREEN as you write; substantive reshape (cross-bullet naming drift, project-vocabulary slip, duplication that surfaced after third bullet, AppSource compliance) waits for full-diff pass. Cross-bullet shape only visible after third or fourth bullet; per-bullet refactor misses it, reshape after `/al-mutate` invalidates the mutation run.
 
-### `/al-mutate` after refactor, when decisions changed
+### `/al-mutate` after refactor
 
-Mutate lines containing branching, comparisons, boolean operators, guards (`Error` / `exit`), arithmetic. Pure delegation, property-only changes, metadata edits skip mutation. Cross-check mutation list via `/al-second-opinion` before it commits; prompt body: *"what mutations are missing or misaligned? AND does this surface any of the eight replan triggers? Return a bulleted list."* Reconcile each returned bullet. If skipped, note reason and proceed. See [tdd.md](../../references/tdd.md) for operators + selection heuristics.
+Trigger fires when prod or tests moved this cycle. Prod moved → mutate to prove tests catch the new decision logic; tests moved → mutate to prove new assertions actually pin prod behaviour. Site selection (which lines within scope qualify) is `/al-mutate`'s call; see [tdd.md](../../references/tdd.md) for operators + qualifiers. Cross-check the mutation list via `/al-second-opinion` before it commits; prompt body: *"what mutations are missing or misaligned? AND does this surface any of the eight replan triggers? Return a bulleted list."* Reconcile each returned bullet.
 
 Commit WIP before `/al-mutate`. Mutate-build-revert cycle assumes `git status` empty; uncommitted work bleeds into revert and corrupts every classification.
 

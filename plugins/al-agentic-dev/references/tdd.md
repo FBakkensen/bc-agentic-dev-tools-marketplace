@@ -62,7 +62,7 @@ Each ZOMBIES scenario becomes one short PascalCase test name (BaseApp style):
 
 ## Mutation operators
 
-Apply when a cycle changes decision logic AND at least one site in the diff qualifies under "mutate where bugs hide" (detection cost or branch density on the code side; story-shaped arrange on the test side). Skip for: metadata-only edits, pure delegation, property-only changes.
+Apply when prod or tests moved in the cycle: prod move → catches under-tested new logic; test move → catches new assertions that don't actually pin prod behaviour. The operators below apply at qualifying sites only — branching, comparisons, boolean ops, guards, arithmetic; pure delegation, property-only, and metadata edits carry no test-rigor signal at the site level.
 
 | Operator | Before | After |
 |---|---|---|
