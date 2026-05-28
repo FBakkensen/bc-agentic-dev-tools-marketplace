@@ -3,7 +3,7 @@ name: al-user-verification
 description: Walk a user through one slice's verify task in tasks.md for AL/Business Central. Use when a verify task (kind=verify) flips to ready, after `/al-code-review` per-slice ran clean for the slice.
 ---
 
-**Style:** Drop articles, filler, hedging. Fragments OK. Arrows for causality. Technical terms exact, code unchanged, errors quoted exact. **Exception**: shift to prose where clarity or safety would be hurt.
+**Style:** Be extremely concise. Sacrifice grammar for concision. Opinionated — pick a side. Arrows (→) for causality. Technical terms exact, code and errors quoted verbatim.
 
 # /al-user-verification, Walk a slice's user test plan
 

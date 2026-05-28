@@ -16,22 +16,11 @@ Reader lands to decide one task. Scans landing points top to bottom (IDs, status
 
 ## Lists of findings
 
-Multi-item lists where the reader picks one to act on (code review, audit, replan analysis): each item multi-line with labeled lines, blank line between items, lede first, uniform shape across the list.
-
-Default slots: `**Finding**:` (what) / `**Where**:` (file:line) / `**Action**:` (do) / `**Note**:` (severity, caveat). Allow `n/a` for inapplicable slots. Adapt slots to the list; uniform shape is the principle, not these specific labels.
+Multi-item findings: label every line (`Finding:` / `Where:` / `Action:`), lede first.
 
 ## Tables of facts
 
-Fixed label/value rows (status recap, settings dump, structured summary): borderless two-column markdown table, no header row, bold labels left, values right.
-
-```
-| | |
-|---|---|
-| **Status**   | `running` → `done` |
-| **Items**    | 6 processed |
-```
-
-Three columns when the data is genuinely three-dimensional (step / action / outcome).
+Field/value recaps: borderless two-column table, not bullets.
 
 ## No workflow chatter in artifacts
 
@@ -49,17 +38,7 @@ Style fills the shape; the skeleton stays. Three skeletons, named defaults.
 
 ### Opener (session start)
 
-Chip line carrying task + status, then a borderless two-column table with skill-specific rows.
-
-```
-**T-NNN <Title>** · `ready` → `in-progress`
-
-| | |
-|---|---|
-| **Pure**  | 4 |
-| **E2E**   | 2 |
-| **First** | T-NNN#1 `BlockedCustomerCannotPostInvoice` |
-```
+Chip line `**T-NNN <Title>** · status → status`, then 2-col table of skill-specific rows.
 
 ### Gate report (every gate event)
 
@@ -76,23 +55,7 @@ Verify-task variant (`/al-user-verification` closing a slice, `kind=verify`): fo
 
 ### Stop (halt)
 
-Pre-flight (nothing touched): one line. `**Stop.** <reason in BC vocab>. <next action>.` Reason line is the C4 carve-out (natural form for safety).
-
-Mid-flow (state landed before halt): Stop reason + State 2-col table + Next action. Absorb-and-continue variant uses the same shape with "Continuing" instead of "Next":
-
-```
-**Stop.** Replan trigger `2` fired on T-007#3: requires `Cust. Banking Permission Set`; no task covers it.
-
-**State:**
-
-| | |
-|---|---|
-| **Status**        | T-007 `in-progress` → `blocked` |
-| **Bullets green** | 2 |
-| **Last commit**   | `a3f5b2c` |
-
-**Next:** Run `/al-steer` to clear the replan, then re-enter via `/al-implement T-007`.
-```
+Pre-flight: one line — `**Stop.** <reason in BC vocab>. <next action>.` Mid-flow: Stop reason + State 2-col table + Next action (absorb-and-continue variant uses "Continuing" instead of "Next").
 
 SKILL-specific shapes (AL Runner ERROR table in `/al-implement`, Drafted scenarios in `/al-refine`, Second opinion line in `/al-second-opinion`) live in their owning SKILL.md and follow the same rule: shape preserved, Style applies.
 
