@@ -24,7 +24,8 @@ param(
 $ErrorActionPreference = 'Stop'
 
 $roleFrame = 'Independent reviewer. Identify gaps in the artefact below. Return a markdown bulleted list.'
-$prompt = "$roleFrame`n`n$Body"
+# $Body pipes via stdin (Codex appends as <stdin> block; mirrored on claude branch for symmetry).
+# Concatenating into one positional arg silently truncates at the first newline on Windows native-arg passing.
 
 if ($env:CLAUDECODE -eq '1') { $target = 'codex' } else { $target = 'claude' }
 
@@ -38,14 +39,14 @@ $job = Start-Job {
         [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
         $OutputEncoding = [System.Text.Encoding]::UTF8
         if ($using:target -eq 'codex') {
-            $raw = & codex exec `
+            $raw = $using:Body | & codex exec `
                 --sandbox read-only `
                 --skip-git-repo-check `
                 --color never `
                 --json `
                 --enable fast_mode `
                 -c 'model_reasoning_effort="medium"' `
-                $using:prompt 2>&1
+                $using:roleFrame 2>&1
             $exit = $LASTEXITCODE
             $result = $raw -split "`n" |
                 Where-Object { $_.TrimStart().StartsWith('{') } |
@@ -54,7 +55,7 @@ $job = Start-Job {
                 Select-Object -Last 1 -ExpandProperty item |
                 Select-Object -ExpandProperty text
         } else {
-            $json = & claude -p $using:prompt `
+            $json = $using:Body | & claude -p $using:roleFrame `
                 --output-format json `
                 --no-session-persistence `
                 --disable-slash-commands `
