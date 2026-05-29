@@ -62,7 +62,7 @@ Two tiers, on purpose.
 | `examples/` (folder) | plugin-level | three populated `*.example.md` artifacts; pattern-match source for writing skills |
 | `cross-branch-numbering.md` | plugin-level | algorithm for picking `NNN` (spec folders) and `NNNN` (ADRs) across parallel branches; read by `/al-design`, `/al-event-model`, `/al-grill-adr` |
 | `bc-patterns.md` | plugin-level | BC pattern catalogue; read by `/al-design` |
-| `bc-knowledge-dispatch.md` | plugin-level | bc-knowledge MCP call pattern (`find_bc_knowledge` → drop-noise → `get_bc_topic`), noise drop-list, relevance scales; read by `/al-refactor`, `/al-code-review`, `/al-research` |
+| `bc-code-intelligence-dispatch.md` | plugin-level | bc-code-intelligence MCP call pattern (`find_bc_knowledge` → drop-noise → `get_bc_topic`), noise drop-list, relevance scales; read by `/al-refactor`, `/al-code-review`, `/al-research` |
 | `LANGUAGE.md` | plugin-level | architectural vocabulary (incl. Connascence, CQS), testability pillars; read by `/al-design`, `/al-grill-adr`, `/al-event-model`, `/al-refactor`, `/al-code-review` |
 | `CONTEXT.template.md` | plugin-level | template materialised into the target repo's `CONTEXT.md` |
 | `adr.template.md` | plugin-level | template materialised into the target repo's `docs/adr/NNNN-<slug>.md` |
@@ -93,7 +93,7 @@ references/                      # Plugin-level shared, read by ≥2 skills, or 
 ├── test-strategy.md             # Test-execution pyramid (unit/integration/acceptance/exploratory → tech stack) + push-down/oracle/checking-vs-testing; frames verification skills
 ├── LANGUAGE.md                  # Architectural vocabulary (incl. Connascence, CQS), testability pillars
 ├── bc-patterns.md               # BC pattern catalogue (read by /al-design)
-├── bc-knowledge-dispatch.md     # bc-knowledge MCP call pattern (find→drop-noise→get_bc_topic), noise drop-list, relevance scales
+├── bc-code-intelligence-dispatch.md     # bc-code-intelligence MCP call pattern (find→drop-noise→get_bc_topic), noise drop-list, relevance scales
 ├── notes-discipline.md          # What lives in the task block vs commit / ADR / .out-of-scope/, eight replan triggers
 ├── markdown-spec-discipline.md  # Pointer to examples/, surgical-edit floor (task= + status= + slice= + kind= on comment line)
 ├── cross-branch-numbering.md    # NNN / NNNN picking algorithm across parallel branches

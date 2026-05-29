@@ -1,6 +1,6 @@
-# bc-knowledge dispatch
+# bc-code-intelligence dispatch
 
-How to consume the `bc-knowledge` MCP for AL/Business Central review and refactor. Read by `/al-refactor` (structural anti-patterns, light touch), `/al-code-review` (in-depth, broad sweep), and `/al-research` (BC fact verification). The MCP is knowledge plumbing: it surfaces relevance-ranked topics; the calling skill (you) is the reviewer. Fetch the topic, match its anti-pattern indicators against the diff yourself.
+How to consume the `bc-code-intelligence` MCP for AL/Business Central review and refactor. Read by `/al-refactor` (structural anti-patterns, light touch), `/al-code-review` (in-depth, broad sweep), and `/al-research` (BC fact verification). The MCP is knowledge plumbing: it surfaces relevance-ranked topics; the calling skill (you) is the reviewer. Fetch the topic, match its anti-pattern indicators against the diff yourself.
 
 ## The misread that wastes the tool
 

@@ -36,7 +36,7 @@ Spawn 4 lens sub-agents in parallel on the task diff. Each returns reshape oppor
 | # | Lens | Focused goal |
 |---|---|---|
 | 1 | **Simplify / dedup** *(primary)* | Duplication, dead code, redundant procedures, simplification, inline candidates. Pass-throughs dissolve; primitives carrying meaning become small records or enums |
-| 2 | **BC best-practice** via bc-knowledge | Per [bc-knowledge-dispatch.md](../../references/bc-knowledge-dispatch.md): `find_bc_knowledge` → drop noise → `get_bc_topic`, cache within run, fetch fewer (only structural anti-patterns worth fixing this pass). MCP ranks topics; lens matches `anti_pattern_indicators` against the diff |
+| 2 | **BC best-practice** via bc-code-intelligence | Per [bc-code-intelligence-dispatch.md](../../references/bc-code-intelligence-dispatch.md): `find_bc_knowledge` → drop noise → `get_bc_topic`, cache within run, fetch fewer (only structural anti-patterns worth fixing this pass). MCP ranks topics; lens matches `anti_pattern_indicators` against the diff |
 | 3 | **Structural shape** | R → P → W boundary, depth over indirection, seam introduction. Disciplines below carry substance |
 | 4 | **Naming** | Objects, procedures, variables, fields, parameters in BC vocabulary AND project terminology per `CONTEXT.md`, ADRs, `architecture.md`, `event-model.md` |
 
@@ -58,7 +58,7 @@ One reshape at a time, `/al-build` after each. Red → revert that step; recover
 
 **Tests are first-class.** Production and tests refactor together. Tests survive internal refactors because they assert on observable outcomes through the interface, not internal state. New tests for branches reshape uncovers must pass against *current* code first → regression signal stays honest. Unit tests on modules the refactor merges away get deleted, not layered.
 
-## Lens 2, BC-specific via bc-knowledge
+## Lens 2, BC-specific via bc-code-intelligence
 
 `find_bc_knowledge` with a BC-specific query → drop noise (`parker-pragmatic/*`, `*/recommend-*`, off-domain) → `get_bc_topic` on the top-ranked on-domain survivors → match each `anti_pattern_indicator` against the diff yourself. Fetch fewer than `/al-code-review` does: refactor acts only on structural anti-patterns worth fixing this same pass, which keeps cost per TDD cycle low. Cache topics within one lens run, fresh fetch across invocations. Non-structural concerns the MCP surfaces (AppSource compliance, publisher/subscriber contracts beyond structural reshape) belong to `/al-code-review`; surface as out-of-scope notes in calling task block, do not act here. Vanilla cannot replace this: `SetLoadFields` after `SetRange` is a syntactically valid call that BC's query-execution order makes ineffective — connascence of execution order ([LANGUAGE.md](../../references/LANGUAGE.md)).
 

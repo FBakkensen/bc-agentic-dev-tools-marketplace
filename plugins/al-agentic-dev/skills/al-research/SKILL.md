@@ -21,7 +21,7 @@ BC moves fast and training data is always behind a recent release: renamed event
 
 When question is "does this signature exist in my dependency graph", workspace's compiled symbols are the truth, not the docs. System Application, Base Application, shipped libraries publish many overloads per release; doc shows one signature, symbol shows five, binding to wrong one fails the build.
 
-Single source is a draft, two families is verification. BC ships across release cadences and "old and stable" is your guess, not a fact; agent's confidence about which areas have drifted is itself drift. Cross against a second source from a different family before returning a finding: Microsoft Learn, BaseApp via `/bc-standard-reference`, workspace symbols via `al-symbols-mcp`, curated BC topics via `bc-knowledge`. Agreement across families is the verification; pick which two by question shape. Single-source finding ships training-data fiction with citation-shaped wrapper.
+Single source is a draft, two families is verification. BC ships across release cadences and "old and stable" is your guess, not a fact; agent's confidence about which areas have drifted is itself drift. Cross against a second source from a different family before returning a finding: Microsoft Learn, BaseApp via `/bc-standard-reference`, workspace symbols via `al-symbols-mcp`, curated BC topics via `bc-code-intelligence`. Agreement across families is the verification; pick which two by question shape. Single-source finding ships training-data fiction with citation-shaped wrapper.
 
 ## Quote, do not paraphrase
 
@@ -35,7 +35,7 @@ Curated BC knowledge tools pattern-match constructs in code against a topic stor
 
 Relevance score is not topicality. Off-domain topics (AI-collaboration methodology, tool-recommendation knowledge, generic workflow advice) pattern-match on common AL constructs (`SetRange`, `FindFirst`, `repeat`, `Insert`) and surface high regardless. Score is real; subject-mismatch against caller's question is the cue to drop before reaching `get_bc_topic`.
 
-Call pattern: `${CLAUDE_SKILL_DIR}/../../references/bc-knowledge-dispatch.md`. Read before invoking `find_bc_knowledge` or `analyze_al_code`; `set_workspace_info` must run once first or every call errors.
+Call pattern: `${CLAUDE_SKILL_DIR}/../../references/bc-code-intelligence-dispatch.md`. Read before invoking `find_bc_knowledge` or `analyze_al_code`; `set_workspace_info` must run once first or every call errors.
 
 ## Stop at actionable, surface conflicts
 
@@ -48,7 +48,7 @@ When two authoritative sources disagree (Microsoft Learn says one signature, wor
 What each source family is for, reach for whichever answers the specific question.
 
 - **Microsoft Learn** via Learn search and fetch tools: canonical Microsoft documentation for AL platform constructs (attributes, properties, methods, triggers, page types, APIs, AppSourceCop rules, version-tagged behaviour).
-- **bc-knowledge MCP**: curated BC pattern topic store. Topic recommender; cold on platform spec, pair with Microsoft Learn for anything spec-shaped. Governed by topic-recommender discipline above.
+- **bc-code-intelligence MCP**: curated BC pattern topic store. Topic recommender; cold on platform spec, pair with Microsoft Learn for anything spec-shaped. Governed by topic-recommender discipline above.
 - **`/bc-standard-reference`**: BaseApp / System Application / APIV2 verbatim source. Reach when question is "what does Microsoft's shipped AL code actually do".
 - **AL symbols** via `al-symbols-mcp` and AL Language Server: workspace's compiled dependency graph (actual signatures, table relations, field types, extension graphs).
 - **LSP** over AL: your code's procedure callsites, definitions, hover info inside a single project.
