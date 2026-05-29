@@ -9,10 +9,13 @@ the BC web client **Settings ⚙ → Page scripting (Preview)** recorder.
 > the BC web-client JS bundle. This reference was **reverse-engineered from the platform** (mining
 > `client.js` + cross-checking recorder output) and validated by replay.
 >
-> **Validated against BC platform `28.0.49873.0`.** The grammar is version-bound — treat anything
-> here as "true for v28" and re-derive against newer platforms (mine the web-client bundle's
+> **Reverse-engineered on BC v28** (first mined on `28.0.49873.0`; verified stable across minor
+> bumps — recordings replay green on later `28.1.x` builds with no change). Treat the grammar as
+> "true for v28." A platform version number alone is **not** a reason to re-derive or to stop;
+> re-derive only when a replay red is a grammar-**shape** mismatch (a nesting or step type the
+> player rejects), not a missing control or a dialog. To re-derive: mine the web-client bundle's
 > recorder serializer + `playRecording` dispatch, then confirm by recording the gesture and reading
-> the emitted `.yml`).
+> the emitted `.yml`.
 
 Worked, replay-green recordings live in [`examples/`](examples/) — read those alongside this grammar;
 agents author far more reliably by pattern-matching a full file than from prose.
@@ -260,12 +263,40 @@ recursively. Failures surface as `fileError`: `fileNotFound`, `fileInvalid`, or 
 
 ## 9. Running recordings
 
-See the skill's `SKILL.md` › *Running a recording* for the full invocation, auth options, and the
-Node 22–25 requirement. In short, from a folder with `@microsoft/bc-replay` installed:
+From a folder with `@microsoft/bc-replay` installed (the Node 22–25 requirement lives in `SKILL.md` › *Running a recording*):
 
 ```powershell
 npx replay .\recordings\*.yml -StartAddress http://<host>/<instance>/ -ResultDir .\results
 ```
+
+**Option surface** (`Replay.ps1`, bc-replay 0.1.139):
+
+| Option | Meaning |
+|---|---|
+| `-Tests` (mandatory) | file-glob of recordings to run |
+| `-StartAddress` (mandatory) | BC web-client URL |
+| `-Authentication` | `Windows` (default) \| `AAD` \| `UserPassword` |
+| `-UserNameKey` / `-PasswordKey` | names of the env vars holding the credentials (never hard-code) |
+| `-MultiFactorType` / `-MultiFactorSecretKey` | `None` (default) \| `TOTP` \| `Certificate`; AAD only |
+| `-ResultDir` | where `results.xml` + `playwright-report/` are written (defaults to cwd) |
+| `-Headed` | show the browser |
+| `-UseServerReplay` | swap the browser for the bundled .NET client-service engine |
+
+**`-UseServerReplay`** runs against `Microsoft.BusinessCentral.Replay.dll` over the UI-client protocol — headless, faster, no browser. It **cannot render control add-ins / canvas**: a feature whose deliverable paints inside a canvas is unverifiable this way (use browser mode, or the exploratory agent-browser walk). `npx replay` runs `npx playwright install` **unconditionally**, even under `-UseServerReplay` — so the Chromium download (and the Node-26 install hang) still applies regardless of the flag. *(Minor upstream bug: the script's `-Headed` guard and doc comment reference `$UseClientService`, but the parameter is `$UseServerReplay`.)*
+
+`replay` exits **non-zero** if any recording fails — that is the green/red gate.
+
+### Reading a failure
+
+Don't trust the exit code alone — read the artifacts. They split across two locations:
+
+- **`-ResultDir`** gets only `results.xml` (JUnit) + `playwright-report/` (the HTML report; `npx playwright show-report` to open).
+- **`<cwd>/test-results/dist-player--<hash>-<recording>-yml--chromium/`** gets the **diagnosis** artifacts (failure-only):
+  - **`error-context.md`** — a Playwright ARIA snapshot of the *frozen surface* at failure (a YAML accessibility tree). This is where an **unexpected dialog is visible** — a hang (timeout with no error string) almost always means a BC platform Confirm (`RecordChangeDialog`: "Your change might update related records…", default focus No) is sitting open, and the snapshot shows it.
+  - **`replay-log.yml`** + **`attachments/Replay-log-<hash>.yml`** — the full step list with engine-appended `log:` blocks; the failing step carries an inline `error:` node, e.g. `error: { type: reference, message: "Field 'X' was not found.", target: [...] }`.
+  - **`video.webm`** — the run.
+
+A red is classified from these, not from the console: an `error:` node on a step is a locator/shape or missing-control problem; a timeout with an open dialog in `error-context.md` is the unexpected-dialog case. (Routing: `SKILL.md` › *Failure classification*.)
 
 ---
 
@@ -286,6 +317,11 @@ npx replay .\recordings\*.yml -StartAddress http://<host>/<instance>/ -ResultDir
    `navigate` in. A recording captured mid-session that assumes a page is already open fails on
    replay with `Unexpected page. Was expecting '<X>' but got '<role center>'`. *(The canonical
    recordings in [`examples/`](examples/) all replay green on BC 28.0.49873.0.)*
+8. **Don't inflate `timeout:` to force a slow scenario green.** The default per-test cap is 120s
+   (`playwright.config.js`); a scenario that needs more is usually too long — split it. A recording
+   that only passes at `timeout: 600` is a smell, not a tuning need: it often means an unanswered
+   platform dialog is eating the clock (see §9 *Reading a failure*), not that the work is genuinely
+   that slow.
 
 ---
 
@@ -339,3 +375,26 @@ pass, for the cases below (a blind-authored navigate + `page-shown` recording re
 
 Practical rule: page navigation + named-field input/validate is hand-authorable; do **one** recorder
 pass per page to harvest its custom-action / repeater control IDs, then author the rest by hand.
+
+### Harvesting the un-derivable IDs via Chrome
+
+When `claude-in-chrome` is already connected, the recorder pass can be automated instead of asking the
+user to paste. The BC recorder (Settings ⚙ → Page scripting → Record) builds its `.yml` as an
+in-browser blob; hook `URL.createObjectURL` *before* recording to capture it as the gesture is driven:
+
+```js
+window.__caps = window.__caps || [];
+if (!window.__hooked) {
+  window.__hooked = true;
+  const orig = URL.createObjectURL.bind(URL);
+  URL.createObjectURL = function (b) {
+    try { if (b && b.text) b.text().then(t => window.__caps.push(t)); } catch (e) {}
+    return orig(b);
+  };
+}
+```
+
+Record the gesture, then read `window.__caps` — the captured `.yml` carries the real
+`repeater`/`action` IDs verbatim. This is how the locator shapes in this reference were derived.
+It is fragile (depends on the client serializing through `createObjectURL`) and is a harvest aid, not
+part of replay. With Chrome not connected, one user prompt for the harvested value is the fallback.
