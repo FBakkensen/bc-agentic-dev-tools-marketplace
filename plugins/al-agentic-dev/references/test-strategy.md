@@ -13,7 +13,7 @@ The terms are sourced — a sourced term has an external definition the project 
 | **Unit** | AL-Runner (fast, in-process) | assertion, isolated | red-first driver | `/al-implement` (`-UnitTestOnly`), `/al-build` |
 | **Integration** | container + TestPage | assertion, transactional rollback | red-first driver | `/al-implement`, `/al-build` |
 | **Acceptance** | bc-replay page-script (fresh container, no rollback) | assertion, **oracle-limited** | regression guard | `/al-page-script`; batch run by `/al-user-verification` |
-| **Exploratory** | human walk + agent-driven browser (claude-in-chrome) | **sapient judgement** | usability oracle | `/al-user-verification` |
+| **Exploratory** | agent-driven browser (claude-in-chrome); human-walk fallback | **sapient judgement** | usability oracle (findings → tasks) | `/al-user-verification` |
 
 The mapping is **primary mechanism, not a wall.** AL-Runner is the fast subset / pre-gate; the container is authoritative and runs both pure-logic and TestPage `[Test]` codeunits — a single `[Test]` may be either. Speed and oracle fidelity, not a rigid unit/integration boundary, decide where a test lives.
 
@@ -27,7 +27,7 @@ Each is named only because it changes what the agent does.
 
 **Oracle problem** (Weyuker). An oracle is the mechanism that decides pass/fail. A test that greens against known-broken code has an oracle *insensitive* to that fault — it cannot distinguish correct from buggy. That is not a defect to fix in place; it means the test is at the **wrong layer**. bc-replay re-reads the page-bound `Rec` exactly as a TestPage does, so it is insensitive to the stale-bound-`Rec` fault class: such a recording is a false net. Push down to a layer with a sensitive oracle, or escalate.
 
-**Checking vs testing** (Bach & Bolton). *Checking* confirms machine-decidable facts via assertions (TestPage asserts, bc-replay `validate`). *Testing* is sapient exploration — judging whether a flow feels like one motion, whether an error reads sanely, whether a surface is usable. Usability questions are **un-checkable by construction**; they belong to the exploratory layer, where a thinking agent drives the real client. Its output is **findings that become tasks**, not a green/red gate.
+**Checking vs testing** (Bach & Bolton). *Checking* confirms machine-decidable facts via assertions (TestPage asserts, bc-replay `validate`). *Testing* is sapient exploration — judging whether a flow feels like one motion, whether an error reads sanely, whether a surface is usable. Usability questions are **un-checkable by construction**; they belong to the exploratory layer, where a thinking agent drives the real client. Its usability output is **findings that become tasks**, not a green/red gate. The same agent walk does both: it *checks* the observable outcomes (a Status value, a cue count — these gate) and *tests* usability (which does not). `/al-user-verification` splits them — gating only on the checkable dimension, routing usability to tasks — and guards the agent-as-its-own-oracle risk with `/al-second-opinion` (reviews the written verdict's reasoning) plus durable captured frames (let a human spot-check observation).
 
 ## Nested loops
 
@@ -35,6 +35,6 @@ The layers run at different cadences — Beck's fast-inner / slow-outer feedback
 
 - **Inner** (seconds–minutes, red-first): `/al-implement` + AL-Runner/TestPage. Drives design.
 - **Middle** (minutes, guard): `/al-page-script` acceptance regression on a fresh container. Written after; pushes bugs down; never the driver.
-- **Outer** (sapient, qualitative): `/al-user-verification` — the human walk (and agent-driven browser where the bad web client needs it). Judges what no oracle can check; emits findings → tasks.
+- **Outer** (sapient, qualitative): `/al-user-verification` — the agent drives the real (bad) web client, human-walk fallback. Observable outcomes are *checked* and gate the slice; subjective usability is *judged* and emits findings → tasks.
 
 A skill states its own layer and role in one line and points here; it does not restate the pyramid.

@@ -6,7 +6,7 @@ Composable skills for AL/Business Central agentic development. One feature flows
 
 ```
 /al-grill-adr  →  /al-event-model  →  /al-design     →  /al-scope                →  /al-refine    →  /al-implement   →  /al-code-review  →  /al-user-verification
-(CONTEXT,         (event-model.md,    (architecture    (tasks.md, slices +         (per-task        (TDD per task,     (gate at slice-      (user walks slice's
+(CONTEXT,         (event-model.md,    (architecture    (tasks.md, slices +         (per-task        (TDD per task,     (gate at slice-      (agent drives slice's
  ADRs)             user/API-facing     .md, AL-shape    technical + verify per     scenarios)        refactor +         done +               verify task; flip done
                    only, pure backend  only)            user/API-facing slice)                       mutate inner)      feature-done)        or blocked → /al-steer)
                    skips this step)
@@ -32,7 +32,7 @@ Slice mechanics: `/al-implement` works through one slice's technical tasks, then
 | `/al-scope` | Decomposes `architecture.md` into a slice-grouped, ZOMBIES-ordered task list in `tasks.md`. | After `/al-design`. |
 | `/al-refine` | One task → numbered scenarios. Technical task → Gherkin for `/al-implement`. Verify task → user test plan for `/al-user-verification`. | Before working a specific task. |
 | `/al-implement` | TDD per task: red → green → refactor → mutate. | After `/al-refine` produces scenarios for a technical task. |
-| `/al-user-verification` | User walks the slice's verify task. Per-step pass/fail capture; gates the next slice. | Verify task ready (after `/al-code-review` flipped it from `blocked`). |
+| `/al-user-verification` | Agent drives the slice's verify task in the browser; functional outcomes gate, usability observations → findings/tasks; second-opinion + visual evidence guard the gate. Gates the next slice. | Verify task ready (after `/al-code-review` flipped it from `blocked`). |
 | `/al-refactor` | Improve shape while green. No new behaviour. | After green inside `/al-implement`, or standalone on legacy code. |
 | `/al-mutate` | Validate test rigor by injecting mutations one at a time. | Mandatory inside `/al-implement` for non-trivial work, or standalone on legacy before `/al-refactor`. |
 | `/al-code-review` | Gate at slice-done and feature-done. Auto-runs `/grill-me` per surviving finding. | Auto-announced by `/al-implement` at slice-done and feature-done. |

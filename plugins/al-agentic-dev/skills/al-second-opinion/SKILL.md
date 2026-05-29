@@ -1,6 +1,6 @@
 ---
 name: al-second-opinion
-description: Independent read-only advisory review via cross-runtime CLI dispatch. Use from `/al-implement`, `/al-refine`, or `/al-refactor` before reconciling non-trivial plans, scenarios, mutation lists, or refactor checklists.
+description: Independent read-only advisory review via cross-runtime CLI dispatch. Use from `/al-implement`, `/al-refine`, `/al-refactor`, or `/al-user-verification` before reconciling non-trivial plans, scenarios, mutation lists, refactor checklists, or an agent-driven verification verdict.
 ---
 
 **Style:** Be extremely concise. Sacrifice grammar for concision. Opinionated — pick a side. Arrows (→) for causality. Technical terms exact, code and errors quoted verbatim.
@@ -9,7 +9,7 @@ description: Independent read-only advisory review via cross-runtime CLI dispatc
 
 Ask a different runtime to read the artifact and name what is missing. Point is independence: same-model self-review confirms its own blind spots. Script `scripts/Invoke-AlSecondOpinion.ps1` runs the dispatch; this file is the contract for when to reach for it, what to put in front of it, what envelope it runs under.
 
-Caller (`/al-implement`, `/al-refine`, `/al-refactor`) owns the artifact and reconciles bullets that come back. This skill owns the call.
+Caller (`/al-implement`, `/al-refine`, `/al-refactor`, `/al-user-verification`) owns the artifact and reconciles bullets that come back. This skill owns the call. (For `/al-user-verification` the artifact is the agent's functional verdict + per-scenario observations; the gate reviews reasoning and coverage, not the browser — text-only dispatch cannot catch a misread screen, which is what the walk's captured frames guard.)
 
 ## Preconditions
 
