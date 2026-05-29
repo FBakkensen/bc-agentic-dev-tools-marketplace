@@ -1,89 +1,72 @@
 # bc-knowledge dispatch
 
-> **Runtime gate.** Content inside `<claude-only>...</claude-only>` blocks applies only to Claude Code (which has an `advisor()` tool). Codex and other runtimes without it: skip the block contents and move on.
-
-How to consume the `bc-knowledge` MCP for AL/Business Central review and refactor. Read by `/al-refactor` (structural anti-patterns, light touch) and `/al-code-review` (in-depth, multi-specialist). The MCP is knowledge plumbing: it surfaces topics; the calling skill applies them.
+How to consume the `bc-knowledge` MCP for AL/Business Central review and refactor. Read by `/al-refactor` (structural anti-patterns, light touch), `/al-code-review` (in-depth, broad sweep), and `/al-research` (BC fact verification). The MCP is knowledge plumbing: it surfaces relevance-ranked topics; the calling skill (you) is the reviewer. Fetch the topic, match its anti-pattern indicators against the diff yourself.
 
 ## The misread that wastes the tool
 
-Treating `ask_bc_expert` as an autonomous reviewer returns vacuous output. The tool is a **persona router plus a context-aware topic recommender**. It does not do server-side LLM inference. The calling skill (the agent reading this) is the reviewer; the MCP supplies role priming and a ranked list of relevant knowledge topics. Apply the topics to the code yourself.
+The MCP does **no server-side LLM inference**. It pattern-matches AL constructs in your query/code against a topic store and returns a ranked list. The topics are the value; apply them yourself. Three traps waste it:
 
-**Why this matters.** A skill that calls `ask_bc_expert(autonomous_mode=true)` reads the empty `steps: []` and concludes the MCP is broken. It is not. `autonomous_mode=false` returns the persona body + `RECOMMENDED TOPICS` block with relevance scores. The topics are the value.
+- **Skipping init.** Every tool returns `⚠️ Server Not Yet Initialized` until `set_workspace_info` runs once. It is a mandatory first call, not an optional context hint.
+- **Trusting rank over topicality.** Off-domain topics (AI-collaboration methodology, tool-upsell) pattern-match common AL constructs (`SetRange`, `FindFirst`, `repeat`) and score at the *top* of the list. Rank is real; subject-match is not. Drop the noise before fetching (see drop-list).
+- **Asking the MCP to review for you.** It recommends topics; it does not find your bugs. A topic surfaced is a lead, not a finding.
 
 ## Call pattern
 
-Per file under review:
+1. **`set_workspace_info`** once per session: `workspace_root` (absolute) + `available_mcps` (the MCP ids in context). Returns `Loaded N topics from M layers`. Skip it and everything else errors.
 
-1. **`ask_bc_expert`** with:
-   - `question`: BC-specific, names the concern in BC vocabulary (not "review this code", but "find performance pitfalls in this persisted-graph DFS over Rule Set Entries").
-   - `context`: the file content (or the relevant procedures if the file is large; ~10 KB is comfortable, the relevance engine pattern-matches against the code).
-   - `preferred_specialist`: from the mapping below; one per call, several calls if the file warrants multiple lenses.
-   - `autonomous_mode`: **`false`**. Always.
+2. **`find_bc_knowledge`** per concern: `query` is BC-specific and names the construct/concern ("SetLoadFields placement before SetRange in a FindSet loop"), not "review this code". `search_type: "topics"`. Returns topics with a raw `relevance_score`.
 
-2. Read the response. Extract the `RECOMMENDED TOPICS` list with relevance scores.
+3. **Drop the noise** before fetching anything. Unconditionally discard:
+   - `parker-pragmatic/*` — AI-collaboration methodology, scores ~100 on any AL code.
+   - `*/recommend-*` — tool-upsell topics ("I notice you don't have BC Telemetry Buddy / Object ID Ninja configured…").
+   - Off-domain topics whose subject does not match the concern (e.g. `taylor-docs/*` on a performance scan).
 
-3. **`get_bc_topic`** per topic above the threshold (see "Thresholds" below). The response carries the full rule markdown, AL code samples (correct + incorrect patterns), `anti_pattern_indicators`, and a `finding_template`.
+4. **`get_bc_topic`** per surviving on-domain topic, top-ranked first: `topic_id`, `include_samples: true`. The response carries the rule markdown, correct/incorrect AL samples, `anti_pattern_indicators`, and a `finding_template`.
 
-4. **Apply the rule yourself.** Pattern-match each `anti_pattern_indicator` against the file. Where the indicator matches, emit a finding using the topic's `finding_template` shape, citing the topic id as the source.
+5. **Apply the rule yourself.** Pattern-match each `anti_pattern_indicator` against the diff. Where it matches, emit a finding in the topic's `finding_template` shape, citing the topic id. Where it does not match, drop the topic — a surfaced topic whose indicator the code does not exhibit is not a finding.
 
-5. **Vanilla pass alongside.** The MCP is the BC-specific lens; a vanilla review pass on the same file catches generic refactor wins the MCP misses (memoize a DFS, dedupe a duplicate procedure, drop a dead parameter). Both passes, then dedupe.
+   **AL false-positive guards.** The indicator matches the *syntax*; it does not know the *context* that sometimes exempts the match. Do not emit a finding when:
+   - **the record is `temporary`** — in-memory, zero DB cost, so every access-pattern / partial-record perf topic (`SetLoadFields`, `FindSet`-without-filter, `Get`-in-loop) is moot even though the construct matches.
+   - **the field/object is `ObsoleteState = Pending`** with `ObsoleteReason` + `ObsoleteTag` and no upgrade code yet — the `Pending` → `Removed` window is the AppSource-safe deprecation path, the expected steady state, not an unfinished defect.
+   - **the topic recommends `ModifyAll` / `DeleteAll`** over a loop whose `OnModify` / `OnDelete` triggers run deliberately — the bulk call bypasses triggers + validation (default `RunTrigger=false`), so swapping it in silently drops that business logic. Flag the trigger-bypass risk instead of recommending the swap.
 
-**Topic caching within a single review run.** The topic universe is small; the same `setloadfields-placement-before-filters` will keep surfacing across files. The agent may cache `get_bc_topic` responses within one `/al-code-review` or `/al-refactor` invocation and reuse them. Across invocations, fetch fresh; topic content may change.
+6. **Vanilla pass alongside.** The MCP is the BC-specific lens; a vanilla pass on the same code catches generic wins it misses (memoize a DFS, dedupe a procedure, drop a dead parameter). Both passes, then dedupe.
 
-## Specialist mapping
+**Topic caching within one run.** The topic universe is small; the same `setloadfields-placement-before-filters` resurfaces across files. Cache `get_bc_topic` responses within one `/al-refactor` / `/al-code-review` / `/al-research` invocation; fetch fresh across invocations.
 
-| File type | Primary specialist | Secondary (when relevant) |
+## `analyze_al_code` — optional whole-file signal scan
+
+When you want a code-aware topic scan without crafting a query, call `analyze_al_code` with `file_path` (absolute, singular) + `analysis_type`. **Trust only `matched_signals` / `suggested_topics`** — they are the same code-matched topics `find_bc_knowledge` returns, minus the query. **Ignore `issues[]` and `optimization_opportunities[]`**: empirically it reports 0 issues on code with a real `FindFirst`-could-be-`Get` and missing `SetLoadFields`, and its "opportunities" are generic filler ("improve architecture with loose coupling"). The same drop-list applies to its `suggested_topics`. `file_path` is the live param; the old "use inline `code`, `file_paths` is broken" guidance is obsolete.
+
+## Relevance scales and the backstop
+
+There is **no universal threshold** — the entry tools report on incompatible scales:
+
+| Tool | Score field | Scale |
 |---|---|---|
-| Codeunit | `roger-reviewer` (code quality & standards) | `dean-debug` (performance), `eva-errors` (when error paths touched), `seth-security` (when permission / temporary tables touched) |
-| Page | `uma-ux` (UX) | `seth-security` (when actions / pages with sensitive data) |
-| Table | `alex-architect` (solution design) | `seth-security` (when new field with sensitive data), `dean-debug` (when key changes / FlowField changes) |
-| PermissionSet | `seth-security` | none |
-| Interface | `alex-architect` | `jordan-bridge` (event / integration design) |
-| Enum | `alex-architect` | none |
-| Subscribers codeunit | `jordan-bridge` (event-driven) | `roger-reviewer` |
-| Report / Query / XmlPort | `roger-reviewer` (fallback) | `dean-debug` (when query/report scans large) |
-| Test codeunit | `quinn-tester` | none |
+| `find_bc_knowledge` | `relevance_score` | raw, unbounded (single digits → hundreds) |
+| `analyze_al_code` | `relevance_score` | float `0.0–1.0` |
 
-**Why this mapping.** Specialists are persona priming with different topic weights baked into the relevance engine. `dean-debug` weights performance topics highly; `seth-security` weights permission and data-protection topics; `quinn-tester` weights test-design topics. Picking the wrong specialist on a file biases topic recommendations toward the wrong domain. The mapping above selects by the dominant concern of each object type.
-
-**Known limitation.** Only the Codeunit mapping (`roger-reviewer` + `dean-debug`) is empirically verified against real code. The other file-type rows are plausible defaults derived from each specialist's stated expertise; the first real per-feature `/al-code-review` run touching Pages, Tables, PermissionSets, Subscribers codeunits, and Interfaces should refine these mappings and fold corrections back into this table.
-
-## Thresholds
-
-| Calling skill | Threshold | Why |
-|---|---|---|
-| `/al-refactor` | `relevance >= 70` | Refactor runs every TDD cycle. High bar keeps the MCP cost down and constrains findings to structural anti-patterns the agent should fix in the same pass. |
-| `/al-code-review` (per-slice) | `relevance >= 50` | Gate runs once per slice; can afford the broader sweep. Catches BC-specific concerns refactor's high bar skipped. |
-| `/al-code-review` (per-feature) | `relevance >= 50` plus cross-file checks | End-of-spec gate; widest net. Cross-file checks (perm set vs new table field, publisher vs subscriber signature, AppSource public-surface additions) are this mode's responsibility, not single-file MCP calls. |
-
-Adjust per call when context demands. The threshold is a default, not a contract.
+A fixed number (the former flat `>=70` / `>=50`) is meaningless across these and was the bug: it discarded real topics while noise outranked them. **The lever is the drop-list, not a cutoff** — once noise is gone, the genuinely relevant topics rank at the top of `find_bc_knowledge` natively. Take the top-ranked on-domain survivors and fetch them. Keep only a light per-tool floor as a backstop against a long tail, and tune it per call when context demands; the floor is a default, not a contract. `/al-refactor` fetches fewer (structural anti-patterns to fix this pass); `/al-code-review` casts wider (gate can afford the sweep); `/al-research` fetches whatever answers the framed question.
 
 ## What the MCP catches that vanilla Claude misses
 
-BC-specific execution-order and platform-cost knowledge. Examples surfaced in evaluation:
+BC-specific execution-order and platform-cost knowledge:
 
-- **SetLoadFields placement.** BC executes `SetLoadFields → filter → query`. SetLoadFields after `SetRange` / `SetFilter` is syntactically valid and the optimization benefit is lost. Vanilla Claude reads it as a valid call and moves on. Topic `dean-debug/setloadfields-placement-before-filters` names it.
-- **Lonely repeat patterns** (`repeat...until` with no `Find` before). Tool flags structural inconsistency that vanilla pattern-matching skips.
-- **SingleInstance subscriber memory model.** Subscriber codeunits with `SingleInstance = true` persist state across the session; pattern that produces leaks vanilla Claude does not connect to subscriber lifecycle.
-- **DeleteAll vs iterate.** Performance vs business-logic-compliance tradeoff that vanilla Claude treats as a style choice.
+- **SetLoadFields placement.** BC executes `SetLoadFields → filter → query`. `SetLoadFields` after `SetRange`/`SetFilter` is syntactically valid and the optimization is lost; vanilla Claude reads it as fine. Topic `dean-debug/setloadfields-placement-before-filters` (and `-before-case-statements`).
+- **Lonely repeat** (`repeat…until` with no `Find` before).
+- **SingleInstance subscriber memory model** — state persisting across the session; leak patterns vanilla Claude does not connect to subscriber lifecycle.
+- **DeleteAll vs iterate** — performance vs business-logic-compliance tradeoff (DeleteAll bypasses `OnDelete` triggers + validation) that vanilla Claude treats as style.
 
-These are the kind of findings the MCP earns its place for. Refactor wins (memoize, dedupe, dead-param, guard-before-recurse) vanilla Claude catches; do not pay MCP cost on those.
+Refactor wins vanilla Claude already catches (memoize, dedupe, dead-param, guard-before-recurse) do not earn the MCP cost.
 
 ## What the MCP does NOT do
 
-- **Cross-file analysis.** Per-file calls return per-file topics. Event publisher / subscriber signature mismatch, permission set vs new table field, AppSource public-surface additions all require reading multiple files together; `/al-code-review` does these as separate passes in per-feature mode, not via `ask_bc_expert`.
-- **Diff-aware review.** The MCP cold-scans whatever code you pass in. It does not know what changed in this PR. Diff scoping is the calling skill's responsibility.
-- **Auto-fixes via `file_paths`.** `analyze_al_code` with `file_paths` ignores the `operation` parameter; `validate`, `suggest_fixes`, and `analyze` return identical responses. Use `ask_bc_expert` instead; reach for `analyze_al_code` only with the inline `code` parameter when a structural pattern check is wanted independently of persona priming.
-- **Workflow orchestration via `scope="files"`.** Broken upstream (silently walks the full workspace). Use `scope="directory"` if a workflow drive is wanted; cost is ~2N+2 MCP calls for N files. `/al-code-review` does not use `workflow_start`; the per-file dispatch is cheaper and gives the same signal.
+- **Cross-file analysis.** Per-query calls return per-concern topics. Event publisher/subscriber signature mismatch, permission set vs new table field, AppSource public-surface additions need multiple files read together; `/al-code-review` does these as its own passes in per-feature mode.
+- **Diff-aware review.** It cold-scans whatever you pass; diff scoping is the calling skill's job.
+- **Workflow orchestration / layer scaffolding.** The `workflow_*` and `*_layer_*` tools are unused by these skills; the per-query dispatch is cheaper and gives the same signal.
 
 ## Composition
 
-- Read by `/al-refactor` for the structural-anti-pattern discipline.
-- Read by `/al-code-review` for per-file consultation and cross-file routing.
-- The MCP itself documents tools the calling skill invokes; the upstream source lives at `JeremyVyska/bc-code-intelligence-mcp` on GitHub, knowledge layer at `jeremyvyska/bc-code-intelligence`. When a call returns nothing useful, check the source for the actual handler shape before concluding the tool is broken.
-
-## Out of scope for this reference
-
-- bcquality consumption. Parked; the MCP earns its place for BC-specific topic surfacing without bcquality in pass-1 evaluation.
-- Cross-file check implementation detail; `/al-code-review` SKILL.md owns that.
-- Vanilla Claude review pass discipline; the calling skill's body covers it inline.
+- Read by `/al-refactor` (structural-anti-pattern discipline), `/al-code-review` (per-file consultation + cross-file routing), `/al-research` (one of the source families, governed by its own topic-recommender discipline).
+- Upstream source: `JeremyVyska/bc-code-intelligence-mcp` (server) and `JeremyVyska/bc-code-intelligence` (knowledge). Advisory-grade, single-maintainer; pair its output with the deterministic gates (`/al-build`, CodeCop/AppSourceCop) and never make a gate depend on it alone. When a call returns nothing useful, check the source for the handler shape before concluding the tool is broken.

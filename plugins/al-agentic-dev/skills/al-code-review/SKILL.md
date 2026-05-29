@@ -37,18 +37,18 @@ Spawn all lenses in one message so they run concurrently. Each lens has narrow f
 
 | # | Lens | Focused goal | Mode |
 |---|---|---|---|
-| 1 | Project compliance + naming | Changes obey `CONTEXT.md`, design and domain ADRs under `docs/adr/`, module map and boundaries in `architecture.md`, originating task's Gherkin in `tasks.md`. Naming check: objects, procedures, variables, fields, parameters use BC vocabulary AND project terminology; names that lie surface even when code is otherwise correct | both |
-| 2 | Bug scan | Shallow scan for large bugs the LLM catches cold on a fresh read. Correctness and obvious logic faults only; skip nitpicks, skip style, skip anything a linter catches | both |
-| 3 | BC-specific via bc-knowledge | Per `${CLAUDE_SKILL_DIR}/../../references/bc-knowledge-dispatch.md`: `ask_bc_expert(autonomous_mode=false)` per file with file-type-mapped specialist, fetch surfaced topics via `get_bc_topic`, apply each topic's `anti_pattern_indicators`. Lower relevance bar (`>= 50`) than `/al-refactor`'s `>= 70`; gate can afford broader sweep | both |
+| 1 | Project compliance + naming + scope | Changes obey `CONTEXT.md`, design and domain ADRs under `docs/adr/`, module map and boundaries in `architecture.md`, originating task's Gherkin in `tasks.md`. Naming check: objects, procedures, variables, fields, parameters use BC vocabulary AND project terminology; names that lie surface even when code is otherwise correct. Scope check: behaviour in the diff not traceable to the originating task's Gherkin is a finding — code doing more than asked (scope creep), and requirements that look implemented but wrong (present but defective), are each distinct from missing | both |
+| 2 | Bug scan | Shallow scan for large bugs the LLM catches cold on a fresh read. Correctness and obvious logic faults only; skip nitpicks, skip style, skip anything a linter catches. Ad-hoc conditionals bolted into unrelated flows ("weird if statements in random places") escalate as a design problem, not a style nit | both |
+| 3 | BC-specific via bc-knowledge | Per `${CLAUDE_SKILL_DIR}/../../references/bc-knowledge-dispatch.md`: `find_bc_knowledge` per concern → drop noise (`parker-pragmatic/*`, `*/recommend-*`, off-domain) → `get_bc_topic` → match each topic's `anti_pattern_indicators` against the diff. Cast wider than `/al-refactor`: the gate can afford the broader sweep | both |
 | 4 | Code comments + git history | Code comments in modified files state guidance (invariants, "do not X" warnings); changes comply. Recent commit history surfaces context: previous fix the current change might re-break, deliberate decision being undone | both |
 | 5 | AppSource public-surface addition | New public procedure, public table field, or page action on shipped object locks public contract into AppSource. Linters fire on removal (AS0011) and rename (AS0007), not on addition; read changed object alongside `app.json` and judge intentional vs accidental lock-in | per-feature only |
 | 6 | Verify ↔ code alignment | Slice's verify task scenarios in `tasks.md` name surfaces, Roles, Status values; changed code under slice's `slice=` actually exposes those surfaces with those names. Drift caught here means `/al-user-verification` would have failed when the user walked it — preempt before the user spends the time. Skip for pure-backend slices (no verify task) | per-slice only |
 
-Lenses state goals, not enumerated checklists. Specifics each lens catches depend on code and what `bc-knowledge` surfaces.
+Lenses state goals, not enumerated checklists. Specifics each lens catches depend on code and what `bc-knowledge` surfaces. Structural and coupling vocabulary the lenses name (Connascence, CQS, Depth, Seam) lives in `${CLAUDE_SKILL_DIR}/../../references/LANGUAGE.md`; use it exactly.
 
 ## Confidence pass
 
-After lenses return, lighter-weight pass scores each finding 0-100 before showing user. Five lenses on a 10-file diff produce 30+ findings if every lens reports everything; filter makes list short enough for `/grill-me` to triage cleanly. Findings `< 80` suppressed; only `>= 80` reach triage.
+After lenses return, lighter-weight pass scores each finding 0-100 before showing user. Five lenses on a 10-file diff produce 30+ findings if every lens reports everything; filter makes list short enough for `/grill-me` to triage cleanly. Findings `< 80` suppressed; only `>= 80` reach triage. Prefer a few high-conviction findings over a long list of cosmetic notes; when a structural issue is in play, do not flood the list with nits beneath it.
 
 | Score | Meaning |
 |---|---|

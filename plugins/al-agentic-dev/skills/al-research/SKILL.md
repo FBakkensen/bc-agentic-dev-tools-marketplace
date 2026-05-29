@@ -31,11 +31,11 @@ Hedges (`might`, `I think`, `probably`, `usually`) are tells that claim is unver
 
 ## Topic recommender, not Q&A
 
-Curated BC knowledge tools pattern-match constructs in code against a topic store and return relevance-ranked list. Topic list is the research value; persona body, generic issue lists, optimisation-opportunity lists around it are scaffolding. Call shape that returns useful topics passes file content (or absolute path) and mapped specialist; response carries `RECOMMENDED TOPICS` / `suggested_topics` block. Fetch each topic above caller's relevance bar and apply its anti-pattern indicators yourself.
+Curated BC knowledge tools pattern-match constructs in code against a topic store and return a relevance-ranked list. Topic list is the research value; generic issue lists and optimisation-opportunity lists around it are scaffolding. Call shape that returns useful topics passes a BC-specific query (or an absolute file path to `analyze_al_code`); response carries a ranked `suggested_topics` / topic block. Fetch each on-domain topic above the caller's relevance bar and apply its anti-pattern indicators yourself.
 
 Relevance score is not topicality. Off-domain topics (AI-collaboration methodology, tool-recommendation knowledge, generic workflow advice) pattern-match on common AL constructs (`SetRange`, `FindFirst`, `repeat`, `Insert`) and surface high regardless. Score is real; subject-mismatch against caller's question is the cue to drop before reaching `get_bc_topic`.
 
-Call pattern: `${CLAUDE_SKILL_DIR}/../../references/bc-knowledge-dispatch.md`. Read before invoking `ask_bc_expert` or `analyze_al_code`.
+Call pattern: `${CLAUDE_SKILL_DIR}/../../references/bc-knowledge-dispatch.md`. Read before invoking `find_bc_knowledge` or `analyze_al_code`; `set_workspace_info` must run once first or every call errors.
 
 ## Stop at actionable, surface conflicts
 

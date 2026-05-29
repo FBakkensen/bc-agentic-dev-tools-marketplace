@@ -36,7 +36,7 @@ Spawn 4 lens sub-agents in parallel on the task diff. Each returns reshape oppor
 | # | Lens | Focused goal |
 |---|---|---|
 | 1 | **Simplify / dedup** *(primary)* | Duplication, dead code, redundant procedures, simplification, inline candidates. Pass-throughs dissolve; primitives carrying meaning become small records or enums |
-| 2 | **BC best-practice** via bc-knowledge | Per [bc-knowledge-dispatch.md](../../references/bc-knowledge-dispatch.md): `ask_bc_expert(autonomous_mode=false)` per touched file, threshold `>= 70`, cache `get_bc_topic` within run. MCP names topics; lens applies `anti_pattern_indicators` |
+| 2 | **BC best-practice** via bc-knowledge | Per [bc-knowledge-dispatch.md](../../references/bc-knowledge-dispatch.md): `find_bc_knowledge` → drop noise → `get_bc_topic`, cache within run, fetch fewer (only structural anti-patterns worth fixing this pass). MCP ranks topics; lens matches `anti_pattern_indicators` against the diff |
 | 3 | **Structural shape** | R → P → W boundary, depth over indirection, seam introduction. Disciplines below carry substance |
 | 4 | **Naming** | Objects, procedures, variables, fields, parameters in BC vocabulary AND project terminology per `CONTEXT.md`, ADRs, `architecture.md`, `event-model.md` |
 
@@ -50,19 +50,25 @@ One reshape at a time, `/al-build` after each. Red → revert that step; recover
 
 **Deletion test on every shallow module.** Imagine deleting the module. Complexity vanishes → module was pass-through; inline at call sites and remove. Complexity reappears across N callers → module earned its place; deepen it. One-line wrapper around `SalesHeader.Modify` that adds only a name is the canonical case for inline.
 
+**Delete, don't rearrange.** The bias runs deeper than removing pass-throughs: prefer the reshape that removes moving pieces over the one that merely spreads the same complexity around. Look for the *code judo* move — a restructuring that uses the existing architecture to make whole branches vanish, not a new abstraction layered on top. Reject a merely cleaner version of the same messy idea when a simpler idea is in reach. Count moving pieces before and after; fewer wins.
+
+**Rule of Three is the brake.** The deletion test removes shallow abstractions; the Rule of Three stops you minting them. Do not extract a helper on the second near-duplicate — two may be coincidence, and a one-caller wrapper is exactly what the deletion test then kills. Wait for the third occurrence, or leave the duplication and note it.
+
+**Canonical home over bespoke.** Logic with a rightful home — a BaseApp / System Application helper, an existing module's internal helper — gets routed there and the canonical one reused, not a near-duplicate minted. Do not normalize architectural drift: code already sitting in the wrong module is not a licence to add more there; push it toward the right module.
+
 **Tests are first-class.** Production and tests refactor together. Tests survive internal refactors because they assert on observable outcomes through the interface, not internal state. New tests for branches reshape uncovers must pass against *current* code first → regression signal stays honest. Unit tests on modules the refactor merges away get deleted, not layered.
 
 ## Lens 2, BC-specific via bc-knowledge
 
-`autonomous_mode=false` always: mode returns persona + topic recs, sub-agent applies. Threshold `>= 70` keeps cost per TDD cycle low. Cache topics within one lens run, fresh fetch across invocations. Non-structural concerns the MCP surfaces (AppSource compliance, publisher/subscriber contracts beyond structural reshape) belong to `/al-code-review`; surface as out-of-scope notes in calling task block, do not act here. Vanilla cannot replace this: `SetLoadFields` after `SetRange` is syntactically valid call that BC's query-execution order makes ineffective.
+`find_bc_knowledge` with a BC-specific query → drop noise (`parker-pragmatic/*`, `*/recommend-*`, off-domain) → `get_bc_topic` on the top-ranked on-domain survivors → match each `anti_pattern_indicator` against the diff yourself. Fetch fewer than `/al-code-review` does: refactor acts only on structural anti-patterns worth fixing this same pass, which keeps cost per TDD cycle low. Cache topics within one lens run, fresh fetch across invocations. Non-structural concerns the MCP surfaces (AppSource compliance, publisher/subscriber contracts beyond structural reshape) belong to `/al-code-review`; surface as out-of-scope notes in calling task block, do not act here. Vanilla cannot replace this: `SetLoadFields` after `SetRange` is a syntactically valid call that BC's query-execution order makes ineffective — connascence of execution order ([LANGUAGE.md](../../references/LANGUAGE.md)).
 
 ## Lens 3, structural shape
 
-**R → P → W as reshape, not annotation.** Procedure mixes I/O and computation → splitting along that line *is* the refactor. P is the most load-bearing line: it names what is testable without a real database. Annotating without splitting changes nothing.
+**R → P → W as reshape, not annotation.** Procedure mixes I/O and computation → splitting along that line *is* the refactor. P is the most load-bearing line: it names what is testable without a real database. Annotating without splitting changes nothing. A procedure that both mutates a record and returns a computed value is the command/query violation (CQS, [LANGUAGE.md](../../references/LANGUAGE.md)); the split runs along the same line.
 
 **Two adapters or no seam.** Seam with one adapter is tautology; codeunit only pretends to be flexible. Production + in-memory test adapter that actually exists counts as two. Two real production transports already deployed counts. "Interface for testability" with no test fake written is one. AL `interface`, `Implementation` enums, and event publishers are seam *mechanisms*; picking among them is separate from whether seam earns its place.
 
-**Depth over indirection.** Deep module hides much behaviour behind small interface. Long procedures break into private helpers behind `Access = Internal`. Feature-envious procedures move to where data lives. Primitive obsession (`Code[20]` carrying meaning) becomes small record or enum.
+**Depth over indirection.** Deep module hides much behaviour behind small interface. Long procedures break into private helpers behind `Access = Internal`. Feature-envious procedures move to where data lives. Primitive obsession (`Code[20]` carrying meaning) becomes small record or enum. Repeated conditionals signal a missing model: the same `case` / `if` chain duplicated across procedures is an absent enum or dispatcher, not just dup code to extract — connascence of meaning the type should carry.
 
 **Internal seams stay internal.** Unit test reaching past `Access = Internal` signals responsibility sits on wrong codeunit, not that `Access` should widen. Split into smaller internal codeunit so surface tells the truth. E2E crosses `Access = Public` and survives internal refactor; unit tests live alongside the implementation against `Access = Internal`.
 

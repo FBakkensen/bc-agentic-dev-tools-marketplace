@@ -1,10 +1,10 @@
 # Architectural vocabulary
 
-Shared language for `/al-design` and `/al-refactor`. Use these terms exactly; do not substitute "component," "service," "API," "boundary," "class," or "entity." Consistent language is the whole point. Sits alongside the BC pattern catalogue (`bc-patterns.md`), does not replace it.
+Shared language for `/al-design`, `/al-refactor`, and `/al-code-review`. Use these terms exactly; do not substitute "component," "service," "API," "boundary," "class," or "entity." Consistent language is the whole point. Sits alongside the BC pattern catalogue (`bc-patterns.md`), does not replace it.
 
 Read-only. Read in place via `${CLAUDE_SKILL_DIR}/../../references/LANGUAGE.md`.
 
-Structural terms (Module, Depth, Leverage) come from Ousterhout (*A Philosophy of Software Design*); **Seam** from Feathers (*Working Effectively with Legacy Code*); behavioural-decomposition terms from Event Modeling (Adam Dymitruk). A sourced term has an external definition the project cannot quietly redefine. Rejected aliases (`_Avoid_`) are themselves cited concepts; naming them is what makes the rejection meaningful.
+Structural terms (Module, Depth, Leverage) come from Ousterhout (*A Philosophy of Software Design*); **Seam** from Feathers (*Working Effectively with Legacy Code*); **Connascence** from Page-Jones (*What Every Programmer Should Know About OOA*); **Command-Query Separation** from Meyer (*Object-Oriented Software Construction*); behavioural-decomposition terms from Event Modeling (Adam Dymitruk). A sourced term has an external definition the project cannot quietly redefine. Rejected aliases (`_Avoid_`) are themselves cited concepts; naming them is what makes the rejection meaningful.
 
 ## Terms
 
@@ -38,6 +38,15 @@ _Avoid_: reuse (too vague; reuse can be shallow copy-paste).
 **Locality**
 What maintainers get from depth. Change, bugs, knowledge, and verification concentrate at one place rather than spreading across callers. Fix once, fixed everywhere. The maintainer-side mirror of leverage.
 _Avoid_: cohesion (related, but locality is about *where the change lands*, not about what belongs together).
+
+**Connascence** _(Page-Jones)_
+The coupling grammar: two elements are connascent when changing one forces a change in the other. Names *what kind* of coupling and *how strong*, where "tight coupling" only gestures. Static forms (weaker → stronger): of **name** (both must agree on a name), of **type**, of **meaning** (both must agree what a value signifies — a magic `Code[20]` or status string two procedures interpret in lockstep), of **position** (callers depend on argument order — a long positional parameter list). Dynamic forms (stronger still): of **execution order** (B only works if A ran first — `SetLoadFields` after `SetRange`, or `repeat` with no `Find` before it), of **timing**, of **value**, of **identity**. Refactor rule: prefer weaker connascence over stronger, and where strong connascence is unavoidable, **localize** it (keep the connascent elements in one module). Generalises primitive-obsession (connascence of meaning) and long-parameter-lists (connascence of position) under one axis; gives the structural lens a reason to introduce an enum, a parameter record, or a guard.
+_Avoid_: "tight coupling" (names the symptom, not the kind or strength), "dependency" (too generic).
+
+**Command-Query Separation (CQS)** _(Meyer)_
+A procedure is either a **command** (causes an effect — `Insert`/`Modify`/`Delete`, telemetry, error, event — and returns nothing) or a **query** (returns a value and has no observable effect), never both. The procedure-level expression of R → P → W: the query side is P (pure, returns a decision), the command side is W (effect, returns nothing). Canonical violation: a *business* procedure that `Modify`s a record *and* returns a computed total — a caller cannot read the total without also posting. Splitting it along the command/query line is the refactor.
+**AL carve-out.** BC platform contracts that legitimately return a value *and* touch state are NOT violations — do not flag them: `Get` / `Find*` (return found-status, populate the record), `Codeunit.Run` / `[TryFunction]` (return success Boolean, effects by design), `NoSeries` next-number (returns the number, advances the series). The smell is a business query that mutates as an incidental side effect, never these.
+_Avoid_: "getter/setter" (too OO, misses the no-effect guarantee), "side-effect-free" (only half — names the query, not the command).
 
 **R → P → W** _(procedure layering)_
 **R** = reads (DB queries, parameters in, events subscribed to), **P** = pure process (decisions, no DB, no external calls), **W** = writes (`Insert` / `Modify` / `Delete`, telemetry, errors, events published). P is the unit-test surface; `Access = Internal` makes it test-accessible without crossing the external interface. Two test surfaces follow: E2E crosses the external interface (R + P + W end-to-end); unit tests target P directly with stubbed R/W collaborators. See [tdd.md](tdd.md) and [testability.md](testability.md).
