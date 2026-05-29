@@ -9,6 +9,8 @@ description: "Validate AL/Business Central test rigor by mutation: inject one mu
 
 Mutate production code one site at a time. Build. Classify. Revert. Survivors are the point: each one is a real coverage gap or a documented equivalence.
 
+**Layer.** Guards **oracle sensitivity** at the unit/integration driver layers (see [`test-strategy.md`](../../references/test-strategy.md)): mutation proves an assertion actually *catches* the fault, not merely runs green — the empirical answer to the oracle problem (the same insensitivity that lets a page-script recording false-green).
+
 ## Preconditions
 
 - Tree clean. Dirty tree makes revert ambiguous → every survivor becomes a question mark.

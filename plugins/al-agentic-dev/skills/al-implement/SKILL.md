@@ -9,6 +9,8 @@ description: Pick a Gherkin-ready task from `tasks.md` and drive it through TDD 
 
 Pick next ready task from `tasks.md`. TDD per Gherkin bullet. Refactor full task diff once. Mutate where decisions live. Flip status. One task per session.
 
+**Layer.** The red-first **driver** at the unit + integration layers (see [`test-strategy.md`](../../references/test-strategy.md)): the cheapest sensitive layer where bugs get pinned. A production bug a higher layer (e.g. `/al-page-script`) surfaces is **pushed down** to this layer — `/al-steer` opens the fix task, `/al-implement` drives it red-first — so the proof lives where an oracle can see it.
+
 ## Preconditions
 
 - Branch matches `^\d{3}-`. If not: **Stop**. Run `/al-event-model` (or `/al-design` for pure-backend).

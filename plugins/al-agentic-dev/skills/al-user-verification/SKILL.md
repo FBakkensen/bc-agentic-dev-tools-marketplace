@@ -11,6 +11,8 @@ Pick a ready verify task. Walk each scenario's numbered steps with the user. Cap
 
 Skill facilitates; user is the runner. No AL writes, no `/al-build` run, no codebase walk. Work is reading scenarios aloud, asking *"what did you see?"*, recording the answer.
 
+**Layer.** Owns the **acceptance** pre-flight (the bc-replay regression batch, every slice's `.yml`) and facilitates the **exploratory** layer (see [`test-strategy.md`](../../references/test-strategy.md)): sapient verification — judging what no assertion oracle can check (checking vs testing). The runner is the human; output is findings → tasks, not a green/red gate.
+
 ## Preconditions
 
 - Branch matches `^\d{3}-`. If not: **Stop**. Verify task only exists inside in-flight feature.

@@ -1,5 +1,5 @@
 {
   "name": "al-agentic-dev",
   "description": "Plugin tour: /al-agentic-dev-overview. Full AL/Business Central dev stack. Agentic flow: /al-steer, /al-grill-adr, /al-event-model, /al-design, /al-scope, /al-refine, /al-implement, /al-page-script, /al-user-verification, /al-refactor, /al-mutate, /al-code-review, /al-research, /al-second-opinion. Build/test: /al-build. Telemetry probes: /al-debug-logging.",
-  "version": "0.41.2"
+  "version": "0.42.0"
 }

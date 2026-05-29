@@ -9,6 +9,8 @@ description: One task to numbered scenarios for AL/Business Central. Technical t
 
 Fill Tests area for one task in `tasks.md`. Branch by the task's `kind=` key: technical → Gherkin for `/al-implement`; verify → user test plan for `/al-user-verification`. Walk codebase, draft scenarios ZOMBIES order, watch the eight replan triggers. One task per run.
 
+**Layer.** Authors the scenarios each pyramid layer verifies (see [`test-strategy.md`](../../references/test-strategy.md)): Gherkin for the unit/integration **driver** (technical task), user-test-plan for the **acceptance** + **exploratory** layers (verify task). Write the verify plan in the shape page-script will emit, so prose and recording read alike.
+
 ## Preconditions
 
 - Branch matches `^\d{3}-`. If not: **Stop**. Run `/al-event-model` (or `/al-design` for pure-backend).
