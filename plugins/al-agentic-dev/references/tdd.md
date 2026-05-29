@@ -119,4 +119,4 @@ If a match appears inside a `[HandlerFunctions(...)]` attribute, update the stri
 
 ### Object ID allocation
 
-Allocate test codeunit IDs via the available allocator (e.g., `mcp__al-object-id-ninja__ninja_assignObjectId`). If the codeunit is not created (scaffold aborted, task dropped), unassign the ID immediately. The unassign step is the one agents miss; a reserved-but-unused ID leaks from the pool.
+Allocate test codeunit IDs via the available allocator (e.g., `mcp__al-objid-mcp-server__ninja_assignObjectId`). If the codeunit is not created (scaffold aborted, task dropped), unassign the ID immediately. The unassign step is the one agents miss; a reserved-but-unused ID leaks from the pool.
