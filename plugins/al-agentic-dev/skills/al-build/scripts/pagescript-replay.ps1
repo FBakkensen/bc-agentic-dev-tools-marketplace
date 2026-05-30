@@ -57,6 +57,72 @@ function Stop-Step {
     }
 }
 
+function Invoke-SerialPageScriptBatch {
+    param(
+        [Parameter(Mandatory)][string]$PageScriptDir,
+        [Parameter(Mandatory)][string]$ModulePath,
+        [Parameter(Mandatory)][string]$Tests,
+        [Parameter(Mandatory)][string]$StartAddress,
+        [Parameter(Mandatory)][string]$ResultDir
+    )
+
+    $script:LastPageScriptReplayExitCode = 0
+    $envNames = @(
+        'bc_player_testDir',
+        'bc_player_workingDir',
+        'bc_player_tests',
+        'bc_player_resultDir',
+        'bc_player_startAddress',
+        'bc_player_auth',
+        'bc_player_username_key',
+        'bc_player_password_key'
+    )
+    $savedEnv = @{}
+    foreach ($name in $envNames) {
+        $savedEnv[$name] = [Environment]::GetEnvironmentVariable($name, 'Process')
+    }
+
+    try {
+        foreach ($credentialName in @('ALBT_BC_CONTAINER_USERNAME', 'ALBT_BC_CONTAINER_PASSWORD')) {
+            if (-not (Get-Item "env:$credentialName" -ErrorAction Ignore).Value) {
+                Write-BuildMessage -Type Error -Message "The required $credentialName environment variable has not been set."
+                $script:LastPageScriptReplayExitCode = 1
+                return
+            }
+        }
+
+        $resolvedPageScriptDir = (Resolve-Path -LiteralPath $PageScriptDir).Path
+        $resolvedResultDir = (Resolve-Path -LiteralPath $ResultDir).Path
+        $playerSpec = (Join-Path $ModulePath 'player\dist\player.spec.js').Replace('\', '/')
+        $configFile = (Join-Path $ModulePath 'player\dist\playwright.config.js').Replace('\', '/')
+        $outputDir = Join-Path $resolvedPageScriptDir 'test-results'
+
+        $env:bc_player_testDir = Join-Path $ModulePath 'player'
+        $env:bc_player_workingDir = $resolvedPageScriptDir
+        $env:bc_player_tests = $Tests
+        $env:bc_player_resultDir = $resolvedResultDir
+        $env:bc_player_startAddress = $StartAddress
+        $env:bc_player_auth = 'UserPassword'
+        $env:bc_player_username_key = 'ALBT_BC_CONTAINER_USERNAME'
+        $env:bc_player_password_key = 'ALBT_BC_CONTAINER_PASSWORD'
+
+        Write-BuildMessage -Type Step -Message "Installing Playwright browsers..."
+        & npx playwright install
+        $script:LastPageScriptReplayExitCode = $LASTEXITCODE
+        if ($script:LastPageScriptReplayExitCode -ne 0) {
+            return
+        }
+
+        Write-BuildMessage -Type Step -Message "Running serial Playwright batch on $Tests (--workers=1 --retries=0)"
+        & npx playwright test $playerSpec --config $configFile --output $outputDir --workers=1 --retries=0
+        $script:LastPageScriptReplayExitCode = $LASTEXITCODE
+    } finally {
+        foreach ($name in $envNames) {
+            [Environment]::SetEnvironmentVariable($name, $savedEnv[$name], 'Process')
+        }
+    }
+}
+
 # Import modules
 Import-Module "$PSScriptRoot/common.psm1" -Force -DisableNameChecking
 Import-Module "$PSScriptRoot/build-operations.psm1" -Force -DisableNameChecking
@@ -196,7 +262,7 @@ try {
         }
     }
 
-    # Step 4: Run bc-replay
+    # Step 4: Run page-script replay
     Start-Step 'replay'
     $replayExe = Join-Path $pagescriptDir 'node_modules\.bin\replay.cmd'
     if (-not (Test-Path -LiteralPath $replayExe)) {
@@ -219,18 +285,21 @@ try {
         # bc-replay's -Tests resolves against its CWD ($pagescriptDir after Push-Location); pass relative.
         $testsArg = [IO.Path]::GetRelativePath($pagescriptDir, $resolvedFile)
         Write-BuildMessage -Type Step -Message "Running bc-replay on $testsArg (single-file mode)"
+        & $replayExe -Tests $testsArg -StartAddress $startAddress -Authentication UserPassword -UserNameKey ALBT_BC_CONTAINER_USERNAME -PasswordKey ALBT_BC_CONTAINER_PASSWORD -ResultDir $resultsDir
+        $replayExitCode = $LASTEXITCODE
     } else {
-        # Batch mode: glob pattern, bc-replay handles file discovery internally
+        # Batch mode: run the bc-replay Playwright player directly and force
+        # serial execution. Microsoft bc-replay's local config is fully parallel
+        # unless worker count is explicit, which can race BC company initialization.
         $testsArg = 'recordings/*.yml'
-        Write-BuildMessage -Type Step -Message "Running bc-replay on $testsArg"
+        Invoke-SerialPageScriptBatch -PageScriptDir $pagescriptDir -ModulePath $modulePath -Tests $testsArg -StartAddress $startAddress -ResultDir $resultsDir
+        $replayExitCode = $script:LastPageScriptReplayExitCode
     }
 
-    & $replayExe -Tests $testsArg -StartAddress $startAddress -Authentication UserPassword -UserNameKey ALBT_BC_CONTAINER_USERNAME -PasswordKey ALBT_BC_CONTAINER_PASSWORD -ResultDir $resultsDir
-
-    if ($LASTEXITCODE -ne 0) {
-        Write-BuildMessage -Type Error -Message "Page script replay failed (exit code $LASTEXITCODE)"
+    if ($replayExitCode -ne 0) {
+        Write-BuildMessage -Type Error -Message "Page script replay failed (exit code $replayExitCode)"
         Stop-Step 'replay'
-        exit $LASTEXITCODE
+        exit $replayExitCode
     }
 
     Write-BuildMessage -Type Success -Message "All recordings passed"
