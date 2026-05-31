@@ -365,36 +365,58 @@ pass, for the cases below (a blind-authored navigate + `page-shown` recording re
 **Works blind** (targets derivable from AL):
 - `navigate` to a named page + `page-shown`.
 - `input` / `validate` / `focus` on a named `field` — including Show-more-hidden fields (§11).
-- **System actions** with stable names: `Control_New`, `Control_Refresh`, `Cancel`, `OK`, `CloseOk`, `Yes`, `No`; `invokeType: New|Edit|DrillDown|Lookup|Refresh`.
+- **System actions** with stable names and already-proven invoke types: `Control_New`, `Control_Refresh`, `Cancel`, `OK`, `CloseOk`, `Yes`, `No`; `invokeType: New|Edit|DrillDown|Lookup|Refresh`.
 - Mint your own `runtimeId`/`runtimeRef` (file-local, §3); start self-contained (§10.7).
 
-**Needs a recorder pass** (identifiers not derivable from AL):
+**Needs recorder evidence** (identifiers or invoke shapes not derivable from AL):
 - **Reports** — not pages: `navigate page: <Report>` fails (`metadata object … not found`); reached via search/an action.
 - **Custom actions** that serialize as generated IDs (`Action37`) instead of their name — varies per page.
 - **Repeater** control names (`Control1`), **cue** part-nests, **peek/lookup** repeaters, **NavigatePage wizard** paging.
+- **Uncertain modal close actions / invoke types**. Example: T-038 showed the lookup modal close actions on `NALICF Manage Rules` recorded as `invokeType: LookupOk` and `invokeType: LookupCancel`.
 
-Practical rule: page navigation + named-field input/validate is hand-authorable; do **one** recorder
-pass per page to harvest its custom-action / repeater control IDs, then author the rest by hand.
+Practical rule: page navigation + named-field input/validate is hand-authorable; do **one** harness
+recorder pass per page or uncertain gesture to harvest custom-action IDs, repeater control IDs,
+modal close invoke types, and other runtime shapes, then author the rest by hand.
 
-### Harvesting the un-derivable IDs via Chrome
+### Recorder harvesting for un-derivable IDs
 
-When `claude-in-chrome` is already connected, the recorder pass can be automated instead of asking the
-user to paste. The BC recorder (Settings ⚙ → Page scripting → Record) builds its `.yml` as an
-in-browser blob; hook `URL.createObjectURL` *before* recording to capture it as the gesture is driven:
+Recorder capture is an evidence technique, not the replay oracle. Use the plugin-local pure
+Playwright harness as the supported capture path:
 
-```js
-window.__caps = window.__caps || [];
-if (!window.__hooked) {
-  window.__hooked = true;
-  const orig = URL.createObjectURL.bind(URL);
-  URL.createObjectURL = function (b) {
-    try { if (b && b.text) b.text().then(t => window.__caps.push(t)); } catch (e) {}
-    return orig(b);
-  };
-}
+```powershell
+node <plugin>/scripts/bc-pagescript-recorder.mjs --repo-root <repo>
 ```
 
-Record the gesture, then read `window.__caps` — the captured `.yml` carries the real
-`repeater`/`action` IDs verbatim. This is how the locator shapes in this reference were derived.
-It is fragile (depends on the client serializing through `createObjectURL`) and is a harvest aid, not
-part of replay. With Chrome not connected, one user prompt for the harvested value is the fallback.
+`<plugin>` is the installed `al-agentic-dev` plugin root. The harness resolves Playwright from the
+target repo's `pagescripts/package.json`, reads auth and `serverInstance` from
+`<repo>/al-build.json`, derives the default container host from the current branch, and allows
+`BC_CONTAINER`, `BC_COMPANY`, and `BC_PAGE` overrides. It saves the downloaded YAML under a
+repo-local `.tmp/bc-pagescript-recorder/...` run directory unless `--output` is passed.
+
+The harness owns only recorder lifecycle:
+
+1. Open the BC Web Client for the target container/company.
+2. Open Settings -> Page scripting (Preview).
+3. Start a recording.
+4. Emit `READY_FOR_AGENT_FLOW`.
+5. Let the coding agent perform the task-specific flow.
+6. Stop the recorder.
+7. Save/download `Recording.yml`.
+8. Read and return the YAML path and preview.
+
+The harness must not contain the business/user flow. After `READY_FOR_AGENT_FLOW`, the coding agent
+drives the smallest representative gesture that produces the uncertain YAML shape, then sends
+`stopSave`. The downloaded `.yml` carries the real `repeater`/`action` IDs and invoke types verbatim;
+use it as syntax ground truth, then replay the final authored recording with `pagescript-replay.ps1
+-File` and the full batch gate.
+
+The harness emits JSON lines such as `start`, `recording`, `READY_FOR_AGENT_FLOW`, `download`, and
+`yml`. Its stdin commands are `screenshot`, `click`, `key`, `type`, `wait`, `stopSave`, `readYml`, and
+`close`.
+
+Known proof shape: recording started; the agent opened a configuration row; the harness downloaded
+`Recording.yml`; the YAML contained `invoke` on `NALICF Configuration List` repeater `Group` and
+`page-shown` for `NALICF Configuration Card`.
+
+If the harness cannot open BC or the recorder, report the exact limitation and fall back to
+user-provided recorder YAML or hand-authored YAML plus replay.
