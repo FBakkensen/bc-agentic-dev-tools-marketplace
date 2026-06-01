@@ -20,22 +20,24 @@ skills/al-build/
 
 ## Smoke test
 
-Use this after changing the script contract or gate behavior.
+Use this after changing the skill invocation contract, delegation behavior, script contract, or gate behavior.
 
 1. From the marketplace repo working tree, capture its path: `$marketplace = $PWD.Path`. Then create a disposable dir under `$env:TEMP` with a random suffix and `Set-Location` into it — the rest of the smoke test runs from the disposable dir, and `$marketplace` lets you invoke the dev-time scripts.
 2. `git init`, `git checkout -b smoke-<scenario>`, then **`git commit --allow-empty -m "init"`**. The branch name becomes the container name via `Get-BCAgentContainerName`. Without a commit the branch lookup fails and falls back to `bctest`, colliding with the golden container. Never use `main` or `bctest` as branch name.
 3. Add a minimal AL app under `app/` and one or more test apps under `test/`, `test-integration/`, etc. Test apps must depend on the main app so provisioning proves local deps are not downloaded as symbol packages.
 4. Add repo-root `al-build.json` with `appDir` and `testApps` array.
 5. Verify the snapshot image from `container.imageName` exists. Do not bootstrap a golden container unless that is the explicit target.
-6. Run `pwsh "$marketplace/plugins/al-build/skills/al-build/scripts/provision.ps1"`.
-7. Run `pwsh "$marketplace/plugins/al-build/skills/al-build/scripts/test.ps1"`.
-8. Verify `.output/TestResults/<dirName>/last.xml` and `telemetry.jsonl` exist per test app.
-9. Verify `.output/TestResults/summary.json` lists all test apps with expected pass/fail.
+6. Run `pwsh "$marketplace/plugins/al-agentic-dev/skills/al-build/scripts/provision.ps1"` from the disposable repo before invoking the skill. This is mandatory for smoke tests because it installs/verifies the compiler, AL Runner, and symbol caches for the temp app/test app.
+7. From the disposable repo, invoke the `al-build` skill as a black-box skill use. Do not tell the smoke session to run `test.ps1` directly, do not restate the subagent contract, and do not describe the model/reasoning/delegation details from `SKILL.md`. The smoke is testing whether the host follows `SKILL.md` by itself.
+8. Verify the host spawned the gate worker according to `SKILL.md`, and inspect the worker's returned gate report plus any emitted `.output/TestResults/<dirName>/last.xml` and `telemetry.jsonl` files.
+9. Verify `.output/TestResults/summary.json` lists all test apps with expected pass/fail when the full gate reaches result emission.
 10. Clean up: `docker rm -f <container-name>`, then delete the temp dir.
 
 The smoke test must exercise the full gate. Do not use test-codeunit filtering. Run container tests sequentially — one branch/container at a time.
 
-**Drive the smoke from the main agent directly. NO subagent delegation.** Subagent reports summarise — smoke needs raw exit codes, stderr, BcContainerHelper output, container logs verbatim. Summary loses fidelity → false greens / false reds the main agent can't diagnose. Runtime usage of `/al-build` by callers still uses the SKILL.md subagent block (that's about containing verbose build output during normal development); smoke tests are different — the main agent is the diagnostician and needs everything.
+Smoke runs must continue past disposable fixture/setup failures. If the failure is in the temp app, temp test app, generated `al-build.json`, disposable git branch, or other smoke scaffolding, repair the fixture in place, rerun provision when symbols/config changed, and invoke the `al-build` skill again until the smoke reaches a real gate execution through the skill. Do not mark the smoke done on the first setup failure. Only conclude after at least one real full-gate execution path has run through the skill's own instructions and its result has been inspected. A disposable fixture/setup error is input to repair and retry; it is not the final smoke result unless the blocker is non-recoverable or outside the disposable fixture.
+
+Smoke prompts must give detailed fixture setup, provision, repair, artifact, and cleanup requirements. They must not give detailed instructions for how `al-build` itself runs the gate. That behavior belongs in `SKILL.md`; the smoke verifies that the skill contract is sufficient.
 
 ## Smoke test: golden container with AL-Go dependencies
 

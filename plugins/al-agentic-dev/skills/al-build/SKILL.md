@@ -54,37 +54,100 @@ Test failures → dispatch `/al-debug-logging`. Don't grep build log for clues t
 
 ## Delegation
 
-Prefer delegated worker when host supports subagents. Build output verbose. Contain it.
+Always delegate `/al-build` to one general subagent. Build output is verbose; keep it out of the main session.
+
+Model:
+- Codex `spawn_agent`: `model=gpt-5.4-mini`, `reasoning_effort=low`
+- Claude Code `Agent`: `model=haiku`
+
+### Worker rules
+
+```
+Do not edit source, specs, tasks, config, or git state. Running `test.ps1` may write build/test artifacts under `.output`; that is allowed.
+
+Run exactly one requested gate. Do not rerun on failure. Do not run multiple `/al-build` gates in parallel. Do not shadow the worker with an inline build.
+
+Return observed outcome only. Do not make routing decisions. Do not invoke follow-up skills. Do not inspect or summarize telemetry; return the telemetry path when present.
+```
+
+### Worker return contract
+
+Return YAML-like plain text in a fenced `text` block.
+
+Use `.output/TestResults/summary.json` as the source of truth for app-level fields when it exists. Echo emitted `appName`, `dir`, `resultFile`, and `telemetryFile` exactly; do not normalize or reinterpret paths. Omit `summary` and `apps` if no app summary exists.
+
+On failure, parse failing `last.xml` for failing test names and the first assertion/exception line. If XML is unavailable but console output has explicit `FAIL` lines, use those. If neither exists, omit `failing_tests`. Omit `first_error` and `log_excerpt` unless corresponding evidence exists. `log_excerpt` is capped at 20 relevant lines. `root_signal` is mandatory for `FAIL` and must compress observed output only; no cause speculation.
+
+PASS example:
+
+```text
+VERDICT: PASS
+cmd: pwsh "<skill-folder>/scripts/test.ps1"
+gate: full
+exit_code: 0
+
+summary:
+  passedApps: 2
+  failedApps: 0
+
+apps:
+- appName: unit-tests
+  dir: unit-tests
+  passed: true
+  resultFile: .output/TestResults/unit-tests/last.xml
+  telemetryFile: .output/TestResults/unit-tests/telemetry.jsonl
+- appName: integration-tests
+  dir: integration-tests
+  passed: true
+  resultFile: .output/TestResults/integration-tests/last.xml
+  telemetryFile: .output/TestResults/integration-tests/telemetry.jsonl
+```
+
+FAIL example:
+
+```text
+VERDICT: FAIL
+cmd: pwsh "<skill-folder>/scripts/test.ps1" -UnitTestOnly
+gate: unit
+exit_code: 1
+
+summary:
+  passedApps: 0
+  failedApps: 1
+
+apps:
+- appName: unit-tests
+  dir: unit-tests
+  passed: false
+  resultFile: .output/TestResults/unit-tests/last.xml
+  telemetryFile: .output/TestResults/unit-tests/telemetry.jsonl
+
+failed_phase: test
+root_signal: two tests failed on `Combination Logic`; expected `OR`, actual `AND`
+failing_tests:
+- DefaultRuleNestedMintPersistsRevisedDescriptionAndPreservesPriorHeader: Assert.AreEqual failed. Expected: OR. Actual: AND.
+- DefaultWarningNestedMintPersistsRevisedDescriptionAndPreservesPriorHeader: Assert.AreEqual failed. Expected: OR. Actual: AND.
+```
 
 ### Full gate delegation
 
-```
-IMPORTANT: READ-ONLY. Do not edit files.
+Run:
 
-Run: pwsh "<skill-folder>/scripts/test.ps1"
-
-Report:
-1. Build result: success or failure
-2. Test result: pass / fail counts per test app
-3. Failures: error messages and stack traces (from per-app last.xml)
-4. Warnings: list them
-5. Summary: contents of .output/TestResults/summary.json
-6. If telemetry relevant: key entries from .output/TestResults/*/telemetry.jsonl
+```powershell
+pwsh "<skill-folder>/scripts/test.ps1"
 ```
+
+Report `gate: full`.
 
 ### Fast unit test delegation (inner loop)
 
-```
-IMPORTANT: READ-ONLY. Do not edit files.
+Run:
 
-Run: pwsh "<skill-folder>/scripts/test.ps1" -UnitTestOnly
-
-Report:
-1. Build result: success or failure
-2. Unit test result: pass / fail counts
-3. Failures: error messages from last.xml
-4. Summary: contents of .output/TestResults/summary.json
+```powershell
+pwsh "<skill-folder>/scripts/test.ps1" -UnitTestOnly
 ```
+
+Report `gate: unit`.
 
 ## Configuration
 
