@@ -1,6 +1,6 @@
 ---
 name: al-design
-description: Settle the AL/Business Central feature architecture from idea or `event-model.md`. Use after `/al-event-model` for user/API-facing features, after `/al-grill-adr` for pure-backend features, or when the user asks to design an AL feature.
+description: Settle the AL/Business Central feature architecture from idea or `event-model.md`. Use after `/al-event-model` for user/API-facing features, after `/al-grill-adr` for backend-only features, or when the user asks to design an AL feature.
 ---
 
 **Style:** Be extremely concise. Sacrifice grammar for concision. Opinionated — pick a side. Arrows (→) for causality. Technical terms exact, code and errors quoted verbatim.
@@ -14,18 +14,18 @@ Turn sharpened idea into feature-level architecture, then write `architecture.md
 ## Preconditions
 
 - `/al-grill-adr` ran for this idea; without sharpened intent in `CONTEXT.md` / domain ADRs you cannot tell domain confusion from genuine architectural choice. **Stop**, run it first.
-- User/API-facing: `/al-event-model` ran, `event-model.md` in spec folder; without it this skill re-litigates user-side picks inline and entanglement returns. Missing → run missing-storm checkpoint: ask whether feature is pure backend (no human, no API consumer) or whether `/al-event-model` was forgotten. **Stop** unless user confirms pure backend.
-- Branch creation shared with `/al-event-model`. On `^\d{3}-`: branch + spec folder exist, write into them. On `main` (pure-backend, or first per-feature skill): this skill creates them.
+- User/API-facing: `/al-event-model` ran, `event-model.md` in spec folder; without it this skill re-litigates user-side picks inline and entanglement returns. Missing → run missing-storm checkpoint: ask whether feature is backend-only (no human, no API consumer) or whether `/al-event-model` was forgotten. **Stop** unless user confirms backend-only.
+- Branch creation shared with `/al-event-model`. On `^\d{3}-`: branch + spec folder exist, write into them. On `main` (backend-only, or first per-feature skill): this skill creates them.
 - Existing `architecture.md` → reshaping; re-run with user's awareness.
 
 ## What goes into architecture.md
 
-- **Slices**: when `event-model.md` present, its user-facing slots (Role, Action, Business Event, View, Status) are settled; read, do not re-decide, qualify each slice by AL pattern (Command / Automation / Translation / View) based on trigger source. Pure-backend slices name trigger-source slot only (Job Queue, install / upgrade, scheduled task); see [LANGUAGE.md](../../references/LANGUAGE.md) *Slice*.
+- **Slices**: when `event-model.md` present, its user-facing slots (Role, Action, Business Event, View, Status) are settled; read, do not re-decide, qualify each slice by AL pattern (Command / Automation / Translation / View) based on trigger source. Backend-only slices name trigger-source slot only (Job Queue, install / upgrade, scheduled task); see [LANGUAGE.md](../../references/LANGUAGE.md) *Slice*.
 - **Module map**: modules under `src/<module>/`. Use CONTEXT.md vocabulary ("the Settlement intake module", never "the FooBarHandler").
 - **BC pattern per module**: pick from [bc-patterns.md](../../references/bc-patterns.md). Verify against current BaseApp via `/al-research` before committing.
 - **R → P → W boundary**: R = reads / inputs / events subscribed; P = pure procedure (no DB, no side effects, unit-test surface); W = effects (Insert / Modify / Delete, telemetry, errors, events published).
 - **Brownfield touchpoints**: objects, procedures, events, table fields the feature touches. Verify every name + signature via `/al-research`; stale memory ships fiction.
-- **Test layer per scenario family**: Pure is default. E2E earns place when behaviour is composition or side effect that cannot reproduce at pure layer (event wiring, table triggers, telemetry shape, install / upgrade).
+- **Test strategy**: name expected Unit and Integration proof surfaces. Unit fits isolated decision logic behind the P layer. Integration earns place when behaviour crosses BC runtime, database, page/TestPage, event wiring, table triggers, telemetry shape, install / upgrade, permissions, or public surface.
 - **Which BC names verified this session?** Every BC-specific name landing in `architecture.md` (pattern, event, codeunit, table, field, procedure): backed this session by `al-symbols-mcp` / `grep` hit, including `grep` against `event-model.md` for upstream-cited names, or `/al-research` citation. Recall does not satisfy. See *Citation chain in chat, before write* below.
 
 Unanswerable → not ready for `/al-scope`. Resolve via `/al-research` (BC behaviour), `/al-grill-adr` (domain rule), or `/al-steer` (replan).
@@ -81,9 +81,9 @@ Each pass runs its own `/al-research` and receives BC vocabulary from `CONTEXT.m
 
 ## Branch + folder + write
 
-On `^\d{3}-`: `/al-event-model` created branch + spec folder; write `architecture.md` into existing folder. On `main`: this is first per-feature skill (pure-backend, or `/al-event-model` skipped after missing-storm resolved to *pure backend*). Resolve `<NNN>` per [cross-branch-numbering.md](../../references/cross-branch-numbering.md) (cross-branch scan, not local-only), derive a 2–4-word kebab-case slug (do not ask), announce both, create branch `<NNN>-<slug>` + `specs/<NNN>-<slug>/`. Branch already exists locally or remotely → **Stop**.
+On `^\d{3}-`: `/al-event-model` created branch + spec folder; write `architecture.md` into existing folder. On `main`: this is first per-feature skill (backend-only, or `/al-event-model` skipped after missing-storm resolved to backend-only). Resolve `<NNN>` per [cross-branch-numbering.md](../../references/cross-branch-numbering.md) (cross-branch scan, not local-only), derive a 2-4-word kebab-case slug (do not ask), announce both, create branch `<NNN>-<slug>` + `specs/<NNN>-<slug>/`. Branch already exists locally or remotely → **Stop**.
 
-Then write `architecture.md`. Pure markdown; constraints in [markdown-spec-discipline.md](../../references/markdown-spec-discipline.md). Voice in [voice-contract.md](../../references/voice-contract.md). Both mandatory reads before writing. Write telegraphic; drop articles, padding, hedges; fragments fine. Gherkin step content (when present in example) keeps sentence shape. No surgical-edit contract; reshape via re-running. Name relationships (module deps, flow) in prose; no mermaid fences.
+Then write `architecture.md`. Markdown only; constraints in [markdown-spec-discipline.md](../../references/markdown-spec-discipline.md). Voice in [voice-contract.md](../../references/voice-contract.md). Both mandatory reads before writing. Write telegraphic; drop articles, padding, hedges; fragments fine. No surgical-edit contract; reshape via re-running. Name relationships (module deps, flow) in prose; no mermaid fences.
 
 ## Gate event
 
@@ -93,7 +93,7 @@ Once when `architecture.md` lands. Gate report names chosen BC pattern + R → P
 
 | | |
 |---|---|
-| **Runs after**     | `/al-event-model` (user/API-facing features) or `/al-grill-adr` (pure-backend) |
+| **Runs after**     | `/al-event-model` (user/API-facing features) or `/al-grill-adr` (backend-only) |
 | **Hands off to**   | `/al-scope` |
 | **Replan venue**   | `/al-steer` |
 | **Sidebands**      | `/al-research` (BC facts), `/bc-standard-reference` (pure BaseApp questions), `/grill-me` (ADR offers, design-twice reconciliation), `/al-second-opinion` (parallel design-twice picks) |

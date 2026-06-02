@@ -4,8 +4,8 @@
 |---|---|
 | **Slug**         | sales-charge-validation |
 | **ADR**          | ADR-0007 |
-| **Event model**  | [event-model.md](./event-model.md) |
-| **Architecture** | [architecture.md](./architecture.md) |
+| **Event model**  | [event-model.example.md](./event-model.example.md) |
+| **Architecture** | [architecture.example.md](./architecture.example.md) |
 | **Tasks**        | 5 technical + 2 verify |
 | **Slices**       | post-validates-allocation, audit-trail |
 
@@ -20,122 +20,257 @@ Catch item charge allocation mismatches at posting before invoice posts, surface
 
 Resolve `Item Charge Assignment (Sales)` rows for released `Sales Header`, grouped by source `Sales Line`. Reads only; no `Insert` or `Modify`.
 
-**Tests** (Gherkin, ZOMBIES):
+Test Specification:
 
-```gherkin
-Scenario: One charge, one assignment
-  Given released Sales Header with No. "SO-1001"
-   And  one Item Charge Assignment (Sales) on a freight charge line
-  When  Charge Validation reads assignments for "SO-1001"
-  Then  one assignment is returned
-   And  it carries the source Sales Line reference
+### Expected Behaviors
 
-Scenario: No assignments yields empty
-  Given released Sales Header with no Item Charge Assignment (Sales) rows
-  When  Charge Validation reads assignments
-  Then  result is empty
-   And  validation is short-circuited as balanced
-```
+| ID | Expected Behavior | Covered By |
+|---|---|---|
+| B1 | One released Sales Order item charge assignment is returned with source Sales Line reference | ReadsSingleItemChargeAssignment |
+| B2 | Released Sales Order with no item charge assignments returns empty result | ReadsNoItemChargeAssignmentsAsEmpty |
+
+### AAA Cases
+
+#### ReadsSingleItemChargeAssignment
+Procedure: `ReadsSingleItemChargeAssignment`
+Scope: Unit
+Covers: B1
+Arrange:
+- Released Sales Order has one freight charge line.
+- One item charge assignment exists for the freight charge line.
+Act:
+- Read item charge assignments for the Sales Order.
+Assert:
+- One assignment is returned.
+- Assignment carries source Sales Line reference.
+
+#### ReadsNoItemChargeAssignmentsAsEmpty
+Procedure: `ReadsNoItemChargeAssignmentsAsEmpty`
+Scope: Unit
+Covers: B2
+Arrange:
+- Released Sales Order has no item charge assignment rows.
+Act:
+- Read item charge assignments for the Sales Order.
+Assert:
+- Empty result is returned.
+- Allocation validation can short-circuit as balanced.
+
+Closeout:
+- Unit: `ReadsSingleItemChargeAssignment`, `ReadsNoItemChargeAssignmentsAsEmpty`
+- Integration: none
+- Build: full gate green
 
 ### T-002 [x] — Validate allocated quantities sum to charge quantity
 <!-- task=T-002 status=done slice=post-validates-allocation kind=technical -->
 
 For each `Item Charge Assignment (Sales)`, verify sum of allocated quantities equals charge quantity. Both inequality directions count as mismatches.
 
-**Tests** (Gherkin, ZOMBIES):
+Test Specification:
 
-```gherkin
-Scenario: Sum equals charge quantity
-  Given charge of quantity 10
-   And  allocations of 4 and 6 across two Sales Line rows
-  When  Charge Validation validates
-  Then  result is balanced
+Acceptance Intent:
+Allocation validation protects posting correctness by rejecting Sales Orders where item charge quantity and assigned quantity do not balance.
 
-Scenario: Sum less than charge quantity
-  Given charge of quantity 10
-   And  allocations of 4 and 4 across two Sales Line rows
-  When  Charge Validation validates
-  Then  result is Mismatch with shortfall 2
+### Decision Matrix
 
-Scenario: Sum greater than charge quantity
-  Given charge of quantity 10
-   And  allocations of 6 and 6 across two Sales Line rows
-  When  Charge Validation validates
-  Then  result is Mismatch with overflow 2
-```
+| Case | Charge Quantity | Allocated Quantity | Expected Result | Covered By |
+|---|---:|---:|---|---|
+| R1 | 10 | 10 | Balanced | AcceptsBalancedAllocationQuantity |
+| R2 | 10 | 8 | Mismatch shortfall 2 | RejectsShortfallAllocationQuantity |
+| R3 | 10 | 12 | Mismatch overflow 2 | RejectsOverflowAllocationQuantity |
 
-### T-003 [~] — Subscribe to OnAfterCheckSalesDoc, route through validator
-<!-- task=T-003 status=in-progress slice=post-validates-allocation kind=technical -->
+### AAA Cases
+
+#### AcceptsBalancedAllocationQuantity
+Procedure: `AcceptsBalancedAllocationQuantity`
+Scope: Unit
+Covers: R1
+Arrange:
+- Item charge quantity is 10.
+- Allocations total 10.
+Act:
+- Validate allocated quantity.
+Assert:
+- Result is balanced.
+
+#### RejectsShortfallAllocationQuantity
+Procedure: `RejectsShortfallAllocationQuantity`
+Scope: Unit
+Covers: R2
+Arrange:
+- Item charge quantity is 10.
+- Allocations total 8.
+Act:
+- Validate allocated quantity.
+Assert:
+- Result is mismatch.
+- Shortfall is 2.
+
+#### RejectsOverflowAllocationQuantity
+Procedure: `RejectsOverflowAllocationQuantity`
+Scope: Unit
+Covers: R3
+Arrange:
+- Item charge quantity is 10.
+- Allocations total 12.
+Act:
+- Validate allocated quantity.
+Assert:
+- Result is mismatch.
+- Overflow is 2.
+
+Closeout:
+- Unit: `AcceptsBalancedAllocationQuantity`, `RejectsShortfallAllocationQuantity`, `RejectsOverflowAllocationQuantity`
+- Integration: none
+- Build: full gate green
+- Mutation: task-end quantity comparison mutants killed at Unit layer
+
+### T-003 [x] — Subscribe to OnAfterCheckSalesDoc, route through validator
+<!-- task=T-003 status=done slice=post-validates-allocation kind=technical -->
 
 **Depends on:** T-001, T-002
 
 Add event subscriber on `Sales-Post` codeunit 80 delegating to `Charge Validation`. Mismatch raises `Error` before any `Insert` or `Modify` on posting tables.
 
-**Tests** (Gherkin, ZOMBIES):
+Test Specification:
 
-```gherkin
-Scenario: Validation fires before posting writes
-  Given released Sales Header with one valid Item Charge Assignment (Sales)
-  When  user calls Post
-  Then  Charge Validation runs before OnBeforePostSalesDoc
-   And  Posted Sales Invoice created with Posting Date matching the header
+Acceptance Intent:
+Posting validation prevents Sales Orders with unbalanced item charge allocations from creating posted documents or partial posting state.
 
-Scenario: Mismatch aborts posting, no partial writes
-  Given released Sales Header with mismatched Item Charge Assignment (Sales)
-  When  user calls Post
-  Then  posting halts with Allocation Mismatch
-   And  no Posted Sales Invoice row is Inserted
-```
+### Decision Matrix
 
-### T-004 [ ] — Surface validation failure inline on Sales Order Card with breakdown
-<!-- task=T-004 status=ready slice=post-validates-allocation kind=technical -->
+| Case | Allocation Balanced | Expected Posting | Posted Invoice Created | Covered By |
+|---|---:|---|---:|---|
+| R1 | Yes | Allowed | Yes | PostsSalesOrderWithBalancedAllocation |
+| R2 | No | Blocked | No | BlocksPostingWithMismatchedAllocation |
+
+### AAA Cases
+
+#### PostsSalesOrderWithBalancedAllocation
+Procedure: `PostsSalesOrderWithBalancedAllocation`
+Scope: Integration
+Covers: R1
+Arrange:
+- Released Sales Order has balanced item charge allocation.
+Act:
+- Post the Sales Order.
+Assert:
+- Posted Sales Invoice is created.
+- Posting Date matches the Sales Order.
+
+#### BlocksPostingWithMismatchedAllocation
+Procedure: `BlocksPostingWithMismatchedAllocation`
+Scope: Integration
+Covers: R2
+Arrange:
+- Released Sales Order has mismatched item charge allocation.
+Act:
+- Post the Sales Order.
+Assert:
+- Allocation mismatch error is raised.
+- Posted Sales Invoice is not created.
+
+Closeout:
+- Unit: none
+- Integration: `PostsSalesOrderWithBalancedAllocation`, `BlocksPostingWithMismatchedAllocation`
+- Build: full gate green
+- Mutation: posting guard and event-subscriber delegation mutants killed at Integration layer
+
+### T-004 [x] — Surface validation failure inline on Sales Order Card with breakdown
+<!-- task=T-004 status=done slice=post-validates-allocation kind=technical -->
 
 **Depends on:** T-003
 
 When validation reports mismatch, render allocation breakdown inline on `Sales Order Card`: one row per receiving `Sales Line`, allocated and required quantities side by side, imbalance highlighted.
 
-**Tests** (Gherkin, ZOMBIES):
+Test Specification:
 
-```gherkin
-Scenario: Breakdown shows allocated vs required per line
-  Given mismatched assignment with allocations 6 and 6 against charge of 10
-  When  user views Sales Order Card after failed Post
-  Then  breakdown lists both Sales Line rows with allocated and required quantities
-   And  overflow row is marked as the imbalance
+Acceptance Intent:
+The Sales Order Card explains allocation mismatch at the point of correction so the Order Processor can fix the affected Sales Lines.
 
-Scenario: Breakdown clears when allocation corrected
-  Given corrected allocation that sums to charge quantity
-  When  user re-opens Sales Order Card
-  Then  breakdown is hidden
-   And  Validate action reports balanced
-```
+### Expected Behaviors
 
-### T-006 [!] — Verify: Order Processor posts a sales document with charge allocation
-<!-- task=T-006 status=blocked slice=post-validates-allocation kind=verify -->
+| ID | Expected Behavior | Covered By |
+|---|---|---|
+| B1 | Mismatched allocation breakdown shows allocated and required quantities per Sales Line | ShowsAllocationMismatchBreakdown |
+| B2 | Corrected allocation hides the breakdown | HidesBreakdownAfterAllocationCorrection |
+
+### AAA Cases
+
+#### ShowsAllocationMismatchBreakdown
+Procedure: `ShowsAllocationMismatchBreakdown`
+Scope: Integration
+Covers: B1
+Arrange:
+- Sales Order has item charge quantity 10.
+- Allocations total 12 across two Sales Lines.
+Act:
+- Open Sales Order Card after failed posting validation.
+Assert:
+- Breakdown lists both Sales Lines.
+- Allocated and required quantities are visible.
+- Overflow row is marked as imbalance.
+
+#### HidesBreakdownAfterAllocationCorrection
+Procedure: `HidesBreakdownAfterAllocationCorrection`
+Scope: Integration
+Covers: B2
+Arrange:
+- Sales Order has corrected allocation that balances to charge quantity.
+Act:
+- Reopen Sales Order Card.
+Assert:
+- Breakdown is hidden.
+- Validate action reports balanced allocation.
+
+Closeout:
+- Unit: none
+- Integration: `ShowsAllocationMismatchBreakdown`, `HidesBreakdownAfterAllocationCorrection`
+- Build: full gate green
+- Mutation: breakdown visibility and correction-state mutants killed at Integration layer
+
+### T-006 [ ] — Verify: Order Processor posts a sales document with charge allocation
+<!-- task=T-006 status=ready slice=post-validates-allocation kind=verify -->
 
 **Depends on:** T-001, T-002, T-003, T-004
 
-User-facing slice `post-validates-allocation`: Order Processor releases and posts `Sales Header` with `Item Charge Assignment (Sales)`. Balanced allocations post cleanly; mismatched halt posting with inline breakdown on `Sales Order Card`.
+User-facing slice `post-validates-allocation`: Order Processor releases and posts `Sales Header` with `Item Charge Assignment (Sales)`. Balanced allocations post cleanly; mismatched allocations halt posting with inline breakdown on `Sales Order Card`.
 
-**User test plan** (numbered steps, ZOMBIES):
+Verification Plan:
 
-1. **Posting a balanced allocation succeeds end-to-end**
-   1. Open `Sales Order Card` for `SO-1041` with charge of quantity 10 and allocations of 4 and 6.
-   2. Click `Post` on action bar.
-   3. Confirm posting dialog.
-   4. **Expected:** `Posted Sales Invoice` created; Sales Order Status flips to `Released`.
+### Journey Examples
 
-2. **Mismatched allocation halts posting with breakdown**
-   1. Open `Sales Order Card` for `SO-1042` with charge of quantity 10 and allocations of 6 and 6.
-   2. Click `Post`.
-   3. **Expected:** posting halts with `Allocation Mismatch` message.
-   4. **Expected:** breakdown shows both `Sales Line` rows; overflow row highlighted.
+#### V1 PostsBalancedAllocationFromSalesOrderPage
+Scope: E2E
+Role: Order Processor
+Action:
+- Open Sales Order Card for a Sales Order with item charge quantity 10 and allocations 4 + 6.
+- Choose `Post`.
+- Confirm the posting dialog.
+Observable Checks:
+- Posted Sales Invoice is created.
+- Sales Order Status remains `Released`.
 
-3. **Boundary at exact zero allocation**
-   1. Open `Sales Order Card` for `SO-1043` with charge of quantity 10 and no allocations.
-   2. Click `Post`.
-   3. **Expected:** posting halts with `Allocation Mismatch` shortfall 10.
-   4. **Expected:** breakdown rendered with zero allocated.
+#### V2 BlocksMismatchedAllocationFromSalesOrderPage
+Scope: E2E
+Role: Order Processor
+Action:
+- Open Sales Order Card for a Sales Order with item charge quantity 10 and allocations 6 + 6.
+- Choose `Post`.
+Observable Checks:
+- Allocation mismatch error is visible.
+- Posted Sales Invoice is not created.
+- Breakdown shows both Sales Lines and marks the overflow.
+
+### Exploration Charters
+
+#### X1 AllocationMismatchGuidesCorrection
+Scope: Exploration
+Charter: Judge whether the mismatch breakdown tells the Order Processor which Sales Line allocation to fix.
+Prompts:
+- Is the affected Sales Line easy to identify?
+- Are allocated and required quantities understandable without opening another page?
+- Does the flow return the user to a useful correction point?
 
 ## Slice: audit-trail
 
@@ -152,18 +287,3 @@ On every successful posting, `Insert` one ledger entry per resolved allocation: 
 **Depends on:** T-005
 
 User-facing slice `audit-trail`: after successful `Post` on balanced allocation, audit trail surfaces one `Allocation Ledger Entry` row per resolved allocation, queryable from `Posted Sales Invoice`.
-
-**User test plan** (numbered steps, ZOMBIES):
-
-1. **One allocation, one ledger entry**
-   1. Post `SO-1041` with charge allocated against one `Sales Line`.
-   2. Open resulting `Posted Sales Invoice`.
-   3. Drill into `Allocation Ledger Entries` from fact box.
-   4. **Expected:** one row with source `Sales Line`, allocated quantity, invoice `Posting Date`.
-
-2. **Many allocations, one row per resolved allocation**
-   1. Post `SO-1044` with charge of quantity 12 allocated as 4 + 4 + 4 across three `Sales Line` rows.
-   2. Open `Posted Sales Invoice`, drill into `Allocation Ledger Entries`.
-   3. **Expected:** three rows, each carrying source `Sales Line` reference and allocated quantity.
-   4. **Expected:** summed `Allocated Quantity` across three rows equals 12.
-

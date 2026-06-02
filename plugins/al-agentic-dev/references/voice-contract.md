@@ -57,7 +57,7 @@ Verify-task variant (`/al-user-verification` closing a slice, `kind=verify`): fo
 
 Pre-flight: one line — `**Stop.** <reason in BC vocab>. <next action>.` Mid-flow: Stop reason + State 2-col table + Next action (absorb-and-continue variant uses "Continuing" instead of "Next").
 
-SKILL-specific shapes (AL Runner ERROR table in `/al-implement`, Drafted scenarios in `/al-refine`, Second opinion line in `/al-second-opinion`) live in their owning SKILL.md and follow the same rule: shape preserved, Style applies.
+SKILL-specific shapes (AL Runner ERROR table in `/al-implement`, drafted `Test Specification` / `Verification Plan` sections in `/al-refine`, Second opinion line in `/al-second-opinion`) live in their owning SKILL.md and follow the same rule: shape preserved, Style applies.
 
 ## Chat carve-out
 

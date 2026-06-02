@@ -82,7 +82,7 @@ Rename when name lies. BC verbs over generic CRUD; objects `"Prefix Feature Suff
 
 Scope: objects, procedures, parameters, variables, record vars, table fields, page actions, publishers, subscribers, captions, labels. Nothing escapes by being "small".
 
-Rename safety: editing a test name or `[SCENARIO]/[GIVEN]/[WHEN]/[THEN]` triggers Gherkin re-verification; intent shift → update via `/al-refine` in the same change. `[HandlerFunctions('...')]` strings are invisible to symbol tools; grep before any test-procedure rename per [tdd.md](../../references/tdd.md).
+Rename safety: editing a test procedure name requires task-spec reconciliation: update AAA header, `Procedure:`, and `Covered By` in the same change when the task is active. Intent shift → update via `/al-refine`. `[HandlerFunctions('...')]` strings are invisible to symbol tools; grep before any test-procedure rename per [tdd.md](../../references/tdd.md).
 
 Citation chain: when rename pulls a BC name from outside codebase (verb picked because "Insert is right for Customer", BaseApp subscriber signature, System Application call), name either appears in `al-symbols-mcp` / `grep` result you ran this session, or cited via `/al-research`: `Researched: <name> → <source>` before rename lands. Workspace lookup is empirical anchor; memory of training data or past sessions is not. Your confidence about whether "Insert" or "Create" is the BC-correct verb is not evidence either is right. This is exactly where confidently-wrong verb corrupts every downstream artifact.
 
@@ -101,7 +101,7 @@ Citation chain: when rename pulls a BC name from outside codebase (verb picked b
 
 **No new behaviour.** Diff leaves observable behaviour identical. New behaviour belongs to `/al-implement` (new task) or `/al-refine` (re-plan).
 
-Standalone mode emits Gate report once at module / pattern / seam altitude (not procedure level), naming application invariant preserved and user's call; inside `/al-implement`, findings fold into the scenario's Gate report. `/al-refactor` does not edit `architecture.md` and writes no Notes by default; `tasks.md` touched only when an operational outcome demands it, surgical-edit contract is the comment-line `task=` + `status=` keys per [markdown-spec-discipline.md](../../references/markdown-spec-discipline.md). See [voice-contract.md](../../references/voice-contract.md).
+Standalone mode emits Gate report once at module / pattern / seam altitude (not procedure level), naming application invariant preserved and user's call; inside `/al-implement`, findings fold into the task Gate report. `/al-refactor` does not edit `architecture.md` and writes no Notes by default; `tasks.md` touched only when an operational outcome demands it, surgical-edit contract is the comment-line `task=` + `status=` keys per [markdown-spec-discipline.md](../../references/markdown-spec-discipline.md). See [voice-contract.md](../../references/voice-contract.md).
 
 ## Composition
 

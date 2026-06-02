@@ -6,8 +6,8 @@ Three modules cooperate under strict R → P → W discipline. Feature touches B
 |---|---|
 | **Slug**        | sales-charge-validation |
 | **ADR**         | ADR-0007 |
-| **Event model** | [event-model.md](./event-model.md) |
-| **Tasks**       | [tasks.md](./tasks.md) |
+| **Event model** | [event-model.example.md](./event-model.example.md) |
+| **Tasks**       | [tasks.example.md](./tasks.example.md) |
 
 ## Goal
 
@@ -50,5 +50,5 @@ Posting routes through four steps: `Release Sales Order` → `Initiate Posting` 
 ## Cross-references
 
 - ADR-0007 Allocation Mismatch Surfacing: in-document mismatch surface and audit policy.
-- [event-model.md](./event-model.md): user-facing chain.
-- [tasks.md](./tasks.md): task bus decomposing this architecture.
+- [event-model.example.md](./event-model.example.md): user-facing chain.
+- [tasks.example.md](./tasks.example.md): task bus decomposing this architecture.

@@ -6,8 +6,8 @@ User-facing journey for catching item charge allocation mismatches at posting ti
 |---|---|
 | **Slug**         | sales-charge-validation |
 | **ADR**          | ADR-0007 |
-| **Architecture** | [architecture.md](./architecture.md) |
-| **Tasks**        | [tasks.md](./tasks.md) |
+| **Architecture** | [architecture.example.md](./architecture.example.md) |
+| **Tasks**        | [tasks.example.md](./tasks.example.md) |
 
 ## Roles
 

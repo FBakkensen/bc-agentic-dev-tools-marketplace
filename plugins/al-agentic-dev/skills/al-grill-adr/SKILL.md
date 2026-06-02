@@ -35,6 +35,6 @@ Before writing any BC-specific term into `CONTEXT.md` or a domain ADR, term eith
 | | |
 |---|---|
 | **Runs after**     | `main` (kicks off new feature) or standalone for fuzzy term |
-| **Hands off to**   | `/al-event-model` (user/API-facing features) or `/al-design` (pure-backend) |
+| **Hands off to**   | `/al-event-model` (user/API-facing features) or `/al-design` (backend-only) |
 | **Replan venue**   | `/al-steer` |
 | **Sidebands**      | `/al-research` (BC facts), `/grill-me` (interview the user), `/al-second-opinion` (ADR reconciliation) |

@@ -7,8 +7,8 @@ Composable skills for AL/Business Central agentic development. One feature flows
 ```
 /al-grill-adr  →  /al-event-model  →  /al-design     →  /al-scope                →  /al-refine    →  /al-implement   →  /al-code-review  →  /al-user-verification
 (CONTEXT,         (event-model.md,    (architecture    (tasks.md, slices +         (per-task        (TDD per task,     (gate at slice-      (agent drives slice's
- ADRs)             user/API-facing     .md, AL-shape    technical + verify per     scenarios)        refactor +         done +               verify task; flip done
-                   only, pure backend  only)            user/API-facing slice)                       mutate inner)      feature-done)        or blocked → /al-steer)
+ ADRs)             user/API-facing     .md, AL-shape    technical + verify per     task specs)       refactor +         done +               verify task; flip done
+                   only, backend-only  only)            user/API-facing slice)                       mutate inner)      feature-done)        or blocked → /al-steer)
                    skips this step)
 ```
 
@@ -19,7 +19,7 @@ Composable skills for AL/Business Central agentic development. One feature flows
 | **Shaping** (inside `/al-implement` or standalone on legacy) | `/al-refactor`, `/al-mutate`, `/al-page-script` |
 | **Meta** | `/al-agentic-dev-overview` (this skill) |
 
-Slice mechanics: `/al-implement` works through one slice's technical tasks, then `/al-code-review` fires automatically at slice-done. For user/API-facing slices, `/al-page-script` generates the slice's bc-replay recording from the verify task scenarios, then `/al-user-verification` pre-flights the recording batch against a fresh container and walks the user through the verify task before the next slice opens. Pure-backend slices skip page-script and user-verification, chaining directly into the next slice. At feature-done (every task in feature `done`), `/al-code-review` fires per-feature before merge.
+Slice mechanics: `/al-implement` works through one slice's technical tasks, then `/al-code-review` fires automatically at slice-done. For user/API-facing slices, `/al-page-script` generates the slice's bc-replay recording from the verify task's E2E Journey Examples, then `/al-user-verification` pre-flights the recording batch against a fresh container, runs Contract Examples, and walks Journey Examples / Exploration Charters before the next slice opens. Backend-only slices skip page-script and user-verification, chaining directly into the next slice. At feature-done (every task in feature `done`), `/al-code-review` fires per-feature before merge.
 
 ## Skills
 
@@ -27,21 +27,21 @@ Slice mechanics: `/al-implement` works through one slice's technical tasks, then
 |---|---|---|
 | `/al-agentic-dev-overview` | Tour of this plugin: pipeline, skills, persistence, cold-start. | "What is al-agentic-dev?", "show me the pipeline", "where do I start". |
 | `/al-grill-adr` | Domain-aware grilling. Sharpens BC vocabulary, updates `CONTEXT.md`, offers domain ADRs only when a hard-to-reverse business rule earns one. | Idea is rough; you want it grilled before settling intent. |
-| `/al-event-model` | User-facing journey: `event-model.md` in BC vocabulary (Role / Action / Business Event / View / Status). | User- or API-facing feature, after `/al-grill-adr`. Pure-backend features skip this. |
-| `/al-design` | Feature architecture: `architecture.md`. Module map, BC patterns, R → P → W boundary, brownfield touchpoints, test strategy. | After `/al-event-model` for user/API features, or after `/al-grill-adr` for pure-backend. |
-| `/al-scope` | Decomposes `architecture.md` into a slice-grouped, ZOMBIES-ordered task list in `tasks.md`. | After `/al-design`. |
-| `/al-refine` | One task → numbered scenarios. Technical task → Gherkin for `/al-implement`. Verify task → user test plan for `/al-user-verification`. | Before working a specific task. |
-| `/al-implement` | TDD per task: red → green → refactor → mutate. | After `/al-refine` produces scenarios for a technical task. |
+| `/al-event-model` | User-facing journey: `event-model.md` in BC vocabulary (Role / Action / Business Event / View / Status). | User- or API-facing feature, after `/al-grill-adr`. Backend-only features skip this. |
+| `/al-design` | Feature architecture: `architecture.md`. Module map, BC patterns, R → P → W boundary, brownfield touchpoints, test strategy. | After `/al-event-model` for user/API features, or after `/al-grill-adr` for backend-only. |
+| `/al-scope` | Decomposes `architecture.md` into a slice-grouped task list in `tasks.md`. | After `/al-design`. |
+| `/al-refine` | One task → `Test Specification` or `Verification Plan`. | Before working a specific task. |
+| `/al-implement` | TDD per technical task: Unit cases → Integration cases → refactor → mutate. | After `/al-refine` produces a `Test Specification`. |
 | `/al-user-verification` | Agent drives the slice's verify task in the browser; functional outcomes gate, usability observations → findings/tasks; second-opinion + visual evidence guard the gate. Gates the next slice. | Verify task ready (after `/al-code-review` flipped it from `blocked`). |
 | `/al-refactor` | Improve shape while green. No new behaviour. | After green inside `/al-implement`, or standalone on legacy code. |
 | `/al-mutate` | Validate test rigor by injecting mutations one at a time. | Mandatory inside `/al-implement` for non-trivial work, or standalone on legacy before `/al-refactor`. |
 | `/al-code-review` | Gate at slice-done and feature-done. Auto-runs `/grill-me` per surviving finding. | Auto-announced by `/al-implement` at slice-done and feature-done. |
 | `/al-research` | Verify BC specifics from authoritative sources. | When prior AL/BC knowledge is unverified and a downstream skill needs the fact. |
-| `/al-second-opinion` | Cross-runtime read-only advisory review. | Before reconciling non-trivial plans, scenarios, mutation lists, or refactor checklists. |
+| `/al-second-opinion` | Cross-runtime read-only advisory review. | Before reconciling non-trivial `Test Specification`, `Verification Plan`, mutation lists, refactor checklists, or verification verdicts. |
 | `/al-steer` | Coach and navigator. Reads state, names next step, never edits code. Owns `.out-of-scope/`. Canonical replan venue. | "Where are we?", "what's next?", trigger fired in another skill. |
 | `/al-build` | Compile, publish, run tests; writes results to `.output/TestResults/<dirName>/`. | After modifying AL code or tests. Required gate before commit. |
 | `/al-debug-logging` | Temporary `DEBUG-*` `FeatureTelemetry.LogUsage` probes; read `telemetry.jsonl`; remove probes. Final state: zero `DEBUG-*` in tree. | Runtime behaviour diverges from source and tests can't reveal which path ran. |
-| `/al-page-script` | Generate the slice's bc-replay recording (`.yml`) from the verify task's scenarios; scenario-by-scenario inner loop against a fresh container; commits the file on green. Produces the recording `/al-user-verification` pre-flights. | After `/al-code-review` per-slice flips the verify task to `ready` (user-facing slice only). |
+| `/al-page-script` | Generate the slice's bc-replay recording (`.yml`) from the verify task's E2E Journey Examples; example-by-example inner loop against a fresh container; commits the file on green. Produces the recording `/al-user-verification` pre-flights. | After `/al-code-review` per-slice flips the verify task to `ready` (user-facing slice only). |
 
 ## Persistence layers
 
@@ -57,7 +57,7 @@ Two layers, on purpose.
 You have an AL repo, no `specs/<NNN>-<slug>/` yet, on the default branch. The chain starts at:
 
 - **User- or API-facing feature** → `/al-grill-adr` (grill the idea) → `/al-event-model` (settle the user-facing journey; creates the branch and spec folder) → `/al-design` → `/al-scope` → `/al-refine` on first task → `/al-implement`.
-- **Pure-backend feature** (no user surface) → `/al-grill-adr` → `/al-design` (skips event-model; creates the branch and spec folder) → `/al-scope` → `/al-refine` on first task → `/al-implement`.
+- **Backend-only feature** (no user/API surface) → `/al-grill-adr` → `/al-design` (skips event-model; creates the branch and spec folder) → `/al-scope` → `/al-refine` on first task → `/al-implement`.
 
 If the idea is already crystallised, skip `/al-grill-adr`. Most features benefit from it.
 

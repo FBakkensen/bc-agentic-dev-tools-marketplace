@@ -11,7 +11,7 @@ Deliberate gate at slice-done and feature-done boundaries, where code is finishe
 
 Slice-done is natural goldilocks. Per-task review (pre-0.27 cadence) reviewed every TDD cycle's diff before slice was end-to-end coherent → cross-task drift surfaced only after slice closed anyway. Feature-done alone lets slice A's defects compound through slices B / C / D. Slice-done catches both: enough end-to-end shape to judge whole, small enough that defects don't ripple.
 
-Programmatic gate runs before `/al-user-verification`. For user-facing slices the chain is implement → code-review → user-verification → next slice; for pure-backend slices it is implement → code-review → next slice. Code-review surfaces structural defects, BC anti-patterns, naming-that-lies, AppSource lock-in before the user spends time walking scenarios that the same defects would invalidate.
+Programmatic gate runs before `/al-user-verification`. For user/API-facing slices the chain is implement → code-review → user-verification → next slice; for backend-only slices it is implement → code-review → next slice. Code-review surfaces structural defects, BC anti-patterns, naming-that-lies, AppSource lock-in before the user spends time walking checks that the same defects would invalidate.
 
 `/al-refactor` (auto inside `/al-implement`) handles structural reshape at high relevance bar every cycle. `/al-code-review` lowers the bar and adds judgment-level lenses the refactor pass cannot afford.
 
@@ -20,14 +20,16 @@ Programmatic gate runs before `/al-user-verification`. For user-facing slices th
 - Branch matches `^\d{3}-` and `specs/<branch>/tasks.md` exists.
 - `/al-build` green: linter pipeline (CodeCop, AppSourceCop, UICop, AppSource Validation) has already cleared deterministic concerns → review starts where linters stop. Red baseline stops the gate.
 - Tree state matches reviewer intent. Uncommitted reshape from unrelated work pollutes diff; confirm scope before proceeding.
+- Read [`test-specification.md`](../../references/test-specification.md) before lens synthesis; lens 1 consumes `Test Specification`, lens 6 consumes `Verification Plan`.
+- Per-slice user/API-facing mode requires the slice verify task to contain a populated `Verification Plan` before review. Empty plan → **Stop**, `Next: /al-refine T-NNN`; the review would otherwise run before lens 6 has an artifact to validate.
 
 Any precondition fails → stop, surface the gap. Do not review against uncertain baseline.
 
 ## Scope and diff
 
-Two modes, deduced from current state, recent `status=` flips, working tree, and what user said: **per-slice** (every technical task in one `slice=` is `done` and slice's gate flip has not landed yet — verify task still `blocked` for user-facing, or next slice's first technical task still `blocked` for pure-backend) or **per-feature** (full feature diff before merge). When inference uncertain (mid-stream WIP commits, mixed in-flight/done), ask with concrete options: "diff for slice `<slug>`?" / "full branch vs `main`?" / "uncommitted working tree?" / "SHA range you name?"
+Two modes, deduced from current state, recent `status=` flips, working tree, and what user said: **per-slice** (every technical task in one `slice=` is `done` and slice's gate flip has not landed yet — verify task still `blocked` for user-facing, or next slice's technical tasks still `blocked` for backend-only) or **per-feature** (full feature diff before merge). When inference uncertain (mid-stream WIP commits, mixed in-flight/done), ask with concrete options: "diff for slice `<slug>`?" / "full branch vs `main`?" / "uncommitted working tree?" / "SHA range you name?"
 
-Per-slice scope: union of diffs for every `T-NNN` carrying slice's `slice=` value, from each task's first commit through its `done` flip. Pure-backend slices use the same per-slice mode; they differ only in the gate flip (next slice's first technical task vs. verify task) and skip lens 6.
+Per-slice scope: union of diffs for every `T-NNN` carrying slice's `slice=` value, from each task's first commit through its `done` flip. Backend-only slices use the same per-slice mode; they differ only in the gate flip (next slice's technical task set vs. verify task) and skip lens 6.
 
 Pipeline commits carry `T-NNN <verb>: <message>` prefixes that associate commits with tasks; `review:` commit or squash defeats the grep, which is when asking beats guessing.
 
@@ -37,12 +39,12 @@ Spawn all lenses in one message so they run concurrently. Each lens has narrow f
 
 | # | Lens | Focused goal | Mode |
 |---|---|---|---|
-| 1 | Project compliance + naming + scope | Changes obey `CONTEXT.md`, design and domain ADRs under `docs/adr/`, module map and boundaries in `architecture.md`, originating task's Gherkin in `tasks.md`. Naming check: objects, procedures, variables, fields, parameters use BC vocabulary AND project terminology; names that lie surface even when code is otherwise correct. Scope check: behaviour in the diff not traceable to the originating task's Gherkin is a finding — code doing more than asked (scope creep), and requirements that look implemented but wrong (present but defective), are each distinct from missing | both |
+| 1 | Project compliance + naming + scope | Changes obey `CONTEXT.md`, design and domain ADRs under `docs/adr/`, module map and boundaries in `architecture.md`, originating task's `Test Specification` in `tasks.md`. Naming check: objects, procedures, variables, fields, parameters use BC vocabulary AND project terminology; names that lie surface even when code is otherwise correct. Scope check: behaviour in the diff not traceable to `Expected Behaviors`, `Decision Matrix`, or AAA cases is a finding — code doing more than asked (scope creep), and requirements that look implemented but wrong (present but defective), are each distinct from missing | both |
 | 2 | Bug scan | Shallow scan for large bugs the LLM catches cold on a fresh read. Correctness and obvious logic faults only; skip nitpicks, skip style, skip anything a linter catches. Ad-hoc conditionals bolted into unrelated flows ("weird if statements in random places") escalate as a design problem, not a style nit | both |
 | 3 | BC-specific via bc-code-intelligence | Per `${CLAUDE_SKILL_DIR}/../../references/bc-code-intelligence-dispatch.md`: `find_bc_knowledge` per concern → drop noise (`parker-pragmatic/*`, `*/recommend-*`, off-domain) → `get_bc_topic` → match each topic's `anti_pattern_indicators` against the diff. Cast wider than `/al-refactor`: the gate can afford the broader sweep | both |
 | 4 | Code comments + git history | Code comments in modified files state guidance (invariants, "do not X" warnings); changes comply. Recent commit history surfaces context: previous fix the current change might re-break, deliberate decision being undone | both |
 | 5 | AppSource public-surface addition | New public procedure, public table field, or page action on shipped object locks public contract into AppSource. Linters fire on removal (AS0011) and rename (AS0007), not on addition; read changed object alongside `app.json` and judge intentional vs accidental lock-in | per-feature only |
-| 6 | Verify ↔ code alignment | Slice's verify task scenarios in `tasks.md` name surfaces, Roles, Status values; changed code under slice's `slice=` actually exposes those surfaces with those names. Drift caught here means `/al-user-verification` would have failed when the user walked it — preempt before the user spends the time. Skip for pure-backend slices (no verify task) | per-slice only |
+| 6 | Verify ↔ code alignment | Slice's verify task `Verification Plan` in `tasks.md` names surfaces, Roles, Status values, clients, and observable checks; changed code under slice's `slice=` actually exposes those surfaces with those names. Drift caught here means `/al-user-verification` would have failed when the user walked or checked it — preempt before the user spends the time. Skip for backend-only slices (no verify task) | per-slice only |
 
 Lenses state goals, not enumerated checklists. Specifics each lens catches depend on code and what `bc-code-intelligence` surfaces. Structural and coupling vocabulary the lenses name (Connascence, CQS, Depth, Seam) lives in `${CLAUDE_SKILL_DIR}/../../references/LANGUAGE.md`; use it exactly.
 
@@ -91,8 +93,8 @@ Abort on explicit `stop` / `end loop` / `cancel`, off-topic shift, or compaction
 
 Per-slice mode, no new tasks materialized in current slice: code-review owns the gate flip the slice depends on to advance.
 
-- **User-facing slice** (verify task exists in slice with `kind=verify`): flip its `status=` from `blocked` to `ready` on the comment-anchor line, sync heading marker to `[~]`. Next handoff is state-conditional on the verify task's Tests area and the slice's bc-replay recording at `pagescripts/recordings/<NNN>-<slug>__<slice>.yml`: empty Tests → `Next: /al-refine T-NNN`; Tests populated, `.yml` missing → `Next: /al-page-script T-NNN`; `.yml` exists → `Next: /al-user-verification T-NNN`.
-- **Pure-backend slice** (no verify task): flip the *next* slice's first technical task (slice whose first task carries `Depends on:` this slice's last technical task) from `blocked` to `ready`. Announce `/al-implement` (or `/al-refine` if the new-ready task's Tests slot is empty) as next handoff. If this was the feature's last slice (no next slice): announce `/al-code-review` per-feature as next handoff.
+- **User/API-facing slice** (verify task exists in slice with `kind=verify`): flip its `status=` from `blocked` to `ready` on the comment-anchor line, sync heading marker to `[~]`. Next handoff is state-conditional on the verify task's `Verification Plan` and the slice's bc-replay recording at `pagescripts/recordings/<NNN>-<slug>__<slice>.yml`: `Journey Examples` present and `.yml` missing → `Next: /al-page-script T-NNN`; `.yml` exists or no E2E recording is needed → `Next: /al-user-verification T-NNN`.
+- **Backend-only slice** (no verify task): identify the next slice by the first technical task carrying `Depends on:` this slice's last technical task, then flip every technical task in that next slice from `blocked` to `ready`. File order plus in-slice `Depends on:` edges tell `/al-implement` which one to pick first. Announce `/al-implement` (or `/al-refine` if the first selected task has no `Test Specification`) as next handoff. If this was the feature's last slice (no next slice): announce `/al-code-review` per-feature as next handoff.
 - **Last user-facing slice**: still flip verify task ready; same state-conditional next handoff as any user-facing slice. `/al-user-verification` then announces `/al-code-review` per-feature.
 
 Edit shape for the user-facing flip:
@@ -102,7 +104,7 @@ old_string: <!-- task=T-NNN status=blocked slice=<slug> kind=verify -->
 new_string: <!-- task=T-NNN status=ready slice=<slug> kind=verify -->
 ```
 
-Cross-slice gate (pure-backend) follows the same surgical-edit contract on the next slice's first technical task: `<!-- task=T-MMM status=blocked slice=<next-slug> kind=technical -->` → `status=ready`.
+Cross-slice gate (backend-only) follows the same surgical-edit contract on each technical task in the next slice: `<!-- task=T-MMM status=blocked slice=<next-slug> kind=technical -->` → `status=ready`.
 
 Per-feature mode: no gate flip; closer announces merge.
 
@@ -117,7 +119,7 @@ Findings carry slot set `Finding / Where / Source (lens name + topic id) / Sever
 | | |
 |---|---|
 | **Runs after**     | `/al-implement` at slice-done (last technical task in slice flipped `done`) or at feature-done (last task in feature flipped `done`) |
-| **Hands off to**   | per-slice: `/al-implement` if grill loop added new tasks in current slice; else state-conditional after the gate flip — user-facing slice routes to `/al-refine` (empty Tests), `/al-page-script` (Tests populated, `.yml` missing), or `/al-user-verification` (`.yml` exists); pure-backend slice routes to next slice's first technical task; `/al-code-review` per-feature if this was last slice and no `/al-user-verification` follows. per-feature: merge. |
+| **Hands off to**   | per-slice: `/al-implement` if grill loop added new tasks in current slice; else state-conditional after the gate flip — user/API-facing slice routes to `/al-page-script` (`Journey Examples` present, `.yml` missing) or `/al-user-verification` (`.yml` exists or no E2E recording is needed); backend-only slice routes to next slice's technical tasks; `/al-code-review` per-feature if this was last slice and no `/al-user-verification` follows. per-feature: merge. |
 | **Replan venue**   | n/a; findings auto-loop into `/grill-me` per finding, never via `/al-steer` (review findings are not replan signals) |
 | **Sidebands**      | `/al-second-opinion` (cross-runtime advisory on large findings lists), `/grill-me` (per-finding triage), `/al-research` (BaseApp behaviour or BC convention), `/bc-standard-reference` (BaseApp pattern correctness) |
 

@@ -76,4 +76,4 @@ No behaviour change.
 - Add internal unit tests against `Access = Internal` for the Process layer where useful.
 - Replace, do not layer; delete unit tests on modules the refactor merged away.
 
-If during Phase 2 or 3 a hidden requirement or design flaw surfaces, halt and recommend `/al-design` (architecture reshape) or `/al-refine` (Gherkin reshape) via `/al-steer`. **No silent scope expansion.**
+If during Phase 2 or 3 a hidden requirement or design flaw surfaces, halt and recommend `/al-design` (architecture reshape) or `/al-refine` (`Test Specification` / `Verification Plan` reshape) via `/al-steer`. **No silent scope expansion.**

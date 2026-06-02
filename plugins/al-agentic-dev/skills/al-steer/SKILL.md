@@ -13,7 +13,7 @@ User invokes `/al-steer` in natural language ("where are we?", "what's next?", "
 
 ## Preconditions
 
-- Branch matches `^\d{3}-`. If not: **Stop**. Run `/al-event-model` (or `/al-design` for pure-backend features).
+- Branch matches `^\d{3}-`. If not: **Stop**. Run `/al-event-model` (or `/al-design` for backend-only features).
 - Spec folder `specs/<branch>/` holds `tasks.md`. Missing but `architecture.md` present → **Stop**, run `/al-scope`. `architecture.md` also missing → **Stop**, run `/al-design` (or `/al-event-model` first for user/API-facing features).
 
 ## Power model
@@ -24,8 +24,8 @@ Read anything in workspace. Write `tasks.md` structurally, only after explicit u
 
 Read `tasks.md`, scan `architecture.md`, `event-model.md` when present, recent commits, `.out-of-scope/` before opening your mouth. Surface what the state already says; coaching from stale memory is the failure mode that drove the user here. Name entries that need a decision: severity, ID, symptom in codebase's terms (object names, table fields, codeunit calls), one line per entry. Distinguish kinds explicitly:
 
-- Verify task (`kind=verify`) `ready` or `blocked` is user-verification gate, not a TDD cycle. State-condition the handoff: empty Tests → `/al-refine T-NNN`; Tests populated but no `.yml` at `pagescripts/recordings/<NNN>-<slug>__<slice>.yml` → `/al-page-script T-NNN`; `.yml` exists and task `ready` → `/al-user-verification T-NNN`; `blocked` → name the failure inline and route per its trigger (*"slice `approve-override` verify is blocked, scenario `#3 Boundary` failed at step 4"*).
-- Slice-done with no clean code-review yet (every technical task in a `slice=` is `done`, slice's verify task still `blocked`, or pure-backend slice's last task `done` with next slice's first task still `blocked`) is the `/al-code-review` per-slice gate (*"slice `release-sales-order` is code-review ready: 4 technical tasks done, verify still blocked"*).
+- Verify task (`kind=verify`) `ready` or `blocked` is verification gate, not a TDD cycle. State-condition the handoff: empty `Verification Plan` → `/al-refine T-NNN`; `Journey Examples` present but no `.yml` at `pagescripts/recordings/<NNN>-<slug>__<slice>.yml` → `/al-page-script T-NNN`; `.yml` exists or no E2E recording is needed and task `ready` → `/al-user-verification T-NNN`; `blocked` → name the failure inline and route per its trigger (*"slice `approve-override` verify is blocked, `V2` failed at observable check 3"*).
+- Slice-done with no clean code-review yet (every technical task in a `slice=` is `done`, slice's verify task still `blocked`, or backend-only slice's last task `done` with next slice's first task still `blocked`) is the `/al-code-review` per-slice gate (*"slice `release-sales-order` is code-review ready: 4 technical tasks done, verify still blocked"*).
 - Feature-done (every `T-NNN` in feature `done`, no merge yet) is the `/al-code-review` per-feature gate.
 
 Naming the gate by name lets user pick the right next skill. Prose paragraphs and generic CRUD words bury the seam; let user pick which entry to walk. See [voice-contract.md](../../references/voice-contract.md) for prose voice.
@@ -40,14 +40,14 @@ Patterns the agent learns to recognise, not a checklist to walk. Other skills fl
 
 | # | Name | Pattern |
 |---|---|---|
-| 1 | Task too big | One task balloons past a session, or its scenarios cluster around two distinct subjects. |
+| 1 | Task too big | One task balloons past a session, or its proof items cluster around two distinct subjects. |
 | 2 | Hidden pre-req | Referenced table, codeunit, permission, or behaviour has no task covering it. |
-| 3 | Wrong order | Task's scenarios reference behaviour a later task introduces. |
-| 4 | Sibling now wrong | Current task invalidates another task's context or scenarios. |
-| 5 | New behaviour emerges | Surfaced code path needs its own test, not a bullet appended to an existing scenario. |
+| 3 | Wrong order | Task's `Test Specification` or `Verification Plan` references behaviour a later task introduces. |
+| 4 | Sibling now wrong | Current task invalidates another task's context, `Test Specification`, or `Verification Plan`. |
+| 5 | New behaviour emerges | Surfaced code path needs its own test, not an appended assertion. |
 | 6 | Architecture decomposition wrong | R → P → W cuts across tasks, or `architecture.md` itself no longer matches reality. |
 | 7 | Goal drift | Goal slot no longer describes what `tasks.md` delivers. |
-| 8 | Verification failed | User-facing scenario in `/al-user-verification` does not match observed behaviour. Judgement call between defect (insert `Fixes:` task), wrong scenario (rewrite via `/al-refine`), or wrong slice boundary (split via `/al-scope`). |
+| 8 | Verification failed | `Verification Plan` example does not match observed behaviour. Judgement call between defect (insert `Fixes:` task), wrong `Verification Plan` (rewrite via `/al-refine`), or wrong slice boundary (split via `/al-scope`). |
 
 ## Trigger response is intent, not mechanics
 
@@ -55,7 +55,7 @@ When trigger means plan is invalid for the task → halt by flipping `status=blo
 
 ## Mutations come from the trigger, not a menu
 
-Name candidate mutations that match what the trigger surfaced. Splitting, inserting, reordering, deleting, rewriting a description, stripping a stale Tests slot all in scope; pick what situation needs. Run `/grill-me` on non-trivial choices. Apply only after explicit ack. Prescribed mutation menu is same anti-pattern as prescribed checklist; trigger says what shape is wrong, response shape varies with codebase.
+Name candidate mutations that match what the trigger surfaced. Splitting, inserting, reordering, deleting, rewriting a description, stripping a stale `Test Specification` or `Verification Plan` all in scope; pick what situation needs. Run `/grill-me` on non-trivial choices. Apply only after explicit ack. Prescribed mutation menu is same anti-pattern as prescribed checklist; trigger says what shape is wrong, response shape varies with codebase.
 
 ## False halt closes the loop
 
@@ -70,4 +70,4 @@ Grilling vetoes a recurring scope item with substantive reason (project scope, t
 | | |
 |---|---|
 | **Invoked from**     | any SKILL on replan trigger, or by user for "where are we" |
-| **Routes to**        | `/al-design` (architecture-decomposition trigger), `/al-refine` (scenario gap), `/al-implement` (next ready technical task), `/al-code-review` (slice-done with no clean review yet, or feature-done), `/al-page-script` (verify task `ready` with prose Tests but no `.yml` yet), `/al-user-verification` (verify task `ready` with `.yml` present), `.out-of-scope/` (durable rejection) |
+| **Routes to**        | `/al-design` (architecture-decomposition trigger), `/al-refine` (`Test Specification` / `Verification Plan` gap), `/al-implement` (next ready technical task), `/al-code-review` (slice-done with no clean review yet, or feature-done), `/al-page-script` (verify task `ready` with `Journey Examples` but no `.yml` yet), `/al-user-verification` (verify task `ready` with `.yml` present or no E2E recording needed), `.out-of-scope/` (durable rejection) |

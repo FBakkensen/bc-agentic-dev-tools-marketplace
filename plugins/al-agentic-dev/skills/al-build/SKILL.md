@@ -11,7 +11,7 @@ Run after every AL change. Zero warnings, zero errors. Anything else is red.
 
 Required gate before committing AL changes. `/al-implement` calls this after every RED, GREEN, `/al-refactor`.
 
-**Layer.** Executes the **unit** (AL-Runner, fast pre-gate) and **integration** (container + TestPage) layers of the test pyramid — the assertion-oracle, red-first foundation that acceptance reds push *down* to. See [`test-strategy.md`](../../references/test-strategy.md).
+**Layer.** Executes the **Unit** (AL-Runner, fast pre-gate) and **Integration** (container + TestPage) layers of the test pyramid — the assertion-oracle, red-first foundation that E2E and Contract reds push *down* to. See [`test-strategy.md`](../../references/test-strategy.md).
 
 ## First time
 

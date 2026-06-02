@@ -17,7 +17,7 @@ Treat your own AL/BC knowledge as untrusted. Verify the specific BC fact the cal
 
 ## Verify, do not recall
 
-BC moves fast and training data is always behind a recent release: renamed events, removed procedures, drifted signatures, new test attributes, recent AppSourceCop rules all read plausible. One stale recall corrupts the artifact (`architecture.md`, Gherkin assertion, refactor seam) and every downstream skill inherits the fiction.
+BC moves fast and training data is always behind a recent release: renamed events, removed procedures, drifted signatures, new test attributes, recent AppSourceCop rules all read plausible. One stale recall corrupts the artifact (`architecture.md`, `Test Specification`, `Verification Plan`, refactor seam) and every downstream skill inherits the fiction.
 
 When question is "does this signature exist in my dependency graph", workspace's compiled symbols are the truth, not the docs. System Application, Base Application, shipped libraries publish many overloads per release; doc shows one signature, symbol shows five, binding to wrong one fails the build.
 

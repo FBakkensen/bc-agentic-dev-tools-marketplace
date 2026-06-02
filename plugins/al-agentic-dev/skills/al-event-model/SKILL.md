@@ -1,6 +1,6 @@
 ---
 name: al-event-model
-description: Settle the user-facing journey for AL/Business Central as `event-model.md` in BC vocabulary (Role / Action / Business Event / View / Status). Use after `/al-grill-adr` for user/API-facing features before `/al-design`; pure-backend features skip.
+description: Settle the user-facing journey for AL/Business Central as `event-model.md` in BC vocabulary (Role / Action / Business Event / View / Status). Use after `/al-grill-adr` for user/API-facing features before `/al-design`; backend-only features skip.
 ---
 
 **Style:** Be extremely concise. Sacrifice grammar for concision. Opinionated — pick a side. Arrows (→) for causality. Technical terms exact, code and errors quoted verbatim.
@@ -14,7 +14,7 @@ Settle the journey at altitude of what an external observer sees, before `/al-de
 ## Preconditions
 
 - `/al-grill-adr` ran for this idea; without sharpened `CONTEXT.md` and domain ADRs, fuzzy terms compound into wrong Role names or fictitious Business Events. **Stop**, run it first.
-- Feature has user or API surface. Pure-backend features (no human, no API consumer, internal batch only) skip this skill; `/al-design` runs its missing-storm checkpoint.
+- Feature has user or API surface. Backend-only features (no human, no API consumer, internal batch only) skip this skill; `/al-design` runs its missing-storm checkpoint.
 - On `main`: this skill creates branch + spec folder (first per-feature skill to run). On feature branch: reshape `event-model.md` in place.
 - Existing `event-model.md` → reshaping; re-run with user's awareness.
 
@@ -54,7 +54,7 @@ Before writing `event-model.md`, every Role / Action verb / Business Event name 
 
 On `^\d{3}-`: spec folder exists, reshape `event-model.md` in place. On `main`: first per-feature skill; resolve `<NNN>` per [cross-branch-numbering.md](../../references/cross-branch-numbering.md), derive 2–4-word kebab-case slug (do not ask), announce both, create branch `<NNN>-<slug>` + `specs/<NNN>-<slug>/`. Branch already exists locally or remotely → **Stop**.
 
-Then write `event-model.md`. Pure markdown; constraints in [markdown-spec-discipline.md](../../references/markdown-spec-discipline.md). Voice in [voice-contract.md](../../references/voice-contract.md). Both mandatory reads before writing. Write telegraphic; drop articles, padding, hedges; fragments fine. Gherkin step content keeps sentence shape (no Gherkin in `event-model.md` itself; rule lands here for consistency across producer skills). No surgical-edit contract; reshape via re-running. Vocabulary in [LANGUAGE.md](../../references/LANGUAGE.md) (*Slice* entry).
+Then write `event-model.md`. Markdown only; constraints in [markdown-spec-discipline.md](../../references/markdown-spec-discipline.md). Voice in [voice-contract.md](../../references/voice-contract.md). Both mandatory reads before writing. Write telegraphic; drop articles, padding, hedges; fragments fine. No surgical-edit contract; reshape via re-running. Vocabulary in [LANGUAGE.md](../../references/LANGUAGE.md) (*Slice* entry).
 
 ## Gate event
 

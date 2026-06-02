@@ -1,15 +1,17 @@
 # AL TDD
 
-TDD cycle, scenario ordering, mutation operators, and the test invariants you never touch. Cited by `/al-refine`, `/al-implement`, `/al-mutate`.
+Red-green cycle, task execution order, mutation operators, and test invariants you never touch. Cited by `/al-implement`, `/al-mutate`, and supporting refinement guidance.
 
 TDD applies to all new development, feature changes, and bug fixes. The only exception is when the user explicitly says to skip ("skip TDD", "no tests", "without TDD"). "Quickly add X" does not count.
+
+The durable task grammar lives in [test-specification.md](test-specification.md). The execution pyramid lives in [test-strategy.md](test-strategy.md). This file owns the red-green cycle.
 
 ## Three layers of trust
 
 | Layer | What it proves | Mechanism |
 |---|---|---|
 | Process discipline | Tests drive production code | Three laws below |
-| Coverage direction | Right scenarios in right order | ZOMBIES ordering |
+| Coverage direction | Right cases at the right layer | Unit-first task execution |
 | Behavioural proof | Assertions actually catch bugs | Mutation testing |
 
 A passing-but-wrong-path test looks green. Branch coverage does not prove an assertion catches a bug; mutation testing is the proof.
@@ -34,35 +36,35 @@ Violations: writing a full feature then back-filling tests; writing all tests be
 
 A compile error is not a Red; fix compile errors first, then get to an assertion failure. Refactor exit gate: a full grep for `DEBUG-` returns nothing before committing.
 
-## ZOMBIES scenario ordering
+## Task execution order
 
-Build the scenario list bottom-up. This order surfaces edge cases that happy-path-first planning misses.
+Technical tasks run lower-layer proof first:
 
-| Letter | Category | AL example |
-|---|---|---|
-| **Z** | Zero / empty | Empty configuration, zero attribute lines, no matching rule, empty rule set |
-| **O** | One | Single attribute line, one rule entry, first sub-configuration, single mapping |
-| **M** | Many | Full rule set, batch of headers, multiple simultaneous attribute updates |
-| **B** | Boundary | Period cutoff date, max/min field values, exact threshold match, last day of posting period |
-| **I** | Interface | Implementer substitution, different stub injected per scenario (unit layer) |
-| **E** | Exceptional | Error paths: blocked record, missing setup, permission denied, duplicate key, invalid state |
-| **S** | Simple | The happy path, named last because it is never the most revealing |
+1. `Unit` AAA cases red -> green -> gate.
+2. `Integration` AAA cases red -> green -> gate.
+3. Refactor full task diff once.
+4. Full gate.
+5. Mutation at task end for non-trivial work.
 
-Write Zero first. If the system cannot handle empty input, everything else is irrelevant. A scenario list that only covers S is a demo script, not a test plan. Writing scenarios top-down from the feature description ("user creates, edits, copies, deletes") only covers S and misses the spectrum.
+Within each scope, follow ascending coverage ID order in `Test Specification`: `B1`, `B2`, `B3`, ... or `R1`, `R2`, `R3`, ...
 
-### Scenario naming
+When a unit seam exists, run Unit first. When the seam should exist but does not, an Integration characterization test may land first to anchor current behaviour; then extract the lower-layer seam and add Unit proof. Behaviour that only exists through BC runtime, database, page, install, permission, or event wiring uses Integration.
 
-Each ZOMBIES scenario becomes one short PascalCase test name (BaseApp style):
+Use edge discovery while refining and implementing: empty, missing, single, multiple, boundary, error, and regression cases where relevant. Final task order still follows the pyramid.
 
-- Z: `RuleSetWithNoEntriesReturnsDefault`
-- O: `RuleSetWithSingleEntryMatchesExactly`
-- B: `RuleSetBoundaryValueMatchesUpperLimit`
-- E: `RuleSetWithBlockedRecordThrowsError`
-- S: `RuleSetCopyPreservesIntervals`
+### Test naming
+
+Each AAA case becomes one short PascalCase test procedure name in BaseApp style:
+
+- `RuleSetWithNoEntriesReturnsDefault`
+- `RuleSetWithSingleEntryMatchesExactly`
+- `RuleSetBoundaryValueMatchesUpperLimit`
+- `RuleSetWithBlockedRecordThrowsError`
+- `RuleSetCopyPreservesIntervals`
 
 ## Mutation operators
 
-Apply when prod or tests moved in the cycle: prod move → catches under-tested new logic; test move → catches new assertions that don't actually pin prod behaviour. The operators below apply at qualifying sites only — branching, comparisons, boolean ops, guards, arithmetic; pure delegation, property-only, and metadata edits carry no test-rigor signal at the site level.
+Apply when prod or tests moved in the cycle: prod move catches under-tested new logic; test move catches new assertions that don't actually pin prod behaviour. The operators below apply at qualifying sites only: branching, comparisons, boolean ops, guards, arithmetic. Plain delegation, property-only, and metadata edits carry no test-rigor signal at the site level.
 
 | Operator | Before | After |
 |---|---|---|
@@ -79,7 +81,7 @@ The `Validate()` skip is BC-specific: it bypasses trigger firing, a behavioural 
 
 ### Selection heuristics
 
-One operator per qualifying site; pick the operator most likely to expose underassertion. A second operator at the same site is justified only when a survivor might be equivalent and the second distinguishes equivalence from gap. Skip obvious equivalences (`x >= 1` ↔ `x > 0` for integers). Confirm at least one test exercises the target line before mutating; an unreached line routes to `/al-refine` (add the scenario) or `/al-refactor` (delete the dead branch), not to a killer test.
+One operator per qualifying site; pick the operator most likely to expose underassertion. A second operator at the same site is justified only when a survivor might be equivalent and the second distinguishes equivalence from gap. Skip obvious equivalences (`x >= 1` vs. `x > 0` for integers). Confirm at least one test exercises the target line before mutating; an unreached line routes to `/al-refine` (add coverage) or `/al-refactor` (delete the dead branch), not to a killer test.
 
 Pre-flight self-report: *"Candidates: K sites qualifying under the filters (J code-side, L test-side). Planning K mutations singleton, with potential equivalence-exception revisits."*
 
@@ -91,7 +93,7 @@ Revert is `git checkout -- <file>` against the Refactor-end commit. Deterministi
 git status --porcelain   # must return empty
 ```
 
-Per mutation: edit one operator in one file → `/al-build` → classify (caught: revert and verify green; survivor: record, revert, strengthen the assertion) → verify green before the next.
+Per mutation: edit one operator in one file -> `/al-build` -> classify (caught: revert and verify green; survivor: record, revert, strengthen the assertion) -> verify green before the next.
 
 ## No-touch invariants
 

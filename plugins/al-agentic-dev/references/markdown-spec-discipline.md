@@ -36,8 +36,8 @@ Four keys on the comment line, single space between each `key=value`, no quotes:
 | Key | Locates | Used by | Written by |
 |---|---|---|---|
 | `task=T-NNN` | the per-task block | every skill that touches a task | `/al-scope` |
-| `status=ready \| in-progress \| done \| blocked` | the status, single source of truth | `/al-implement`, `/al-code-review`, `/al-user-verification`, `/al-steer` | `/al-scope` (`ready` for every technical task in the first slice, `blocked` for every other task); `/al-implement` flips technical tasks `in-progress` → `done` (does not touch verify tasks); `/al-code-review` per-slice on clean review flips the slice's verify task `blocked` → `ready` (user-facing) or the next slice's first technical task `blocked` → `ready` (pure-backend); `/al-user-verification` flips verify task `ready` → `in-progress` → `done` or `blocked`, and on `done` flips next-slice technical tasks `blocked` → `ready`; `/al-steer` flips to `blocked` on replan triggers |
-| `slice=<slug>` | slice membership; matches one `event-model.md` timeline step (user-facing) or `architecture.md` slice (pure-backend) | `/al-implement` (detect last technical task in slice → announce `/al-code-review`), `/al-code-review` (per-slice diff scope, gate flip target), `/al-steer` (group by slice when reporting) | `/al-scope` |
+| `status=ready \| in-progress \| done \| blocked` | the status, single source of truth | `/al-implement`, `/al-code-review`, `/al-user-verification`, `/al-steer` | `/al-scope` (`ready` for every technical task in the first slice, `blocked` for every other task); `/al-implement` flips technical tasks `in-progress` → `done` (does not touch verify tasks); `/al-code-review` per-slice on clean review flips the slice's verify task `blocked` → `ready` (user/API-facing) or the next slice's technical tasks `blocked` → `ready` (backend-only); `/al-user-verification` flips verify task `ready` → `in-progress` → `done` or `blocked`, and on `done` flips next-slice technical tasks `blocked` → `ready`; `/al-steer` flips to `blocked` on replan triggers |
+| `slice=<slug>` | slice membership; matches one `event-model.md` timeline step (user/API-facing) or `architecture.md` slice (backend-only) | `/al-implement` (detect last technical task in slice → announce `/al-code-review`), `/al-code-review` (per-slice diff scope, gate flip target), `/al-steer` (group by slice when reporting) | `/al-scope` |
 | `kind=technical \| verify` | task kind; routes `/al-implement` (technical) vs `/al-page-script` + `/al-user-verification` (verify) | `/al-implement` (stop on verify), `/al-refine` (branch by kind), `/al-page-script` (precondition, generates the slice's `.yml`), `/al-user-verification` (precondition, pre-flights the `.yml` batch) | `/al-scope` |
 
 `task=T-NNN` makes the line unique within the file. The status flip is an Edit on the full comment line where only the `status=` value differs; stale read trips the byte match.
@@ -61,7 +61,7 @@ new_string: <!-- task=T-007 status=done slice=release-sales-order kind=technical
 
 One Edit, one attribute change. The line stays unique on `task=T-007`; the read-before-edit catches a stale assumption (if you think `in-progress` but the file says `ready`, Edit fails fast rather than corrupting state).
 
-**Other writes regenerate, not surgical-edit.** When `/al-refine` fills the Tests area, `/al-mutate` writes a verdict, or `/al-implement` records a NOTE-style block alongside the task, the writing skill regenerates that portion of the task block whole.
+**Other writes regenerate, not surgical-edit.** When `/al-refine` fills the `Test Specification` or `Verification Plan`, `/al-mutate` writes a verdict, or `/al-implement` records a NOTE-style block alongside the task, the writing skill regenerates that portion of the task block whole.
 
 **Forbidden:**
 

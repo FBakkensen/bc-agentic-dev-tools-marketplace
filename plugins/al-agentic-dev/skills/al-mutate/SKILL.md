@@ -45,11 +45,11 @@ Unanswerable → pass not done. Resolve via another cycle, survivor decision, or
 
 **One operator per qualifying site.** Pick operator most likely to expose underassertion at *that* site: boundary flip in money math, guard inversion in validation chain, statement removal in posting subscriber, `Validate()` bypass when field trigger carries contract. Operator catalogue and selection heuristics in [tdd.md](../../references/tdd.md). No fallback operators. No worker-invented alternate mutation. Rare unclassified sites are evidence gaps, not permission to improvise.
 
-**Reachability before mutation.** Confirm at least one test exercises target line. Survivor on unreached line is not coverage gap, it is dead code or missing scenario; route to `/al-refine` (add scenario) or `/al-refactor` (delete dead branch).
+**Reachability before mutation.** Confirm at least one test exercises target line. Survivor on unreached line is not coverage gap, it is dead code or missing coverage; route to `/al-refine` (add coverage) or `/al-refactor` (delete dead branch).
 
 **No mutation during refactor in flight.** Land refactor green, commit, then mutate. Shape still moving produces classifications that drift; survivor lists go stale before report ships.
 
-**Pure-layer gating via `-UnitTestOnly`.** Use the narrowest meaningful gate. When `unitTestApp` configured and the site is genuinely P-layer, run `test.ps1 -UnitTestOnly` (AL Runner). Integration-only behaviour, page/TestPage behaviour, install/publish behaviour, permissions, AppSource/public surface, or container-state behaviour uses full `test.ps1`. Final closeout is always full `test.ps1`.
+**Unit-layer gating via `-UnitTestOnly`.** Use the narrowest meaningful gate. When `unitTestApp` configured and the site is genuinely P-layer, run `test.ps1 -UnitTestOnly` (AL Runner). Integration-only behaviour, page/TestPage behaviour, install/publish behaviour, permissions, AppSource/public surface, or container-state behaviour uses full `test.ps1`. Final closeout is always full `test.ps1`.
 
 **Runner contract is unclassified.** AL Runner `ERROR` / exit 2 during a mutant → `not_classified_runner_contract`, not killed, not survived, not equivalent. Full gate is not fallback when full gate also runs AL Runner first. Record exact runner output, broad revert, prove clean tree, continue. Host judges evidence sufficiency after the pass.
 
@@ -93,13 +93,13 @@ Write durable session report at `.output/mutation-report/<YYYYMMDD-HHMMSS>.md`. 
 
 Task block gets compact verdict only: baseline SHA, report path, counts, final full-gate result, and survivor follow-up or insufficiency note. No full mutation table in `tasks.md`.
 
-`/al-mutate` does not flip status. Shape (NOTE alert chip, prose line, structured block, table cell) per task. See [markdown-spec-discipline.md](../../references/markdown-spec-discipline.md) and [voice-contract.md](../../references/voice-contract.md). Standalone mode emits Gate report once at pass close, naming rigor proved (or not) for user-facing behaviour under test, soft spots that remain by design, and user's call; inside `/al-implement`, findings fold into the scenario's Gate report.
+`/al-mutate` does not flip status. Shape (NOTE alert chip, prose line, structured block, table cell) per task. See [markdown-spec-discipline.md](../../references/markdown-spec-discipline.md) and [voice-contract.md](../../references/voice-contract.md). Standalone mode emits Gate report once at pass close, naming rigor proved (or not) for user-facing behaviour under test, soft spots that remain by design, and user's call; inside `/al-implement`, findings fold into the task Gate report.
 
 ## Composition
 
 | | |
 |---|---|
 | **Runs after**     | `/al-refactor` (inside `/al-implement` loop), OR standalone on legacy code before `/al-refactor` |
-| **Hands off to**   | `/al-refine` (real-gap survivor → killer scenario) inside `/al-implement`; back to caller standalone |
+| **Hands off to**   | `/al-implement` for reached real-gap survivors inside the task loop; `/al-refine` only for unreached-line or missing-coverage cases; back to caller standalone |
 | **Replan venue**   | `/al-steer` |
 | **Sidebands**      | `/al-research` (BaseApp behaviour for survivor classification), `/grill-me` (classification call needs the user) |

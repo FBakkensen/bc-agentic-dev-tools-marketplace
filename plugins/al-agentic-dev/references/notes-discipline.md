@@ -22,7 +22,7 @@ Cannot tell which side a piece belongs on → ask trigger test: *will this line 
 | Task kind (verify vs technical) | `kind=verify` or `kind=technical` on task comment-anchor line | `/al-scope` (write), every reader |
 | In-flight scaffolding the next agent on this branch needs | inside task block | writing skill (shape is its call) |
 | Replan flag (trigger fired; plan invalid or note added) | inside task block (and `status=blocked` when plan invalid) | `/al-refine`, `/al-implement`, `/al-refactor`, `/al-user-verification`, `/al-steer` |
-| Verification failure (scenario, step, observed vs expected) | inside verify task block | `/al-user-verification` |
+| Verification failure (example, check, observed vs expected) | inside verify task block | `/al-user-verification` |
 | Mutation verdict (kills / survivors / equivalence) | inside task block | `/al-mutate` |
 | Critical hidden risk surfaced during refinement, implementation, or scope | inside task block | `/al-scope`, `/al-refine`, `/al-implement` |
 | Architectural decision with cross-task or future-feature impact | design ADR (via `/al-design` or `/al-steer` re-routing) | `/al-design` |
