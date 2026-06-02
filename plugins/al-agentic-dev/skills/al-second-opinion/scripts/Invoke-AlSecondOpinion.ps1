@@ -45,7 +45,8 @@ $job = Start-Job {
                 --color never `
                 --json `
                 --enable fast_mode `
-                -c 'model_reasoning_effort="medium"' `
+                -m gpt-5.4 `
+                -c 'model_reasoning_effort="low"' `
                 $using:roleFrame 2>&1
             $exit = $LASTEXITCODE
             $result = $raw -split "`n" |
@@ -59,7 +60,10 @@ $job = Start-Job {
                 --output-format json `
                 --no-session-persistence `
                 --disable-slash-commands `
-                --strict-mcp-config '{}' 2>&1 | Out-String
+                --strict-mcp-config '{}' `
+                --model sonnet `
+                --effort low `
+                --tools "" 2>&1 | Out-String
             $exit = $LASTEXITCODE
             $result = ($json | ConvertFrom-Json).result
         }

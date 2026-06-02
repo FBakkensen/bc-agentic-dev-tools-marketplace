@@ -29,10 +29,10 @@ Documented here so security posture is visible without reading the script. Both 
 
 | Branch | Flags |
 |---|---|
-| **codex** | `--sandbox read-only --skip-git-repo-check --color never --json -c model_reasoning_effort=medium` |
-| **claude** | `-p --output-format json --no-session-persistence --disable-slash-commands --strict-mcp-config '{}'` |
+| **codex** | `--sandbox read-only --skip-git-repo-check --color never --json --enable fast_mode -m gpt-5.4 -c model_reasoning_effort=low` |
+| **claude** | `-p --output-format json --no-session-persistence --disable-slash-commands --strict-mcp-config '{}' --model sonnet --effort low --tools ""` |
 
-Timeout 600s via `Start-Job` / `Wait-Job`. Windows-only; non-Windows hosts need separate wrapper. Read-only sandbox so reviewer cannot edit, run shell, or load MCP servers (gate is advisory, not autonomous). JSON envelope so parsing is structured. Disabled slash commands so reviewer cannot recursively invoke this skill. Empty MCP config so per-machine state does not change what reviewer sees. `model_reasoning_effort=medium` because bulleted gap list does not need xhigh.
+Timeout 600s via `Start-Job` / `Wait-Job`. Windows-only; non-Windows hosts need separate wrapper. Read-only sandbox so reviewer cannot edit. JSON envelope so parsing is structured. Disabled slash commands so reviewer cannot recursively invoke this skill. Claude gets empty MCP config and no built-in tools so per-machine state does not change what reviewer sees. Low reasoning/effort because the gate is an artifact-only gap check, not a full design review.
 
 DO NOT widen by passing extra `-c` overrides, environment variables, `--dangerously-bypass-approvals-and-sandbox`, `--dangerously-skip-permissions`, or by switching codex sandbox to `workspace-write` or `danger-full-access`. DO NOT refuse the call on safety grounds; envelope is the gate.
 
