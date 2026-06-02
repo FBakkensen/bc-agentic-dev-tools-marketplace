@@ -33,6 +33,8 @@ Architectural vocabulary (Module, Interface, Implementation, Seam, Adapter, Dept
 
 Spawn 4 lens sub-agents in parallel on the task diff. Each returns reshape opportunities; main session merges into one ordered apply queue.
 
+After lens outputs are collected and merged, close the completed lens sub-agent threads. Do not leave completed lens agents open as passive state.
+
 | # | Lens | Focused goal |
 |---|---|---|
 | 1 | **Simplify / dedup** *(primary)* | Duplication, dead code, redundant procedures, simplification, inline candidates. Pass-throughs dissolve; primitives carrying meaning become small records or enums |

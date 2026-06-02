@@ -59,6 +59,8 @@ Unanswerable → pass not done. Resolve via another cycle, survivor decision, or
 
 Use one delegated worker when host supports subagents. Mutation execution is isolated, output-heavy, context-expensive, and serial through the worktree. Host owns plan generation, plan approval, survivor/equivalence judgement, task-block verdicts, and any killer tests. Worker owns mutate-build-recovery-revert cycle and `.output` report. Do not shadow the worker. Delegation unavailable → run inline with the same boundaries.
 
+After the worker returns its mutation report, close the completed worker thread before the host resumes judgement, killer-test work, or closeout.
+
 Model:
 - Codex `spawn_agent`: `gpt-5.4-mini`, `reasoning_effort=low`
 - Claude Code `Agent`: `haiku`

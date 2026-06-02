@@ -125,4 +125,6 @@ Findings carry slot set `Finding / Where / Source (lens name + topic id) / Sever
 
 Spawn each lens as parallel sub-agent in one message. Lenses independent and context-expensive; running serially in main session burns tokens on per-file content synthesis doesn't need to retain. Per-feature mode benefits especially: five lenses across 20+ files is exactly the shape that wants parallelism. Delegation unavailable → run serially.
 
+After lens outputs are collected and synthesized, close completed lens sub-agent threads before the confidence pass. Do not leave completed lens agents open as passive state.
+
 Do not shadow a running lens. Lens fails or returns nothing → note gap in synthesis rather than re-running silently.

@@ -58,6 +58,8 @@ _Avoid_: paraphrasing docs, vague summaries, or naming a source without quoting 
 
 For open-ended questions, spawn subagent with focused brief:
 
+After the subagent returns and its answer is folded into the response, close the completed subagent thread before ending the skill.
+
 ```
 Search the standard mirror `fbakkensen/bc-w1` for [topic].
 Return: file path, object name + ID, event signature, hook point.

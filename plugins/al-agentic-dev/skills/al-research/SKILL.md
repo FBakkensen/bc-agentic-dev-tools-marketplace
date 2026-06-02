@@ -41,6 +41,8 @@ Call pattern: `${CLAUDE_SKILL_DIR}/../../references/bc-code-intelligence-dispatc
 
 The moment the caller has what they need to act → stop. Pass that returns ten findings when one was needed buries the actionable line. Scope is one question per pass; parallel passes for independent questions when host supports subagents.
 
+When using parallel subagent passes, close each completed subagent thread after its finding is collected and before returning the consolidated answer.
+
 When two authoritative sources disagree (Microsoft Learn says one signature, workspace symbols show another), surface both with citations and name the conflict. Silently picking hides it from caller, who has the architectural context to choose.
 
 ## Sources

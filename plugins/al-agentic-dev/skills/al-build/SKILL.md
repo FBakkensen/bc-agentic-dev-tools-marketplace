@@ -56,6 +56,8 @@ Test failures → dispatch `/al-debug-logging`. Don't grep build log for clues t
 
 Always delegate `/al-build` to one general subagent. Build output is verbose; keep it out of the main session.
 
+After the worker returns the gate report, close the completed subagent thread before interpreting or reporting the result.
+
 Model:
 - Codex `spawn_agent`: `model=gpt-5.4-mini`, `reasoning_effort=low`
 - Claude Code `Agent`: `model=haiku`

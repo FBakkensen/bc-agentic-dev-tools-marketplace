@@ -75,6 +75,8 @@ Non-trivial = multi-module, brownfield refactor, or novel pattern selection. Whe
 | 2 | Maximise flexibility, many use cases, easy extension. |
 | 3 | Optimise the most common caller, default case trivial. |
 
+After the delegated pass outputs are collected and reconciled, close the completed subagent threads. Do not leave design-pass agents open as passive state.
+
 Each pass runs its own `/al-research` and receives BC vocabulary from `CONTEXT.md` plus architectural vocabulary from [LANGUAGE.md](../../references/LANGUAGE.md) → all three name things consistently. Output per pass: module map + per-module interface, named adapters at every seam, the one trade-off line that distinguishes this design. Present all three sequentially, compare along **depth** / **locality** / **seam placement**, pick one (or hybrid) opinionatedly, run `/grill-me` when choice is user's call; `/al-second-opinion` reconciles non-trivial picks. Never silently skip the reconcile.
 
 ## Branch + folder + write
