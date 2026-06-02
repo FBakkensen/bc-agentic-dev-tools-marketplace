@@ -54,9 +54,11 @@ Mandatory before mutation. Inline renames + obvious dedupe land inside GREEN as 
 
 ### `/al-mutate` after refactor
 
-Trigger fires when prod or tests moved this cycle. Prod moved → mutate to prove tests catch the new decision logic; tests moved → mutate to prove new assertions actually pin prod behaviour. Site selection (which lines within scope qualify) is `/al-mutate`'s call; see [tdd.md](../../references/tdd.md) for operators + qualifiers. Cross-check the mutation list via `/al-second-opinion` before it commits; prompt body: *"what mutations are missing or misaligned? AND does this surface any of the eight replan triggers? Return a bulleted list."* Reconcile each returned bullet.
+Trigger fires when prod or tests moved this cycle. Prod moved → mutate to prove tests catch the new decision logic; tests moved → mutate to prove new assertions actually pin prod behaviour. `/al-implement` supplies scope: task context, changed prod/test files, green refactor diff, and business decision points. `/al-mutate` owns site selection, skipped-site rationale, operator choice, `/al-second-opinion` challenge, delegated execution, and compact verdict.
 
 Commit WIP before `/al-mutate`. Mutate-build-revert cycle assumes `git status` empty; uncommitted work bleeds into revert and corrupts every classification.
+
+Survivor → same host session resumes TDD here. Write killer test, prove RED/GREEN, run `/al-build`, then rerun the survivor site by default. Full mutation rerun only when the new test or fix changes shared decision logic. Do not hand back to user unless survivor classification needs a business decision.
 
 ### AppSource compliance bites at implementation time
 
