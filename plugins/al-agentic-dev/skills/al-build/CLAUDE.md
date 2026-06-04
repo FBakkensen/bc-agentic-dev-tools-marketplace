@@ -60,6 +60,39 @@ Use this after changing dependency-install or gh-CLI dispatch in `new-bc-contain
 
 Failure-mode runs validate the fail-loud contract — silent partial-success is the shape of the original GHE-host defect.
 
+## Smoke test: analyzers
+
+Use after changing `Install-ALCops`, `Get-EnabledAnalyzerPath`, `Select-CompilerCandidate`, or the analyzer wiring in `Invoke-ALBuild`. Container-free: analyzers act at `alc` time on the host; Docker is never involved.
+
+The oracle is seeded violations — one per diagnostic family, all ten prefixes must surface in the compile output (`AA` `AW` `AS` `PTE` `AC` `DC` `FC` `LC` `PC` `TA`). "Compile exits 0 with `/analyzer:` args" is a weak oracle: alc can fail to load one DLL, warn, and still compile green. A diagnostic per family is the evidence each DLL loaded *and* executed.
+
+1. Same scaffolding as the standard smoke: capture `$marketplace`, disposable dir, `git init`, branch `smoke-analyzers`, empty commit.
+2. Minimal `app/` (idRange 50000-50149) and a unit-test app (idRange 50150-50199, depends on the main app, configured as `unitTestApp` in `al-build.json`). The main `app.json` needs `"application"` and `"features": ["TranslationFile"]` — without them AppSourceCop aborts the build with AS0100/AS0015 before any seed surfaces.
+3. `AppSourceCop.json` in the main app: `{"mandatoryAffixes": ["SMK"]}` only. No `name`/`publisher`/`version` keys — those activate baseline comparison and fire AS0003.
+4. Repo-root `.vscode/settings.json`, official AL notation only: `${CodeCop}`, `${UICop}`, `${AppSourceCop}`, `${PerTenantExtensionCop}`, six `${analyzerFolder}ALCops.*.dll` entries plus `${analyzerFolder}ALCops.Common.dll`.
+5. Repo-root `al.ruleset.json`: downgrade `AS0011` + `PTE0008` (Error→Warning, else the build aborts before warnings print) and escalate `AC0014`, `DC0001`, `TA0001` (Info→Warning, else invisible). `warnAsError: false` in `al-build.json`.
+6. Seed one violation per family. The proven set (v0.8.6; severities read from tagged `DiagnosticDescriptors.cs`, which overrules the alcops.dev rule tables when they disagree):
+
+| Family | Rule | Seed |
+|---|---|---|
+| AA | AA0008 | parameterless call without `()` |
+| AW | AW0008 | `repeater` on a Card page |
+| AS | AS0011 | object name without the SMK affix (empty codeunit) |
+| PTE | PTE0008 | action without `ApplicationArea` on a table-free page named with the affix |
+| AC | AC0014 | `ToolTip` not ending with a dot (table field; `InherentPermissions = RIMD` keeps AC0010 quiet) |
+| DC | DC0001 | `Commit()` without a `//` comment (local procedure keeps DC0004 quiet) |
+| FC | FC0001 | `procedure Foo();` — trailing semicolon with a `begin end` body |
+| LC | LC0003 | `Customer: Record 18;` — numeric object reference |
+| PC | PC0001 | FlowField without `Editable = false` |
+| TA | TA0001 | global non-`[Test]` procedure in a `Subtype = Test` codeunit — **in the main app**: `-UnitTestOnly` never runs `Invoke-ALBuild` on the unit-test app (AL Runner compiles it internally, without `/analyzer:` args), so a test-app seed can't surface |
+
+7. `pwsh "$marketplace/plugins/al-agentic-dev/skills/al-build/scripts/provision.ps1"` → expect exit 0, the seven `ALCops.*.dll` files in the compiler's `Analyzers` folder, and no `BusinessCentral.LinterCop.dll` (provision deletes the legacy DLL — shared diagnostic IDs, the two must never co-load).
+8. `pwsh "$marketplace/plugins/al-agentic-dev/skills/al-build/scripts/test.ps1" -UnitTestOnly`, full output captured → assert every one of the ten prefixes appears as a diagnostic.
+9. A seed that will not fire is a switch-the-rule signal, not a tune-harder signal — the smoke proves the *prefix family*, not any specific rule ID. ALCops is pre-1.0; rule IDs and default severities churn between releases.
+10. Failure-mode check (fail-loud contract): remove one ALCops DLL from the Analyzers folder, re-run the gate, expect the build to throw naming the unresolvable analyzer — never a green compile with reduced coverage. Re-run provision to restore.
+11. Per-app config check: drop a reduced `app/.vscode/settings.json` (e.g. only `${CodeCop}` + `${analyzerFolder}ALCops.LinterCop.dll`), re-run, expect exactly those families and nothing else; delete it after. App-local settings win over the repo-root fallback. Note the asymmetry: the main app and each test app resolve analyzers from their own `.vscode/settings.json`, but in `-UnitTestOnly` mode the unit-test app is never analyzed at all — test-app analyzer config only takes effect in the full container gate.
+12. Cleanup: delete the temp dir. No container to remove.
+
 ## Editing rules
 
 - **Config priority chain is load-bearing.** CLI flag > env var (`ALBT_*`) > `al-build.json` > built-in defaults. Don't reorder; don't add a fifth tier.

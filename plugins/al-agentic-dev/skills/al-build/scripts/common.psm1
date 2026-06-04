@@ -635,6 +635,15 @@ function Get-EnabledAnalyzerPath {
     <#
     .SYNOPSIS
         Get list of enabled analyzer DLL paths based on VS Code settings
+    .DESCRIPTION
+        Resolves al.codeAnalyzers entries in the official AL notation: '${CodeCop}'
+        style tokens for the Microsoft analyzers and '${analyzerFolder}ALCops.*.dll'
+        path entries for the ALCops cops. When any ALCops cop is enabled, the shared
+        ALCops.Common.dll is appended automatically, plus
+        Microsoft.Dynamics.Nav.Analyzers.Common.dll when no Microsoft analyzer is
+        enabled to bring it in. Throws when a requested analyzer cannot be resolved;
+        the build gate must never silently compile with less lint coverage than the
+        settings ask for.
     .PARAMETER AppDir
         Application directory
     .PARAMETER CompilerDir
@@ -651,7 +660,6 @@ function Get-EnabledAnalyzerPath {
         'UICop'                 = 'Microsoft.Dynamics.Nav.UICop.dll'
         'AppSourceCop'          = 'Microsoft.Dynamics.Nav.AppSourceCop.dll'
         'PerTenantExtensionCop' = 'Microsoft.Dynamics.Nav.PerTenantExtensionCop.dll'
-        'LinterCop'             = 'BusinessCentral.LinterCop.dll'
     }
     $supported = $dllMap.Keys
     $enabled = @()
@@ -668,7 +676,10 @@ function Get-EnabledAnalyzerPath {
                 if ($json.PSObject.Properties.Match('enablePerTenantExtensionCop').Count -gt 0 -and $json.enablePerTenantExtensionCop) { $enabled += 'PerTenantExtensionCop' }
             }
         } catch {
-            Write-Information "[albt] settings.json parse failed: $($_.Exception.Message)" -InformationAction Continue
+            # A settings.json that exists but will not parse is a misconfiguration, not
+            # an absent-file default. Guessing "no analyzers" here would silently strip
+            # lint coverage — the same failure mode the unresolved-analyzer throw closes.
+            throw "settings.json at '$settingsPath' could not be parsed: $($_.Exception.Message)"
         }
     }
 
@@ -751,38 +762,67 @@ function Get-EnabledAnalyzerPath {
         return @()
     }
 
+    $searchRoots = @()
+    if ($analyzersDir) { $searchRoots += $analyzersDir }
+    if ($CompilerDir -and ($searchRoots -notcontains $CompilerDir)) { $searchRoots += $CompilerDir }
+
+    function Find-AnalyzerDll {
+        param([string]$DllName)
+
+        foreach ($root in $searchRoots) {
+            if (-not (Test-Path -LiteralPath $root)) { continue }
+            $candidate = Get-ChildItem -Path $root -Recurse -Filter $DllName -File -ErrorAction SilentlyContinue | Select-Object -First 1
+            if ($candidate) { return $candidate.FullName }
+        }
+        return $null
+    }
+
+    $unresolved = New-Object System.Collections.Generic.List[string]
+
     foreach ($item in $enabled) {
         $name = ($item | Out-String).Trim()
         if ([string]::IsNullOrWhiteSpace($name)) { continue }
         if ($name -match '^\$\{([A-Za-z]+)\}$') { $name = $matches[1] }
 
         if ($supported -contains $name) {
-            if ($analyzersDir -or $CompilerDir) {
-                $dll = $dllMap[$name]
-                $searchRoots = @()
-                if ($analyzersDir) { $searchRoots += $analyzersDir }
-                if ($CompilerDir -and ($searchRoots -notcontains $CompilerDir)) { $searchRoots += $CompilerDir }
-
-                $found = $null
-                foreach ($root in $searchRoots) {
-                    if (-not (Test-Path -LiteralPath $root)) { continue }
-                    $candidate = Get-ChildItem -Path $root -Recurse -Filter $dll -File -ErrorAction SilentlyContinue | Select-Object -First 1
-                    if ($candidate) { $found = $candidate; break }
-                }
-
-                if ($found -and -not $dllPaths.Contains($found.FullName)) {
-                    $dllPaths.Add($found.FullName) | Out-Null
-                } elseif (-not $found) {
-                    Write-Information "[albt] Analyzer '$name' requested but $dll not found near compiler directory." -InformationAction Continue
-                }
+            $dll = $dllMap[$name]
+            $found = Find-AnalyzerDll -DllName $dll
+            if ($found) {
+                if (-not $dllPaths.Contains($found)) { $dllPaths.Add($found) | Out-Null }
             } else {
-                Write-Information "[albt] Analyzer '$name' requested but compiler directory unavailable for resolution." -InformationAction Continue
+                $unresolved.Add("$name ($dll)") | Out-Null
             }
         } else {
-            (Resolve-AnalyzerEntry -Entry $name) | ForEach-Object {
-                if ($_ -and -not $dllPaths.Contains($_)) { $dllPaths.Add($_) | Out-Null }
+            $resolved = @(Resolve-AnalyzerEntry -Entry $name)
+            if ($resolved.Count -eq 0) {
+                $unresolved.Add($name) | Out-Null
+            } else {
+                $resolved | ForEach-Object {
+                    if ($_ -and -not $dllPaths.Contains($_)) { $dllPaths.Add($_) | Out-Null }
+                }
             }
         }
+    }
+
+    # ALCops cops need companion DLLs loaded alongside (per alcops.dev command-line
+    # docs): ALCops.Common.dll always, and Microsoft.Dynamics.Nav.Analyzers.Common.dll
+    # when no Microsoft analyzer is enabled to bring it in.
+    $leafNames = @($dllPaths | ForEach-Object { Split-Path -Leaf $_ })
+    $hasALCopsCop = [bool]($leafNames | Where-Object { $_ -like 'ALCops.*.dll' -and $_ -ne 'ALCops.Common.dll' })
+    if ($hasALCopsCop) {
+        $companions = @('ALCops.Common.dll')
+        if (-not ($leafNames | Where-Object { $_ -like 'Microsoft.Dynamics.Nav.*.dll' })) {
+            $companions += 'Microsoft.Dynamics.Nav.Analyzers.Common.dll'
+        }
+        foreach ($companion in $companions) {
+            if ($leafNames -contains $companion) { continue }
+            $found = Find-AnalyzerDll -DllName $companion
+            if ($found) { $dllPaths.Add($found) | Out-Null } else { $unresolved.Add($companion) | Out-Null }
+        }
+    }
+
+    if ($unresolved.Count -gt 0) {
+        throw "Analyzer(s) requested in '$settingsPath' but not resolvable: $($unresolved -join ', '). Run provision.ps1 to install analyzers, then retry."
     }
 
     return $dllPaths

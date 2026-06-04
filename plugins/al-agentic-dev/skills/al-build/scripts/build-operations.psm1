@@ -224,7 +224,7 @@ function Install-ALCompiler {
     .DESCRIPTION
         Reuses an existing AL compiler by default. Installs the compiler when missing,
         or updates it only when explicitly requested.
-        Also downloads and installs LinterCop analyzer.
+        Also downloads and installs the ALCops analyzers.
     .PARAMETER Update
         Force update of an existing global compiler tool.
     #>
@@ -301,8 +301,8 @@ function Install-ALCompiler {
 
     Write-BuildMessage -Type Detail -Message "Sentinel saved: $sentinelPath"
 
-    # Install LinterCop
-    Install-LinterCop -CompilerVersion $version -CompilerDir (Split-Path -Parent $alcPath)
+    # Install ALCops analyzers
+    Install-ALCops -CompilerDir (Split-Path -Parent $alcPath)
 
     Write-BuildMessage -Type Success -Message "Compiler provisioning complete"
 }
@@ -398,6 +398,66 @@ function Get-InstalledCompilerVersion {
     }
 }
 
+function Get-InstalledRuntimeMajors {
+    <#
+    .SYNOPSIS
+        Major versions of installed Microsoft.NETCore.App runtimes
+    #>
+    try {
+        $runtimes = & dotnet --list-runtimes 2>$null
+        if ($LASTEXITCODE -ne 0) { return @() }
+        return @($runtimes |
+            Where-Object { $_ -match '^Microsoft\.NETCore\.App (\d+)\.' } |
+            ForEach-Object { [int]($_ -replace '^Microsoft\.NETCore\.App (\d+)\..*$', '$1') } |
+            Sort-Object -Unique)
+    } catch {
+        return @()
+    }
+}
+
+function Select-CompilerCandidate {
+    <#
+    .SYNOPSIS
+        Pick the compiler executable among multi-target candidates.
+    .DESCRIPTION
+        The compiler dotnet tool ships one alc per target framework (tools/net8.0,
+        tools/net10.0). Prefer candidates whose target framework has an installed
+        .NET runtime, then the highest target framework, then the newest file.
+        Deterministic, so the analyzers installed next to the compiler at provision
+        time keep matching the compiler directory picked at build time.
+    .PARAMETER Candidates
+        Objects with FullName and LastWriteTime (FileInfo or equivalent).
+    .PARAMETER InstalledRuntimeMajors
+        Major versions of installed Microsoft.NETCore.App runtimes. Candidates whose
+        path carries no target framework rank as runnable.
+    #>
+    param(
+        [object[]]$Candidates,
+        [int[]]$InstalledRuntimeMajors = @()
+    )
+
+    if (-not $Candidates -or $Candidates.Count -eq 0) { return $null }
+
+    $ranked = foreach ($item in $Candidates) {
+        $tfmMajor = 0
+        if ($item.FullName -match '[\\/]tools[\\/]net(\d+)\.\d+[\\/]') {
+            $tfmMajor = [int]$matches[1]
+        }
+        [pscustomobject]@{
+            Item       = $item
+            TfmMajor   = $tfmMajor
+            HasRuntime = ($tfmMajor -eq 0) -or ($InstalledRuntimeMajors -contains $tfmMajor)
+        }
+    }
+
+    $chosen = $ranked |
+        Sort-Object -Property @{Expression = 'HasRuntime'; Descending = $true },
+                              @{Expression = 'TfmMajor'; Descending = $true },
+                              @{Expression = { $_.Item.LastWriteTime }; Descending = $true } |
+        Select-Object -First 1
+    return $chosen.Item
+}
+
 function Get-LatestCompilerPath {
     <#
     .SYNOPSIS
@@ -421,123 +481,82 @@ function Get-LatestCompilerPath {
     $items = Get-ChildItem -Path $packageRoot -Recurse -File -Depth 6 -ErrorAction SilentlyContinue |
         Where-Object { $toolExecutableNames -contains $_.Name }
 
-    $candidate = $items | Sort-Object -Property LastWriteTime -Descending | Select-Object -First 1
+    $candidate = Select-CompilerCandidate -Candidates @($items) -InstalledRuntimeMajors (Get-InstalledRuntimeMajors)
     if ($candidate) { return $candidate.FullName }
     return $null
 }
 
-function Get-LinterCopDownloadUrl {
+function Install-ALCops {
     <#
     .SYNOPSIS
-        Find the best matching LinterCop asset for the given compiler version.
+        Download and install the ALCops analyzers into the compiler's Analyzers folder.
     .DESCRIPTION
-        Uses multi-tier fallback: exact version → major.minor → prerelease → stable.
+        Uses the official '@alcops/core' CLI to detect the compiler's target framework
+        and download the latest ALCops.Analyzers NuGet package (six cops plus the
+        shared ALCops.Common.dll). Always installs the latest version and runs on
+        every provision, so analyzers track upstream releases without pinning.
+        Removes a legacy BusinessCentral.LinterCop.dll when present: ALCops shares
+        diagnostic IDs with the discontinued LinterCop, so the two must never load
+        together. Fails loudly; a missing analyzer must stop provisioning rather
+        than silently degrade the build gate's lint coverage.
+    .PARAMETER CompilerDir
+        Directory containing alc.exe. DLLs land in '<CompilerDir>\Analyzers' where
+        Get-EnabledAnalyzerPath resolves '${analyzerFolder}' entries.
     #>
+    [CmdletBinding()]
     param(
         [Parameter(Mandatory)]
-        [string]$CompilerVersion
-    )
-
-    $apiUrl = "https://api.github.com/repos/StefanMaron/BusinessCentral.LinterCop/releases/latest"
-    $release = Invoke-RestMethod -Uri $apiUrl -UseBasicParsing -ErrorAction Stop
-    $assets = $release.assets
-
-    # Parse version: 17.0.30.30339 or 17.0.1998613
-    $versionParts = $CompilerVersion -split '\.'
-    $major = $versionParts[0]
-    $minor = $versionParts[1]
-    $majorMinor = "$major.$minor"
-
-    # Tier 1: Exact version match (e.g., BusinessCentral.LinterCop.AL-17.0.1998613.dll)
-    $exactMatch = $assets | Where-Object { $_.name -eq "BusinessCentral.LinterCop.AL-$CompilerVersion.dll" } | Select-Object -First 1
-    if ($exactMatch) {
-        Write-BuildMessage -Type Detail -Message "LinterCop: Exact version match found"
-        return $exactMatch.browser_download_url
-    }
-
-    # Tier 2: Major.minor match - find highest patch version for this major.minor
-    # Pattern: BusinessCentral.LinterCop.AL-17.0.NNNNNN.dll (stable patch)
-    $majorMinorPattern = "^BusinessCentral\.LinterCop\.AL-$major\.$minor\.(\d+)\.dll$"
-    $majorMinorMatches = $assets | Where-Object { $_.name -match $majorMinorPattern } | Sort-Object {
-        if ($_.name -match $majorMinorPattern) { [int]$matches[1] } else { 0 }
-    } -Descending
-    $bestMajorMinor = $majorMinorMatches | Select-Object -First 1
-    if ($bestMajorMinor) {
-        Write-BuildMessage -Type Detail -Message "LinterCop: Major.minor match found: $($bestMajorMinor.name)"
-        return $bestMajorMinor.browser_download_url
-    }
-
-    # Tier 3: Beta/prerelease for this major.minor (e.g., 17.0.30.30339-beta)
-    $betaPattern = "^BusinessCentral\.LinterCop\.AL-$major\.$minor\.\d+\.\d+(-beta)?\.dll$"
-    $betaMatches = $assets | Where-Object { $_.name -match $betaPattern }
-    $bestBeta = $betaMatches | Select-Object -First 1
-    if ($bestBeta) {
-        Write-BuildMessage -Type Detail -Message "LinterCop: Beta match found: $($bestBeta.name)"
-        return $bestBeta.browser_download_url
-    }
-
-    # Tier 4: Generic prerelease (AL-PreRelease.dll)
-    $preRelease = $assets | Where-Object { $_.name -eq "BusinessCentral.LinterCop.AL-PreRelease.dll" } | Select-Object -First 1
-    if ($preRelease) {
-        Write-BuildMessage -Type Detail -Message "LinterCop: Using prerelease version"
-        return $preRelease.browser_download_url
-    }
-
-    # Tier 5: Stable fallback (BusinessCentral.LinterCop.dll)
-    $stable = $assets | Where-Object { $_.name -eq "BusinessCentral.LinterCop.dll" } | Select-Object -First 1
-    if ($stable) {
-        Write-BuildMessage -Type Detail -Message "LinterCop: Using stable fallback"
-        return $stable.browser_download_url
-    }
-
-    return $null
-}
-
-function Install-LinterCop {
-    <#
-    .SYNOPSIS
-        Download and install LinterCop analyzer matching compiler version.
-    .DESCRIPTION
-        Downloads to Analyzers subfolder as BusinessCentral.LinterCop.dll so it's
-        discovered by Get-EnabledAnalyzerPath when "LinterCop" is in al.codeAnalyzers.
-    #>
-    param(
-        [string]$CompilerVersion,
         [string]$CompilerDir
     )
 
-    Write-BuildMessage -Type Step -Message "Installing LinterCop analyzer..."
+    Write-BuildMessage -Type Step -Message "Installing ALCops analyzers..."
 
-    # Target path: always use standard name for discovery
+    # Own the native-command error path: with $PSNativeCommandUseErrorActionPreference
+    # on, a non-zero npx exit would throw at the call site and discard the captured
+    # npm diagnostics. The explicit $LASTEXITCODE check below produces the richer error.
+    $PSNativeCommandUseErrorActionPreference = $false
+
+    if (-not (Get-Command npx -ErrorAction SilentlyContinue)) {
+        throw "npx not found. ALCops analyzers are installed via the official '@alcops/core' CLI, which requires Node.js. Install Node (e.g. 'winget install Volta.Volta', open a new shell, 'volta install node@22') and re-run provision."
+    }
+
     $analyzersDir = Join-Path $CompilerDir 'Analyzers'
     Ensure-Directory -Path $analyzersDir
-    $targetPath = Join-Path $analyzersDir 'BusinessCentral.LinterCop.dll'
 
-    # Check if already installed
-    if (Test-Path $targetPath) {
-        Write-BuildMessage -Type Success -Message "LinterCop already installed"
-        return
+    # ALCops shares diagnostic IDs with the discontinued LinterCop; never load both.
+    $legacyDll = Join-Path $analyzersDir 'BusinessCentral.LinterCop.dll'
+    if (Test-Path -LiteralPath $legacyDll) {
+        Remove-Item -LiteralPath $legacyDll -Force
+        Write-BuildMessage -Type Detail -Message "Removed legacy BusinessCentral.LinterCop.dll"
     }
 
-    try {
-        $downloadUrl = Get-LinterCopDownloadUrl -CompilerVersion $CompilerVersion
-        if (-not $downloadUrl) {
-            Write-BuildMessage -Type Warning -Message "No matching LinterCop version found for $CompilerVersion"
-            return
-        }
-
-        # Download to temp file first, then move (atomic operation)
-        $tempPath = Join-Path $analyzersDir "LinterCop.tmp.$([guid]::NewGuid().ToString('N')).dll"
-        try {
-            Invoke-WebRequest -Uri $downloadUrl -OutFile $tempPath -UseBasicParsing
-            Move-Item -Path $tempPath -Destination $targetPath -Force
-            Write-BuildMessage -Type Success -Message "LinterCop installed for compiler v$CompilerVersion"
-        } finally {
-            if (Test-Path $tempPath) { Remove-Item $tempPath -Force -ErrorAction SilentlyContinue }
-        }
-    } catch {
-        Write-BuildMessage -Type Warning -Message "LinterCop installation failed: $($_.Exception.Message)"
+    $npxArgs = @(
+        '--yes', '@alcops/core@latest', 'download'
+        '--output', $analyzersDir
+        '--detect-using', $CompilerDir
+        '--detect-from', 'compiler-path'
+    )
+    $output = & npx @npxArgs 2>&1
+    if ($LASTEXITCODE -ne 0) {
+        throw "ALCops download failed (npx exit $LASTEXITCODE): $($output -join [Environment]::NewLine)"
     }
+
+    $expectedDlls = @(
+        'ALCops.ApplicationCop.dll'
+        'ALCops.Common.dll'
+        'ALCops.DocumentationCop.dll'
+        'ALCops.FormattingCop.dll'
+        'ALCops.LinterCop.dll'
+        'ALCops.PlatformCop.dll'
+        'ALCops.TestAutomationCop.dll'
+    )
+    $missing = @($expectedDlls | Where-Object { -not (Test-Path -LiteralPath (Join-Path $analyzersDir $_)) })
+    if ($missing.Count -gt 0) {
+        throw "ALCops installation incomplete; missing in '$analyzersDir': $($missing -join ', ')"
+    }
+
+    Write-BuildMessage -Type Success -Message "ALCops analyzers installed ($($expectedDlls.Count) DLLs)"
+    Write-BuildMessage -Type Detail -Message "Folder: $analyzersDir"
 }
 
 # =============================================================================
@@ -735,9 +754,8 @@ function Invoke-ALBuild {
     $symbolCacheInfo = Get-SymbolCacheInfo -AppJson $appJson
     $packageCachePath = $symbolCacheInfo.CacheDir
 
-    # Get analyzers
-    $analyzerPaths = Get-EnabledAnalyzerPath -AppDir $AppDir -CompilerDir $compilerRoot
-    $filteredAnalyzers = @($analyzerPaths | Where-Object { $_ -and (Test-Path $_ -PathType Leaf) })
+    # Get analyzers (Get-EnabledAnalyzerPath throws when a requested analyzer is missing)
+    $filteredAnalyzers = @(Get-EnabledAnalyzerPath -AppDir $AppDir -CompilerDir $compilerRoot)
 
     if ($filteredAnalyzers.Count -gt 0) {
         Write-BuildMessage -Type Detail -Message "Analyzers: $($filteredAnalyzers.Count) configured"
@@ -1229,7 +1247,8 @@ Export-ModuleMember -Function @(
     'Install-ALCompiler'
     'Get-InstalledCompilerVersion'
     'Get-LatestCompilerPath'
-    'Install-LinterCop'
+    'Select-CompilerCandidate'
+    'Install-ALCops'
 
     # Symbols
     'Get-ALSymbols'

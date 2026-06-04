@@ -1,7 +1,7 @@
 #Requires -Version 7.2
 
 BeforeAll {
-    $script:CommonModule = Resolve-Path (Join-Path $PSScriptRoot '..' 'skills' 'al-build' 'scripts' 'common.psm1')
+    $script:CommonModule = Resolve-Path (Join-Path $PSScriptRoot '..' '..' 'plugins' 'al-agentic-dev' 'skills' 'al-build' 'scripts' 'common.psm1')
     Import-Module $script:CommonModule -Force
 
     function script:Initialize-TestClone {

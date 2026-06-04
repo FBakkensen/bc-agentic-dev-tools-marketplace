@@ -7,6 +7,7 @@ Self-contained build/test gate for AL/Business Central. No external task runners
 - PowerShell 7.2+ (`pwsh`, not `powershell`).
 - Docker Desktop. Use container, not VM.
 - .NET SDK (compiler install).
+- Node.js (`npx`) — ALCops analyzers install via the official `@alcops/core` CLI. Recommended: `winget install Volta.Volta`, new shell, `volta install node@22`.
 - [BcContainerHelper](https://github.com/microsoft/navcontainerhelper) PowerShell module.
 
 ## Quick start
@@ -36,7 +37,7 @@ pwsh scripts/test.ps1
 |---|---|
 | `test.ps1` | **Canonical gate.** Build, publish, run tests. |
 | `init.ps1` | Drop `al-build.json` in repo root. |
-| `provision.ps1` | One-time setup (compiler + symbols). Reuses an installed compiler unless `-UpdateCompiler` is passed. |
+| `provision.ps1` | One-time setup (compiler + analyzers + symbols). Reuses an installed compiler unless `-UpdateCompiler` is passed; refreshes ALCops analyzers on every run. |
 | `clean.ps1` | Remove build artifacts. |
 | `new-bc-container.ps1` | Create golden BC container. |
 | `commit-bc-container.ps1` | Commit container to snapshot image. |
@@ -129,6 +130,32 @@ Claude Code users get this via session-start hook.
   }
 }
 ```
+
+## Analyzers
+
+The compiler ships Microsoft's analyzers (CodeCop, UICop, AppSourceCop, PerTenantExtensionCop). `provision.ps1` adds the community [ALCops](https://alcops.dev) analyzers — six cops plus `ALCops.Common.dll` — into the compiler's `Analyzers` folder via the official `@alcops/core` CLI. Always the latest ALCops release, refreshed on every provision run; no pinning. ALCops replaces the discontinued BusinessCentral.LinterCop (shared diagnostic IDs — the two must never load together; provision removes a leftover LinterCop DLL).
+
+Which analyzers run is controlled by `al.codeAnalyzers` in `.vscode/settings.json`, official AL notation only — the same file drives the AL extension in VS Code:
+
+```json
+{
+  "al.codeAnalyzers": [
+    "${CodeCop}",
+    "${UICop}",
+    "${AppSourceCop}",
+    "${PerTenantExtensionCop}",
+    "${analyzerFolder}ALCops.ApplicationCop.dll",
+    "${analyzerFolder}ALCops.DocumentationCop.dll",
+    "${analyzerFolder}ALCops.FormattingCop.dll",
+    "${analyzerFolder}ALCops.LinterCop.dll",
+    "${analyzerFolder}ALCops.PlatformCop.dll",
+    "${analyzerFolder}ALCops.TestAutomationCop.dll",
+    "${analyzerFolder}ALCops.Common.dll"
+  ]
+}
+```
+
+Resolution is per app: `<appDir>/.vscode/settings.json` wins, repo-root `.vscode/settings.json` is the shared fallback — so the main app can run the full set including AppSourceCop while test apps run a reduced set (TestAutomationCop, no AppSourceCop). In `-UnitTestOnly` mode the unit-test app is not analyzed (AL Runner compiles it internally); test-app analyzers apply in the full gate. No `settings.json` → no analyzers. A requested analyzer that cannot be resolved fails the build — the gate never silently compiles with less lint coverage than the settings ask for. `ALCops.Common.dll` (and `Microsoft.Dynamics.Nav.Analyzers.Common.dll` when no Microsoft analyzer is enabled) is appended automatically when missing from the list. Diagnostic prefixes: `AA` CodeCop, `AW` UICop, `AS` AppSourceCop, `PTE` PerTenantExtensionCop, `AC` ApplicationCop, `DC` DocumentationCop, `FC` FormattingCop, `LC` LinterCop (code-quality subset), `PC` PlatformCop, `TA` TestAutomationCop.
 
 ## Architecture
 
