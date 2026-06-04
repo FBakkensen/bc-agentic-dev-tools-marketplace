@@ -8,7 +8,7 @@ Format-agnostic. Markdown mechanics (`task=`, `status=`, `slice=`, `kind=` on th
 
 ## Two destinations, picked by lifetime
 
-- **Survives past `done`** → durable artifact outside task block: `CONTEXT.md`, domain ADR, design ADR, `.out-of-scope/`, commit message, PR description, or side-band reference. Task block is branch-scoped; dies when feature merges.
+- **Survives past `done`** → durable artifact outside task block: `CONTEXT.md`, domain ADR, `.out-of-scope/`, commit message, PR description, or side-band reference. Task block is branch-scoped; dies when feature merges.
 - **Dies with branch** → may live inside task block (the `### T-NNN` heading + comment line + body). Status flips, in-flight scaffolding, replan flags, mutation verdicts, deferred-decision notes the next agent on this branch needs.
 
 Cannot tell which side a piece belongs on → ask trigger test: *will this line be useful past `done`?* Yes → durable. No → inside-task or commit-only.
@@ -25,7 +25,7 @@ Cannot tell which side a piece belongs on → ask trigger test: *will this line 
 | Verification failure (example, check, observed vs expected) | inside verify task block | `/al-user-verification` |
 | Mutation verdict (kills / survivors / equivalence) | inside task block | `/al-mutate` |
 | Critical hidden risk surfaced during refinement, implementation, or scope | inside task block | `/al-scope`, `/al-refine`, `/al-implement` |
-| Architectural decision with cross-task or future-feature impact | design ADR (via `/al-design` or `/al-steer` re-routing) | `/al-design` |
+| Architectural decision with cross-task impact inside the feature | architecture trade-off callout | `/al-design` |
 | BC vocabulary, business rule, cross-feature truth | domain ADR or `CONTEXT.md` (via `/al-grill-adr`) | `/al-grill-adr` |
 | Recurring scope rejection with substantive reason | `.out-of-scope/<concept>.md` | `/al-steer` |
 | Process IDs (issue / PR numbers, "the current fix") | commit message or PR description | writing skill at commit time |
@@ -41,7 +41,7 @@ When something surfaces inside in-flight task but actually belongs to durable de
 
 | Surface | Route to |
 |---|---|
-| Architectural decision with cross-task or future-feature impact | `/al-steer` → `/al-design` (architecture reshape or design ADR) |
+| Architectural decision with cross-task impact inside the feature | `/al-steer` → `/al-design` (architecture reshape or trade-off callout) |
 | BC vocabulary, business rule, cross-feature truth | `/al-steer` → `/al-grill-adr` (domain ADR or `CONTEXT.md`) |
 | Recurring scope rejection with substantive reason | `/al-steer` (writes `.out-of-scope/<concept>.md`) |
 

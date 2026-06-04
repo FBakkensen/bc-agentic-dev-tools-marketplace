@@ -12,7 +12,7 @@ The grammar separates three concerns:
 
 ## Technical task: Test Specification
 
-Technical tasks use a `Test Specification` section. `/al-refine` writes it before implementation. `/al-implement` reconciles it to actual test procedure names and final scopes before flipping the task to `done`.
+Technical tasks use a `Test Specification` section. `/al-refine` writes it for one named technical task from the current app/tests before implementation. `/al-scope` writes task shells only and does not pre-seed proof sections. `/al-implement` reconciles the specification to actual test procedure names and final scopes before flipping the task to `done`.
 
 Use one primary coverage table per technical task:
 
@@ -120,7 +120,7 @@ AAA case rules:
 
 ## Verify task: Verification Plan
 
-Verify tasks use a `Verification Plan` section. Include only subsections that apply.
+Verify tasks use a `Verification Plan` section. `/al-refine` writes it for one named verify task from the current app/tests before verification. `/al-scope` writes task shells only and does not pre-seed proof sections. Include only subsections that apply.
 
 Allowed verify scopes:
 

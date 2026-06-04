@@ -36,13 +36,15 @@ Four keys on the comment line, single space between each `key=value`, no quotes:
 | Key | Locates | Used by | Written by |
 |---|---|---|---|
 | `task=T-NNN` | the per-task block | every skill that touches a task | `/al-scope` |
-| `status=ready \| in-progress \| done \| blocked` | the status, single source of truth | `/al-implement`, `/al-code-review`, `/al-user-verification`, `/al-steer` | `/al-scope` (`ready` for every technical task in the first slice, `blocked` for every other task); `/al-implement` flips technical tasks `in-progress` → `done` (does not touch verify tasks); `/al-code-review` per-slice on clean review flips the slice's verify task `blocked` → `ready` (user/API-facing) or the next slice's technical tasks `blocked` → `ready` (backend-only); `/al-user-verification` flips verify task `ready` → `in-progress` → `done` or `blocked`, and on `done` flips next-slice technical tasks `blocked` → `ready`; `/al-steer` flips to `blocked` on replan triggers |
+| `status=ready \| ready-for-implementation \| ready-for-verification \| blocked \| done` | the status, single source of truth | `/al-refine`, `/al-implement`, `/al-code-review`, `/al-page-script`, `/al-user-verification`, `/al-steer` | `/al-scope` writes unrefined tasks as `ready` when they have enough context for `/al-refine`, otherwise `blocked`; `/al-refine` flips technical tasks `ready` → `ready-for-implementation` after writing a fresh `Test Specification`, and verify tasks `ready` → `ready-for-verification` after writing a fresh `Verification Plan`; downstream evidence flips executable tasks to `done`; missing dependency or context flips tasks to `blocked` |
 | `slice=<slug>` | slice membership; matches one `event-model.md` timeline step (user/API-facing) or `architecture.md` slice (backend-only) | `/al-implement` (detect last technical task in slice → announce `/al-code-review`), `/al-code-review` (per-slice diff scope, gate flip target), `/al-steer` (group by slice when reporting) | `/al-scope` |
 | `kind=technical \| verify` | task kind; routes `/al-implement` (technical) vs `/al-page-script` + `/al-user-verification` (verify) | `/al-implement` (stop on verify), `/al-refine` (branch by kind), `/al-page-script` (precondition, generates the slice's `.yml`), `/al-user-verification` (precondition, pre-flights the `.yml` batch) | `/al-scope` |
 
+Status meanings are fixed: `ready` is ready for `/al-refine` only; `ready-for-implementation` means a technical task has a fresh `Test Specification`; `ready-for-verification` means a verify task has a fresh `Verification Plan`; `blocked` means dependency or context is missing; `done` means downstream evidence exists.
+
 `task=T-NNN` makes the line unique within the file. The status flip is an Edit on the full comment line where only the `status=` value differs; stale read trips the byte match.
 
-The visible heading marker (`[ ]` ready, `[~]` in-progress, `[x]` done, `[!]` blocked) is a courtesy fallback; the comment-line `status=` attribute is source of truth. Writing skills keep the marker in sync on flip.
+The visible heading marker (`[ ]` ready, `[>]` ready-for-implementation or ready-for-verification, `[x]` done, `[!]` blocked) is a courtesy fallback; the comment-line `status=` attribute is source of truth. Writing skills keep the marker in sync on flip.
 
 `slice` and `kind` are scope-time decisions. `/al-scope` writes them, downstream skills read them. A skill that needs to change `slice` (boundary moved) or `kind` (miscategorised) is doing replan work; route through `/al-steer`.
 
@@ -52,14 +54,14 @@ The visible heading marker (`[ ]` ready, `[~]` in-progress, `[x]` done, `[!]` bl
 
 `/al-implement` and `/al-steer` flip `status=` via the Edit tool, anchored on the full comment line.
 
-**Status flip example** (`/al-implement` from `in-progress` to `done` on T-007):
+**Status flip example** (`/al-implement` from `ready-for-implementation` to `done` on T-007):
 
 ```
-old_string: <!-- task=T-007 status=in-progress slice=release-sales-order kind=technical -->
+old_string: <!-- task=T-007 status=ready-for-implementation slice=release-sales-order kind=technical -->
 new_string: <!-- task=T-007 status=done slice=release-sales-order kind=technical -->
 ```
 
-One Edit, one attribute change. The line stays unique on `task=T-007`; the read-before-edit catches a stale assumption (if you think `in-progress` but the file says `ready`, Edit fails fast rather than corrupting state).
+One Edit, one attribute change. The line stays unique on `task=T-007`; the read-before-edit catches a stale assumption (if you think `ready-for-implementation` but the file says `ready`, Edit fails fast rather than corrupting state).
 
 **Other writes regenerate, not surgical-edit.** When `/al-refine` fills the `Test Specification` or `Verification Plan`, `/al-mutate` writes a verdict, or `/al-implement` records a NOTE-style block alongside the task, the writing skill regenerates that portion of the task block whole.
 

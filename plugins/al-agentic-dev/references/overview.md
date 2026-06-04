@@ -19,7 +19,7 @@ Composable skills for AL/Business Central agentic development. One feature flows
 | **Shaping** (inside `/al-implement` or standalone on legacy) | `/al-refactor`, `/al-mutate`, `/al-page-script` |
 | **Meta** | `/al-agentic-dev-overview` (this skill) |
 
-Slice mechanics: `/al-implement` works through one slice's technical tasks, then `/al-code-review` fires automatically at slice-done. For user/API-facing slices, `/al-page-script` generates the slice's bc-replay recording from the verify task's E2E Journey Examples, then `/al-user-verification` pre-flights the recording batch against a fresh container, runs Contract Examples, and walks Journey Examples / Exploration Charters before the next slice opens. Backend-only slices skip page-script and user-verification, chaining directly into the next slice. At feature-done (every task in feature `done`), `/al-code-review` fires per-feature before merge.
+Slice mechanics: `/al-refine` opens one `ready` task at a time. Technical tasks become `ready-for-implementation`, then `/al-implement` drives them to `done`. When a user/API-facing slice's technical tasks are done, `/al-implement` opens the verify task to `ready`; `/al-refine` writes its `Verification Plan` and flips it to `ready-for-verification`; `/al-code-review` validates that slice before page-script/user-verification. `/al-page-script` generates the slice's bc-replay recording from E2E Journey Examples, then `/al-user-verification` pre-flights the recording batch against a fresh container, runs Contract Examples, and walks Journey Examples / Exploration Charters before the next slice opens to `ready` for refinement. Backend-only slices skip page-script and user-verification, chaining through `/al-code-review` into the next slice. At feature-done (every task in feature `done`), `/al-code-review` fires per-feature before merge.
 
 ## Skills
 
@@ -32,7 +32,7 @@ Slice mechanics: `/al-implement` works through one slice's technical tasks, then
 | `/al-scope` | Decomposes `architecture.md` into a slice-grouped task list in `tasks.md`. | After `/al-design`. |
 | `/al-refine` | One task → `Test Specification` or `Verification Plan`. | Before working a specific task. |
 | `/al-implement` | TDD per technical task: Unit cases → Integration cases → refactor → mutate. | After `/al-refine` produces a `Test Specification`. |
-| `/al-user-verification` | Agent drives the slice's verify task in the browser; functional outcomes gate, usability observations → findings/tasks; second-opinion + visual evidence guard the gate. Gates the next slice. | Verify task ready (after `/al-code-review` flipped it from `blocked`). |
+| `/al-user-verification` | Agent drives the slice's verify task in the browser; functional outcomes gate, usability observations → findings/tasks; second-opinion + visual evidence guard the gate. Gates the next slice. | Verify task is `ready-for-verification` after `/al-refine` wrote a fresh `Verification Plan` and `/al-code-review` ran clean. |
 | `/al-refactor` | Improve shape while green. No new behaviour. | After green inside `/al-implement`, or standalone on legacy code. |
 | `/al-mutate` | Validate test rigor by injecting mutations one at a time. | Mandatory inside `/al-implement` for non-trivial work, or standalone on legacy before `/al-refactor`. |
 | `/al-code-review` | Gate at slice-done and feature-done. Auto-runs `/grill-me` per surviving finding. | Auto-announced by `/al-implement` at slice-done and feature-done. |
@@ -41,16 +41,16 @@ Slice mechanics: `/al-implement` works through one slice's technical tasks, then
 | `/al-steer` | Coach and navigator. Reads state, names next step, never edits code. Owns `.out-of-scope/`. Canonical replan venue. | "Where are we?", "what's next?", trigger fired in another skill. |
 | `/al-build` | Compile, publish, run tests; writes results to `.output/TestResults/<dirName>/`. | After modifying AL code or tests. Required gate before commit. |
 | `/al-debug-logging` | Temporary `DEBUG-*` `FeatureTelemetry.LogUsage` probes; read `telemetry.jsonl`; remove probes. Final state: zero `DEBUG-*` in tree. | Runtime behaviour diverges from source and tests can't reveal which path ran. |
-| `/al-page-script` | Generate the slice's bc-replay recording (`.yml`) from the verify task's E2E Journey Examples; example-by-example inner loop against a fresh container; commits the file on green. Produces the recording `/al-user-verification` pre-flights. | After `/al-code-review` per-slice flips the verify task to `ready` (user-facing slice only). |
+| `/al-page-script` | Generate the slice's bc-replay recording (`.yml`) from the verify task's E2E Journey Examples; example-by-example inner loop against a fresh container; commits the file on green. Produces the recording `/al-user-verification` pre-flights. | After `/al-code-review` per-slice preserves the verify task at `ready-for-verification` (user-facing slice only). |
 
 ## Persistence layers
 
 Two layers, on purpose.
 
-- **Repo-root, durable across features**: `CONTEXT.md`, `docs/adr/`, `.out-of-scope/`. Owners: `/al-grill-adr` (CONTEXT + domain ADRs), `/al-design` (design ADRs), `/al-steer` (out-of-scope).
+- **Repo-root, durable across features**: `CONTEXT.md`, `docs/adr/`, `.out-of-scope/`. Owners: `/al-grill-adr` (CONTEXT + domain ADRs), `/al-steer` (out-of-scope).
 - **Branch-scoped, per in-flight feature**: `specs/<NNN>-<slug>/event-model.md` (present for user/API-facing features) + `architecture.md` + `tasks.md`. Slug matches the current git branch.
 
-`tasks.md` carries one HTML-comment status line per task: `<!-- task=T-NNN status=ready slice=<slug> kind=technical -->`. Status values: `ready`, `in-progress`, `done`, `blocked`. `T-NNN` IDs monotonic, never reused. `kind=verify` marks the per-slice user-verification task; `kind=technical` marks technical tasks.
+`tasks.md` carries one HTML-comment status line per task: `<!-- task=T-NNN status=ready slice=<slug> kind=technical -->`. Status values: `ready`, `ready-for-implementation`, `ready-for-verification`, `blocked`, `done`. `ready` means ready for `/al-refine`; executable tasks use `ready-for-implementation` or `ready-for-verification`. `T-NNN` IDs monotonic, never reused. `kind=verify` marks the per-slice user-verification task; `kind=technical` marks technical tasks.
 
 ## Cold-start: where do I begin from `main`?
 

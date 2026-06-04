@@ -9,7 +9,6 @@ This file is the single source of truth for the picking algorithm. Read it befor
 | Caller | Artifact | Width |
 |---|---|---|
 | `/al-design` step 12 (branch + folder) | `specs/<NNN>-<slug>/` | three-digit `^\d{3}-` |
-| `/al-design` step 11 (design ADR accept) | `docs/adr/<NNNN>-<slug>.md` | four-digit `^\d{4}-` |
 | `/al-grill-adr` ADR offer accept | `docs/adr/<NNNN>-<slug>.md` | four-digit `^\d{4}-` |
 
 ## Algorithm
@@ -24,7 +23,7 @@ This file is the single source of truth for the picking algorithm. Read it befor
 
 ## Scope of the ADR scan
 
-ADR files are file-shaped, so collecting candidates from other branches needs one `git ls-tree -r <ref> -- docs/adr/` per ref. **Only scan refs whose short name matches `^\d{3}-`** (local and remote-tracking). New ADRs are minted exclusively by `/al-design` and `/al-grill-adr`, both of which run on feature branches named `<NNN>-<slug>`. Branches outside that shape are outside the agentic-dev flow and won't carry new ADR files; if one does, that's a workflow violation, not a numbering correctness problem. The working tree's `docs/adr/` covers everything merged to `main`.
+ADR files are file-shaped, so collecting candidates from other branches needs one `git ls-tree -r <ref> -- docs/adr/` per ref. **Only scan refs whose short name matches `^\d{3}-`** (local and remote-tracking). New ADRs are minted exclusively by `/al-grill-adr`, which runs on feature branches named `<NNN>-<slug>`. Branches outside that shape are outside the agentic-dev flow and won't carry new ADR files; if one does, that's a workflow violation, not a numbering correctness problem. The working tree's `docs/adr/` covers everything merged to `main`.
 
 ## Race risk
 

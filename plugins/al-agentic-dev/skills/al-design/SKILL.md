@@ -11,6 +11,14 @@ Turn sharpened idea into feature-level architecture, then write `architecture.md
 
 `/al-scope` reads this file next and decomposes it into tasks.
 
+## Artifact boundary
+
+Writes only `architecture.md`.
+
+May define production architecture, AL object responsibilities, module boundaries, seams, events, R → P → W flow, testability constraints, and seam expectations.
+
+Never write `tasks.md`. Never write task-level AAA cases, `Test Specification`, `Verification Plan`, Journey Examples, Contract Examples, Exploration Charters, verification journeys, or task proof. `/al-scope` owns `tasks.md`; `/al-refine` owns task-level proof shape.
+
 ## Preconditions
 
 - `/al-grill-adr` ran for this idea; without sharpened intent in `CONTEXT.md` / domain ADRs you cannot tell domain confusion from genuine architectural choice. **Stop**, run it first.
@@ -25,7 +33,7 @@ Turn sharpened idea into feature-level architecture, then write `architecture.md
 - **BC pattern per module**: pick from [bc-patterns.md](../../references/bc-patterns.md). Verify against current BaseApp via `/al-research` before committing.
 - **R → P → W boundary**: R = reads / inputs / events subscribed; P = pure procedure (no DB, no side effects, unit-test surface); W = effects (Insert / Modify / Delete, telemetry, errors, events published).
 - **Brownfield touchpoints**: objects, procedures, events, table fields the feature touches. Verify every name + signature via `/al-research`; stale memory ships fiction.
-- **Test strategy**: name expected Unit and Integration proof surfaces. Unit fits isolated decision logic behind the P layer. Integration earns place when behaviour crosses BC runtime, database, page/TestPage, event wiring, table triggers, telemetry shape, install / upgrade, permissions, or public surface.
+- **Testability constraints**: name where architecture should expose isolated decision logic behind the P layer and where behaviour necessarily crosses BC runtime, database, page/TestPage, event wiring, table triggers, telemetry shape, install / upgrade, permissions, or public surface. Do not write task-level proof, AAA cases, or assertions.
 - **Which BC names verified this session?** Every BC-specific name landing in `architecture.md` (pattern, event, codeunit, table, field, procedure): backed this session by `al-symbols-mcp` / `grep` hit, including `grep` against `event-model.md` for upstream-cited names, or `/al-research` citation. Recall does not satisfy. See *Citation chain in chat, before write* below.
 
 Unanswerable → not ready for `/al-scope`. Resolve via `/al-research` (BC behaviour), `/al-grill-adr` (domain rule), or `/al-steer` (replan).
@@ -54,16 +62,16 @@ Two design-time risks bite at AppSource boundaries: **BaseApp modification** (in
 
 Before writing any BC-specific name into `architecture.md` (pattern, event, codeunit, table, field, procedure), the name either appears in `al-symbols-mcp` / `grep` result you ran this session, or cited via `/al-research`: `Researched: <name> → <source path / URL / topic id>`. Workspace lookup is empirical anchor; memory of training data or past sessions is not. Training data for BC is stale fiction; workspace + `/al-research` are the empirical anchor. Names already research-backed by `/al-event-model` upstream count when `grep` against `event-model.md` returns the name this session, not when you recall they're there. Your confidence about a name, signature, or pattern label is not evidence any are right.
 
-## ADR offer criteria
+## Architecture trade-off criteria
 
-Offer a design ADR when **all four** are true:
+Call out an architecture trade-off inside `architecture.md` when **all four** are true:
 
 1. **Hard to reverse**: cost of changing later is meaningful.
 2. **Surprising without context**: a future reader will wonder why.
 3. **Real trade-off**: genuine alternatives, one picked for specific reasons.
 4. **Architectural**: mechanism, module shape, pattern, seam placement, test layer. Domain rules belong to `/al-grill-adr`, not here.
 
-Three of four does not earn an ADR; inflation rots the index. Template at [adr.template.md](../../references/adr.template.md). ADRs are markdown.
+Three of four does not earn the callout; inflation rots the artifact. This skill does not write ADR files.
 
 ## Parallel design-twice, non-trivial calls
 
@@ -96,7 +104,7 @@ Once when `architecture.md` lands. Gate report names chosen BC pattern + R → P
 | **Runs after**     | `/al-event-model` (user/API-facing features) or `/al-grill-adr` (backend-only) |
 | **Hands off to**   | `/al-scope` |
 | **Replan venue**   | `/al-steer` |
-| **Sidebands**      | `/al-research` (BC facts), `/bc-standard-reference` (pure BaseApp questions), `/grill-me` (ADR offers, design-twice reconciliation), `/al-second-opinion` (parallel design-twice picks) |
+| **Sidebands**      | `/al-research` (BC facts), `/bc-standard-reference` (pure BaseApp questions), `/grill-me` (design-twice reconciliation), `/al-second-opinion` (parallel design-twice picks) |
 
 <claude-only>
 

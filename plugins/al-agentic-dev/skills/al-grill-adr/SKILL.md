@@ -9,6 +9,14 @@ description: Domain-aware grilling for AL/Business Central. Sharpens BC vocabula
 
 Interview the user about domain intent, one question at a time, cross-referencing the codebase when codebase can answer. Sharpen `CONTEXT.md` until BC vocabulary is unambiguous; offer domain ADRs when constraint is hard to reverse and worth preserving. User-facing journey settlement belongs to `/al-event-model`; architectural picks belong to `/al-design`.
 
+## Artifact boundary
+
+Writes only `CONTEXT.md` and accepted domain ADRs under `docs/adr/`.
+
+May read implementation, app, test, and code artifacts to expose domain conflicts. Never edit them. Never write `event-model.md`, `architecture.md`, or `tasks.md`.
+
+Journey pressure → hand off to `/al-event-model`. Architecture, object responsibility, task, proof, or implementation pressure → hand off to `/al-design` or the downstream owning skill.
+
 ## Preconditions
 
 - None hard. Run before `/al-design` to crystallise intent, or standalone mid-feature when a fuzzy term or hidden trade-off surfaces.

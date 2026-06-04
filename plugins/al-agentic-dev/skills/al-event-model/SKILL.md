@@ -11,6 +11,14 @@ Settle the journey at altitude of what an external observer sees, before `/al-de
 
 `/al-design` reads `event-model.md` next.
 
+## Artifact boundary
+
+Writes only `event-model.md`.
+
+Never write `architecture.md` or `tasks.md`. Branch and spec-folder creation do not grant permission to create sibling artifacts.
+
+Do not choose implementation structure: no modules, codeunits, table fields, event subscribers, AL object responsibilities, or test surfaces. Do not write task proof: no task-level AAA cases, `Test Specification`, `Verification Plan`, Journey Examples, Contract Examples, or Exploration Charters.
+
 ## Preconditions
 
 - `/al-grill-adr` ran for this idea; without sharpened `CONTEXT.md` and domain ADRs, fuzzy terms compound into wrong Role names or fictitious Business Events. **Stop**, run it first.

@@ -1,13 +1,13 @@
 ---
 name: al-refine
-description: One task to a Test Specification or Verification Plan for AL/Business Central. Technical task -> Expected Behaviors or Decision Matrix + AAA cases. Verify task -> Journey Examples, Contract Examples, and Exploration Charters. Reads architecture.md, event-model.md, CONTEXT.md, and the codebase, then writes into tasks.md.
+description: One `status=ready` task to a fresh Test Specification or Verification Plan for AL/Business Central. Technical task -> ready-for-implementation. Verify task -> ready-for-verification.
 ---
 
 **Style:** Be extremely concise. Sacrifice grammar for concision. Opinionated — pick a side. Arrows (→) for causality. Technical terms exact, code and errors quoted verbatim.
 
 # /al-refine, Task to Test Specification / Verification Plan
 
-Fill one task in `tasks.md`. Branch by `kind=` on the comment-anchor line: `technical` → `Test Specification`; `verify` → `Verification Plan`. Walk codebase, ground symbols, sharpen intent, write the task block. One task per run.
+Fill one named `status=ready` task in `tasks.md`. Branch by `kind=` on the comment-anchor line: `technical` → fresh `Test Specification`; `verify` → fresh `Verification Plan`. Existing proof content is untrusted; regenerate from current app/tests, ground symbols, sharpen intent, write the task block. One task per run.
 
 **Layer.** Authors the `Test Specification` / `Verification Plan` each pyramid layer verifies (see [`test-strategy.md`](../../references/test-strategy.md)) using the grammar in [`test-specification.md`](../../references/test-specification.md). Technical tasks feed `/al-implement`; verify tasks feed `/al-page-script` and `/al-user-verification`.
 
@@ -16,13 +16,18 @@ Fill one task in `tasks.md`. Branch by `kind=` on the comment-anchor line: `tech
 - Branch matches `^\d{3}-`. If not: **Stop**. Run `/al-event-model` (or `/al-design` for backend-only).
 - Spec folder holds `architecture.md`. Missing → **Stop**, run `/al-design`.
 - User/API-facing features: `event-model.md` also present.
-- Task `status=blocked`: technical task → **Stop**, route to `/al-steer`; verify task with empty `Verification Plan` and completed technical dependencies → write the plan and leave status `blocked` for `/al-code-review`; verify task with a recorded failure/replan note → **Stop**, route to `/al-steer`.
+- Target task is named and has `status=ready`. `ready` means context exists for `/al-refine` only.
+- Any other status is not a refine target: `blocked` → `/al-steer`; `ready-for-implementation` → `/al-implement`; `ready-for-verification` → `/al-page-script` or `/al-user-verification` after `/al-code-review`; `done` → downstream evidence exists, reopen only through `/al-steer`.
 - Verify task (`kind=verify`) but no `event-model.md` → contract violation, **Stop**, route to `/al-steer`. Verify tasks only exist for user/API-facing features.
 - Read [`test-specification.md`](../../references/test-specification.md), [`test-strategy.md`](../../references/test-strategy.md), [`voice-contract.md`](../../references/voice-contract.md), and [`markdown-spec-discipline.md`](../../references/markdown-spec-discipline.md) before writing.
 
 ## Branch by task kind
 
-Read task's `kind=` value. `technical` writes a `Test Specification`. `verify` writes a `Verification Plan`.
+Read task's `kind=` value. `technical` writes a `Test Specification` and flips `ready` → `ready-for-implementation`. `verify` writes a `Verification Plan` and flips `ready` → `ready-for-verification`.
+
+## Regenerate proof
+
+Preserve scope-time context: title, description, `Depends on:`, `Refactors:`, `Fixes:`, slice grouping, constraints, risks, source context, acceptance intent. Rewrite the proof section whole. Do not preserve stale `Test Specification`, `Verification Plan`, AAA cases, coverage tables, examples, or charters because they existed in the task block.
 
 ## Technical task: Test Specification
 
@@ -36,7 +41,7 @@ Spec how one technical task's behaviour is proved so `/al-implement` can drive r
 - **What does codebase actually expose?** Real codeunits, tables, fields, pages, procedures, events, and APIs on the boundary. Every exact name rests on current evidence.
 - **What vocabulary names the coverage?** Project terms from `CONTEXT.md` first, then BC display labels, then exact AL names only when traceability or ambiguity requires them.
 
-Unanswerable → cannot write the spec yet. Resolve via `/al-research` (BC behaviour), `/al-grill-adr` (domain rule), `/grill-me` (intent the user must adjudicate), or `/al-steer` (replan).
+Unanswerable → cannot write the spec yet. Flip or keep `status=blocked` and resolve via `/al-research` (BC behaviour), `/al-grill-adr` (domain rule), `/grill-me` (intent the user must adjudicate), or `/al-steer` (replan).
 
 ## Verify task: Verification Plan
 
@@ -54,7 +59,7 @@ Answer before writing:
 - **Which exploration is useful?** Add charters for new workflows, major workflow changes, and error/user-guidance changes. Exploration findings become tasks unless a functional failure is observed.
 - **Which `event-model.md` slots are cited?** Every Role / Action / Business Event / View / Status name in a verify example is backed by `grep` against `event-model.md` or workspace lookup on the underlying BC surface.
 
-Unanswerable → cannot write `Verification Plan` yet. Resolve via `/al-research` (BC surface), `/grill-me` (intent), or `/al-steer` (wrong slice boundary or missing prerequisite).
+Unanswerable → cannot write `Verification Plan` yet. Flip or keep `status=blocked` and resolve via `/al-research` (BC surface), `/grill-me` (intent), or `/al-steer` (wrong slice boundary or missing prerequisite).
 
 ## Ground exact names
 
@@ -88,6 +93,17 @@ Stable handles:
 
 Write telegraphic; drop articles, padding, hedges; fragments fine. Follow surgical-edit contract from [`markdown-spec-discipline.md`](../../references/markdown-spec-discipline.md).
 
+## Status flip
+
+After writing and reconciling the fresh proof section, flip the comment-anchor line only:
+
+```markdown
+technical: <!-- task=T-NNN status=ready slice=<slug> kind=technical --> → <!-- task=T-NNN status=ready-for-implementation slice=<slug> kind=technical -->
+verify:    <!-- task=T-NNN status=ready slice=<slug> kind=verify --> → <!-- task=T-NNN status=ready-for-verification slice=<slug> kind=verify -->
+```
+
+No `in-progress` state. Sync heading marker from `[ ]` to `[>]` because the task is now executable-ready, but still not `done`.
+
 <claude-only>
 
 **Advisor checkpoint.** Call `advisor()` before writing the first `Test Specification` or `Verification Plan` into `tasks.md`. Shape is hard to retract once downstream skills consume it.
@@ -98,7 +114,7 @@ Write telegraphic; drop articles, padding, hedges; fragments fine. Follow surgic
 
 | | |
 |---|---|
-| **Runs after**     | `/al-scope` (technical task `status=ready` with empty `Test Specification`) or slice technical completion (dependency-blocked verify task with empty `Verification Plan`) |
-| **Hands off to**   | `/al-implement` for technical tasks, `/al-page-script` for verify tasks with `Journey Examples`, `/al-user-verification` after verify recordings/checks are ready |
+| **Runs after**     | `/al-scope` or dependency restoration opened one named task to `status=ready` |
+| **Hands off to**   | `/al-implement` for `ready-for-implementation` technical tasks; `/al-code-review` then `/al-page-script` or `/al-user-verification` for `ready-for-verification` verify tasks |
 | **Replan venue**   | `/al-steer` |
 | **Sidebands**      | `/al-research` (BC facts), `/al-second-opinion` (non-trivial `Test Specification` / `Verification Plan`), `/al-grill-adr` (fuzzy domain term), `/grill-me` (fuzzy intent) |

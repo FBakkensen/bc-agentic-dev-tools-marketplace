@@ -1,13 +1,13 @@
 ---
 name: al-implement
-description: Pick a ready technical task from `tasks.md` and drive it through TDD for AL/Business Central. Use after `/al-refine`, one task per session, Unit AAA cases first, then Integration AAA cases, then refactor and task-end mutation.
+description: Pick a `ready-for-implementation` technical task from `tasks.md` and drive it through TDD for AL/Business Central. Use after `/al-refine`, one task per session, Unit AAA cases first, then Integration AAA cases, then refactor and task-end mutation.
 ---
 
 **Style:** Be extremely concise. Sacrifice grammar for concision. Opinionated — pick a side. Arrows (→) for causality. Technical terms exact, code and errors quoted verbatim.
 
 # /al-implement, Pick a task, run TDD
 
-Pick next ready technical task from `tasks.md`. Consume its `Test Specification`. Drive AAA cases red → green: `Unit` first, `Integration` second. Reconcile final procedure names and scopes in `tasks.md`. Refactor full task diff once. Mutate at task end. Flip status. One task per session.
+Pick next `ready-for-implementation` technical task from `tasks.md`. Consume its fresh `Test Specification`. Drive AAA cases red → green: `Unit` first, `Integration` second. Reconcile final procedure names and scopes in `tasks.md`. Refactor full task diff once. Mutate at task end. Flip status to `done` when downstream evidence exists. One task per session.
 
 **Layer.** The red-first driver at the Unit + Integration layers (see [`test-strategy.md`](../../references/test-strategy.md)): the cheapest sensitive layer where bugs get pinned. A production bug a higher layer surfaces is pushed down to this layer so the proof lives where an oracle can see it.
 
@@ -15,17 +15,17 @@ Pick next ready technical task from `tasks.md`. Consume its `Test Specification`
 
 - Branch matches `^\d{3}-`. If not: **Stop**. Run `/al-event-model` (or `/al-design` for backend-only).
 - `specs/<branch>/` holds `tasks.md` + `architecture.md`. Missing → `/al-design`.
-- Target task `kind=technical`. `kind=verify` → **Stop**, route to `/al-page-script T-NNN` when `Journey Examples` exist, otherwise `/al-user-verification T-NNN` according to verification state.
-- Target task `status=ready`, populated `Test Specification`. Empty or missing `Test Specification` → `/al-refine <T-NNN>`. `blocked` → `/al-steer`.
+- Target task `kind=technical`. `kind=verify` → **Stop**; route via `/al-steer` or `/al-code-review` based on verification state.
+- Target task `status=ready-for-implementation` with populated `Test Specification`. Plain `ready` → **Stop**, `/al-refine T-NNN`. `ready-for-implementation` with empty or missing `Test Specification` → **Stop**, `/al-steer`; status and proof disagree. `blocked` → `/al-steer`. `done` → downstream evidence exists; do not reopen here.
 - Read [`test-specification.md`](../../references/test-specification.md), [`test-strategy.md`](../../references/test-strategy.md), [`tdd.md`](../../references/tdd.md), and [`testability.md`](../../references/testability.md).
 
 ## What this session answers
 
-- **Which task in flight?** One `T-NNN`, named in opener, status flipped `ready` → `in-progress` before first RED.
+- **Which task in flight?** One `T-NNN`, named in opener. Status stays `ready-for-implementation` during the run; session-local work is not durable status.
 - **Where is the seam?** Read `architecture.md` R → P → W boundary, module map, brownfield touchpoints. Name seam in BC vocab: procedure to extract, event to subscribe, interface to implement, or page/action to wire.
 - **Which AAA cases land?** Traverse `Unit` cases first, then `Integration`, in coverage-ID order. One case red → green before the next.
 - **Which BC names verified this session?** Every exact BC-specific name in the AAA case or implementation path is backed this session by `al-symbols-mcp` / `grep` hit, or `/al-research` citation.
-- **What flips at end?** `status=` goes `in-progress` → `done` on the comment-anchor line, heading marker `[~]` → `[x]`; final full `/al-build` green. Slice-done announces `/al-code-review` per-slice. Feature-done announces `/al-code-review` per-feature.
+- **What flips at end?** `status=` goes `ready-for-implementation` → `done` on the comment-anchor line; final full `/al-build` green. User/API-facing slice-done opens the slice verify task to `ready` for `/al-refine`. Backend-only slice-done announces `/al-code-review` per-slice. Feature-done announces `/al-code-review` per-feature.
 
 Unanswerable question → task not ready. Resolve via `/al-research`, `/al-refine`, or `/al-steer`.
 
@@ -33,7 +33,7 @@ Unanswerable question → task not ready. Resolve via `/al-research`, `/al-refin
 
 ### One AAA case at a time
 
-RED → GREEN → gate, one case, then next. Bulk-RED locks test surface before seam understood. Tests written ahead verify imagined behaviour.
+RED → GREEN → gate, one case, then next. Bulk-RED locks test surface before seam understood. Tests written ahead verify imagined behaviour. No `in-progress` status; the task remains `ready-for-implementation` until it becomes `done` or `blocked`.
 
 Default order:
 
@@ -115,17 +115,19 @@ Before flipping task to `done`, call `advisor()`. Final correctness check on imp
 Flip surface: edit anchored on the comment line `<!-- task=T-NNN status=... slice=... kind=... -->`. Status flip swaps the `status=` value byte-exact:
 
 ```markdown
-old_string: <!-- task=T-007 status=in-progress slice=release-sales-order kind=technical -->
+old_string: <!-- task=T-007 status=ready-for-implementation slice=release-sales-order kind=technical -->
 new_string: <!-- task=T-007 status=done slice=release-sales-order kind=technical -->
 ```
 
-Heading marker stays in sync (`[~]` → `[x]`) but is fallback rendering, not the anchor. Everything else inside task block follows the task shape. See [notes-discipline.md](../../references/notes-discipline.md), [markdown-spec-discipline.md](../../references/markdown-spec-discipline.md), [voice-contract.md](../../references/voice-contract.md).
+Heading marker stays in sync (`[>]` → `[x]`) but is fallback rendering, not the anchor. Everything else inside task block follows the task shape. See [notes-discipline.md](../../references/notes-discipline.md), [markdown-spec-discipline.md](../../references/markdown-spec-discipline.md), [voice-contract.md](../../references/voice-contract.md).
+
+At user/API-facing slice-done, flip the slice verify task from `blocked` to `ready` only when every in-slice technical dependency is `done` and no replan flag remains. That opens `/al-refine` to write the fresh `Verification Plan`. Do not run `/al-code-review` until the verify task is `ready-for-verification`.
 
 ## Composition
 
 | | |
 |---|---|
-| **Runs after**     | `/al-refine` (filled `Test Specification` in `tasks.md`) |
-| **Hands off to**   | `/al-code-review` per-slice at slice-done; `/al-code-review` per-feature at feature-done; else next ready technical task |
+| **Runs after**     | `/al-refine` (filled `Test Specification` in `tasks.md` and flipped task to `ready-for-implementation`) |
+| **Hands off to**   | next `ready-for-implementation` technical task; `/al-refine` on the slice verify task at user/API-facing slice-done; `/al-code-review` per-slice for backend-only slice-done; `/al-code-review` per-feature at feature-done |
 | **Replan venue**   | `/al-steer` |
 | **Sidebands**      | `/al-research` (BC facts), `/al-debug-logging` (execution path unclear), `/grill-me` (judgement needs user), `/bc-standard-reference` (BaseApp questions) |

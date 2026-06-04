@@ -6,7 +6,7 @@
 | **ADR**          | ADR-0007 |
 | **Event model**  | [event-model.example.md](./event-model.example.md) |
 | **Architecture** | [architecture.example.md](./architecture.example.md) |
-| **Tasks**        | 5 technical + 2 verify |
+| **Tasks**        | 6 technical + 2 verify |
 | **Slices**       | post-validates-allocation, audit-trail |
 
 ## Goal
@@ -229,8 +229,8 @@ Closeout:
 - Build: full gate green
 - Mutation: breakdown visibility and correction-state mutants killed at Integration layer
 
-### T-006 [ ] — Verify: Order Processor posts a sales document with charge allocation
-<!-- task=T-006 status=ready slice=post-validates-allocation kind=verify -->
+### T-006 [x] — Verify: Order Processor posts a sales document with charge allocation
+<!-- task=T-006 status=done slice=post-validates-allocation kind=verify -->
 
 **Depends on:** T-001, T-002, T-003, T-004
 
@@ -272,18 +272,67 @@ Prompts:
 - Are allocated and required quantities understandable without opening another page?
 - Does the flow return the user to a useful correction point?
 
+Closeout:
+- E2E: `pagescripts/recordings/007-sales-charge-validation__post-validates-allocation.yml`
+- Verification: Journey Examples passed; Exploration Charter recorded no blocking usability findings
+
 ## Slice: audit-trail
 
-### T-005 [!] — Persist allocation audit entries via Allocation Ledger Entry table
-<!-- task=T-005 status=blocked slice=audit-trail kind=technical -->
+### T-005 [>] — Persist allocation audit entries via Allocation Ledger Entry table
+<!-- task=T-005 status=ready-for-implementation slice=audit-trail kind=technical -->
 
 **Depends on:** T-002, T-006
 
 On every successful posting, `Insert` one ledger entry per resolved allocation: source `Sales Line`, receiving `Sales Line`, allocated quantity, `Posting Date`. Audit trail referenced by ADR-0007.
 
-### T-007 [!] — Verify: Allocation Ledger Entry rows persist after successful posting
-<!-- task=T-007 status=blocked slice=audit-trail kind=verify -->
+Test Specification:
 
-**Depends on:** T-005
+Acceptance Intent:
+Allocation audit entries preserve posting traceability by recording the source and receiving Sales Lines for each posted allocation.
+
+### Expected Behaviors
+
+| ID | Expected Behavior | Covered By |
+|---|---|---|
+| B1 | Successful posting inserts one Allocation Ledger Entry per resolved allocation | InsertsAllocationLedgerEntries |
+| B2 | Failed posting inserts no Allocation Ledger Entry rows | SkipsAuditEntriesWhenPostingFails |
+
+### AAA Cases
+
+#### InsertsAllocationLedgerEntries
+Procedure: `InsertsAllocationLedgerEntries`
+Scope: Integration
+Covers: B1
+Arrange:
+- Sales Order has balanced item charge allocation across two receiving Sales Lines.
+Act:
+- Post the Sales Order.
+Assert:
+- Two Allocation Ledger Entry rows are inserted.
+- Each entry carries source Sales Line, receiving Sales Line, allocated quantity, and Posting Date.
+
+#### SkipsAuditEntriesWhenPostingFails
+Procedure: `SkipsAuditEntriesWhenPostingFails`
+Scope: Integration
+Covers: B2
+Arrange:
+- Sales Order has mismatched item charge allocation.
+Act:
+- Post the Sales Order.
+Assert:
+- Posting is blocked.
+- No Allocation Ledger Entry rows are inserted.
+
+### T-007 [ ] — Derive allocation audit reason values
+<!-- task=T-007 status=ready slice=audit-trail kind=technical -->
+
+**Depends on:** T-002
+
+Translate allocation validation outcomes into audit reason values so ledger entries can distinguish balanced postings, shortfalls, and overflows.
+
+### T-008 [!] — Verify: Allocation Ledger Entry rows persist after successful posting
+<!-- task=T-008 status=blocked slice=audit-trail kind=verify -->
+
+**Depends on:** T-005, T-007
 
 User-facing slice `audit-trail`: after successful `Post` on balanced allocation, audit trail surfaces one `Allocation Ledger Entry` row per resolved allocation, queryable from `Posted Sales Invoice`.
