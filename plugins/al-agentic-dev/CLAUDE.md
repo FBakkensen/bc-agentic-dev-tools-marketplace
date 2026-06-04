@@ -6,10 +6,10 @@ Composable skills for AL/Business Central agentic development.
 
 Two layers, on purpose.
 
-- **Repo-root, durable across features**, markdown: `CONTEXT.md`, `docs/adr/`, `.out-of-scope/`. Owners: `/al-grill-adr` (CONTEXT + domain ADRs), `/al-steer` (out-of-scope).
+- **Repo-root, durable across features**, markdown: `CONTEXT.md`, `docs/adr/`, `.out-of-scope/`. Owners: `/al-grill-adr` (CONTEXT + domain ADRs), `/al-steer` (out-of-scope). `/al-doc-verify` checks `CONTEXT.md` and domain ADR writes before handoff; `.out-of-scope/` is outside the document gate.
 - **Branch-scoped, per in-flight feature**, markdown: `specs/<NNN>-<slug>/event-model.md` (user-facing journey, present for user/API-facing features) + `architecture.md` + `tasks.md`. Slug matches the current git branch.
 
-`tasks.md` is the per-feature task bus. Status lives on a one-line HTML comment immediately under each `### T-NNN` heading, single source of truth: `<!-- task=T-NNN status=ready slice=<slug> kind=technical -->`. `status=` values are `ready`, `ready-for-implementation`, `ready-for-verification`, `blocked`, `done`. `ready` means the task is ready for `/al-refine` only. `ready-for-implementation` means a technical task has a fresh `Test Specification`. `ready-for-verification` means a verify task has a fresh `Verification Plan`. `blocked` means dependency or context is missing. `done` means downstream evidence exists. `T-NNN` IDs are monotonic and never reused. `slice=<slug>` groups tasks by one `event-model.md` timeline step (user-facing) or `architecture.md` slice (backend-only); `kind=verify` marks the per-slice verification task, `kind=technical` marks technical tasks.
+`tasks.md` is the per-feature task bus. Status lives on a one-line HTML comment immediately under each `### T-NNN` heading, single source of truth: `<!-- task=T-NNN status=ready slice=<slug> kind=technical -->`. `status=` values are `ready`, `ready-for-implementation`, `ready-for-verification`, `blocked`, `done`. `ready` means the task is ready for `/al-refine` only. `ready-for-implementation` means a technical task has a fresh `Test Specification`. `ready-for-verification` means a verify task has a fresh `Verification Plan`. `blocked` means dependency or context is missing. `done` means downstream evidence exists. `T-NNN` IDs are monotonic and never reused. `slice=<slug>` groups tasks by one `event-model.md` timeline step (user-facing) or `architecture.md` slice (backend-only); `kind=verify` marks the per-slice verification task, `kind=technical` marks technical tasks. `/al-doc-verify` checks the written markdown artifact before handoff.
 
 **Branch creation is shared between `/al-event-model` and `/al-design`.** The first per-feature skill to run from `main` creates the branch and `specs/<NNN>-<slug>/`. For user/API-facing features that runs `/al-event-model` first; backend-only features skip `/al-event-model` and `/al-design` does it.
 
@@ -21,7 +21,7 @@ Slice cycle: `/al-refine` selects one named `ready` technical task, writes its `
 
 ## Skills
 
-User-facing catalogue (17 skills, role + when-to-invoke) lives in [`references/overview.md`](references/overview.md). Edit it in lockstep when adding, removing, renaming, or repurposing a skill.
+User-facing catalogue (18 skills, role + when-to-invoke) lives in [`references/overview.md`](references/overview.md). Edit it in lockstep when adding, removing, renaming, or repurposing a skill.
 
 Skills compose by name. When you change a skill, scan the others for cross-references and update in lockstep. Cross-skill orchestration depth (gate flip mechanics, replan triggers, slice-cycle suppression rules) lives in the owning skill's `SKILL.md` and in the dev-time slice-cycle paragraph above; the user-facing overview stays tour-shape.
 
@@ -52,7 +52,7 @@ Two tiers, on purpose.
 
 | File | Tier | Notes |
 |---|---|---|
-| `overview.md` | plugin-level | user-facing tour: pipeline diagram, 17-skill catalogue (role + when-to-invoke), persistence layers paragraph, cold-start guidance, pointer to `/al-steer` for state-aware nav; emitted verbatim by `/al-agentic-dev-overview`; edit in lockstep with any skill addition / removal / rename |
+| `overview.md` | plugin-level | user-facing tour: pipeline diagram, 18-skill catalogue (role + when-to-invoke), persistence layers paragraph, cold-start guidance, pointer to `/al-steer` for state-aware nav; emitted verbatim by `/al-agentic-dev-overview`; edit in lockstep with any skill addition / removal / rename |
 | `voice-contract.md` | plugin-level | non-voice rules: BC vocab, names-as-citation, lists-of-findings, tables-of-facts, chat carve-out, no-workflow-chatter, 3 chat shape skeletons (Opener / Gate report / Stop); style itself lives at top of each SKILL.md as a one-line Style declaration; read by every skill that writes prose |
 | `testability.md` | plugin-level | three-phase decoupling, three default seams (IEnvironment / IApiRequest / IFinance), five-kind test-double taxonomy with AL code shapes; read by `/al-design`, `/al-implement`, `/al-refactor` |
 | `test-specification.md` | plugin-level | `Test Specification` / `Verification Plan` grammar: Expected Behaviors, Decision Matrix, AAA cases, scopes, traceability, closeout summaries; read by `/al-refine`, `/al-implement`, `/al-code-review`, `/al-page-script`, `/al-user-verification` |
@@ -87,7 +87,7 @@ The two former agent-shaped workflows now live as skills:
 
 ```
 references/                      # Plugin-level shared, read by ≥2 skills, or cited by shared templates
-├── overview.md                  # User-facing tour: pipeline + 17-skill catalogue + persistence + cold-start; emitted by /al-agentic-dev-overview
+├── overview.md                  # User-facing tour: pipeline + 18-skill catalogue + persistence + cold-start; emitted by /al-agentic-dev-overview
 ├── voice-contract.md            # Non-voice rules + 3 chat shape skeletons; voice declared inline at top of each SKILL.md
 ├── testability.md               # Three-phase decoupling, three default seams, five-kind test-double taxonomy
 ├── test-specification.md        # Test Specification + Verification Plan grammar
@@ -116,6 +116,7 @@ skills/
 │   ├── config/                  # al-build.json template (the live copy lives in the consumer repo root)
 │   └── scripts/                 # PowerShell 7.2+: init.ps1, provision.ps1, test.ps1, new-bc-container.ps1, ...
 ├── al-code-review/SKILL.md
+├── al-doc-verify/SKILL.md
 ├── al-debug-logging/
 │   ├── CLAUDE.md                # Skill-local dev-time rules (same-publisher constraint, DEBUG- prefix, transient-only)
 │   ├── AGENTS.md                # Codex bridge to CLAUDE.md

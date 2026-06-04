@@ -14,12 +14,12 @@ Composable skills for AL/Business Central agentic development. One feature flows
 
 | Lane | Skills |
 |---|---|
-| **Side-band** (invoked from any main-pipeline skill) | `/al-research`, `/al-steer`, `/al-second-opinion` |
+| **Side-band** (invoked from any main-pipeline skill) | `/al-research`, `/al-doc-verify`, `/al-steer`, `/al-second-opinion` |
 | **Infrastructure** | `/al-build` (compile, publish, run tests), `/al-debug-logging` (transient `FeatureTelemetry.LogUsage` probes) |
 | **Shaping** (inside `/al-implement` or standalone on legacy) | `/al-refactor`, `/al-mutate`, `/al-page-script` |
 | **Meta** | `/al-agentic-dev-overview` (this skill) |
 
-Slice mechanics: `/al-refine` opens one `ready` task at a time. Technical tasks become `ready-for-implementation`, then `/al-implement` drives them to `done`. When a user/API-facing slice's technical tasks are done, `/al-implement` opens the verify task to `ready`; `/al-refine` writes its `Verification Plan` and flips it to `ready-for-verification`; `/al-code-review` validates that slice before page-script/user-verification. `/al-page-script` generates the slice's bc-replay recording from E2E Journey Examples, then `/al-user-verification` pre-flights the recording batch against a fresh container, runs Contract Examples, and walks Journey Examples / Exploration Charters before the next slice opens to `ready` for refinement. Backend-only slices skip page-script and user-verification, chaining through `/al-code-review` into the next slice. At feature-done (every task in feature `done`), `/al-code-review` fires per-feature before merge.
+Slice mechanics: `/al-refine` opens one `ready` task at a time. Technical tasks become `ready-for-implementation`, then `/al-implement` drives them to `done`. When a user/API-facing slice's technical tasks are done, `/al-implement` opens the verify task to `ready`; `/al-refine` writes its `Verification Plan` and flips it to `ready-for-verification`; `/al-code-review` validates that slice before page-script/user-verification. `/al-page-script` generates the slice's bc-replay recording from E2E Journey Examples, then `/al-user-verification` pre-flights the recording batch against a fresh container, runs Contract Examples, and walks Journey Examples / Exploration Charters before the next slice opens to `ready` for refinement. Backend-only slices skip page-script and user-verification, chaining through `/al-code-review` into the next slice. At feature-done (every task in feature `done`), `/al-code-review` fires per-feature before merge. Separately, `/al-doc-verify` checks newly written markdown artifacts for structure, boundary, and sibling consistency before the producer reports gate or hands off.
 
 ## Skills
 
@@ -36,6 +36,7 @@ Slice mechanics: `/al-refine` opens one `ready` task at a time. Technical tasks 
 | `/al-refactor` | Improve shape while green. No new behaviour. | After green inside `/al-implement`, or standalone on legacy code. |
 | `/al-mutate` | Validate test rigor by injecting mutations one at a time. | Mandatory inside `/al-implement` for non-trivial work, or standalone on legacy before `/al-refactor`. |
 | `/al-code-review` | Gate at slice-done and feature-done. Auto-runs `/grill-me` per surviving finding. | Auto-announced by `/al-implement` at slice-done and feature-done. |
+| `/al-doc-verify` | Read-only markdown integrity verifier. Checks canonical artifact structure and sibling consistency; blocks structural or boundary failures, warns wording or ambiguity. | After `/al-grill-adr`, `/al-event-model`, `/al-design`, `/al-scope`, or `/al-refine` writes a canonical markdown artifact, or after `/al-steer` restructures `tasks.md`, before gate report or downstream handoff. |
 | `/al-research` | Verify BC specifics from authoritative sources. | When prior AL/BC knowledge is unverified and a downstream skill needs the fact. |
 | `/al-second-opinion` | Cross-runtime read-only advisory review. | Before reconciling non-trivial `Test Specification`, `Verification Plan`, mutation lists, refactor checklists, or verification verdicts. |
 | `/al-steer` | Coach and navigator. Reads state, names next step, never edits code. Owns `.out-of-scope/`. Canonical replan venue. | "Where are we?", "what's next?", trigger fired in another skill. |
@@ -47,7 +48,7 @@ Slice mechanics: `/al-refine` opens one `ready` task at a time. Technical tasks 
 
 Two layers, on purpose.
 
-- **Repo-root, durable across features**: `CONTEXT.md`, `docs/adr/`, `.out-of-scope/`. Owners: `/al-grill-adr` (CONTEXT + domain ADRs), `/al-steer` (out-of-scope).
+- **Repo-root, durable across features**: `CONTEXT.md`, `docs/adr/`, `.out-of-scope/`. Owners: `/al-grill-adr` (CONTEXT + domain ADRs), `/al-steer` (out-of-scope). `/al-doc-verify` checks `CONTEXT.md` and domain ADR writes before handoff; `.out-of-scope/` is outside the document gate.
 - **Branch-scoped, per in-flight feature**: `specs/<NNN>-<slug>/event-model.md` (present for user/API-facing features) + `architecture.md` + `tasks.md`. Slug matches the current git branch.
 
 `tasks.md` carries one HTML-comment status line per task: `<!-- task=T-NNN status=ready slice=<slug> kind=technical -->`. Status values: `ready`, `ready-for-implementation`, `ready-for-verification`, `blocked`, `done`. `ready` means ready for `/al-refine`; executable tasks use `ready-for-implementation` or `ready-for-verification`. `T-NNN` IDs monotonic, never reused. `kind=verify` marks the per-slice user-verification task; `kind=technical` marks technical tasks.
@@ -58,6 +59,8 @@ You have an AL repo, no `specs/<NNN>-<slug>/` yet, on the default branch. The ch
 
 - **User- or API-facing feature** → `/al-grill-adr` (grill the idea) → `/al-event-model` (settle the user-facing journey; creates the branch and spec folder) → `/al-design` → `/al-scope` → `/al-refine` on first task → `/al-implement`.
 - **Backend-only feature** (no user/API surface) → `/al-grill-adr` → `/al-design` (skips event-model; creates the branch and spec folder) → `/al-scope` → `/al-refine` on first task → `/al-implement`.
+
+`/al-doc-verify` runs inside the document-writing skills after each canonical markdown write, not as a standalone cold-start step.
 
 If the idea is already crystallised, skip `/al-grill-adr`. Most features benefit from it.
 

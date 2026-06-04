@@ -38,6 +38,16 @@ Question stays unanswerable → grilling not done. Keep going, or `/al-research`
 
 Before writing any BC-specific term into `CONTEXT.md` or a domain ADR, term either appears in `al-symbols-mcp` / `grep` result you ran this session, or cited via `/al-research`: `Researched: <name> → <source path / URL / topic id>`. Workspace lookup is empirical anchor; memory of training data or past sessions is not. Vocabulary drift between agents and codebase is what `CONTEXT.md` exists to fix; let workspace and `/al-research` settle canonical term. Research fails → keep grilling; do not write term or ADR this session. Your confidence about BC term's standard meaning is not evidence the meaning is right; BC vocabulary drifts across releases and project boundaries. See [voice-contract.md](../../references/voice-contract.md) for prose voice.
 
+## Document verification
+
+After writing `CONTEXT.md` or a domain ADR, run `/al-doc-verify` before handing off:
+
+```text
+/al-doc-verify --producer al-grill-adr --artifacts CONTEXT.md[,docs/adr/NNNN-slug.md] --handoff al-event-model|al-design
+```
+
+`verdict=fail` blocks handoff; fix the structural/boundary issue or route to `/al-steer`. `verdict=warn` does not block; carry the warning in the handoff note. This gate checks document integrity only, not whether the domain rule is right.
+
 ## Composition
 
 | | |

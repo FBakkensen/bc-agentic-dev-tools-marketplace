@@ -80,6 +80,16 @@ Verify-task descriptions name slice's user-facing outcome in `event-model.md` vo
 
 Shape follows [markdown-spec-discipline.md](../../references/markdown-spec-discipline.md). Write telegraphic; drop articles, padding, hedges; fragments fine.
 
+## Document verification
+
+After writing `tasks.md`, run `/al-doc-verify` before the Gate report:
+
+```text
+/al-doc-verify --producer al-scope --artifacts specs/<NNN>-<slug>/tasks.md --handoff al-refine
+```
+
+`verdict=fail` blocks the Gate report and `/al-refine` handoff; fix the structural/boundary issue or route to `/al-steer`. `verdict=warn` does not block; include the warning in the Gate report. This gate checks document integrity only, not whether the task decomposition is optimal.
+
 ## Gate event
 
 Once when task decomposition lands in `tasks.md`. Gate report names slice families decomposed (one per `event-model.md` step for user-facing, one per `architecture.md` slice for backend-only), verify-task count (or *none, backend-only*), dependency shape (linear or branching), states feature Goal in user terms, names user's call to greenlight `/al-refine` on first task of first slice.

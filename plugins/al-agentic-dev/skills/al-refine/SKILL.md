@@ -93,6 +93,16 @@ Stable handles:
 
 Write telegraphic; drop articles, padding, hedges; fragments fine. Follow surgical-edit contract from [`markdown-spec-discipline.md`](../../references/markdown-spec-discipline.md).
 
+## Document verification
+
+After writing the fresh `Test Specification` or `Verification Plan`, run `/al-doc-verify` before flipping `status=`:
+
+```text
+/al-doc-verify --producer al-refine --artifacts specs/<NNN>-<slug>/tasks.md --task T-NNN --slice <slice> --handoff al-implement|al-code-review
+```
+
+`verdict=fail` blocks the `ready-for-implementation` / `ready-for-verification` flip; fix the structural/boundary issue or route to `/al-steer`. `verdict=warn` does not block; include the warning in the handoff. This gate checks document integrity only, not whether the planned proof is sufficient.
+
 ## Status flip
 
 After writing and reconciling the fresh proof section, flip the comment-anchor line only:

@@ -64,6 +64,16 @@ On `^\d{3}-`: spec folder exists, reshape `event-model.md` in place. On `main`: 
 
 Then write `event-model.md`. Markdown only; constraints in [markdown-spec-discipline.md](../../references/markdown-spec-discipline.md). Voice in [voice-contract.md](../../references/voice-contract.md). Both mandatory reads before writing. Write telegraphic; drop articles, padding, hedges; fragments fine. No surgical-edit contract; reshape via re-running. Vocabulary in [LANGUAGE.md](../../references/LANGUAGE.md) (*Slice* entry).
 
+## Document verification
+
+After writing `event-model.md`, run `/al-doc-verify` before the Gate report:
+
+```text
+/al-doc-verify --producer al-event-model --artifacts specs/<NNN>-<slug>/event-model.md --handoff al-design
+```
+
+`verdict=fail` blocks the Gate report and `/al-design` handoff; fix the structural/boundary issue or route to `/al-steer`. `verdict=warn` does not block; include the warning in the Gate report. This gate checks document integrity only, not whether the journey is the best product decision.
+
 ## Gate event
 
 Once when `event-model.md` lands. Gate report describes user-facing journey in BC vocabulary (Role, Action, Business Event, View, Status), names application problem the journey addresses, names user's call to greenlight `/al-design`.

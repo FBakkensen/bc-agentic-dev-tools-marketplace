@@ -93,6 +93,16 @@ On `^\d{3}-`: `/al-event-model` created branch + spec folder; write `architectur
 
 Then write `architecture.md`. Markdown only; constraints in [markdown-spec-discipline.md](../../references/markdown-spec-discipline.md). Voice in [voice-contract.md](../../references/voice-contract.md). Both mandatory reads before writing. Write telegraphic; drop articles, padding, hedges; fragments fine. No surgical-edit contract; reshape via re-running. Name relationships (module deps, flow) in prose; no mermaid fences.
 
+## Document verification
+
+After writing `architecture.md`, run `/al-doc-verify` before the Gate report:
+
+```text
+/al-doc-verify --producer al-design --artifacts specs/<NNN>-<slug>/architecture.md --handoff al-scope
+```
+
+`verdict=fail` blocks the Gate report and `/al-scope` handoff; fix the structural/boundary issue or route to `/al-steer`. `verdict=warn` does not block; include the warning in the Gate report. This gate checks document integrity only, not whether the architecture is the best design.
+
 ## Gate event
 
 Once when `architecture.md` lands. Gate report names chosen BC pattern + R → P → W boundary as 'how this fits', states application problem the architecture solves, names user's call to greenlight `/al-scope`.

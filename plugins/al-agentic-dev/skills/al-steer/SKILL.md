@@ -59,6 +59,16 @@ When trigger means plan is invalid for the task → halt by flipping `status=blo
 
 Name candidate mutations that match what the trigger surfaced. Splitting, inserting, reordering, deleting, rewriting a description, stripping a stale `Test Specification` or `Verification Plan` all in scope; pick what situation needs. Run `/grill-me` on non-trivial choices. Apply only after explicit ack. Prescribed mutation menu is same anti-pattern as prescribed checklist; trigger says what shape is wrong, response shape varies with codebase.
 
+## Document verification
+
+When restructuring `tasks.md` by explicit user ack, run `/al-doc-verify` after the write and before naming downstream handoff:
+
+```text
+/al-doc-verify --producer al-steer --artifacts specs/<NNN>-<slug>/tasks.md --task <T-NNN> --slice <slice> --handoff <next-skill>
+```
+
+Do not run this gate for simple `status=` flips, closeout notes, or inline replan flags. `verdict=fail` blocks the handoff; fix the structural/boundary issue or leave the relevant task `blocked`. `verdict=warn` does not block; surface the warning in the steering note.
+
 ## False halt closes the loop
 
 Grilling vetoes the trigger → restore prior `status=` value on the comment-anchor line (sync heading marker) and rewrite alert body to record resolution. Silent un-flag loses reasoning, and gate scanner can't see what changed.

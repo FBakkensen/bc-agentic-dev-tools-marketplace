@@ -23,7 +23,7 @@ Codex can then browse the marketplace from `/plugins`, or install plugins from t
 
 ## Plugins
 
-- `al-agentic-dev` — full AL/BC dev stack. Agentic flow (grill-adr, event-model, design, scope, refine, implement, user-verification, refactor, mutate, code-review, second-opinion, research, steer) + build/test gate (`/al-build`) + telemetry probes (`/al-debug-logging`)
+- `al-agentic-dev` — full AL/BC dev stack. Agentic flow (grill-adr, event-model, design, scope, refine, implement, user-verification, refactor, mutate, code-review, second-opinion, research, steer) + document gate (`/al-doc-verify`) + build/test gate (`/al-build`) + telemetry probes (`/al-debug-logging`)
 - `bc-standard-reference` — BaseApp / System Application / APIV2 canonical lookup
 - `grill-me` — interview and stress-test plans
 - `release-notes` — PR-driven release note generation
