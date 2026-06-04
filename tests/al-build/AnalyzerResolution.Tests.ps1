@@ -135,6 +135,35 @@ Describe 'Get-EnabledAnalyzerPath' {
             Should -Throw '*not resolvable*'
     }
 
+    It 'treats an empty settings.json as requesting no analyzers' {
+        $compilerDir = New-AnalyzerFixture -Root $TestDrive
+        $appDir = Join-Path $TestDrive 'empty-settings-app'
+        New-Item -ItemType Directory -Path (Join-Path $appDir '.vscode') -Force | Out-Null
+        New-Item -ItemType File -Path (Join-Path $appDir '.vscode' 'settings.json') -Force | Out-Null
+
+        $result = @(Get-EnabledAnalyzerPath -AppDir $appDir -CompilerDir $compilerDir)
+
+        $result.Count | Should -Be 0
+    }
+
+    It 'accepts JSONC comments and trailing commas in settings.json' {
+        $compilerDir = New-AnalyzerFixture -Root $TestDrive
+        $appDir = Join-Path $TestDrive 'jsonc-app'
+        New-Item -ItemType Directory -Path (Join-Path $appDir '.vscode') -Force | Out-Null
+        @'
+{
+    // VS Code treats settings.json as JSONC
+    "al.codeAnalyzers": [
+        "${CodeCop}",
+    ],
+}
+'@ | Set-Content -LiteralPath (Join-Path $appDir '.vscode' 'settings.json') -Encoding UTF8
+
+        $result = @(Get-EnabledAnalyzerPath -AppDir $appDir -CompilerDir $compilerDir)
+
+        @($result | Split-Path -Leaf) | Should -Be @('Microsoft.Dynamics.Nav.CodeCop.dll')
+    }
+
     It 'throws when settings.json exists but cannot be parsed' {
         $compilerDir = New-AnalyzerFixture -Root $TestDrive
         $appDir = Join-Path $TestDrive 'malformed-app'

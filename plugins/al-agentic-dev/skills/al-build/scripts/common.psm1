@@ -665,21 +665,27 @@ function Get-EnabledAnalyzerPath {
     $enabled = @()
 
     if ($settingsPath -and (Test-Path -LiteralPath $settingsPath)) {
-        try {
-            $json = Get-Content $settingsPath -Raw | ConvertFrom-Json
-            if ($json -and ($json.PSObject.Properties.Match('al.codeAnalyzers').Count -gt 0) -and $json.'al.codeAnalyzers') {
-                $enabled = @($json.'al.codeAnalyzers')
-            } elseif ($json) {
-                if ($json.PSObject.Properties.Match('enableCodeCop').Count -gt 0 -and $json.enableCodeCop) { $enabled += 'CodeCop' }
-                if ($json.PSObject.Properties.Match('enableUICop').Count -gt 0 -and $json.enableUICop) { $enabled += 'UICop' }
-                if ($json.PSObject.Properties.Match('enableAppSourceCop').Count -gt 0 -and $json.enableAppSourceCop) { $enabled += 'AppSourceCop' }
-                if ($json.PSObject.Properties.Match('enablePerTenantExtensionCop').Count -gt 0 -and $json.enablePerTenantExtensionCop) { $enabled += 'PerTenantExtensionCop' }
+        # An empty settings.json requests nothing — only a non-empty file that fails to
+        # parse is a misconfiguration. ConvertFrom-Json tolerates JSONC comments and
+        # trailing commas, so files shared with VS Code parse fine.
+        $settingsRaw = Get-Content $settingsPath -Raw
+        if (-not [string]::IsNullOrWhiteSpace($settingsRaw)) {
+            try {
+                $json = $settingsRaw | ConvertFrom-Json
+                if ($json -and ($json.PSObject.Properties.Match('al.codeAnalyzers').Count -gt 0) -and $json.'al.codeAnalyzers') {
+                    $enabled = @($json.'al.codeAnalyzers')
+                } elseif ($json) {
+                    if ($json.PSObject.Properties.Match('enableCodeCop').Count -gt 0 -and $json.enableCodeCop) { $enabled += 'CodeCop' }
+                    if ($json.PSObject.Properties.Match('enableUICop').Count -gt 0 -and $json.enableUICop) { $enabled += 'UICop' }
+                    if ($json.PSObject.Properties.Match('enableAppSourceCop').Count -gt 0 -and $json.enableAppSourceCop) { $enabled += 'AppSourceCop' }
+                    if ($json.PSObject.Properties.Match('enablePerTenantExtensionCop').Count -gt 0 -and $json.enablePerTenantExtensionCop) { $enabled += 'PerTenantExtensionCop' }
+                }
+            } catch {
+                # A settings.json that exists but will not parse is a misconfiguration,
+                # not an absent-file default. Guessing "no analyzers" here would silently
+                # strip lint coverage — the failure mode the unresolved-analyzer throw closes.
+                throw "settings.json at '$settingsPath' could not be parsed: $($_.Exception.Message)"
             }
-        } catch {
-            # A settings.json that exists but will not parse is a misconfiguration, not
-            # an absent-file default. Guessing "no analyzers" here would silently strip
-            # lint coverage — the same failure mode the unresolved-analyzer throw closes.
-            throw "settings.json at '$settingsPath' could not be parsed: $($_.Exception.Message)"
         }
     }
 
