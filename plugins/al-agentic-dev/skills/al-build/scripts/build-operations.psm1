@@ -889,6 +889,81 @@ function Invoke-ALPublish {
 # Test Operations
 # =============================================================================
 
+function Get-XmlAttributeInt {
+    param(
+        [System.Xml.XmlElement]$Element,
+        [string]$Name
+    )
+    $value = $Element.GetAttribute($Name)
+    if ($value) { [int]$value } else { 0 }
+}
+
+function Get-JUnitTestCounts {
+    <#
+    .SYNOPSIS
+        Parse test counts from a JUnit XML result file
+    .DESCRIPTION
+        Both result producers emit the same JUnit schema: the container via
+        Run-TestsInBcContainer -JUnitResultFileName and AL Runner via --output-junit.
+        One testsuite element per test codeunit; tests=/failures=/errors=/skipped=
+        attributes carry the counts.
+    .PARAMETER ResultFile
+        Path to the JUnit XML result file
+    .OUTPUTS
+        PSCustomObject with testCodeunits, tests, testsPassed, testsFailed,
+        testsSkipped. $null when the file is missing or unparseable — unknown
+        counts are never reported as zeros.
+    #>
+    [CmdletBinding()]
+    param(
+        [string]$ResultFile
+    )
+
+    if (-not $ResultFile -or -not (Test-Path -LiteralPath $ResultFile)) {
+        return $null
+    }
+
+    try {
+        [xml]$doc = Get-Content -LiteralPath $ResultFile -Raw
+        $suites = @($doc.SelectNodes('//testsuite'))
+
+        $tests = 0
+        $failed = 0
+        $skipped = 0
+        foreach ($suite in $suites) {
+            $tests += Get-XmlAttributeInt -Element $suite -Name 'tests'
+            $failed += (Get-XmlAttributeInt -Element $suite -Name 'failures') + (Get-XmlAttributeInt -Element $suite -Name 'errors')
+            $skipped += Get-XmlAttributeInt -Element $suite -Name 'skipped'
+        }
+
+        return [PSCustomObject]@{
+            testCodeunits = $suites.Count
+            tests         = $tests
+            testsPassed   = $tests - $failed - $skipped
+            testsFailed   = $failed
+            testsSkipped  = $skipped
+        }
+    } catch {
+        Write-BuildMessage -Type Warning -Message "Could not parse test counts from ${ResultFile}: $_"
+        return $null
+    }
+}
+
+function Format-TestCountSummary {
+    <#
+    .SYNOPSIS
+        Format a counts object as one unambiguous console line fragment
+    .DESCRIPTION
+        Keeps "tests" and "test codeunits" labeled and adjacent so a reader
+        quoting any single line cannot transpose the two numbers.
+    #>
+    param(
+        [Parameter(Mandatory)]
+        $Counts
+    )
+    "$($Counts.tests) tests in $($Counts.testCodeunits) test codeunits - $($Counts.testsPassed) passed, $($Counts.testsFailed) failed, $($Counts.testsSkipped) skipped"
+}
+
 function Invoke-ALTest {
     <#
     .SYNOPSIS
@@ -898,7 +973,7 @@ function Invoke-ALTest {
     .PARAMETER OutputDir
         Directory to write test results (last.xml, telemetry.jsonl)
     .OUTPUTS
-        PSCustomObject with Passed, AppName, ResultFile, TelemetryFile properties
+        PSCustomObject with Passed, Runner, AppName, TestDir, Counts, ResultFile, TelemetryFile properties
     #>
     [CmdletBinding()]
     param(
@@ -970,13 +1045,13 @@ function Invoke-ALTest {
     # Get credentials
     $credential = Get-BCCredential -Username $config.ContainerUsername -Password $config.ContainerPassword
 
-    # Build test parameters
+    # Build test parameters — JUnit result format, same schema AL Runner emits (one parser for both)
     $testParams = @{
         containerName         = $config.ContainerName
         tenant                = $config.Tenant
         credential            = $credential
         extensionId           = $appJson.id
-        XUnitResultFileName   = $sharedResultFile
+        JUnitResultFileName   = $sharedResultFile
         returnTrueIfAllPassed = $true
     }
 
@@ -1004,19 +1079,32 @@ function Invoke-ALTest {
         Write-BuildMessage -Type Warning -Message "Telemetry copy failed (non-fatal): $_"
     }
 
+    # Parse authoritative counts from the JUnit result — never derived from console lines
+    $counts = Get-JUnitTestCounts -ResultFile $resultFile
+
     # Return result object
     $result = [PSCustomObject]@{
         Passed        = [bool]$testsPassed
+        Runner        = 'container'
         AppName       = $appJson.name
         TestDir       = $TestDir
+        Counts        = $counts
         ResultFile    = $resultFile
         TelemetryFile = $telemetryFile
     }
 
     if ($testsPassed) {
-        Write-BuildMessage -Type Success -Message "All tests passed: $($appJson.name)"
+        if ($counts) {
+            Write-BuildMessage -Type Success -Message "container - $($appJson.name): $(Format-TestCountSummary $counts)"
+        } else {
+            Write-BuildMessage -Type Success -Message "All tests passed: $($appJson.name) (test counts unavailable - result XML missing)"
+        }
     } else {
-        Write-BuildMessage -Type Error -Message "Tests failed: $($appJson.name). See results in $OutputDir"
+        if ($counts) {
+            Write-BuildMessage -Type Error -Message "container - $($appJson.name): $(Format-TestCountSummary $counts). See results in $OutputDir"
+        } else {
+            Write-BuildMessage -Type Error -Message "Tests failed: $($appJson.name). See results in $OutputDir"
+        }
     }
 
     return $result
@@ -1031,11 +1119,12 @@ function Invoke-ALRunnerTest {
     .PARAMETER TestDir
         Directory containing the unit test app source
     .PARAMETER OutputDir
-        Directory to write test results (last.xml)
+        Directory to write test results (al-runner.xml — last.xml belongs to the
+        container run; separate files so neither runner overwrites the other)
     .PARAMETER InitEvents
         Fire BC lifecycle events (OnCompanyInitialize, OnInstallAppPerCompany) at startup
     .OUTPUTS
-        PSCustomObject with Passed, AppName, TestDir, ResultFile, TelemetryFile properties
+        PSCustomObject with Passed, Runner, AppName, TestDir, Counts, ResultFile, TelemetryFile properties
     #>
     [CmdletBinding()]
     param(
@@ -1065,9 +1154,11 @@ function Invoke-ALRunnerTest {
     Write-BuildHeader 'AL Runner Unit Test'
     Write-BuildMessage -Type Step -Message "Running unit tests: $($appJson.name)"
 
-    # Setup output directory and clean stale results
+    # Setup output directory and clean stale results.
+    # AL Runner owns al-runner.xml; the container run owns last.xml in the same
+    # directory — separate files so a full gate never overwrites the unit result.
     Ensure-Directory -Path $OutputDir
-    $resultFile = Join-Path $OutputDir 'last.xml'
+    $resultFile = Join-Path $OutputDir 'al-runner.xml'
     if (Test-Path -LiteralPath $resultFile) {
         Remove-Item -LiteralPath $resultFile -Force
         Write-BuildMessage -Type Detail -Message "Removed previous result: $resultFile"
@@ -1105,18 +1196,31 @@ function Invoke-ALRunnerTest {
     # Exit codes: 0 = all passed, 1 = test failures, 2 = runner limitations (--strict promotes to 1), 3 = compile error
     $testsPassed = $exitCode -eq 0
 
+    # Parse authoritative counts from the JUnit result — never derived from console lines
+    $counts = Get-JUnitTestCounts -ResultFile $resultFile
+
     $result = [PSCustomObject]@{
         Passed        = $testsPassed
+        Runner        = 'al-runner'
         AppName       = $appJson.name
         TestDir       = $TestDir
+        Counts        = $counts
         ResultFile    = if (Test-Path -LiteralPath $resultFile) { $resultFile } else { '' }
         TelemetryFile = ''
     }
 
     if ($testsPassed) {
-        Write-BuildMessage -Type Success -Message "All unit tests passed: $($appJson.name)"
+        if ($counts) {
+            Write-BuildMessage -Type Success -Message "al-runner - $($appJson.name): $(Format-TestCountSummary $counts)"
+        } else {
+            Write-BuildMessage -Type Success -Message "All unit tests passed: $($appJson.name) (test counts unavailable - result XML missing)"
+        }
     } else {
-        Write-BuildMessage -Type Error -Message "Unit tests failed (exit $exitCode): $($appJson.name). See results in $OutputDir"
+        if ($counts) {
+            Write-BuildMessage -Type Error -Message "al-runner - $($appJson.name): $(Format-TestCountSummary $counts) (exit $exitCode). See results in $OutputDir"
+        } else {
+            Write-BuildMessage -Type Error -Message "Unit tests failed (exit $exitCode): $($appJson.name). See results in $OutputDir"
+        }
     }
 
     return $result
@@ -1265,6 +1369,8 @@ Export-ModuleMember -Function @(
     # Test
     'Invoke-ALTest'
     'Invoke-ALRunnerTest'
+    'Get-JUnitTestCounts'
+    'Format-TestCountSummary'
 
     # AL Runner
     'Install-ALRunner'

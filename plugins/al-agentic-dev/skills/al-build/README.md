@@ -187,8 +187,8 @@ State files live per-container in the symbol cache directory.
 
 ### Test failures
 
-1. Read `.output/TestResults/last.xml` for assertion failures.
-2. Use telemetry — `/al-debug-logging` consumes `.output/TestResults/telemetry.jsonl`.
+1. Read `.output/TestResults/summary.json` — `runs[]` names each failing run's `resultFile` (JUnit XML with assertion failures).
+2. Use telemetry — `/al-debug-logging` consumes `.output/TestResults/<dirName>/telemetry.jsonl`.
 3. Fix the failing test or code, then rerun the full gate.
 
 ### Container issues
@@ -210,7 +210,9 @@ State files live per-container in the symbol cache directory.
 
 | File | Location |
 |---|---|
-| Test results (JUnit) | `.output/TestResults/last.xml` |
-| Telemetry | `.output/TestResults/telemetry.jsonl` |
+| Container test results (JUnit) | `.output/TestResults/<dirName>/last.xml` |
+| AL Runner test results (JUnit) | `.output/TestResults/<dirName>/al-runner.xml` |
+| Run summary (gate, per-runner totals, run records with counts) | `.output/TestResults/summary.json` |
+| Telemetry | `.output/TestResults/<dirName>/telemetry.jsonl` |
 | Build timing | `.output/logs/build-timing.jsonl` |
 | Publish state | `~/.bc-symbol-cache/.../publish-state.*.json` |

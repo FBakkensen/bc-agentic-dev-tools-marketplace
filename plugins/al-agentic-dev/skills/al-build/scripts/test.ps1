@@ -10,8 +10,10 @@
     2. For each test app: provision symbols, build
     3. If unitTestApp configured: run AL Runner unit tests (fast, no container)
     4. Publish and run container tests for each test app
-    5. Write per-app results to .output/TestResults/<dirName>/
+    5. Write per-run results to .output/TestResults/<dirName>/
+       (al-runner.xml for AL Runner, last.xml + telemetry.jsonl for container)
     6. Write summary to .output/TestResults/summary.json
+       (gate, per-runner totals, one record per run with test counts)
 
     If -UnitTestOnly is specified and unitTestApp is configured, only compile and
     run AL Runner unit tests. Skips container publish and container tests entirely.
@@ -65,6 +67,72 @@ function Stop-Step {
 # Import modules
 Import-Module "$PSScriptRoot/common.psm1" -Force -DisableNameChecking
 Import-Module "$PSScriptRoot/build-operations.psm1" -Force -DisableNameChecking
+
+function ConvertTo-RunRecord {
+    param($Result)
+    [ordered]@{
+        runner        = $Result.Runner
+        appName       = $Result.AppName
+        dir           = (Split-Path $Result.TestDir -Leaf)
+        passed        = $Result.Passed
+        counts        = $Result.Counts
+        resultFile    = $Result.ResultFile
+        telemetryFile = $Result.TelemetryFile
+    }
+}
+
+function Get-RunnerTotals {
+    # Totals are aggregated per runner, never across runners: the unit test app
+    # runs through both al-runner and the container, so a grand total would
+    # count the same tests twice.
+    param($Results)
+    $totals = [ordered]@{}
+    foreach ($runner in @($Results | ForEach-Object { $_.Runner } | Select-Object -Unique)) {
+        $runnerResults = @($Results | Where-Object { $_.Runner -eq $runner })
+        $counted = @($runnerResults | Where-Object { $_.Counts })
+        if ($counted.Count -eq 0) {
+            # Counts unknown for every run of this runner — null, never zeros
+            $totals[$runner] = $null
+            continue
+        }
+        $totals[$runner] = [ordered]@{
+            runs          = $runnerResults.Count
+            testCodeunits = [int](($counted | ForEach-Object { $_.Counts.testCodeunits } | Measure-Object -Sum).Sum)
+            tests         = [int](($counted | ForEach-Object { $_.Counts.tests } | Measure-Object -Sum).Sum)
+            testsPassed   = [int](($counted | ForEach-Object { $_.Counts.testsPassed } | Measure-Object -Sum).Sum)
+            testsFailed   = [int](($counted | ForEach-Object { $_.Counts.testsFailed } | Measure-Object -Sum).Sum)
+            testsSkipped  = [int](($counted | ForEach-Object { $_.Counts.testsSkipped } | Measure-Object -Sum).Sum)
+        }
+    }
+    return $totals
+}
+
+function Write-TestSummary {
+    param(
+        [string]$Gate,
+        $Results,
+        [string]$Path
+    )
+    [ordered]@{
+        gate   = $Gate
+        totals = Get-RunnerTotals $Results
+        runs   = @($Results | ForEach-Object { ConvertTo-RunRecord $_ })
+    } | ConvertTo-Json -Depth 6 | Set-Content -LiteralPath $Path -Force
+}
+
+function Show-RunnerTotals {
+    param($Results)
+    $totals = Get-RunnerTotals $Results
+    foreach ($runner in $totals.Keys) {
+        $t = $totals[$runner]
+        if ($null -eq $t) {
+            Write-BuildMessage -Type Warning -Message "${runner}: test counts unavailable (no parseable result XML)"
+            continue
+        }
+        $runWord = if ($t.runs -eq 1) { 'run' } else { 'runs' }
+        Write-BuildMessage -Type Info -Message "${runner}: $($t.runs) $runWord - $($t.tests) tests in $($t.testCodeunits) test codeunits - $($t.testsPassed) passed, $($t.testsFailed) failed, $($t.testsSkipped) skipped"
+    }
+}
 
 # Load configuration
 $config = Get-BuildConfig
@@ -144,21 +212,19 @@ if ($config.UnitTestApp) {
     $unitResult = Invoke-ALRunnerTest -AppDir $config.AppDir -TestDir $config.UnitTestApp -OutputDir $unitOutputDir -InitEvents:($config.UnitTestInitEvents)
     Stop-Step 'al-runner'
 
+    # The al-runner run is a first-class record in summary.json in every mode
+    $testResults += $unitResult
+    Write-Host (ConvertTo-RunRecord $unitResult | ConvertTo-Json -Compress -Depth 4)
+
+    $gateName = if ($UnitTestOnly) { 'unit' } else { 'full' }
+
     if (-not $unitResult.Passed) {
         # Unit tests failed — write summary and fail fast
-        $testResults += $unitResult
         $summaryPath = Join-Path $baseResultsPath 'summary.json'
-        @($testResults | ForEach-Object {
-            @{
-                appName       = $_.AppName
-                dir           = (Split-Path $_.TestDir -Leaf)
-                passed        = $_.Passed
-                resultFile    = $_.ResultFile
-                telemetryFile = $_.TelemetryFile
-            }
-        }) | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath $summaryPath -Force
+        Write-TestSummary -Gate $gateName -Results $testResults -Path $summaryPath
 
         Write-BuildHeader 'Test FAILED (AL Runner)'
+        Show-RunnerTotals $testResults
         Write-BuildMessage -Type Error -Message "Unit tests failed: $($unitResult.AppName)"
         Write-BuildMessage -Type Error -Message "Results: $($unitResult.ResultFile)"
         exit 1
@@ -166,17 +232,8 @@ if ($config.UnitTestApp) {
 
     if ($UnitTestOnly) {
         # Unit tests passed — write summary and exit
-        $testResults += $unitResult
         $summaryPath = Join-Path $baseResultsPath 'summary.json'
-        @($testResults | ForEach-Object {
-            @{
-                appName       = $_.AppName
-                dir           = (Split-Path $_.TestDir -Leaf)
-                passed        = $_.Passed
-                resultFile    = $_.ResultFile
-                telemetryFile = $_.TelemetryFile
-            }
-        }) | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath $summaryPath -Force
+        Write-TestSummary -Gate 'unit' -Results $testResults -Path $summaryPath
 
         # Show timing
         $script:BuildStartTime.Stop()
@@ -189,6 +246,7 @@ if ($config.UnitTestApp) {
         Show-BuildTimingHistory -Count 5
 
         Write-BuildHeader 'Unit Test Complete'
+        Show-RunnerTotals $testResults
         Write-BuildMessage -Type Success -Message "All unit tests passed"
         exit 0
     }
@@ -239,28 +297,13 @@ foreach ($testAppDir in $config.TestApps) {
     $testResults += $result
     Stop-Step "test-$dirName"
 
-    # Emit JSONL summary line
-    $jsonLine = @{
-        appName       = $result.AppName
-        dir           = $dirName
-        passed        = $result.Passed
-        resultFile    = $result.ResultFile
-        telemetryFile = $result.TelemetryFile
-    } | ConvertTo-Json -Compress
-    Write-Host $jsonLine
+    # Emit JSONL run record
+    Write-Host (ConvertTo-RunRecord $result | ConvertTo-Json -Compress -Depth 4)
 }
 
 # Write summary.json
 $summaryPath = Join-Path $baseResultsPath 'summary.json'
-@($testResults | ForEach-Object {
-    @{
-        appName       = $_.AppName
-        dir           = (Split-Path $_.TestDir -Leaf)
-        passed        = $_.Passed
-        resultFile    = $_.ResultFile
-        telemetryFile = $_.TelemetryFile
-    }
-}) | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath $summaryPath -Force
+Write-TestSummary -Gate 'full' -Results $testResults -Path $summaryPath
 Write-BuildMessage -Type Info -Message "Summary written: $summaryPath"
 
 # Show timing summary
@@ -276,16 +319,18 @@ Save-BuildTimingEntry -Task 'test' -Steps $steps -TotalSeconds $totalSeconds
 Show-BuildTimingHistory -Count 5
 
 # Final pass/fail determination
-$failedApps = $testResults | Where-Object { -not $_.Passed }
+$failedRuns = $testResults | Where-Object { -not $_.Passed }
 
-if ($failedApps) {
+if ($failedRuns) {
     Write-BuildHeader 'Test FAILED'
-    Write-BuildMessage -Type Error -Message "Failed test apps:"
-    foreach ($failed in $failedApps) {
-        Write-BuildMessage -Type Error -Message "  - $($failed.AppName): $($failed.ResultFile)"
+    Show-RunnerTotals $testResults
+    Write-BuildMessage -Type Error -Message "Failed test runs:"
+    foreach ($failed in $failedRuns) {
+        Write-BuildMessage -Type Error -Message "  - $($failed.Runner) - $($failed.AppName): $($failed.ResultFile)"
     }
     exit 1
 }
 
 Write-BuildHeader 'Test Complete'
+Show-RunnerTotals $testResults
 Write-BuildMessage -Type Success -Message "All tests passed with zero warnings and zero errors"

@@ -42,13 +42,14 @@ pwsh "<skill-folder>/scripts/test.ps1" -UnitTestOnly
 
 Compiles all apps, runs AL Runner against unit test app, exits. No container needed. Use during RED→GREEN inner loop in `/al-implement` for fast feedback.
 
-**Outputs (per test app):**
+**Outputs (per test run):**
 
-- `.output/TestResults/<dirName>/last.xml` → JUnit XML per test app.
-- `.output/TestResults/<dirName>/telemetry.jsonl` → feature telemetry per test app. `/al-debug-logging` reads this.
-- `.output/TestResults/summary.json` → machine-readable pass/fail summary for all test apps.
+- `.output/TestResults/<dirName>/last.xml` → JUnit XML from the container run.
+- `.output/TestResults/<dirName>/al-runner.xml` → JUnit XML from the AL Runner run. Separate file — a full gate must never overwrite the unit result.
+- `.output/TestResults/<dirName>/telemetry.jsonl` → feature telemetry per container run. `/al-debug-logging` reads this.
+- `.output/TestResults/summary.json` → machine-readable summary: `gate` (`full`/`unit`), `totals` per runner, `runs[]` with one record per test run (`runner`, `appName`, `dir`, `passed`, `counts`, `resultFile`, `telemetryFile`).
 
-Find all test results: `glob .output/TestResults/*/last.xml`
+Take `resultFile` paths from `summary.json` run records — don't glob; a stale file from an earlier gate may sit beside a fresh one.
 
 Test failures → dispatch `/al-debug-logging`. Don't grep build log for clues telemetry already answers.
 
@@ -76,9 +77,9 @@ Return observed outcome only. Do not make routing decisions. Do not invoke follo
 
 Return YAML-like plain text in a fenced `text` block.
 
-Use `.output/TestResults/summary.json` as the source of truth for app-level fields when it exists. Echo emitted `appName`, `dir`, `resultFile`, and `telemetryFile` exactly; do not normalize or reinterpret paths. Omit `summary` and `apps` if no app summary exists.
+Take `gate`, `totals`, and all counts from `.output/TestResults/summary.json` — it is the source of truth. **Never derive counts from console lines: `Codeunit … Success` lines are test codeunits (containers of tests), not tests.** Echo `appName`, `dir`, `resultFile`, `telemetryFile`, and every `counts` number exactly as emitted; do not normalize or reinterpret. Report totals per runner; never sum across runners — the unit test app runs through both al-runner and the container, so a cross-runner sum counts the same tests twice. If `counts` is `null` for a run, report `counts: unavailable` — do not substitute zeros. Omit `totals` and `runs` if no summary exists.
 
-On failure, parse failing `last.xml` for failing test names and the first assertion/exception line. If XML is unavailable but console output has explicit `FAIL` lines, use those. If neither exists, omit `failing_tests`. Omit `first_error` and `log_excerpt` unless corresponding evidence exists. `log_excerpt` is capped at 20 relevant lines. `root_signal` is mandatory for `FAIL` and must compress observed output only; no cause speculation.
+On failure, parse the failing run's `resultFile` (JUnit XML, both runners) for failing test names and the `<failure message=…>` text. If XML is unavailable but console output has explicit failure lines, use those. If neither exists, omit `failing_tests`. Omit `first_error` and `log_excerpt` unless corresponding evidence exists. `log_excerpt` is capped at 20 relevant lines. `root_signal` is mandatory for `FAIL` and must compress observed output only; no cause speculation.
 
 PASS example:
 
@@ -88,19 +89,17 @@ cmd: pwsh "<skill-folder>/scripts/test.ps1"
 gate: full
 exit_code: 0
 
-summary:
-  passedApps: 2
-  failedApps: 0
+totals:
+  al-runner: 1 run - 563 tests in 54 test codeunits - 563 passed, 0 failed, 0 skipped
+  container: 2 runs - 601 tests in 58 test codeunits - 601 passed, 0 failed, 0 skipped
 
-apps:
-- appName: unit-tests
-  dir: unit-tests
-  passed: true
+runs:
+- runner: al-runner | app: unit-tests | passed: true | tests: 563 (54 test codeunits)
+  resultFile: .output/TestResults/unit-tests/al-runner.xml
+- runner: container | app: unit-tests | passed: true | tests: 563 (54 test codeunits)
   resultFile: .output/TestResults/unit-tests/last.xml
   telemetryFile: .output/TestResults/unit-tests/telemetry.jsonl
-- appName: integration-tests
-  dir: integration-tests
-  passed: true
+- runner: container | app: integration-tests | passed: true | tests: 38 (4 test codeunits)
   resultFile: .output/TestResults/integration-tests/last.xml
   telemetryFile: .output/TestResults/integration-tests/telemetry.jsonl
 ```
@@ -113,16 +112,12 @@ cmd: pwsh "<skill-folder>/scripts/test.ps1" -UnitTestOnly
 gate: unit
 exit_code: 1
 
-summary:
-  passedApps: 0
-  failedApps: 1
+totals:
+  al-runner: 1 run - 563 tests in 54 test codeunits - 561 passed, 2 failed, 0 skipped
 
-apps:
-- appName: unit-tests
-  dir: unit-tests
-  passed: false
-  resultFile: .output/TestResults/unit-tests/last.xml
-  telemetryFile: .output/TestResults/unit-tests/telemetry.jsonl
+runs:
+- runner: al-runner | app: unit-tests | passed: false | tests: 563 (54 test codeunits, 2 failed)
+  resultFile: .output/TestResults/unit-tests/al-runner.xml
 
 failed_phase: test
 root_signal: two tests failed on `Combination Logic`; expected `OR`, actual `AND`

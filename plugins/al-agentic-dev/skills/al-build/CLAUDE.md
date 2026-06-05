@@ -16,7 +16,7 @@ skills/al-build/
 
 1. `init.ps1` — drops `al-build.json` into the consumer repo root.
 2. `provision.ps1` — one-time symbol/Docker setup. Reuses an installed compiler by default; `-UpdateCompiler` is explicit.
-3. `test.ps1` — the gate. Writes per-app `last.xml` and `telemetry.jsonl` plus `summary.json`.
+3. `test.ps1` — the gate. Writes per-run result XML (`last.xml` container, `al-runner.xml` AL Runner) and `telemetry.jsonl` plus `summary.json`.
 
 ## Smoke test
 
@@ -30,7 +30,7 @@ Use this after changing the skill invocation contract, delegation behavior, scri
 6. Run `pwsh "$marketplace/plugins/al-agentic-dev/skills/al-build/scripts/provision.ps1"` from the disposable repo before invoking the skill. This is mandatory for smoke tests because it installs/verifies the compiler, AL Runner, and symbol caches for the temp app/test app.
 7. From the disposable repo, invoke the `al-build` skill as a black-box skill use. Do not tell the smoke session to run `test.ps1` directly, do not restate the subagent contract, and do not describe the model/reasoning/delegation details from `SKILL.md`. The smoke is testing whether the host follows `SKILL.md` by itself.
 8. Verify the host spawned the gate worker according to `SKILL.md`, and inspect the worker's returned gate report plus any emitted `.output/TestResults/<dirName>/last.xml` and `telemetry.jsonl` files.
-9. Verify `.output/TestResults/summary.json` lists all test apps with expected pass/fail when the full gate reaches result emission.
+9. Verify `.output/TestResults/summary.json` lists all test runs (`runs[]` with `runner`, `passed`, `counts`) with expected pass/fail when the full gate reaches result emission.
 10. Clean up: `docker rm -f <container-name>`, then delete the temp dir.
 
 The smoke test must exercise the full gate. Do not use test-codeunit filtering. Run container tests sequentially — one branch/container at a time.
@@ -96,10 +96,11 @@ The oracle is seeded violations — one per diagnostic family, all ten prefixes 
 ## Editing rules
 
 - **Config priority chain is load-bearing.** CLI flag > env var (`ALBT_*`) > `al-build.json` > built-in defaults. Don't reorder; don't add a fifth tier.
-- **Outputs are the contract.** `.output/TestResults/<dirName>/last.xml` (JUnit), `.output/TestResults/<dirName>/telemetry.jsonl`, and `.output/TestResults/summary.json`. `/al-debug-logging` reads `telemetry.jsonl` from subfolders. Don't rename or relocate.
+- **Outputs are the contract.** `.output/TestResults/<dirName>/last.xml` (container, JUnit), `.output/TestResults/<dirName>/al-runner.xml` (AL Runner, JUnit), `.output/TestResults/<dirName>/telemetry.jsonl`, and `.output/TestResults/summary.json` (`gate` + per-runner `totals` + `runs[]` with `counts`). `/al-debug-logging` reads `telemetry.jsonl` from subfolders. Don't rename or relocate.
+- **Both result XMLs are deliberately JUnit, one parser.** `Invoke-ALTest` passes `JUnitResultFileName` (not `XUnitResultFileName` — BcContainerHelper supports both, the XUnit dialect differs down to the failure element); AL Runner's `--output-junit` is also JUnit. `Get-JUnitTestCounts` parses both; counts are never derived from console lines (the `Codeunit … Success` stream lines are test codeunits, not tests). Missing/unparseable XML → `counts: null`, never zeros.
 - **Scripts run from the consumer repo root.** Not from this marketplace repo. Keep `Set-Location` discipline; never assume `$PSScriptRoot` is the working dir.
 - **PowerShell 7.2+ only.** `#Requires -Version 7.2`. _Avoid_: `powershell.exe` (5.1) — pipeline-chain `&&`/`||` and `??` aren't there.
 - **SKILL.md's subagent block is the canonical invocation.** Build output is verbose; the subagent contains it. Keep that block accurate.
 - **Container recovery is restart → delete → re-run.** Never document a manual fix path inside the container.
-- **AL Runner is a fast gate, not a replacement for container tests.** `Invoke-ALRunnerTest` runs before the container; its result does not appear in final `summary.json` during full-mode runs (the container overwrites `last.xml`). In `-UnitTestOnly` mode, it is the only result.
+- **AL Runner is a fast gate, not a replacement for container tests.** `Invoke-ALRunnerTest` runs before the container and lands as a first-class `runner: al-runner` record in `summary.json` in every mode, writing `al-runner.xml` so the container's `last.xml` never overwrites it. The unit test app legitimately appears twice in a full gate (al-runner + container) — that's why `totals` aggregate per runner and never across.
 - **AL Runner installation follows the compiler pattern.** `Install-ALRunner` mirrors `Install-ALCompiler` — global dotnet tool, guarded by `Get-Command`, skip when `unitTestApp` is not configured.
