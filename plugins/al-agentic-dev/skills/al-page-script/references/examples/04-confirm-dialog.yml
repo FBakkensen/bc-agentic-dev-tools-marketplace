@@ -2,7 +2,8 @@
 # Validates: CONFIRM dialog handling. A dialog with no AL page name serialises as
 #   page: null + automationId + caption (modal: true); the Yes/No response is an
 #   `invoke` with invokeType: Yes|No. Anonymous controls target by automationId + caption.
-# (The `message` step in the reference §4 is the assert-a-Message()-dialog analogue; same model.)
+# (A Message() shares only the automationId targeting — asserted via `type: message`, never
+#  invoked; Confirm blocks for Yes|No, Message is fire-and-forget. See §4.)
 # Trigger: Post on an empty journal line -> confirm -> clicked No (NO posting, no data change).
 name: Recording
 description: Test recording

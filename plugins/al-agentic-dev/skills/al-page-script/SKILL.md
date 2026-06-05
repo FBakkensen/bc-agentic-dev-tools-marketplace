@@ -11,7 +11,7 @@ User-invoked generator. Reads a verify task's `Verification Plan` `Journey Examp
 
 **Layer.** This is the **E2E layer** of the test pyramid (see [`test-strategy.md`](../../references/test-strategy.md)): a regression guard written *after* the slice, from verify-task Journey Examples — not a red-first driver. Its oracle is bc-replay's equality/visibility checks, which are **oracle-limited** (a recording can pass against broken code where the platform absorbs the fault). So a red here doesn't get fixed here by default: it **pushes down** to the layer that can pin it. See *Failure classification* below.
 
-Grammar (envelope, `target:` locator, 18 step types, operators, Power Fx, `include`, locator-by-page-kind) lives in [`references/bc-replay-yaml-format.md`](references/bc-replay-yaml-format.md). Six recorder-captured replay-green recordings (`01`–`06`) plus one hand-authored shape example for the No. Series + `copy-value` discipline (`07`) live in [`references/examples/`](references/examples/) — pattern-match a full file before authoring from prose.
+Grammar (envelope, `target:` locator, 19 step types, operators, Power Fx, `include`, locator-by-page-kind) lives in [`references/bc-replay-yaml-format.md`](references/bc-replay-yaml-format.md). Six recorder-captured replay-green recordings (`01`–`06`) plus one hand-authored shape example for the No. Series + `copy-value` discipline (`07`) live in [`references/examples/`](references/examples/) — pattern-match a full file before authoring from prose.
 
 ## Preconditions
 
@@ -20,7 +20,7 @@ Grammar (envelope, `target:` locator, 18 step types, operators, Power Fx, `inclu
 - Target task is `kind=verify` with `status=ready-for-verification` and populated `Verification Plan` containing `Journey Examples`. Plain `ready` → **Stop**, `Next: /al-refine T-NNN`. `ready-for-verification` with an empty plan → **Stop**, `Next: /al-steer T-NNN`; status and proof disagree. No `Scope: E2E` examples → **Stop**, `Next: /al-user-verification T-NNN` if the plan contains only `Contract` / `Exploration`, otherwise `/al-steer T-NNN` for malformed plan routing. Status `blocked` → **Stop**, `Next: /al-steer T-NNN`. Status `done` → downstream evidence exists; do not regenerate here.
 - Clean per-slice `/al-code-review` evidence exists for this verify task. Missing clean review → **Stop**, `Next: /al-code-review T-NNN`. Page-script is a verification pre-flight artifact, not the code-review gate.
 - `.yml` already at `pagescripts/recordings/<NNN>-<slug>__<slice>.yml` → **Stop**, `Next: /al-user-verification T-NNN`. Regeneration is a replan call (route via `/al-steer`); silently overwriting an existing recording loses the bc-replay state the pre-flight depends on.
-- Author from the live surface when syntax is uncertain. Every `field`/`action`/`page` name in a step must be a live rendered control at replay time, or replay fails `Field '<caption>' was not found.` Use the plugin-local Playwright recorder harness when recorder-derived syntax, runtime identifiers, generated action/repeater IDs, invoke types, captions, or modal-stack depth are needed. The harness owns recorder lifecycle and download capture; the coding agent owns the Journey Example flow after `READY_FOR_AGENT_FLOW`. The Codex in-app browser is not the capture path because download support is blocked there; the problem is not BC Page Scripting. Blind authoring is the fallback for stable shapes only: `navigate`, named fields, known system actions, and already-proven invoke types. If the harness cannot open BC or the recorder, report the exact limitation and fall back to user-provided recorder YAML or hand-authored YAML plus replay.
+- Author blind first. Names come from page AL + grammar reference + worked examples + the repo's committed `pagescripts/recordings/*.yml` (replay-proven local ground truth). A name not live-rendered at replay → `Field '<caption>' was not found.` Recorder session = escalation for an unknown only (generated action/repeater ID, uncertain invoke type, unclear gesture) → capture the smallest gesture that answers it → back to authoring. Recording is slow; the inner replay loop already proves the file. Drive by pixel coordinates — BC's iframe stack defeats role/text/title locators (locator clicks → `steps: []`). Chrome MCP (`claude-in-chrome`) = session-proven drive (user signs in manually; HTTP containers strand the download as `Unconfirmed *.crdownload` — bytes complete, copy it out). No Chrome MCP (Codex, headless) → plugin harness: owns lifecycle, auth, download capture; drive its coordinate `click`, not locator commands. Codex in-app browser: download support blocked → not a capture path. Neither opens BC/recorder → report the exact limitation, fall back to user-provided recorder YAML or hand-authored YAML plus replay.
 
 ## What this session answers
 
@@ -40,9 +40,9 @@ Grammar (envelope, `target:` locator, 18 step types, operators, Power Fx, `inclu
 
 One `new-agent-container.ps1` spawn per `/al-page-script` invocation. Fresh container at start; publish apps once; the same container hosts every inner-loop replay. Container is left running on exit — `/al-user-verification`'s spawn #1 will replace it with another fresh container regardless, so explicit teardown here would just add churn. No spawn-per-example — that would multiply container churn for no benefit; the inner-loop replay re-uses the same backend state.
 
-### Recorder harness for live syntax
+### Recorder harvest for unknowns
 
-Preferred harvest path when live Page Scripting syntax is needed:
+Blind authoring is the default; recorder session = escalation when AL can't answer. Drive by coordinates — iframes defeat locators. Chrome MCP where available (session-proven; manual sign-in, `.crdownload` copy-out). Otherwise (Codex, headless) the plugin harness:
 
 ```powershell
 node <plugin>/scripts/bc-pagescript-recorder.mjs --repo-root <repo>
@@ -50,7 +50,7 @@ node <plugin>/scripts/bc-pagescript-recorder.mjs --repo-root <repo>
 
 `<plugin>` is the installed `al-agentic-dev` plugin root. The target repo must contain `al-build.json` and `pagescripts/package.json` with `@microsoft/bc-replay` installed; the harness resolves Playwright from the target repo's `pagescripts/package.json`, not from plugin dependencies. It reads `serverInstance` and container auth from `al-build.json`, derives the default container host from the current branch like the AL build scripts, and accepts overrides: `--container` / `BC_CONTAINER`, `--company` / `BC_COMPANY`, `--page` / `BC_PAGE`, `--output`, `--headed`.
 
-The harness only opens the BC Web Client, authenticates, opens Settings -> `Page scripting (Preview)`, starts recording, emits `READY_FOR_AGENT_FLOW`, stops/saves/downloads on command, and reads the YAML. It must not contain the business/user flow. After `READY_FOR_AGENT_FLOW`, drive only the task-specific Journey Example flow through the harness command channel or another agent driver attached to that session, then send `stopSave`.
+The harness only opens the BC Web Client, authenticates, opens Settings -> `Page scripting (Preview)`, starts recording, emits `READY_FOR_AGENT_FLOW`, stops/saves/downloads on command, and reads the YAML. It must not contain the business/user flow. After `READY_FOR_AGENT_FLOW`: smallest gesture that answers the unknown, coordinate clicks from screenshots, `stopSave`. Coordinate drive not yet session-proven — verify on first use.
 
 Machine-readable JSON lines include:
 
@@ -62,9 +62,9 @@ Machine-readable JSON lines include:
 { "event": "yml", "path": "...", "bytes": 543, "preview": "..." }
 ```
 
-Supported stdin commands are `screenshot`, `click`, `key`, `type`, `wait`, `stopSave`, `readYml`, and `close`. Use JSON lines for precise commands, e.g. `{"cmd":"click","text":"Open"}`, `{"cmd":"key","key":"Enter"}`, `{"cmd":"type","selector":"input","value":"ABC"}`. The harness writes screenshots and `error.log` under its repo-local `.tmp/bc-pagescript-recorder/...` run directory.
+Stdin commands: `screenshot`, `click`, `key`, `type`, `wait`, `stopSave`, `readYml`, `close` — JSON lines, e.g. `{"cmd":"click","x":640,"y":312}`, `{"cmd":"key","key":"Enter"}`. Locator forms (`{"cmd":"click","text":"Open"}`) reach recorder chrome and dialog buttons only; business-page controls sit behind the iframe stack → coordinates. Screenshots and `error.log` land under repo-local `.tmp/bc-pagescript-recorder/...`.
 
-Successful proof shape for the first known harness capture: recording started; the agent opened a configuration row; the harness downloaded `Recording.yml`; the YAML contained `invoke` on `NALICF Configuration List` repeater `Group` and `page-shown` for `NALICF Configuration Card`.
+Successful proof shape for the first known harness capture: recording started; the agent opened a list row; the harness downloaded `Recording.yml`; the YAML contained the row `invoke` on the list's repeater and `page-shown` for the card. (Drive path unrecorded, predates the locator refutation → proves lifecycle, not drive mode.)
 
 ### Example-by-example inner loop
 
@@ -83,7 +83,7 @@ A red is a question — *can this layer pin the truth, and if not, which layer c
 **Stay in-loop — the recording is wrong, not the system:**
 
 - **YAML defect.** Error reads as a shape/locator problem (wrong `target:` nest, `invokeType` typo, missing `runtimeRef` after `page-shown`, `operation:` outside the enum) — or an *expected* dialog the recording forgot to answer. Self-fix against the grammar reference (a Confirm is answered with `invoke invokeType: Yes`|`No`), retry. No prompt.
-- **Un-derivable ID / uncertain invoke type.** AL search misses and the failure references a runtime-generated control ID (`Action37`, `Control1`, `b71`-style), or the gesture serializes an unclear `invokeType`. Harvest it from the BC Page Scripting recorder with the plugin-local Playwright harness. Custom-action IDs, repeater names, and some modal close actions are not derivable from AL. Example: T-038 proved BC lookup modal close actions on `NALICF Manage Rules` recorded as `invokeType: LookupOk` and `invokeType: LookupCancel`. If the harness cannot open BC or the recorder, report the exact limitation and fall back to user-provided recorder YAML or hand-authored YAML plus replay. Single resolution, not a back-and-forth.
+- **Un-derivable ID / uncertain invoke type.** AL search misses and the failure references a runtime-generated control ID (`Action37`, `Control1`, `b71`-style), or the gesture serializes an unclear `invokeType`. Harvest it from the BC Page Scripting recorder — coordinate-driven via Chrome MCP, or the plugin harness where Chrome MCP is unavailable. Custom-action IDs, repeater names, and some modal close actions are not derivable from AL — lookup modal close actions, for instance, record as `invokeType: LookupOk` and `invokeType: LookupCancel`. If no recorder session can open BC or the recorder, report the exact limitation and fall back to user-provided recorder YAML or hand-authored YAML plus replay. Single resolution, not a back-and-forth.
 - **Sequence collision.** Error names a record that already exists, a precondition an earlier example in this file left behind, or a prior slice's `.yml` colliding in the batch pre-flight. Restructure in-loop — page No. Series for a fresh value per replay, `copy-value` to capture the auto-assigned No., `=Clipboard.'name'` downstream. Literal IDs only for a record the example must hit by value (demo data, system-defined account). Same posture as `/al-implement` iterating on test setup. No routing.
 
 **Push down — the system is wrong, and a lower layer should own the proof:**
@@ -98,7 +98,7 @@ A red is a question — *can this layer pin the truth, and if not, which layer c
 
 ## Authoring discipline
 
-**No. Series first.** When an example creates a record on a page whose underlying table uses No. Series, the task prose says "Create a Customer" (No. auto-assigned), not "Create Customer C00010". The page assigns a fresh No. per replay; recordings sidestep cross-example and cross-file collisions naturally. Literal IDs only when the example must reference a seeded record — demo data, system-defined accounts, anything the example's intent depends on by exact value. Same instinct for row selection: a positional `relative:N` pick drifts when demo data differs from your assumption (the CRONUS attribute set includes `Height`, so the "3rd row" may not be what you think) — anchor to a record you seed, not whatever demo data happens to sit there.
+**No. Series first.** When an example creates a record on a page whose underlying table uses No. Series, the task prose says "Create a Customer" (No. auto-assigned), not "Create Customer C00010". The page assigns a fresh No. per replay; recordings sidestep cross-example and cross-file collisions naturally. Literal IDs only when the example must reference a seeded record — demo data, system-defined accounts, anything the example's intent depends on by exact value. Same instinct for row selection: a positional `relative:N` pick drifts when demo data differs from your assumption (the CRONUS attribute set includes `Height`, so the "3rd row" may not be what you think) — anchor to a record you seed, not whatever demo data happens to sit there. A **just-created** row: never positional — `relative:N` drifts as the container accumulates rows → `SortColumn` toggle (newest No. on top) or filter by the captured No. (grammar §4 *Anchoring a just-created row*).
 
 **`copy-value` capture for auto-assigned values.** Auto-assigned No. is unknown at authoring time. The first step on the new record captures the No. via `copy-value` (`source` ends in `field: No.`, `name: <slug>-no`); every later step that needs the No. references it via `=Clipboard.'<slug>-no'`. Same shape applies to any auto-generated ledger entry No., document No., journal line No.
 
@@ -106,7 +106,7 @@ A red is a question — *can this layer pin the truth, and if not, which layer c
 
 **No Power Fx for fake uniqueness.** Power Fx (`=Today()`, `=Session.'User ID'`) is used where the page legitimately needs an expression — date filters, today's posting date, current-user contexts. It is not used to fabricate uniqueness in IDs; that is what No. Series + `copy-value` does. Magic-string Power Fx in a No. field is an anti-pattern that masks the real shape.
 
-**Blind reliability envelope.** Hand-authoring is reliable for `navigate` + named `field`/known system-action (`Control_New`, `Cancel`, `CloseOk`, `Yes`/`No`) and already-proven invoke types. Custom-action generated IDs (`Action37`), repeater control names (`Control1`), and uncertain modal close invoke types are **not** derivable from AL — when the AL search misses or the gesture shape is unclear, harvest the real value with the plugin-local Playwright recorder harness per *Failure classification* › Un-derivable ID / uncertain invoke type, rather than guessing.
+**Blind reliability envelope.** Hand-authoring is reliable for `navigate` + named `field`/known system-action (`Control_New`, `Cancel`, `CloseOk`, `Yes`/`No`) and already-proven invoke types. Custom-action generated IDs (`Action37`), repeater control names (`Control1`), and uncertain modal close invoke types are **not** derivable from AL — when the AL search misses or the gesture shape is unclear, harvest the real value with a recorder session per *Failure classification* › Un-derivable ID / uncertain invoke type, rather than guessing.
 
 ## Canonical example
 
@@ -157,7 +157,7 @@ Once when the slice's `.yml` lands at the committed path. Gate report names slic
 
 <claude-only>
 
-**Advisor checkpoint.** Call `advisor()` before committing the `.yml`. The recording becomes part of the regression batch every future slice's pre-flight runs; a fragile or wrongly-asserting recording multiplies false-red across the rest of the feature.
+**Advisor checkpoint.** Call `advisor()` on the recording as it will be committed — the batch-pre-flight-green version, not a mid-fight draft a restructure superseded. The recording joins every future slice's pre-flight; a fragile or wrongly-asserting one multiplies false-red across the feature.
 
 </claude-only>
 
@@ -168,7 +168,7 @@ Once when the slice's `.yml` lands at the committed path. Gate report names slic
 | **Invoked by**     | user. Suggested by `/al-code-review` per-slice (next-action when verify task `ready-for-verification` and `.yml` missing), `/al-steer` (state-read routing on clean-reviewed verify task with `Verification Plan` and no `.yml`) |
 | **Runs after**     | `/al-refine` filled the verify task's `Verification Plan`, `/al-code-review` per-slice preserved the verify task at `ready-for-verification` |
 | **Hands off to**   | `/al-user-verification` on green (the recording joins the pre-flight batch). `/al-steer` on a production-bug red (status unchanged; push down — `/al-steer` opens the integration fix task, `/al-implement` drives it, recording stays as guard). `/al-steer` on an unscriptable example red (status unchanged; `/al-steer` decides whether to reopen to `ready` for `/al-refine` or keep the judgment in `Exploration Charters`). |
-| **Uses**           | `new-agent-container.ps1` (one spawn per invocation), `pagescript-replay.ps1` (`-File` mode in the inner loop, batch mode for the pre-commit cross-file check), `al-symbols-mcp` / `grep` for page AL lookup, plugin-local pure Playwright recorder harness `scripts/bc-pagescript-recorder.mjs` for live ground-truth + recorder harvest, [`../../references/test-specification.md`](../../references/test-specification.md) (`Verification Plan` grammar), [`../../references/test-strategy.md`](../../references/test-strategy.md) (layer + push-down frame), [`references/bc-replay-yaml-format.md`](references/bc-replay-yaml-format.md) grammar, [`references/examples/`](references/examples/) |
+| **Uses**           | `new-agent-container.ps1` (one spawn per invocation), `pagescript-replay.ps1` (`-File` mode in the inner loop, batch mode for the pre-commit cross-file check), `al-symbols-mcp` / `grep` for page AL lookup, the repo's committed `pagescripts/recordings/*.yml` as replay-proven pattern source, recorder harvest by coordinate drive — Chrome MCP (`claude-in-chrome`) or the plugin-local Playwright harness `scripts/bc-pagescript-recorder.mjs` (Codex/headless), [`../../references/test-specification.md`](../../references/test-specification.md) (`Verification Plan` grammar), [`../../references/test-strategy.md`](../../references/test-strategy.md) (layer + push-down frame), [`references/bc-replay-yaml-format.md`](references/bc-replay-yaml-format.md) grammar, [`references/examples/`](references/examples/) |
 | **Replan venue**   | `/al-steer` — production-bug and unscriptable reds route here with status unchanged (it opens the integration fix task or reopens the verify task to `ready` for `/al-refine`); push-down then lands the fix in `/al-implement` |
 | **Sidebands**      | `/al-research` (BC surface behaviour the example asserts), `/grill-me` (intent on an example step the user must adjudicate) |
 
@@ -176,5 +176,5 @@ Once when the slice's `.yml` lands at the committed path. Gate report names slic
 
 - **Writing the examples themselves.** Journey Examples live in the verify task's `Verification Plan` in `tasks.md`, written by `/al-refine`. This skill consumes `Scope: E2E` only.
 - **Copilot `run-prompt`.** SaaS-tenant feature (gated by `Features.RunPrompt`); not runnable in a container. Grammar documented in the reference, not exercised here.
-- **Inventing custom-action / repeater control IDs.** When AL search misses, harvest the real value from the BC Page Scripting recorder via the plugin-local Playwright harness; if BC or the recorder cannot be opened, report the exact limitation and use user-provided recorder YAML or hand-authored YAML plus replay. This skill never guesses an ID.
+- **Inventing custom-action / repeater control IDs.** When AL search misses, harvest the real value from the BC Page Scripting recorder — coordinate-driven via Chrome MCP or the plugin-local Playwright harness; if BC or the recorder cannot be opened, report the exact limitation and use user-provided recorder YAML or hand-authored YAML plus replay. This skill never guesses an ID.
 - **Standalone YAML authoring outside the slice-cycle flow.** The grammar reference and examples support that use case directly; pattern-match a worked file and write by hand. This SKILL's generator is shaped for verify-task input.

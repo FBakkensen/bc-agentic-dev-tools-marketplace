@@ -90,7 +90,7 @@ recordings from scratch.** [replayed: synthetic-token swap]
 
 ## 4. Step types
 
-18 top-level `type:` values. Three are **containers** (carry nested `steps:`): `scope`, `for-each`,
+19 top-level `type:` values. Three are **containers** (carry nested `steps:`): `scope`, `for-each`,
 `include`. The rest are leaf steps. (`navigate`/`invoke`/`input`/`focus`/`validate`/`close-page` are
 *actions*; `page-shown`/`page-closed` are *observed results* the recorder emits in pairs with them.)
 
@@ -123,9 +123,33 @@ recordings from scratch.** [replayed: synthetic-token swap]
 ```
 
 `invokeType` is the *name* of the platform `SystemAction` enum member. Common values: `New`,
-`Edit`, `DrillDown`, `Lookup`, `Refresh`, `RunReport`, `CloseOk`, `Cancel`, `Yes`, `No`. A repeater
-**row** invoke omits `invokeType` and instead carries `parameters: { AlwaysCommit: true }`.
+`Edit`, `DrillDown`, `Lookup`, `Refresh`, `RunReport`, `CloseOk`, `Cancel`, `Yes`, `No`,
+`SortColumn` (column-header sort; carries `parameters: { sortOrder: 1|2 }` — see *Anchoring a
+just-created row*, §4). A repeater **row** invoke omits `invokeType` and instead carries
+`parameters: { AlwaysCommit: true }`.
 [recorded · replayed: navigate/page-shown/input/focus/invoke/close-page/page-closed]
+
+### Filter fields  [replayed]
+
+`input` into a **filter field** (filter pane, modal-page filter row) is not a plain `{field:}`
+leaf — the chain carries two null spacers + a `scope: filter` leaf. Same chain works for
+`validate` (e.g. assert a filter opens blank). Recorder-captured, replayed green:
+
+```yaml
+- type: input
+  target:
+    - page: Item List
+      runtimeRef: pg1
+    - part: null
+    - page: null
+    - scope: filter
+      field: No.
+  value: "1000"
+```
+
+Recorder also emits `isFilterAsYouType: true`; dropped flag replayed green → optional artifact.
+Same `{scope: filter, field: <Caption>}` leaf as the row-anchoring `filter` step (below). Not
+derivable from AL.
 
 ### `validate` — assert a control value  [replayed: `=`,`<>` · source: rest]
 
@@ -154,9 +178,14 @@ recordings from scratch.** [replayed: synthetic-token swap]
 ### Rich steps
 
 ```yaml
-- type: set-current-row   # position a repeater's current row by a relative offset
+- type: set-current-row   # position a repeater's current row — RELATIVE-ONLY, no absolute/bookmark form
   target: [ {page,runtimeRef}, {repeater: Control1} ]
   targetRecord: { relative: 1 }
+- type: filter            # add a column filter on a list — pins rows by exact value
+  target: [ {page,runtimeRef} ]
+  operation: add
+  column: { field: No., scope: filter }
+  # the value is then typed via an input on the {scope: filter, field: No.} leaf (see Filter fields)
 - type: copy-value        # copy a control value to the page-scripting clipboard
   source: [ {page,runtimeRef}, {repeater: Control1}, {field: Description} ]
   name: Item List - Description   # clipboard key → later read via Clipboard.'Item List - Description'
@@ -169,13 +198,30 @@ recordings from scratch.** [replayed: synthetic-token swap]
 - type: run-prompt        # run a Copilot prompt (SaaS tenants only; gated by Features.RunPrompt); outputs → Variables.
   name: My prompt
   prompt: [ { type: literal, text: "Your prompt" } ]
-- type: message           # assert a specific message dialog was shown
-  automationId: ...
+- type: message           # ASSERT a Message() toast was shown — assert-only, never invoked
+  automationId: ...       # same automationId targeting as a dialog, but no invokeType exists for it
+  text: ...               # optional content assertion (recorder-emitted); automationId-only replays green
 - type: autofill          # data-suggestion / autofill on a field
   action: invoke          # invoke | accept | reject | change
   target: [ {page,runtimeRef}, {field: ...} ]
 ```
-[recorded: `set-current-row`, `copy-value` · source: `copy-rows`, `run-prompt`, `message`, `autofill`]
+[recorded: `set-current-row`, `copy-value`, `filter` · replayed: `message` (automationId-only) ·
+source: `copy-rows`, `run-prompt`, `autofill`]
+
+`Message()` is fire-and-forget: assert, move on. Converting `message` to the Confirm pattern
+(`page-shown` + `invoke Ok`) reds `No page found … but no form was found` — a Confirm blocks for
+`Yes`/`No`; a Message is never answered. [replayed: mis-conversion red → revert green]
+
+**Anchoring a just-created row.** `set-current-row` is relative-only; an accumulating list shifts
+the offset every replay → `relative:` cannot reach a just-created record. Two anchors:
+
+- **SortColumn toggle** [replayed] — `invoke invokeType: SortColumn` on the No. column,
+  `parameters: { sortOrder: 1 }` then `sortOrder: 2` → forced re-sort, cursor on top row = highest
+  No. Load-bearing: works only because No. Series sorts monotonic-ascending and the toggle ends
+  descending — any other sort key silently anchors the wrong row.
+- **Filter by captured value** [recorded; not yet replayed] — `filter` step adds the column filter,
+  `input` the `copy-value`-captured No. into the `{scope: filter, field: No.}` leaf (see *Filter
+  fields*) → exact row, sort-independent. Verify by replay on first use.
 
 ---
 
@@ -352,7 +398,8 @@ Behaviours beyond a locator variant:
 - **Closing a page** = `invoke` with `invokeType: Cancel` (request page) or `CloseOk` (modal).
 - **Wizard / assisted-setup** (NavigatePage) — `page-shown` (`modal: true`) opens the wizard; Back/Next/Finish are `invoke action: ActionBack`/`ActionNext`/`ActionFinish` that **swap content in place** (no per-step `page-shown`); exit X = `invoke CloseOk` → Confirm. Open an assisted-setup entry via `invoke invokeType: OpenTargetSettingsPage`.
 - **Role Center** — navigate via a role-center action = `page: <X> Role Center` + `action: <name>`; cue-tile drilldown = a part-nested `action` invoke (`page: <X> Role Center → part: <CuePart> → page: <ActivitiesPage> → action: <Cue caption>`).
-- **Message dialog** (`Message()`) — asserted by the `message` step (§4), same `automationId` model as the confirm dialog. *[message step source-only; confirm dialog recorded]*
+- **Message dialog** (`Message()`) — asserted by the `message` step (§4), same `automationId` model as the confirm dialog. *[message step replayed (automationId-only); confirm dialog recorded]*
+- **Filter fields** — `input`/`validate` on a filter field (filter pane, modal-page filter row) uses the §4 *Filter fields* chain: `part: null` → `page: null` → `{scope: filter, field: <Caption>}` leaf.
 - **Show more / Show less / FastTab expand-collapse are NOT recorded** — they're client-side rendering/density toggles; a session doing all three produces zero steps. And they don't need to be: a field hidden by Show-less (or a collapsed FastTab) is still **reachable on replay** — the player resolves controls via the logical page model, not the rendered DOM. Proven: a `copy-value` on a Show-less-hidden field replayed green. Target hidden fields by name directly; never try to author a Show-more step.
 
 ---
@@ -372,16 +419,32 @@ pass, for the cases below (a blind-authored navigate + `page-shown` recording re
 - **Reports** — not pages: `navigate page: <Report>` fails (`metadata object … not found`); reached via search/an action.
 - **Custom actions** that serialize as generated IDs (`Action37`) instead of their name — varies per page.
 - **Repeater** control names (`Control1`), **cue** part-nests, **peek/lookup** repeaters, **NavigatePage wizard** paging.
-- **Uncertain modal close actions / invoke types**. Example: T-038 showed the lookup modal close actions on `NALICF Manage Rules` recorded as `invokeType: LookupOk` and `invokeType: LookupCancel`.
+- **Uncertain modal close actions / invoke types**. Lookup modal close actions, for instance, record as `invokeType: LookupOk` / `invokeType: LookupCancel` — recorder-discovered, not in the AL.
 
-Practical rule: page navigation + named-field input/validate is hand-authorable; do **one** harness
-recorder pass per page or uncertain gesture to harvest custom-action IDs, repeater control IDs,
-modal close invoke types, and other runtime shapes, then author the rest by hand.
+Practical rule: author blind first — this grammar + [`examples/`](examples/) + the repo's
+committed `pagescripts/recordings/*.yml` (replayed green against this very app → local ground
+truth for IDs and invoke shapes). Recording = escalation for an unknown (custom-action ID,
+repeater ID, modal close invoke type, unclear gesture), never journey pre-recording — a pass is
+slow, and the replay loop already proves the file. One pass per unknown → smallest gesture → back
+to authoring.
 
 ### Recorder harvesting for un-derivable IDs
 
-Recorder capture is an evidence technique, not the replay oracle. Use the plugin-local pure
-Playwright harness as the supported capture path:
+Recorder capture is an evidence technique, not the replay oracle. **Drive by pixel coordinates,
+whatever the path**: BC's iframe stack defeats Playwright locator selectors — every
+role/text/title click → `No visible element found across frames for click target`, recorder
+captured `steps: []` [refuted]. Trusted coordinate input is what the recorder captures
+[replayed→captured].
+
+Two paths:
+
+- **Chrome MCP** (`claude-in-chrome`) — proven end-to-end: screenshot → coordinate click →
+  capture. Caveats: user signs in manually (agents don't type credentials); HTTP containers strand
+  the download as `Unconfirmed *.crdownload` — bytes complete, copy it out.
+- **Plugin harness** (below) — when Chrome MCP is absent (Codex, headless). Lifecycle, auth,
+  download capture [proven]. Coordinate click `{"cmd":"click","x":<n>,"y":<n>}` →
+  `page.mouse.click` [not yet session-proven — verify on first use]; locator commands reach
+  recorder chrome and dialog buttons only.
 
 ```powershell
 node <plugin>/scripts/bc-pagescript-recorder.mjs --repo-root <repo>
@@ -406,17 +469,18 @@ The harness owns only recorder lifecycle:
 
 The harness must not contain the business/user flow. After `READY_FOR_AGENT_FLOW`, the coding agent
 drives the smallest representative gesture that produces the uncertain YAML shape, then sends
-`stopSave`. The downloaded `.yml` carries the real `repeater`/`action` IDs and invoke types verbatim;
-use it as syntax ground truth, then replay the final authored recording with `pagescript-replay.ps1
--File` and the full batch gate.
+`stopSave` — capture answers the unknown; it does not pre-record the journey. The downloaded `.yml`
+carries the real `repeater`/`action` IDs and invoke types verbatim; use it as syntax ground truth,
+then replay the final authored recording with `pagescript-replay.ps1 -File` and the full batch gate.
 
 The harness emits JSON lines such as `start`, `recording`, `READY_FOR_AGENT_FLOW`, `download`, and
 `yml`. Its stdin commands are `screenshot`, `click`, `key`, `type`, `wait`, `stopSave`, `readYml`, and
 `close`.
 
-Known proof shape: recording started; the agent opened a configuration row; the harness downloaded
-`Recording.yml`; the YAML contained `invoke` on `NALICF Configuration List` repeater `Group` and
-`page-shown` for `NALICF Configuration Card`.
+Known proof shape: recording started; the agent opened a list row; the harness downloaded
+`Recording.yml`; the YAML contained the row `invoke` on the list's repeater and `page-shown` for
+the card. (Drive path unrecorded, predates the locator refutation → proves lifecycle, not drive
+mode.)
 
 If the harness cannot open BC or the recorder, report the exact limitation and fall back to
 user-provided recorder YAML or hand-authored YAML plus replay.
