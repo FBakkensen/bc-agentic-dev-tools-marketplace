@@ -46,7 +46,7 @@
         "source": "local",
         "path": "./plugins/al-agentic-dev"
       },
-      "description": "Plugin tour: /al-agentic-dev-overview. Full AL/Business Central dev stack. Agentic flow: /al-steer, /al-grill-adr, /al-event-model, /al-design, /al-scope, /al-refine, /al-implement, /al-page-script, /al-user-verification, /al-refactor, /al-mutate, /al-code-review, /al-research, /al-second-opinion. Doc gate: /al-doc-verify. Build/test: /al-build. Telemetry probes: /al-debug-logging.",
+      "description": "Plugin tour: /al-agentic-dev-overview. Full AL/Business Central dev stack. Agentic flow: /al-steer, /al-grill-adr, /al-event-model, /al-design, /al-scope, /al-refine, /al-implement, /al-page-script, /al-user-verification, /al-refactor, /al-mutate, /al-code-review, /al-research, /al-second-opinion. Autonomous: /al-autopilot. Doc gate: /al-doc-verify. Build/test: /al-build. Telemetry probes: /al-debug-logging.",
       "policy": {
         "installation": "AVAILABLE",
         "authentication": "ON_INSTALL"

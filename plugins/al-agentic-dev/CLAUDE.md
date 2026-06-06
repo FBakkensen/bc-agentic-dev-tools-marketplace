@@ -19,9 +19,11 @@ User-facing pipeline diagram, skills catalogue, and cold-start guidance live in 
 
 Slice cycle: `/al-refine` selects one named `ready` technical task, writes its `Test Specification` from the current app/tests, and flips it to `ready-for-implementation`. `/al-implement` works through `ready-for-implementation` technical tasks in Unit-first order and flips each task to `done` only after downstream evidence exists. When the last user/API-facing technical task lands, `/al-implement` opens the slice verify task from `blocked` to `ready`; `/al-refine` then writes the verify task's `Verification Plan` from the current app/tests and flips it to `ready-for-verification`. `/al-code-review` runs per-slice and validates the plan against the code. If its `/grill-me` auto-loop materializes new technical tasks in the same slice, those tasks open as `ready`; `/al-refine` writes fresh proof before `/al-implement` resumes, and `/al-code-review` re-runs on the updated diff. For user-facing slices `/al-page-script` then generates the slice's bc-replay recording at `pagescripts/recordings/<NNN>-<slug>__<slice>.yml` from `Scope: E2E` Journey Examples (example-by-example inner loop, one fresh container per `/al-page-script` invocation via `new-agent-container.ps1`, commits on green). A page-script red that proves a production bug leaves verify task status unchanged and routes to `/al-steer` (push-down: `/al-steer` opens the integration fix task, `/al-refine` refreshes its proof, `/al-implement` drives it red-first, the recording re-greens as the E2E guard). `/al-user-verification` follows: spawn #1 publishes apps to a fresh container and runs the regression batch (this slice's `.yml` plus every prior slice's `.yml`) via `pagescript-replay.ps1`; green → spawn #2 runs Contract Examples and hosts the agent-driven browser walk (`claude-in-chrome` drives Journey Examples and Exploration Charters, capturing visual evidence; functional/observable outcomes gate, subjective usability → findings/tasks; `/al-second-opinion` reviews the verdict's reasoning and the captured evidence guards observation; human-walk fallback if Chrome can't drive); red → verify task flips `blocked` and routes to `/al-steer` (trigger #4 prior-slice red, trigger #8 current-slice red); spawn #3 leaves a fresh container at exit regardless of outcome. On verify pass, the verify task flips to `done`, next slice tasks flip to `ready`, and the loop continues; on verify fail, verify task flips `blocked` and `/al-steer` routes (trigger #8). Feature-done invokes `/al-code-review` per-feature before merge. Backend-only features have no `event-model.md` and skip page-script + user-verification entirely; the chain becomes refine → implement → code-review → next slice.
 
+`/al-autopilot` drives this slice cycle unattended under the runtime goal feature (`/goal` on both Claude Code and Codex): one slice-cycle step per turn, `/al-second-opinion` fills every interview seat (including `/al-code-review`'s per-finding triage — that skill carries the autonomous-seat branch), self-answered decisions audit to `specs/<NNN>-<slug>/decision-log.md` (append-only, exempt from `/al-doc-verify`), additive fix-task insertion stays in-loop while reshaping replans stop the run via `AUTONOMY STOP REPORT`. It never pushes. Entry is post-`/al-scope` only; the intent-settling pipeline upstream is never self-answered.
+
 ## Skills
 
-User-facing catalogue (18 skills, role + when-to-invoke) lives in [`references/overview.md`](references/overview.md). Edit it in lockstep when adding, removing, renaming, or repurposing a skill.
+User-facing catalogue (19 skills, role + when-to-invoke) lives in [`references/overview.md`](references/overview.md). Edit it in lockstep when adding, removing, renaming, or repurposing a skill.
 
 Skills compose by name. When you change a skill, scan the others for cross-references and update in lockstep. Cross-skill orchestration depth (gate flip mechanics, replan triggers, slice-cycle suppression rules) lives in the owning skill's `SKILL.md` and in the dev-time slice-cycle paragraph above; the user-facing overview stays tour-shape.
 
@@ -52,7 +54,7 @@ Two tiers, on purpose.
 
 | File | Tier | Notes |
 |---|---|---|
-| `overview.md` | plugin-level | user-facing tour: pipeline diagram, 18-skill catalogue (role + when-to-invoke), persistence layers paragraph, cold-start guidance, pointer to `/al-steer` for state-aware nav; emitted verbatim by `/al-agentic-dev-overview`; edit in lockstep with any skill addition / removal / rename |
+| `overview.md` | plugin-level | user-facing tour: pipeline diagram, 19-skill catalogue (role + when-to-invoke), persistence layers paragraph, cold-start guidance, pointer to `/al-steer` for state-aware nav; emitted verbatim by `/al-agentic-dev-overview`; edit in lockstep with any skill addition / removal / rename |
 | `voice-contract.md` | plugin-level | non-voice rules: BC vocab, names-as-citation, lists-of-findings, tables-of-facts, chat carve-out, no-workflow-chatter, 3 chat shape skeletons (Opener / Gate report / Stop); style itself lives at top of each SKILL.md as a one-line Style declaration; read by every skill that writes prose |
 | `testability.md` | plugin-level | three-phase decoupling, three default seams (IEnvironment / IApiRequest / IFinance), five-kind test-double taxonomy with AL code shapes; read by `/al-design`, `/al-implement`, `/al-refactor` |
 | `test-specification.md` | plugin-level | `Test Specification` / `Verification Plan` grammar: Expected Behaviors, Decision Matrix, AAA cases, scopes, traceability, closeout summaries; read by `/al-refine`, `/al-implement`, `/al-code-review`, `/al-page-script`, `/al-user-verification` |
@@ -87,7 +89,7 @@ The two former agent-shaped workflows now live as skills:
 
 ```
 references/                      # Plugin-level shared, read by ≥2 skills, or cited by shared templates
-├── overview.md                  # User-facing tour: pipeline + 18-skill catalogue + persistence + cold-start; emitted by /al-agentic-dev-overview
+├── overview.md                  # User-facing tour: pipeline + 19-skill catalogue + persistence + cold-start; emitted by /al-agentic-dev-overview
 ├── voice-contract.md            # Non-voice rules + 3 chat shape skeletons; voice declared inline at top of each SKILL.md
 ├── testability.md               # Three-phase decoupling, three default seams, five-kind test-double taxonomy
 ├── test-specification.md        # Test Specification + Verification Plan grammar
@@ -108,6 +110,7 @@ references/                      # Plugin-level shared, read by ≥2 skills, or 
     └── tasks.example.md
 skills/
 ├── al-agentic-dev-overview/SKILL.md  # Reads ../../references/overview.md, emits verbatim
+├── al-autopilot/SKILL.md        # Unattended slice-cycle driver under the runtime goal feature
 ├── al-build/
 │   ├── CLAUDE.md                # Skill-local dev-time rules (smoke tests, container recovery, config priority)
 │   ├── AGENTS.md                # Codex bridge to CLAUDE.md

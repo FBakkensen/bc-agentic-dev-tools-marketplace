@@ -89,6 +89,8 @@ Passing proposal (not raw finding) lets `/grill-me` stress-test whether proposal
 
 Abort on explicit `stop` / `end loop` / `cancel`, off-topic shift, or compaction: emit partial-summary closer and exit, no resume (queue is transient). Single-finding case: spawn one grill, skip progress chip, straight to closer. `/grill-me` stays generic; triage contract rides in via spawn prompt, no section added to `grill-me`'s `SKILL.md`.
 
+**Autonomous seat** (`/al-autopilot` run active — `AUTONOMY RUN ACTIVE` announced, `decision-log.md` carries an open run): spawn no `/grill-me` — there is no interviewee. Per surviving finding, dispatch `/al-second-opinion` on finding + lens proposal, reconcile, land the same three outcomes. Disagreement on drop-vs-fix → fix wins; correctness findings always land as tasks, hygiene may settle as notes. Record each verdict in `specs/<NNN>-<slug>/decision-log.md`; the closer counts outcomes identically.
+
 ## Gate outcome on clean review
 
 Per-slice mode, no new tasks materialized in current slice: code-review validates the already-refined gate. It does not flip verify tasks from `blocked` to `ready`.
