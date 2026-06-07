@@ -37,7 +37,7 @@ First invocation, before any goal exists:
 
 - **Preflight, refuse to emit the goal line on any miss.** Unattended permissions active (auto mode or equivalent — the first `docker` prompt otherwise parks the run); container snapshot image from `al-build.json` `container.imageName` exists; `bc-replay` and the browser MCP respond when the feature has user-facing slices; the opposite-runtime CLI for `/al-second-opinion` answers; on Codex, `features.goals` enabled (`codex features enable goals`).
 - **Read state**, report remaining work per slice.
-- **Write the `decision-log.md` header**: active-run marker, the per-turn protocol in three lines, the stop-report rule. The header is the durable protocol anchor — if a long run drops this skill body from context, the turn-one re-read restores the discipline.
+- **Write the `decision-log.md` header**: active-run marker, the per-turn protocol in three lines, the stop-report rule, both entry skeletons from the Decision log section, and the `## Entries` append marker. The header is the turn-one anchor — a cold start reads the file whole and restores the discipline. Mid-run turns read only the tail, so the entry shape rides the append marker and the previous entry, not the header.
 - **Compose the goal line and emit it for the user to fire.** One human keypress at launch; zero mid-run. Never let the user hand-write the condition — the escape clause below is load-bearing, and a condition without it resurrects infinite retry against a dead container.
 
 ## Goal condition
@@ -65,7 +65,35 @@ No autonomous turn waits on a human. Seats that contracts reserve for one:
 
 ## Decision log
 
-`specs/<NNN>-<slug>/decision-log.md`, append-only, exempt from `/al-doc-verify` (a log, not a canonical artifact). Entry: the question as it would have been asked → chosen answer → rationale → second-opinion verdict → reversibility. The log dies reviewed at merge; it exists so the human audits afterwards what they were not asked during.
+`specs/<NNN>-<slug>/decision-log.md`, append-only, exempt from `/al-doc-verify` (a log, not a canonical artifact). The log dies reviewed at merge; it exists so the human audits afterwards what they were not asked during — which makes it the one sanctioned workflow-chatter venue: second-opinion verdicts and reversibility live here by design, inverting the artifact ban in `voice-contract.md`. Landing-line discipline still applies.
+
+Two entry kinds, both labeled landing lines — one fact per line, lede word first. Splicing facts into an arrowed paragraph is density, not concision; the post-run reader scans labels top to bottom, then slow-reads the one line that catches the eye. Overflow facts become lede-word bullets under the entry, never spliced into a line. A line earns its place only if the post-run reader acts differently because of it; a line whose fact did not occur is dropped or reads `none`, never invented.
+
+**Decision entry** — one per interview seat answered:
+
+```markdown
+### 2026-06-07 — Decision: deferred T-003 walk in autonomy scope?
+
+Question: is the deferred T-003 walk in scope for the autonomy run?
+Answer: yes — ran it.
+Why: the deferral postponed the walk, did not waive it; tasks.md still gates feature-done on it.
+Second opinion: concur — deferral text names completion, not exemption.
+Reversible: yes — re-walk any time; evidence retained.
+```
+
+`irreversible-class` flags land on the `Reversible:` line. A decision's evidence is its `Why:` — gate evidence lives in the Turn entry and tasks.md closeouts, not here.
+
+**Turn entry** — one per gate verdict (review verdict, verification outcome, build gate at a status flip), never per housekeeping turn:
+
+```markdown
+### 2026-06-07 — /al-user-verification T-003: PASS
+
+Step: /al-user-verification T-003 → done
+Evidence: replay 15/15 green; agent walk V1–V6 pass; SetRecFilter survivor net discharged (WALK-V7/V9)
+Next: /al-refine T-007
+```
+
+The shape's standing corrective is in the tail, not the header: the `## Entries` marker reads `(append-only below — every entry follows the Decision or Turn skeleton above)`, and the previous entry is the live template every later turn mimics. One blobbed entry propagates; the marker is what breaks the chain.
 
 ## Replan boundary: additive stays, reshaping stops
 
