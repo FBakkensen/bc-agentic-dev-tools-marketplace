@@ -212,6 +212,40 @@ source: `copy-rows`, `run-prompt`, `autofill`]
 (`page-shown` + `invoke Ok`) reds `No page found … but no form was found` — a Confirm blocks for
 `Yes`/`No`; a Message is never answered. [replayed: mis-conversion red → revert green]
 
+**`Error()` dialog** [recorded · replayed] — not a step type, a composition (recorder-verbatim):
+
+```yaml
+- type: page-shown            # catch — MUST immediately follow the triggering step
+  source:
+    page: null
+    automationId: 00000000-0000-0000-0800-0000836bd2d2   # platform Error-dialog id
+    caption: Error            # documentation only — matcher ignores caption
+  modal: true
+  runtimeId: b4e
+- type: invoke
+  target:
+    - page: null
+      automationId: 00000000-0000-0000-0800-0000836bd2d2
+      caption: Error
+      runtimeRef: b4e
+  invokeType: Ok
+- type: page-closed
+  source: { page: null }
+  runtimeId: b4e
+```
+
+Mechanics (client.js module 90531): an uncaught dialog reds `Invalid state: Unexpected error
+dialog. <value>{error text}</value>` on the first later step carrying a foreign `runtimeRef` —
+`page-shown` is the only exempt step type → the only catcher; `invoke Ok` is safe (targets the
+dialog's own ref). Anonymous-dialog matching: `automationId` or `runtimeRef` only, `caption:`
+ignored, neither → `No page found`; Confirm/Message's `8da61efd-…` id does NOT match Error. Error
+text not assertable (caption is literal `Error`, no `contains` — §5) → wording checks stay
+agent-walk. The automationId is platform-generated — stable within a platform version, re-harvest
+on a BC bump if it reds as a reference mismatch.
+
+Message = assert via `message`, never invoked · Confirm = `invoke Yes`\|`No` · Error = catch
+`page-shown`, dismiss `invoke Ok`.
+
 **Anchoring a just-created row.** `set-current-row` is relative-only; an accumulating list shifts
 the offset every replay → `relative:` cannot reach a just-created record. Two anchors:
 
@@ -388,7 +422,8 @@ elements appear, not the grammar. Empirically captured shapes (BC 28.0.49873.0):
 | **Lookup / peek page** | `source.page: lookup:<Field>` or `peek:<Field>`; caption "Select" | recorded |
 | **Request page** (report) | run it: `invoke invokeType: RunReport` on `action: <Report>` (from a list's Report menu) → `page-shown source.page: <Report>` (`modal: true`) → `invoke invokeType: Cancel`. Reports are NOT `page:`-navigable. | recorded |
 | **Analysis / Query page** | open via a list/role-center action → `page-shown`; close = `invoke invokeType: CloseOk`. Navigate may carry `props: {navigationTreeContext, replaceForm}`. | recorded |
-| **Confirm / dialog** | `page: null` + `automationId` + `caption` (`modal: true`); answer = `invoke invokeType: Yes`\|`No` | recorded |
+| **Confirm / dialog** | `page: null` + `automationId` + `caption` (`modal: true`); answer = `invoke invokeType: Yes`\|`No`; its `8da61efd-…` id does NOT match Error dialogs | recorded |
+| **Error dialog** (`Error()`) | `page: null` + `automationId: 00000000-0000-0000-0800-0000836bd2d2` (`modal: true`); catch = `page-shown` (only exempt step), dismiss = `invoke invokeType: Ok` → `page-closed` — §4 | recorded + replayed |
 | **Modal vs content** | `page-shown.modal: true` (drilldown/RunModal/dialog) vs `false` (navigate/content) | recorded |
 
 Behaviours beyond a locator variant:

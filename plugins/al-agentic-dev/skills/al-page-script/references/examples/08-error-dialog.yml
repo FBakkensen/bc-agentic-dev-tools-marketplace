@@ -1,0 +1,73 @@
+# HAND-AUTHORED SHAPE — BC v28. Error() dialog: catch -> dismiss -> origin survives.
+# The three dialog steps (automationId 00000000-0000-0000-0800-0000836bd2d2) are
+#   RECORDER-VERBATIM + replay-proven; the request-page wrapper is schematic —
+#   <Report>/<ReportAction> are placeholders, prove the full file by replay before trusting.
+# page-shown must immediately follow the trigger (only step exempt from the
+#   `Invalid state: Unexpected error dialog` check); error TEXT not assertable;
+#   the final Cancel doubles as the origin assertion. Mechanics: grammar §4.
+name: Recording
+description: Request page OK with a blank mandatory filter raises Error(); dismiss; origin survives
+start:
+  profile: ORDER PROCESSOR
+steps:
+  - type: navigate
+    target:
+      - page: Item List
+    description: Navigate to Items
+  - type: page-shown
+    source:
+      page: Item List
+    modal: false
+    runtimeId: il1
+    description: Item List shown
+  - type: invoke
+    target:
+      - page: Item List
+        runtimeRef: il1
+      - action: <ReportAction>
+    invokeType: RunReport
+    description: Run <Report> from the list's Report menu
+  - type: page-shown
+    source:
+      page: <Report>
+    modal: true
+    runtimeId: rq1
+    description: Request page shown
+  - type: invoke                     # the triggering step — OK with the mandatory filter blank
+    target:
+      - page: <Report>
+        runtimeRef: rq1
+      - action: OK
+    description: OK with the mandatory filter blank -> AL guard raises Error()
+  - type: page-shown                 # catch — MUST immediately follow the triggering step
+    source:
+      page: null
+      automationId: 00000000-0000-0000-0800-0000836bd2d2
+      caption: Error
+    modal: true
+    runtimeId: b4e
+    description: Error dialog shown
+  - type: invoke                     # dismiss
+    target:
+      - page: null
+        automationId: 00000000-0000-0000-0800-0000836bd2d2
+        caption: Error
+        runtimeRef: b4e
+    invokeType: Ok
+    description: Dismiss the Error dialog
+  - type: page-closed
+    source:
+      page: null
+    runtimeId: b4e
+    description: Error dialog closed
+  - type: invoke                     # origin assertion + cleanup — reds if the dialog still blocked
+    target:
+      - page: <Report>
+        runtimeRef: rq1
+    invokeType: Cancel
+    description: Cancel the request page — proves the origin survived the Error
+  - type: page-closed
+    source:
+      page: <Report>
+    runtimeId: rq1
+    description: Request page closed
