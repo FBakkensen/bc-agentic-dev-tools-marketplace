@@ -91,9 +91,9 @@ Container/tooling failure never counts as killed.
 
 Write durable session report at `.output/mutation-report/<YYYYMMDD-HHMMSS>.md`. It is ignored output, not committed. Survivors are actionable section, one row per site with classification and proposed killer-test direction. Killed mutants map site to catching test. Equivalent candidates carry specific reason; host confirms. Include plan rationale, skipped-site rationale, baseline SHA, per-mutant gate command, recovery attempts, final full-gate result, and counts: killed / survived / equivalent / unclassified / blocked.
 
-Task block gets compact verdict only: baseline SHA, report path, counts, final full-gate result, and survivor follow-up or insufficiency note. No full mutation table in `tasks.md`.
+Task block gets the `Closeout` mutation verdict shape from [test-specification.md](../../references/test-specification.md): borderless two-column table (baseline SHA, report path, mutant count with a rationale lede, killed, survivors, final full-gate result) plus labeled `Survivor:` / `Why kept:` lines per survivor. One fact per landing line; no prose wall, no full mutation table in `tasks.md`.
 
-`/al-mutate` does not flip status. Shape (NOTE alert chip, prose line, structured block, table cell) per task. See [markdown-spec-discipline.md](../../references/markdown-spec-discipline.md) and [voice-contract.md](../../references/voice-contract.md). Standalone mode emits Gate report once at pass close, naming rigor proved (or not) for user-facing behaviour under test, soft spots that remain by design, and user's call; inside `/al-implement`, findings fold into the task Gate report.
+`/al-mutate` does not flip status. See [markdown-spec-discipline.md](../../references/markdown-spec-discipline.md) and [voice-contract.md](../../references/voice-contract.md). Standalone mode emits Gate report once at pass close, naming rigor proved (or not) for user-facing behaviour under test, soft spots that remain by design, and user's call; inside `/al-implement`, findings fold into the task Gate report.
 
 ## Composition
 

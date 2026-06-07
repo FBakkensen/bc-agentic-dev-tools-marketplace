@@ -32,6 +32,36 @@ Acceptance Intent:
 Release blocking protects posting readiness by preventing Sales Orders from being released when Customer state violates release policy.
 ```
 
+### Contract notes
+
+Include `Contract notes` only when the task carries proof-shaping freight the coverage tables cannot hold: oracle design, scope justification (why zero `Unit` cases), seam or test-double decisions, binding mechanics, transaction model, red-suite rework. Most tasks need none.
+
+Shape: bulleted, one fact per landing line, lede word first. A `;`-spliced multi-fact paragraph is density, not concision — the reader scans landing lines, then slow-reads one.
+
+```markdown
+Contract notes:
+- Oracle: handler-absence — a dialog with no declared handler fails the run.
+- No Message handler on the Yes path — a surviving completion Message fails the run.
+- Zero Unit cases — structural: both W entries self-inject the production Confirm, leaving no unit seam.
+- Decision surface proved: T-001.
+- Transaction: service commits before first dialog → `[TransactionModel(TransactionModel::AutoCommit)]`.
+- Red-suite rework: `PostsWithCompletionMessage` sheds its `MessageHandler` for a Yes ConfirmHandler — part of this task's green gate.
+```
+
+A bullet survives only if the next agent acts differently because of it. How a decision was reached never survives: provenance ("settled:", "second-opinion added", "resolved by user decision") belongs in the commit message, per the no-workflow-chatter rule in `voice-contract.md` and the session-internal-reasoning row in `notes-discipline.md`. Cross-task retelling trims to a pointer — `proved: T-001` — not the story.
+
+### Out of automated reach
+
+Include only when the task leaves claims no automated layer proves. Each bullet names the claim and its destination: code-review invariant, verify-task journey, or accepted gap.
+
+```markdown
+Out of automated reach:
+- `GuiAllowed()` silent branch — container sessions are interactive; code-review invariant.
+- Drill from list row to card — verify-layer outcome; V-task journey.
+```
+
+`/al-code-review` reads this section as its invariant list. A claim without a destination is a hole, not a note.
+
 ### Expected Behaviors
 
 Use for non-branching technical tasks.
@@ -215,8 +245,23 @@ Closeout:
 - Unit: `AllowsReleasePolicyWhenRuleDisabled`, `BlocksReleasePolicyWhenRuleEnabled`
 - Integration: `BlocksSalesOrderReleaseWhenRuleEnabled`
 - Build: full gate green
-- Mutation: task-end mutants killed at lowest sensitive layer
+
+Mutation verdict:
+
+| | |
+|---|---|
+| Baseline | `2d02629f` |
+| Report | `.output/mutation-report/20260605-214958.md` |
+| Mutants | 5 — release guard chain, blocked-state boundary, status flip |
+| Killed | 4 (3 by named tests, 1 compile-time) |
+| Survivors | 1 |
+| Final gate | full green |
+
+Survivor: `SetRecFilter()` removal in `OpenReleasedOrder`.
+Why kept: outside the pinned contract — the event model pins that the order's card opens, not its rowset; a killer test would pin presentation. Net: the slice verify journey probes card scoping.
 ```
+
+The mutation verdict is a borderless two-column field/value table; each survivor gets labeled `Survivor:` / `Why kept:` lines stating the gap → killer-test direction, the equivalence reason, or the accepted gap and the net that catches it. One fact per line; a survivor rationale is a finding, not a paragraph. Tasks where mutation ran with zero survivors collapse the labeled lines and keep the table.
 
 Verify closeout:
 
@@ -227,4 +272,4 @@ Closeout:
 - Exploration: `X1` produced 1 follow-up UX task, no functional failures
 ```
 
-Mutation targets are execution work, not durable task specification. A bounded mutation result summary may appear in closeout for non-trivial technical tasks.
+Mutation targets are execution work, not durable task specification. The verdict table and survivor lines are the only mutation content in `tasks.md`; the full mutation table lives in the `.output` report.

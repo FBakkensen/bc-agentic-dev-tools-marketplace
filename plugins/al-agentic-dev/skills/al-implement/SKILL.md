@@ -71,7 +71,8 @@ Before `done`, update the task block so it reflects actual proof:
 - `Covers:` references real `B#` / `R#`.
 - `Scope:` is final. Any scope change is edited back into `tasks.md`.
 - Completed task keeps final `Test Specification`.
-- Closeout includes concise pyramid summary.
+- Implementation discoveries land in `Contract notes` as new bullets, one fact per landing line — never spliced onto an existing bullet, never a `;`-chained paragraph. How a decision was reached goes to the commit message, not the task block.
+- Closeout follows the [test-specification.md](../../references/test-specification.md) shape: pyramid bullets plus the mutation verdict table with labeled `Survivor:` / `Why kept:` lines.
 
 ### One `/al-refactor` pass on full task diff
 

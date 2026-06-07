@@ -91,7 +91,7 @@ Stable handles:
 - Technical: AL test procedure name in `Covered By` / `Procedure`.
 - Verify: example ID + title, e.g. `V1 BlocksReleaseFromSalesOrderPage`.
 
-Write telegraphic; drop articles, padding, hedges; fragments fine. Follow surgical-edit contract from [`markdown-spec-discipline.md`](../../references/markdown-spec-discipline.md).
+Write telegraphic per line; drop articles, padding, hedges; fragments fine. Concision compresses each line, never the line count: multi-fact content splits one fact per landing line — a `;`-spliced multi-fact paragraph is density, not concision. Follow surgical-edit contract from [`markdown-spec-discipline.md`](../../references/markdown-spec-discipline.md).
 
 ## Document verification
 

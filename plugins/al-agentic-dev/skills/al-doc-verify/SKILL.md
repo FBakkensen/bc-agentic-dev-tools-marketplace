@@ -42,7 +42,7 @@ No model escalation unless the verifier cannot classify a structural ambiguity. 
 - `CONTEXT.md` and ADR: durable intent, decision shape, and link integrity
 - `event-model.md`: Role / Action / Business Event / View / Status structure
 - `architecture.md`: module map, boundaries, and cross-file consistency
-- `tasks.md`: task anchors, status line, slice, kind, and proof sections
+- `tasks.md`: task anchors, status line, slice, kind, and proof sections. Proof-section prose walls -> warn: a paragraph splicing several independent facts with `;`-chained clauses (roughly 60+ words of multi-fact prose) flags `multi-fact wall; one fact per landing line`. Fires on paragraphs only — never on table cells, single bullets, or a dense-but-single-fact line.
 
 ## Verdict
 

@@ -123,7 +123,17 @@ Closeout:
 - Unit: `AcceptsBalancedAllocationQuantity`, `RejectsShortfallAllocationQuantity`, `RejectsOverflowAllocationQuantity`
 - Integration: none
 - Build: full gate green
-- Mutation: task-end quantity comparison mutants killed at Unit layer
+
+Mutation verdict:
+
+| | |
+|---|---|
+| Baseline | `8b2d41ca` |
+| Report | `.output/mutation-report/20260112-141503.md` |
+| Mutants | 3 — quantity comparison boundaries, shortfall/overflow branch |
+| Killed | 3 by named tests |
+| Survivors | 0 |
+| Final gate | full green |
 
 ### T-003 [x] — Subscribe to OnAfterCheckSalesDoc, route through validator
 <!-- task=T-003 status=done slice=post-validates-allocation kind=technical -->
@@ -136,6 +146,15 @@ Test Specification:
 
 Acceptance Intent:
 Posting validation prevents Sales Orders with unbalanced item charge allocations from creating posted documents or partial posting state.
+
+Contract notes:
+- Oracle: posted-document absence — `BlocksPostingWithMismatchedAllocation` asserts no Posted Sales Invoice exists, not the error text alone.
+- Zero Unit cases — structural: the subscriber delegates to `Charge Validation` and adds no decision logic of its own.
+- Decision surface proved: T-002.
+- Transaction: validation raises `Error` before any posting-table write — blocked posting leaves no partial state to assert away.
+
+Out of automated reach:
+- Subscriber placement on `OnAfterCheckSalesDoc` — a later posting event satisfies the same assertions; code-review invariant.
 
 ### Decision Matrix
 
@@ -174,7 +193,20 @@ Closeout:
 - Unit: none
 - Integration: `PostsSalesOrderWithBalancedAllocation`, `BlocksPostingWithMismatchedAllocation`
 - Build: full gate green
-- Mutation: posting guard and event-subscriber delegation mutants killed at Integration layer
+
+Mutation verdict:
+
+| | |
+|---|---|
+| Baseline | `4f1c9a2e` |
+| Report | `.output/mutation-report/20260114-103012.md` |
+| Mutants | 3 — posting guard inversion, subscriber delegation removal, empty-assignment early exit |
+| Killed | 2 by named tests |
+| Survivors | 1 |
+| Final gate | full green |
+
+Survivor: empty-assignment early-exit removal in the posting subscriber.
+Why kept: equivalent — the validator returns balanced on an empty assignment set; the early exit is a fast path with no observable difference.
 
 ### T-004 [x] — Surface validation failure inline on Sales Order Card with breakdown
 <!-- task=T-004 status=done slice=post-validates-allocation kind=technical -->
@@ -227,7 +259,17 @@ Closeout:
 - Unit: none
 - Integration: `ShowsAllocationMismatchBreakdown`, `HidesBreakdownAfterAllocationCorrection`
 - Build: full gate green
-- Mutation: breakdown visibility and correction-state mutants killed at Integration layer
+
+Mutation verdict:
+
+| | |
+|---|---|
+| Baseline | `c91e07d5` |
+| Report | `.output/mutation-report/20260115-091847.md` |
+| Mutants | 2 — breakdown visibility guard, correction-state re-evaluation |
+| Killed | 2 by named tests |
+| Survivors | 0 |
+| Final gate | full green |
 
 ### T-006 [x] — Verify: Order Processor posts a sales document with charge allocation
 <!-- task=T-006 status=done slice=post-validates-allocation kind=verify -->
