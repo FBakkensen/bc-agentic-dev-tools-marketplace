@@ -21,10 +21,10 @@ This section leads the file on purpose: skill bodies are re-injected after compa
    | technical task `ready` | `/al-refine T-NNN` |
    | technical task `ready-for-implementation` | `/al-implement T-NNN` |
    | slice technical tasks `done`, verify task `ready` | `/al-refine T-NNN` (verify) |
-   | verify task `ready-for-verification`, no clean per-slice review | `/al-code-review T-NNN` |
+   | verify task `ready-for-verification` without `review=clean` on its comment line | `/al-code-review T-NNN` |
    | backend-only slice all `done` (no `kind=verify`), next slice's first task still `blocked` | `/al-code-review` per-slice — its clean-review gate opens the next slice |
-   | clean review, `Journey Examples` present, no `.yml` recording | `/al-page-script T-NNN` |
-   | clean review, `.yml` present or no E2E recording needed | `/al-user-verification T-NNN` |
+   | verify task carries `review=clean`, `Journey Examples` present, no `.yml` recording | `/al-page-script T-NNN` |
+   | verify task carries `review=clean`, `.yml` present or no E2E recording needed | `/al-user-verification T-NNN` |
    | every task in feature `done` | feature-done `/al-code-review` rounds |
 
 3. **Close.** End the turn by surfacing the status-line table, the freshest gate evidence, and the line `AUTONOMY RUN ACTIVE — specs/<NNN>-<slug>`. The goal evaluator judges only what the conversation surfaces; re-surfacing each turn keeps its proof fresher than any compaction summary. The turn that satisfies the final completion clause re-surfaces **all three proofs together** — status table, feature review closer, final gate report — because the other two may by then exist only as compaction summaries, and the evaluator must never need an earlier turn.

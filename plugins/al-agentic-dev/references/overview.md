@@ -43,7 +43,7 @@ Slice mechanics: `/al-refine` opens one `ready` task at a time. Technical tasks 
 | `/al-steer` | Coach and navigator. Reads state, names next step, never edits code. Owns `.out-of-scope/`. Canonical replan venue. | "Where are we?", "what's next?", trigger fired in another skill. |
 | `/al-build` | Compile, publish, run tests; writes results to `.output/TestResults/<dirName>/`. | After modifying AL code or tests. Required gate before commit. |
 | `/al-debug-logging` | Temporary `DEBUG-*` `FeatureTelemetry.LogUsage` probes; read `telemetry.jsonl`; remove probes. Final state: zero `DEBUG-*` in tree. | Runtime behaviour diverges from source and tests can't reveal which path ran. |
-| `/al-page-script` | Generate the slice's bc-replay recording (`.yml`) from the verify task's E2E Journey Examples; example-by-example inner loop against a fresh container; commits the file on green. Produces the recording `/al-user-verification` pre-flights. | After `/al-code-review` per-slice preserves the verify task at `ready-for-verification` (user-facing slice only). |
+| `/al-page-script` | Generate the slice's bc-replay recording (`.yml`) from the verify task's E2E Journey Examples; example-by-example inner loop against a fresh container; commits the file on green. Produces the recording `/al-user-verification` pre-flights. | After `/al-code-review` per-slice stamps `review=clean` on the verify task (user-facing slice only). |
 | `/al-autopilot` | Drives the slice cycle unattended under the runtime goal feature (`/goal`): one step per turn, self-answered triage via `/al-second-opinion`, decisions audited in `specs/<NNN>-<slug>/decision-log.md`, fail-fast stop report on infrastructure or replan-class blockers. Never pushes. | After `/al-scope`, when you want the remaining `tasks.md` work completed autonomously; resume-aware from any manual progress. |
 
 ## Persistence layers
@@ -53,7 +53,7 @@ Two layers, on purpose.
 - **Repo-root, durable across features**: `CONTEXT.md`, `docs/adr/`, `.out-of-scope/`. Owners: `/al-grill-adr` (CONTEXT + domain ADRs), `/al-steer` (out-of-scope). `/al-doc-verify` checks `CONTEXT.md` and domain ADR writes before handoff; `.out-of-scope/` is outside the document gate.
 - **Branch-scoped, per in-flight feature**: `specs/<NNN>-<slug>/event-model.md` (present for user/API-facing features) + `architecture.md` + `tasks.md`. Slug matches the current git branch.
 
-`tasks.md` carries one HTML-comment status line per task: `<!-- task=T-NNN status=ready slice=<slug> kind=technical -->`. Status values: `ready`, `ready-for-implementation`, `ready-for-verification`, `blocked`, `done`. `ready` means ready for `/al-refine`; executable tasks use `ready-for-implementation` or `ready-for-verification`. `T-NNN` IDs monotonic, never reused. `kind=verify` marks the per-slice user-verification task; `kind=technical` marks technical tasks.
+`tasks.md` carries one HTML-comment status line per task: `<!-- task=T-NNN status=ready slice=<slug> kind=technical -->`. Status values: `ready`, `ready-for-implementation`, `ready-for-verification`, `blocked`, `done`. `ready` means ready for `/al-refine`; executable tasks use `ready-for-implementation` or `ready-for-verification`. `T-NNN` IDs monotonic, never reused. `kind=verify` marks the per-slice user-verification task; `kind=technical` marks technical tasks. Verify tasks gain a transient `review=clean` key when `/al-code-review` per-slice runs clean; it strips on any status flip or when new technical work opens in the slice.
 
 ## Cold-start: where do I begin from `main`?
 
