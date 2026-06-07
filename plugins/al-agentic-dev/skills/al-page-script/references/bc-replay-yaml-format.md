@@ -474,8 +474,9 @@ captured `steps: []` [refuted]. Trusted coordinate input is what the recorder ca
 Two paths:
 
 - **Chrome MCP** (`claude-in-chrome`) — proven end-to-end: screenshot → coordinate click →
-  capture. Caveats: user signs in manually (agents don't type credentials); HTTP containers strand
-  the download as `Unconfirmed *.crdownload` — bytes complete, copy it out.
+  capture. Agent signs in itself: `container.username` / `container.password` from repo-root
+  `al-build.json` (defaults `admin` / `P@ssw0rd`), local container hosts only. Caveat: HTTP
+  containers strand the download as `Unconfirmed *.crdownload` — bytes complete, copy it out.
 - **Plugin harness** (below) — when Chrome MCP is absent (Codex, headless). Lifecycle, auth,
   download capture [proven]. Coordinate click `{"cmd":"click","x":<n>,"y":<n>}` →
   `page.mouse.click` [not yet session-proven — verify on first use]; locator commands reach
