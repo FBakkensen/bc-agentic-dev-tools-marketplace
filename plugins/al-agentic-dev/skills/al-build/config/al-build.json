@@ -25,5 +25,10 @@
   },
 
   "tenant": "default",
-  "validateCurrent": true
+  "validateCurrent": true,
+
+  "breakingChange": {
+    "enabled": false,
+    "baselinePackageCachePath": ".output/baseline-cache"
+  }
 }

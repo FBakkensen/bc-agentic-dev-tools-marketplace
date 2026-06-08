@@ -2,12 +2,18 @@
 
 <#
 .SYNOPSIS
-    Validate AL app against previous release for breaking changes.
+    Validate the AL app against the provisioned baseline for breaking changes.
 
 .DESCRIPTION
-    Downloads the latest release from GitHub and runs Run-AlValidation
-    to check for breaking changes. Uses AppSourceCop.json for affixes
-    and supported countries configuration.
+    The heavyweight AppSource-style check (per-country, install/upgrade) that the
+    compile-time AppSourceCop pass cannot do. Reads the previous release + its
+    dependencies from the baseline package cache that provision.ps1 populated
+    (download-baseline.ps1) and runs Run-AlValidation against them.
+
+    Does NOT download — the cache is the single source of truth. Empty cache ->
+    fails loud with "run provision.ps1", never a silent pass.
+
+    Uses AppSourceCop.json for affixes and supported countries.
 
 .EXAMPLE
     pwsh -File validate-breaking-changes.ps1
@@ -32,15 +38,21 @@ $Exit = Get-ExitCode
 
 Write-BuildHeader 'Breaking Change Validation'
 
-# First build the app
+if (-not $config.BreakingChangeEnabled) {
+    Write-BuildMessage -Type Detail -Message "breakingChange.enabled is false - skipping validation."
+    exit 0
+}
+
+# Build the current app
 Write-BuildMessage -Type Step -Message "Building current app..."
 Invoke-ALBuild -AppDir $config.AppDir -WarnAsError:(ConvertTo-Boolean $config.WarnAsError)
 
-# Resolve app directory
 $absoluteAppDir = (Resolve-Path -Path $config.AppDir).Path
 Write-BuildMessage -Type Detail -Message "App Directory: $absoluteAppDir"
 
-$validateCurrent = $config.ValidateCurrent -eq "1"
+# ConvertTo-Boolean handles bool/'1'/'true'/'True' uniformly — the env round-trip
+# stringifies the JSON boolean, so a plain -eq "1" test silently reads false.
+$validateCurrent = ConvertTo-Boolean $config.ValidateCurrent
 Write-BuildMessage -Type Detail -Message "Validate Current: $validateCurrent"
 
 Write-BuildHeader 'AppSourceCop Configuration'
@@ -78,127 +90,74 @@ if (-not $currentAppPath -or -not (Test-Path $currentAppPath)) {
 $currentApp = Get-Item $currentAppPath
 Write-BuildMessage -Type Success -Message "Found: $($currentApp.Name)"
 
-Write-BuildHeader 'Previous Release'
+Write-BuildHeader 'Baseline Cache'
 
-# Check gh CLI
-if (-not (Get-Command gh -ErrorAction SilentlyContinue)) {
-    Write-BuildMessage -Type Error -Message "GitHub CLI (gh) not found"
-    exit $Exit.MissingTool
+# Resolve repo root + absolute cache directory (same convention as download-baseline.ps1)
+$repoRoot = & git rev-parse --show-toplevel 2>$null
+if ($LASTEXITCODE -ne 0 -or -not $repoRoot) {
+    $repoRoot = (Get-Location).Path
+}
+if ($IsWindows -or $env:OS -match 'Windows') {
+    $repoRoot = $repoRoot -replace '/', '\'
+}
+$cacheDir = if ([System.IO.Path]::IsPathRooted($config.BaselinePackageCachePath)) {
+    $config.BaselinePackageCachePath
+} else {
+    Join-Path $repoRoot $config.BaselinePackageCachePath
 }
 
-if (-not (Test-GhAuthentication)) {
-    Write-BuildMessage -Type Error -Message "GitHub CLI not authenticated. Run 'gh auth login'"
+# provision.ps1 owns the fetch. No cache -> stop loud; never a silent green.
+$cachedApps = @()
+if (Test-Path $cacheDir) {
+    $cachedApps = @(Get-ChildItem -Path $cacheDir -Filter '*.app' -File -ErrorAction SilentlyContinue)
+}
+if ($cachedApps.Count -eq 0) {
+    Write-BuildMessage -Type Error -Message "Baseline cache empty at $cacheDir - run provision.ps1 (breakingChange.enabled) to populate it."
     exit $Exit.Contract
 }
 
-# Get latest release
-Write-BuildMessage -Type Step -Message "Fetching latest release..."
-$releaseInfo = gh release view --json tagName,assets 2>$null | ConvertFrom-Json
+# Split the flat cache: the previous main app vs its dependencies, by app name.
+$appJson = Get-AppJsonObject $config.AppDir
+$previousApps = @($cachedApps | Where-Object { $_.Name -like "*$($appJson.name)*" } | ForEach-Object { $_.FullName })
+$dependencyApps = @($cachedApps | Where-Object { $_.Name -notlike "*$($appJson.name)*" } | ForEach-Object { $_.FullName })
 
-if (-not $releaseInfo) {
-    Write-BuildMessage -Type Warning -Message "No releases found - skipping validation"
-    exit 0
+if ($previousApps.Count -eq 0) {
+    Write-BuildMessage -Type Error -Message "No baseline for '$($appJson.name)' in cache - re-run provision.ps1."
+    exit $Exit.Contract
+}
+Write-BuildMessage -Type Success -Message "Baseline: $([System.IO.Path]::GetFileName($previousApps[0]))"
+if ($dependencyApps.Count -gt 0) {
+    Write-BuildMessage -Type Detail -Message "Dependencies: $($dependencyApps.Count)"
 }
 
-Write-BuildMessage -Type Detail -Message "Latest release: $($releaseInfo.tagName)"
+Write-BuildHeader 'Running Validation'
 
-# Download previous app
-$tempDir = New-TemporaryDirectory
+Import-BCContainerHelper
+
+$validationParams = @{
+    countries          = $supportedCountries
+    apps               = @($currentAppPath)
+    previousApps       = $previousApps
+    installApps        = $dependencyApps
+    affixes            = $affixes
+    supportedCountries = $supportedCountries
+    validateCurrent    = $validateCurrent
+    failOnError        = $true
+    includeWarnings    = $true
+}
+
+Write-BuildMessage -Type Step -Message "Running AL validation..."
+
 try {
-    Write-BuildMessage -Type Step -Message "Downloading previous release..."
+    Run-AlValidation @validationParams
 
-    $appFiles = @(Get-ReleaseAppFiles -ReleaseTag $releaseInfo.tagName -OutputDir $tempDir -ExcludeTest $true)
-
-    if (-not $appFiles -or $appFiles.Count -eq 0) {
-        Write-BuildMessage -Type Warning -Message "No .app file in release - skipping validation"
-        exit 0
+    Write-BuildHeader 'Validation Complete'
+    Write-BuildMessage -Type Success -Message "No breaking changes detected"
+} catch {
+    Write-BuildHeader 'Validation Failed'
+    Write-BuildMessage -Type Error -Message "Breaking changes detected"
+    if ($_.Exception.Message) {
+        Write-BuildMessage -Type Detail -Message $_.Exception.Message
     }
-
-    $previousAppPath = $appFiles[0].FullName
-    Write-BuildMessage -Type Success -Message "Found: $($appFiles[0].Name)"
-
-    # Download dependencies
-    Write-BuildHeader 'Dependencies'
-
-    $dependencyApps = @()
-    $probingPaths = Get-AlGoDependencyProbingPaths -WorkspaceRoot (Get-Location)
-
-    foreach ($dependency in $probingPaths) {
-        try {
-            $spec = Get-RepoFromUrl $dependency.repo
-        } catch {
-            Write-BuildMessage -Type Error -Message "Unparseable repo URL '$($dependency.repo)': $_"
-            exit $Exit.Contract
-        }
-
-        if (-not (Test-GhHostAuthentication -HostName $spec.HostName)) {
-            Write-BuildMessage -Type Error -Message "Not authenticated to $($spec.HostName). Run: gh auth login --hostname $($spec.HostName)"
-            exit $Exit.Contract
-        }
-
-        $releaseTag = if ($dependency.version -eq 'latest' -or -not $dependency.version) { 'latest' } else { $dependency.version }
-        $repoDisplay = "$($spec.Owner)/$($spec.Repo)"
-
-        Write-BuildMessage -Type Step -Message "Downloading dependency: $repoDisplay ($releaseTag) from $($spec.HostName)"
-
-        $depDir = Join-Path $tempDir ("deps_{0}_{1}_{2}" -f $spec.HostName.Replace('.', '_'), $spec.Owner, $spec.Repo)
-        New-Item -ItemType Directory -Path $depDir -Force | Out-Null
-
-        $repoArg = "$($spec.HostName)/$($spec.Owner)/$($spec.Repo)"
-        $depApps = @(Get-ReleaseAppFiles -ReleaseTag $releaseTag -Repo $repoArg -OutputDir $depDir -ExcludeTest $true)
-
-        if ($depApps.Count -eq 0) {
-            Write-BuildMessage -Type Error -Message "No apps found in $repoDisplay on $($spec.HostName)"
-            exit $Exit.Contract
-        }
-
-        foreach ($app in $depApps) {
-            Write-BuildMessage -Type Success -Message "Found: $($app.Name)"
-            $dependencyApps += $app.FullName
-        }
-    }
-
-    if ($dependencyApps.Count -gt 0) {
-        Write-BuildMessage -Type Detail -Message "Total dependencies: $($dependencyApps.Count)"
-    }
-
-    Write-BuildHeader 'Running Validation'
-
-    Import-BCContainerHelper
-
-    # Get BC artifact for validation
-    $artifactUrl = Get-BcArtifactUrl -type 'OnPrem' -country $config.ArtifactCountry -select $config.ArtifactSelect
-
-    $validationParams = @{
-        countries             = $supportedCountries
-        apps                  = @($currentAppPath)
-        previousApps          = @($previousAppPath)
-        installApps           = $dependencyApps
-        affixes               = $affixes
-        supportedCountries    = $supportedCountries
-        validateCurrent       = $validateCurrent
-        failOnError           = $true
-        includeWarnings       = $true
-    }
-
-    Write-BuildMessage -Type Step -Message "Running AL validation..."
-
-    try {
-        Run-AlValidation @validationParams
-
-        Write-BuildHeader 'Validation Complete'
-        Write-BuildMessage -Type Success -Message "No breaking changes detected"
-    } catch {
-        Write-BuildHeader 'Validation Failed'
-        Write-BuildMessage -Type Error -Message "Breaking changes detected"
-        if ($_.Exception.Message) {
-            Write-BuildMessage -Type Detail -Message $_.Exception.Message
-        }
-        exit $Exit.Analysis
-    }
-
-} finally {
-    if (Test-Path $tempDir) {
-        Remove-Item -Path $tempDir -Recurse -Force -ErrorAction SilentlyContinue
-    }
+    exit $Exit.Analysis
 }

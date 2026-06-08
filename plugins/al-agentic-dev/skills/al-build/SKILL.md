@@ -160,8 +160,19 @@ Key config fields:
 - `testApps` — array of test app directory paths (default: `["test"]`)
 - `unitTestApp` — path to AL Runner unit test app (default: `""`, disabled). When set, `test.ps1` runs AL Runner unit tests as fast gate before container tests. App may also appear in `testApps` → container tests run all `testApps` regardless.
 - `unitTestInitEvents` — fire BC lifecycle events (`OnCompanyInitialize`, `OnInstallAppPerCompany`) before AL Runner tests (default: `false`). Enable if unit tests depend on install-time data.
+- `breakingChange.enabled` — enable breaking-change detection (default: `false`). See below.
+- `breakingChange.baselinePackageCachePath` — baseline package cache dir (default: `.output/baseline-cache`, gitignored).
 
 _Avoid_: editing plugin's template `config/al-build.json`. It's a template, not the live config. Repo-root copy is the live one.
+
+## Breaking-change detection
+
+Off by default (`breakingChange.enabled`). When on, two mechanisms, split by cost:
+
+- **Compile-time, in every gate.** `provision.ps1` caches the latest release + deps and points `AppSourceCop.json` at them. A break then surfaces as a normal `AS00xx` diagnostic inside `test.ps1`'s compile (`-UnitTestOnly` included). `AS0001`–`AS0018` default to Error → red gate, like any cop. Not a special verdict — the rule ID is the signal; tune severity in `al.ruleset.json`. No `summary.json` change.
+- **Standalone heavyweight.** `validate-breaking-changes.ps1` runs the broader AppSource sim (per-country, install/upgrade) against the same cache. Reads the cache, never downloads; empty cache → stops with *"run provision.ps1"*. Not wired into `test.ps1` — a feature-end / pre-release check, never the inner loop.
+
+`provision.ps1` is the sole baseline fetcher and now refreshes per feature (re-run when a new release is cut). No release yet → detection stays cleanly off, never a false green.
 
 ## Container recovery
 

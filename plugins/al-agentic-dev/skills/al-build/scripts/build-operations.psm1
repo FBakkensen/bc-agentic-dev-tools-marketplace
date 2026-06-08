@@ -127,6 +127,19 @@ function Get-BuildConfig {
         return $Default
     }
 
+    # Helper for nested breakingChange config values
+    function Resolve-BreakingChangeValue {
+        param([string]$Key, [string]$EnvVar, $Default)
+        if ($Overrides.ContainsKey($Key) -and $null -ne $Overrides[$Key]) { return $Overrides[$Key] }
+        $envVal = [Environment]::GetEnvironmentVariable($EnvVar)
+        if ($null -ne $envVal) { return $envVal }
+        if ($defaults.ContainsKey('breakingChange') -and $defaults['breakingChange'] -is [hashtable]) {
+            $breakingChange = $defaults['breakingChange']
+            if ($breakingChange.ContainsKey($Key) -and $null -ne $breakingChange[$Key]) { return $breakingChange[$Key] }
+        }
+        return $Default
+    }
+
     # Resolve unitTestApp (single string, empty = disabled)
     $unitTestAppRaw = Resolve-Value 'unitTestApp' 'ALBT_UNIT_TEST_APP' ''
     $unitTestApp = ''
@@ -159,6 +172,8 @@ function Get-BuildConfig {
         Tenant                              = Resolve-Value 'tenant' 'ALBT_BC_TENANT' 'default'
         ValidateCurrent                     = Resolve-Value 'validateCurrent' 'ALBT_VALIDATE_CURRENT' '1'
         ApplicationInsightsConnectionString = Resolve-Value 'applicationInsightsConnectionString' 'ALBT_APPLICATION_INSIGHTS_CONNECTION_STRING' ''
+        BreakingChangeEnabled               = ConvertTo-Boolean (Resolve-BreakingChangeValue 'enabled' 'ALBT_BREAKING_CHANGE_ENABLED' $false)
+        BaselinePackageCachePath            = Resolve-BreakingChangeValue 'baselinePackageCachePath' 'ALBT_BASELINE_CACHE_PATH' '.output/baseline-cache'
     }
 
     return $config
@@ -194,6 +209,8 @@ function Set-BuildEnvironment {
     $env:ALBT_BC_TENANT = $Config.Tenant
     $env:ALBT_VALIDATE_CURRENT = $Config.ValidateCurrent
     $env:ALBT_APPLICATION_INSIGHTS_CONNECTION_STRING = $Config.ApplicationInsightsConnectionString
+    $env:ALBT_BREAKING_CHANGE_ENABLED = $Config.BreakingChangeEnabled
+    $env:ALBT_BASELINE_CACHE_PATH = $Config.BaselinePackageCachePath
 }
 
 # =============================================================================
@@ -1337,6 +1354,82 @@ function ConvertTo-Boolean {
 }
 
 # =============================================================================
+# Breaking-Change Baseline
+# =============================================================================
+
+function Get-BaselineVersion {
+    <#
+    .SYNOPSIS
+        Derive the baseline app version for AppSourceCop.
+    .DESCRIPTION
+        Prefers the trailing token of the .app filename (BcContainerHelper
+        convention: <publisher>_<name>_<version>.app), falling back to the
+        release tag (leading 'v' stripped). Returns $null when neither yields a
+        valid 2- to 4-part version — the caller fails loud rather than write a
+        bad baseline.
+    .PARAMETER AppFileName
+        The baseline .app file name (with or without the .app extension).
+    .PARAMETER ReleaseTag
+        The release tag to fall back to.
+    #>
+    param(
+        [Parameter(Mandatory)][string]$AppFileName,
+        [string]$ReleaseTag
+    )
+    $baseName = $AppFileName -replace '\.app$', ''
+    $token = ($baseName -split '_')[-1]
+    if ($token -match '^\d+(\.\d+){1,3}$') { return $token }
+    $tag = $ReleaseTag -replace '^v', ''
+    if ($tag -match '^\d+(\.\d+){1,3}$') { return $tag }
+    return $null
+}
+
+function Set-AppSourceCopBaseline {
+    <#
+    .SYNOPSIS
+        Point an AppSourceCop.json object at a baseline (version + cache path).
+    .DESCRIPTION
+        Mutates the PSCustomObject in place, preserving existing key order and
+        single-element arrays (PSCustomObject + ConvertTo-Json round-trips both).
+        Existing version/baselinePackageCachePath values are updated, not
+        duplicated. Returns the object for chaining.
+    .PARAMETER Object
+        The AppSourceCop.json object (from ConvertFrom-Json).
+    .PARAMETER Version
+        Baseline version string.
+    .PARAMETER CachePath
+        baselinePackageCachePath value (relative to the app folder).
+    #>
+    param(
+        [Parameter(Mandatory)]$Object,
+        [Parameter(Mandatory)][string]$Version,
+        [Parameter(Mandatory)][string]$CachePath
+    )
+    foreach ($pair in @(@{ n = 'version'; v = $Version }, @{ n = 'baselinePackageCachePath'; v = $CachePath })) {
+        if ($Object.PSObject.Properties[$pair.n]) { $Object.$($pair.n) = $pair.v }
+        else { $Object | Add-Member -NotePropertyName $pair.n -NotePropertyValue $pair.v }
+    }
+    return $Object
+}
+
+function Clear-AppSourceCopBaseline {
+    <#
+    .SYNOPSIS
+        Remove the baseline version so AppSourceCop stops breaking-change checks.
+    .DESCRIPTION
+        Drops the 'version' property (the switch that activates breaking-change
+        detection per AS0003 docs), leaving affixes/countries/cache path intact.
+        Used when no release exists — detection stays cleanly off, never a false
+        green. Returns the object for chaining.
+    .PARAMETER Object
+        The AppSourceCop.json object (from ConvertFrom-Json).
+    #>
+    param([Parameter(Mandatory)]$Object)
+    if ($Object.PSObject.Properties['version']) { $Object.PSObject.Properties.Remove('version') }
+    return $Object
+}
+
+# =============================================================================
 # Module Exports
 # =============================================================================
 
@@ -1345,6 +1438,11 @@ Export-ModuleMember -Function @(
     'Get-BuildConfig'
     'Set-BuildEnvironment'
     'ConvertTo-Boolean'
+
+    # Breaking-change baseline
+    'Get-BaselineVersion'
+    'Set-AppSourceCopBaseline'
+    'Clear-AppSourceCopBaseline'
 
     # Compiler
     'Get-ToolPackageId'

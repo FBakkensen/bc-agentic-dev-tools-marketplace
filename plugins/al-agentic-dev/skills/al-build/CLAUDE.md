@@ -15,8 +15,12 @@ skills/al-build/
 ## Lifecycle (in consuming projects)
 
 1. `init.ps1` — drops `al-build.json` into the consumer repo root.
-2. `provision.ps1` — one-time symbol/Docker setup. Reuses an installed compiler by default; `-UpdateCompiler` is explicit.
+2. `provision.ps1` — per-feature freshness refresh (compiler, symbols, ALCops, and the breaking-change baseline when enabled). Reuses an installed compiler by default; `-UpdateCompiler` is explicit. It already re-fetches symbols every run; owning the baseline (which advances per release) makes the per-feature re-run the norm, not one-time machine setup.
 3. `test.ps1` — the gate. Writes per-run result XML (`last.xml` container, `al-runner.xml` AL Runner) and `telemetry.jsonl` plus `summary.json`.
+
+### Breaking-change baseline
+
+`download-baseline.ps1` is the **sole baseline fetcher**, invoked by `provision.ps1` when `breakingChange.enabled`. It caches the latest release `.app` + AL-Go deps (flat) under `baselinePackageCachePath` and writes `version` + `baselinePackageCachePath` into `app/AppSourceCop.json` from the *same* fetch → `AS0003` (version-not-in-cache) is structurally impossible. `validate-breaking-changes.ps1` (heavyweight `Run-AlValidation`) **reads** that cache, never downloads, and fails loud on an empty cache. The compile-time path needs no script — AppSourceCop reports `AS00xx` during `Invoke-ALBuild` once `version` + cache are set.
 
 ## Smoke test
 
@@ -96,6 +100,8 @@ The oracle is seeded violations — one per diagnostic family, all ten prefixes 
 ## Editing rules
 
 - **Config priority chain is load-bearing.** CLI flag > env var (`ALBT_*`) > `al-build.json` > built-in defaults. Don't reorder; don't add a fifth tier.
+- **`provision.ps1` is the only script allowed to write consumer source.** It writes `version` + `baselinePackageCachePath` into `app/AppSourceCop.json` (via `download-baseline.ps1`). The gate worker (`test.ps1`, delegated, runs constantly) stays read-only on source — never give it a source-mutating step. AppSourceCop edits use a PSCustomObject read-modify-write (preserves key order → stable diffs); the `version`/`baselinePackageCachePath` keys are provision-owned, the rest (affixes, countries) are the dev's.
+- **`validateCurrent` is a `Run-AlValidation` param, not the enable switch.** `breakingChange.enabled` gates the feature. Resolve `validateCurrent` through `ConvertTo-Boolean`, never `-eq "1"` — the env round-trip stringifies the JSON boolean (`true` → `"True"`), so a string compare reads false silently.
 - **Outputs are the contract.** `.output/TestResults/<dirName>/last.xml` (container, JUnit), `.output/TestResults/<dirName>/al-runner.xml` (AL Runner, JUnit), `.output/TestResults/<dirName>/telemetry.jsonl`, and `.output/TestResults/summary.json` (`gate` + per-runner `totals` + `runs[]` with `counts`). `/al-debug-logging` reads `telemetry.jsonl` from subfolders. Don't rename or relocate.
 - **Both result XMLs are deliberately JUnit, one parser.** `Invoke-ALTest` passes `JUnitResultFileName` (not `XUnitResultFileName` — BcContainerHelper supports both, the XUnit dialect differs down to the failure element); AL Runner's `--output-junit` is also JUnit. `Get-JUnitTestCounts` parses both; counts are never derived from console lines (the `Codeunit … Success` stream lines are test codeunits, not tests). Missing/unparseable XML → `counts: null`, never zeros.
 - **Scripts run from the consumer repo root.** Not from this marketplace repo. Keep `Set-Location` discipline; never assume `$PSScriptRoot` is the working dir.

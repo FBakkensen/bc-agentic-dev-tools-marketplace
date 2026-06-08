@@ -87,6 +87,15 @@ if ($config.UnitTestApp -and (Test-Path $config.UnitTestApp)) {
     }
 }
 
+# Step 5: Refresh the breaking-change baseline (when enabled). Cache the previous
+# release + deps and point AppSourceCop at them, so AS00xx surfaces at compile.
+if ($config.BreakingChangeEnabled) {
+    & "$PSScriptRoot/download-baseline.ps1"
+    if ($LASTEXITCODE -ne 0) {
+        throw "Breaking-change baseline refresh failed"
+    }
+}
+
 Write-BuildHeader 'Provision Complete'
 Write-BuildMessage -Type Success -Message "Environment is ready for development"
 Write-BuildMessage -Type Info -Message "Next: Run 'pwsh $PSScriptRoot/test.ps1' to build and test"

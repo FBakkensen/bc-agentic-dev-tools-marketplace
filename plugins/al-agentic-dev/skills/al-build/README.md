@@ -37,14 +37,15 @@ pwsh scripts/test.ps1
 |---|---|
 | `test.ps1` | **Canonical gate.** Build, publish, run tests. |
 | `init.ps1` | Drop `al-build.json` in repo root. |
-| `provision.ps1` | One-time setup (compiler + analyzers + symbols). Reuses an installed compiler unless `-UpdateCompiler` is passed; refreshes ALCops analyzers on every run. |
+| `provision.ps1` | Per-feature freshness refresh (compiler + analyzers + symbols, plus the breaking-change baseline when enabled). Reuses an installed compiler unless `-UpdateCompiler` is passed; refreshes ALCops analyzers on every run. |
 | `clean.ps1` | Remove build artifacts. |
 | `new-bc-container.ps1` | Create golden BC container. |
 | `commit-bc-container.ps1` | Commit container to snapshot image. |
 | `new-agent-container.ps1` | Create agent container from snapshot. |
 | `prune.ps1` | Remove orphaned containers. |
 | `pagescript-replay.ps1` | Run page script YAML replays. |
-| `validate-breaking-changes.ps1` | Check public API changes. |
+| `download-baseline.ps1` | Cache the previous release + deps and point AppSourceCop at them (sole baseline fetcher; invoked by `provision.ps1`). |
+| `validate-breaking-changes.ps1` | Heavyweight AppSource-style validation (per-country, install/upgrade) against the cached baseline. Reads the cache; does not download. |
 
 ## Daily loop
 
@@ -105,6 +106,8 @@ The plugin's `config/al-build.json` is a template, not the live config. Copy it 
 | `ALBT_BC_ARTIFACT_COUNTRY` | BC artifact country | `w1` |
 | `ALBT_BC_ARTIFACT_SELECT` | BC version selection | `Latest` |
 | `ALBT_BC_MEMORY_LIMIT` | Docker container memory limit | `8g` |
+| `ALBT_BREAKING_CHANGE_ENABLED` | Enable breaking-change baseline + validation | `false` |
+| `ALBT_BASELINE_CACHE_PATH` | Baseline package cache directory | `.output/baseline-cache` |
 
 ### Project config
 
@@ -156,6 +159,26 @@ Which analyzers run is controlled by `al.codeAnalyzers` in `.vscode/settings.jso
 ```
 
 Resolution is per app: `<appDir>/.vscode/settings.json` wins, repo-root `.vscode/settings.json` is the shared fallback — so the main app can run the full set including AppSourceCop while test apps run a reduced set (TestAutomationCop, no AppSourceCop). In `-UnitTestOnly` mode the unit-test app is not analyzed (AL Runner compiles it internally); test-app analyzers apply in the full gate. No `settings.json` → no analyzers. A requested analyzer that cannot be resolved fails the build — the gate never silently compiles with less lint coverage than the settings ask for. `ALCops.Common.dll` (and `Microsoft.Dynamics.Nav.Analyzers.Common.dll` when no Microsoft analyzer is enabled) is appended automatically when missing from the list. Diagnostic prefixes: `AA` CodeCop, `AW` UICop, `AS` AppSourceCop, `PTE` PerTenantExtensionCop, `AC` ApplicationCop, `DC` DocumentationCop, `FC` FormattingCop, `LC` LinterCop (code-quality subset), `PC` PlatformCop, `TA` TestAutomationCop.
+
+## Breaking-change detection
+
+Off by default. Turn it on with `breakingChange.enabled` in `al-build.json`:
+
+```json
+{
+  "breakingChange": {
+    "enabled": true,
+    "baselinePackageCachePath": ".output/baseline-cache"
+  }
+}
+```
+
+Two mechanisms, split by cost:
+
+- **Compile-time (AppSourceCop)** — the in-gate detector. `provision.ps1` fetches the latest release's `.app` + its dependencies into the baseline cache and writes `version` + `baselinePackageCachePath` into `app/AppSourceCop.json`. A breaking change then surfaces as a normal `AS00xx` diagnostic in every `test.ps1` build (`-UnitTestOnly` included). `AS0001`–`AS0018` default to Error → they fail the build; tune severity in `al.ruleset.json` like any cop. No special verdict, no `summary.json` change — the rule ID is the signal.
+- **Heavyweight (`validate-breaking-changes.ps1`)** — the broader AppSource-style check (per-country, install/upgrade) AppSourceCop's compile pass can't do. Reads the same cache (never downloads); fails loud on an empty cache. Standalone, for a feature-end / pre-release gate point — never the inner loop.
+
+`provision.ps1` is the sole baseline fetcher and owns the freshness: re-run it when a new release is cut so the baseline advances. No release yet → `version` is omitted and detection stays cleanly off (never a false green). `AppSourceCop.json` must list `${AppSourceCop}` in the app's `.vscode/settings.json` for the compile-time path to run. The cache lives under `.output/` (gitignored).
 
 ## Architecture
 
@@ -215,4 +238,5 @@ State files live per-container in the symbol cache directory.
 | Run summary (gate, per-runner totals, run records with counts) | `.output/TestResults/summary.json` |
 | Telemetry | `.output/TestResults/<dirName>/telemetry.jsonl` |
 | Build timing | `.output/logs/build-timing.jsonl` |
+| Breaking-change baseline cache (when enabled) | `.output/baseline-cache/` |
 | Publish state | `~/.bc-symbol-cache/.../publish-state.*.json` |
