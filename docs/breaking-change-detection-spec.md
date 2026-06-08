@@ -46,9 +46,13 @@ Two mechanisms, split by cost: **A** (compile-time AppSourceCop) runs in every g
 End-to-end verified against a real GHE consumer repo:
 
 - `download-baseline.ps1` + `provision.ps1` step 5 — fetched release `27.9.0` from `9altitudes.ghe.com` (no `--repo`, auto-host), derived version `27.9.556.0` from the `.app` filename (tag `27.9.0` would have been wrong → filename-first vindicated), pulled the GHE dependency `License 27.0.30.0`, wrote `version` + `baselinePackageCachePath` into `AppSourceCop.json` without corrupting the single-element arrays, cache flat + gitignored.
-- Mechanism A compile resolution — **no `AS0003`/`AS0091`**: AppSourceCop found the baseline + dep at `../.output/baseline-cache` and reported real breaking changes (`AS0068`/`AS0035`/`AS0004`/`AS0040`/`AS0086`), red gate under `warnAsError`. The load-bearing path-resolution assumption holds.
+- Mechanism A compile resolution — **no `AS0003`/`AS0091`**: AppSourceCop found the baseline + dep at `../.output/baseline-cache` and reported breaking changes, red gate under `warnAsError`. The load-bearing path-resolution assumption holds.
 
-Open nuance (not a wiring defect): several diagnostics read `changed from '__MissingTypeSymbol__'` → the baseline cache holds the app + AL-Go deps but not the Microsoft platform/base symbols the baseline was built against, so some `AS00xx` may be false positives from an incomplete baseline closure. `AS0091` did not fire, but baseline-symbol completeness is worth tuning before trusting the verdicts for hard gating.
+### Baseline symbol closure (the false-positive fix)
+
+First smoke run flooded with `changed from '__MissingTypeSymbol__'` diagnostics: the baseline cache held the app + AL-Go deps but **not** the Microsoft platform/base/system symbols the baseline references, so AppSourceCop could not resolve base types (`Item`, standard enums) on the baseline side and reported every reference as a change. `AS0091` did not catch it — the Microsoft closure is pulled via `application`/`platform`, not the baseline's explicit `dependencies`.
+
+Fix: `download-baseline.ps1` also copies the resolved `Microsoft.*.app` symbols from the project's build symbol cache (`Get-SymbolCacheInfo`) into the baseline cache. They are the current platform version, not the baseline's — but base type identities are stable across minors, and resolving *both* sides against the same Microsoft symbols isolates the diff to the app's own schema changes. Re-smoke: `__MissingTypeSymbol__` dropped to **0**, leaving **5 genuine breaks** (`AS0035` ×2, `AS0040` ×2, `AS0086`). Trustworthy signal.
 
 ## What the brief wanted that we rejected
 

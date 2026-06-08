@@ -180,6 +180,27 @@ try {
         }
     }
 
+    # The baseline also needs the Microsoft platform/base/system closure, or
+    # AppSourceCop cannot resolve base types (Item, standard enums) on the
+    # baseline side and reports every reference as a change from
+    # '__MissingTypeSymbol__' — a flood of false AS00xx. Source the resolved
+    # Microsoft symbols from the project's build cache (download-symbols owns it).
+    # These are the current platform version, not the baseline's: base type
+    # identities are stable across minors, and resolving both sides against the
+    # same Microsoft symbols isolates the diff to the app's own schema changes.
+    Write-BuildHeader 'Platform Symbols'
+    $symbolCacheDir = (Get-SymbolCacheInfo -AppJson $appJson).CacheDir
+    $msSymbols = @()
+    if ($symbolCacheDir -and (Test-Path $symbolCacheDir)) {
+        $msSymbols = @(Get-ChildItem -Path $symbolCacheDir -Filter 'Microsoft.*.app' -File -ErrorAction SilentlyContinue)
+    }
+    if ($msSymbols.Count -eq 0) {
+        Write-BuildMessage -Type Error -Message "No Microsoft symbols in '$symbolCacheDir' - run provision.ps1 (download-symbols) before the baseline."
+        exit $Exit.Contract
+    }
+    foreach ($sym in $msSymbols) { Copy-Item -Path $sym.FullName -Destination $cacheDir -Force }
+    Write-BuildMessage -Type Success -Message "Platform symbols: $($msSymbols.Count)"
+
     # Point AppSourceCop at the baseline. Path is relative to the app folder
     # (where AppSourceCop.json lives), forward-slashed for portability.
     $relCache = [System.IO.Path]::GetRelativePath($absoluteAppDir, $cacheDir) -replace '\\', '/'
