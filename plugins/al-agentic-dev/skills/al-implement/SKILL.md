@@ -15,7 +15,7 @@ Pick next `ready-for-implementation` technical task from `tasks.md`. Consume its
 
 - Branch matches `^\d{3}-`. If not: **Stop**. Run `/al-event-model` (or `/al-design` for backend-only).
 - `specs/<branch>/` holds `tasks.md` + `architecture.md`. Missing → `/al-design`.
-- Target task `kind=technical`. `kind=verify` → **Stop**; route via `/al-steer` or `/al-code-review` based on verification state.
+- Target task `kind=technical`. `kind=verify` → **Stop**; route via `/al-steer` or `/al-code-review` based on verification state. `kind=provision` → `/al-provision`; `kind=breaking-change` → `/al-validate-breaking-changes` (ops tasks, run-and-flip, never reach `ready-for-implementation`).
 - Target task `status=ready-for-implementation` with populated `Test Specification`. Plain `ready` → **Stop**, `/al-refine T-NNN`. `ready-for-implementation` with empty or missing `Test Specification` → **Stop**, `/al-steer`; status and proof disagree. `blocked` → `/al-steer`. `done` → downstream evidence exists; do not reopen here.
 - Read [`test-specification.md`](../../references/test-specification.md), [`test-strategy.md`](../../references/test-strategy.md), [`tdd.md`](../../references/tdd.md), and [`testability.md`](../../references/testability.md).
 

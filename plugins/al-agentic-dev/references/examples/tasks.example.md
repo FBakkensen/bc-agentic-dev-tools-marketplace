@@ -13,6 +13,8 @@
 
 Catch item charge allocation mismatches at posting before invoice posts, surface cause inline on document, produce deterministic audit trail tying each allocation back to source line.
 
+> A fresh `/al-scope` run brackets the feature tasks with two ops tasks, omitted below to keep the focus on slice and proof shapes: `T-001 kind=provision slice=provision` first (`/al-provision` refreshes the build environment) and a `kind=breaking-change slice=breaking-change` task last, `Depends on:` the final terminal task (`/al-validate-breaking-changes`). Both carry no proof section and run `ready` → `done`/`blocked`, bypassing `/al-refine`. The feature tasks shown here would shift to `T-002…` after provision.
+
 ## Slice: post-validates-allocation
 
 ### T-001 [x] — Read released sales order item charge assignments

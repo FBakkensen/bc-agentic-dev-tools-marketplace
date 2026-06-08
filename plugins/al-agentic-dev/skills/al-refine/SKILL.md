@@ -25,6 +25,8 @@ Fill one named `status=ready` task in `tasks.md`. Branch by `kind=` on the comme
 
 Read task's `kind=` value. `technical` writes a `Test Specification` and flips `ready` → `ready-for-implementation`. `verify` writes a `Verification Plan` and flips `ready` → `ready-for-verification`.
 
+`kind=provision` or `kind=breaking-change` → **not a refine target**. These ops tasks carry no proof artifact; they run a script and flip status. Write nothing, leave `status=ready`, notify: *"ops task → run `/al-provision`"* (`kind=provision`) or *"ops task → run `/al-validate-breaking-changes`"* (`kind=breaking-change`).
+
 ## Regenerate proof
 
 Preserve scope-time context: title, description, `Depends on:`, `Refactors:`, `Fixes:`, slice grouping, constraints, risks, source context, acceptance intent. Rewrite the proof section whole. Do not preserve stale `Test Specification`, `Verification Plan`, AAA cases, coverage tables, examples, or charters because they existed in the task block.

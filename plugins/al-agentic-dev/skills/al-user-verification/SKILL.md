@@ -109,7 +109,7 @@ Session interrupted mid-walk leaves the verify task at `ready-for-verification` 
 
 ## Gate event
 
-Once when the verify task flips to `done`. Gate report names slice (slug + `event-model.md` step), what the agent confirmed in BC vocabulary (Role action, Business Event, View state, Status value, API/client result), the usability findings surfaced (→ candidate tasks), the evidence captured, the second-opinion outcome (reconciled / skipped), next handoff: `/al-refine` on first technical task of next slice, or `/al-code-review` per-feature if this was the last slice.
+Once when the verify task flips to `done`. Gate report names slice (slug + `event-model.md` step), what the agent confirmed in BC vocabulary (Role action, Business Event, View state, Status value, API/client result), the usability findings surfaced (→ candidate tasks), the evidence captured, the second-opinion outcome (reconciled / skipped), next handoff: `/al-refine` on first technical task of next slice; or, if this was the last slice, **open the `kind=breaking-change` task `blocked` → `ready`** (its `Depends on:` this verify task is now satisfied — this skill is its named flip-owner) and hand off to `/al-validate-breaking-changes`, then `/al-code-review` per-feature.
 
 Gate report on failure (flipping to `blocked`) is the Stop shape from [voice-contract.md](../../references/voice-contract.md): one stop line naming example / check / observed-vs-expected, state table (verify task ID, examples completed, example blocked on), next action (route to `/al-steer`).
 
@@ -118,7 +118,7 @@ Gate report on failure (flipping to `blocked`) is the Stop shape from [voice-con
 | | |
 |---|---|
 | **Runs after**     | `/al-page-script` committed the slice's `.yml` when `Journey Examples` exist, and `/al-code-review` per-slice stamped `review=clean` on the verify task at `ready-for-verification` |
-| **Hands off to**   | next slice's technical tasks opened to `ready` for `/al-refine`; or `/al-code-review` per-feature if this was last slice. `/al-steer` on failure (after `status=blocked`, whether pre-flight red or functional-walk fail). Usability findings → candidate tasks in the slice. |
+| **Hands off to**   | next slice's technical tasks opened to `ready` for `/al-refine`; or — if this was the last slice — the `kind=breaking-change` task opened `blocked` → `ready`, then `/al-validate-breaking-changes` (then `/al-code-review` per-feature). `/al-steer` on failure (after `status=blocked`, whether pre-flight red or functional-walk fail). Usability findings → candidate tasks in the slice. |
 | **Uses**           | `new-agent-container.ps1` (three spawns per cycle), `pagescript-replay.ps1` (batch mode for spawn #1's pre-flight), `publish-apps.ps1` (spawn #2 publish before the agent walk), `claude-in-chrome` (spawn #2 drives the walk + captures evidence), `/al-second-opinion` (verdict review before the gate), [`../../references/test-specification.md`](../../references/test-specification.md) (`Verification Plan` grammar), [`../../references/test-strategy.md`](../../references/test-strategy.md) (layer + checking-vs-testing frame) |
 | **Replan venue**   | `/al-steer` — trigger #4 (pre-flight prior-slice red), trigger #8 (pre-flight current-slice red or functional-walk fail) |
 | **Sidebands**      | `/grill-me` (adjudicate an ambiguous usability finding, or whether an observation matches the expected outcome), `/al-research` (BC surface behaviour to verify against documentation) |

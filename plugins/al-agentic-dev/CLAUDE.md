@@ -9,7 +9,7 @@ Two layers, on purpose.
 - **Repo-root, durable across features**, markdown: `CONTEXT.md`, `docs/adr/`, `.out-of-scope/`. Owners: `/al-grill-adr` (CONTEXT + domain ADRs), `/al-steer` (out-of-scope). `/al-doc-verify` checks `CONTEXT.md` and domain ADR writes before handoff; `.out-of-scope/` is outside the document gate.
 - **Branch-scoped, per in-flight feature**, markdown: `specs/<NNN>-<slug>/event-model.md` (user-facing journey, present for user/API-facing features) + `architecture.md` + `tasks.md`. Slug matches the current git branch.
 
-`tasks.md` is the per-feature task bus. Status lives on a one-line HTML comment immediately under each `### T-NNN` heading, single source of truth: `<!-- task=T-NNN status=ready slice=<slug> kind=technical -->`. `status=` values are `ready`, `ready-for-implementation`, `ready-for-verification`, `blocked`, `done`. `ready` means the task is ready for `/al-refine` only. `ready-for-implementation` means a technical task has a fresh `Test Specification`. `ready-for-verification` means a verify task has a fresh `Verification Plan`. `blocked` means dependency or context is missing. `done` means downstream evidence exists. `T-NNN` IDs are monotonic and never reused. `slice=<slug>` groups tasks by one `event-model.md` timeline step (user-facing) or `architecture.md` slice (backend-only); `kind=verify` marks the per-slice verification task, `kind=technical` marks technical tasks. `review=clean` is an optional transient fifth key on verify tasks: written only by `/al-code-review` on a clean per-slice review (the durable evidence `/al-autopilot`, `/al-page-script`, `/al-user-verification`, and `/al-steer` read — `ready-for-verification` alone reads identically before and after review), stripped in the same Edit by any flip off `ready-for-verification` and by any skill opening a technical task in the slice. `/al-doc-verify` checks the written markdown artifact before handoff.
+`tasks.md` is the per-feature task bus. Status lives on a one-line HTML comment immediately under each `### T-NNN` heading, single source of truth: `<!-- task=T-NNN status=ready slice=<slug> kind=technical -->`. `status=` values are `ready`, `ready-for-implementation`, `ready-for-verification`, `blocked`, `done`. `ready` means the task is ready for `/al-refine` only. `ready-for-implementation` means a technical task has a fresh `Test Specification`. `ready-for-verification` means a verify task has a fresh `Verification Plan`. `blocked` means dependency or context is missing. `done` means downstream evidence exists. `T-NNN` IDs are monotonic and never reused. `slice=<slug>` groups tasks by one `event-model.md` timeline step (user-facing) or `architecture.md` slice (backend-only); `kind=verify` marks the per-slice verification task, `kind=technical` marks technical tasks. Two **ops kinds** bracket the feature: `kind=provision` (`T-001`, `slice=provision`) and `kind=breaking-change` (last, `slice=breaking-change`) on reserved non-feature slugs; they carry no proof artifact, bypass `/al-refine`, and run `ready` → `done` (or `blocked`) via `/al-provision` / `/al-validate-breaking-changes`. Each `blocked` → `ready` flip has a named owner like the cross-slice gate: `/al-provision` opens the first slice on its `done`; the skill landing the feature's final terminal task `done` (`/al-user-verification` last verify, or `/al-code-review` last backend slice) opens the breaking-change task. `review=clean` is an optional transient fifth key on verify tasks: written only by `/al-code-review` on a clean per-slice review (the durable evidence `/al-autopilot`, `/al-page-script`, `/al-user-verification`, and `/al-steer` read — `ready-for-verification` alone reads identically before and after review), stripped in the same Edit by any flip off `ready-for-verification` and by any skill opening a technical task in the slice. `/al-doc-verify` checks the written markdown artifact before handoff.
 
 **Branch creation is shared between `/al-event-model` and `/al-design`.** The first per-feature skill to run from `main` creates the branch and `specs/<NNN>-<slug>/`. For user/API-facing features that runs `/al-event-model` first; backend-only features skip `/al-event-model` and `/al-design` does it.
 
@@ -23,7 +23,7 @@ Slice cycle: `/al-refine` selects one named `ready` technical task, writes its `
 
 ## Skills
 
-User-facing catalogue (19 skills, role + when-to-invoke) lives in [`references/overview.md`](references/overview.md). Edit it in lockstep when adding, removing, renaming, or repurposing a skill.
+User-facing catalogue (21 skills, role + when-to-invoke) lives in [`references/overview.md`](references/overview.md). Edit it in lockstep when adding, removing, renaming, or repurposing a skill.
 
 Skills compose by name. When you change a skill, scan the others for cross-references and update in lockstep. Cross-skill orchestration depth (gate flip mechanics, replan triggers, slice-cycle suppression rules) lives in the owning skill's `SKILL.md` and in the dev-time slice-cycle paragraph above; the user-facing overview stays tour-shape.
 
@@ -38,7 +38,7 @@ Skills compose by name. When you change a skill, scan the others for cross-refer
 - **Spec artifacts are text-only.** Name relationships in prose; gates in `Depends on:` lines on tasks. No mermaid fences; Claude Desktop's markdown preview and other viewers lack mermaid support, and a second encoding alongside text just drifts.
 - **Spec artifacts are pure markdown.** Visual polish is a separate dev-server concern; the spec is text.
 - **`architecture.md` is reshape-only.** Written by `/al-design`, read by everyone downstream. Never edit in place; re-run `/al-design`. No surgical-edit contract.
-- **`tasks.md` carries one surgical-edit contract.** Maintaining skills find a task by `<!-- task=T-NNN ... -->` and flip its `status=` value, stripping `review=clean` in the same Edit when the line carries it. `/al-scope` writes `slice=<slug>` on every task and `kind=verify` on per-slice verify tasks (technical tasks carry `kind=technical`); downstream skills read these but do not change them (a slice or kind change is replan work, routes through `/al-steer`). `/al-code-review` is the sole writer of `review=clean`. The heading marker is a visible fallback; the comment-line `status=` value is source of truth. The agent flips both; the comment-line attribute is the byte the Edit anchors on. See `references/markdown-spec-discipline.md`.
+- **`tasks.md` carries one surgical-edit contract.** Maintaining skills find a task by `<!-- task=T-NNN ... -->` and flip its `status=` value, stripping `review=clean` in the same Edit when the line carries it. `/al-scope` writes `slice=<slug>` and `kind=` (`technical` / `verify` / `provision` / `breaking-change`) on every task; downstream skills read these but do not change them (a slice or kind change is replan work, routes through `/al-steer`). `/al-code-review` is the sole writer of `review=clean`. The heading marker is a visible fallback; the comment-line `status=` value is source of truth. The agent flips both; the comment-line attribute is the byte the Edit anchors on. See `references/markdown-spec-discipline.md`.
 - **New skills need a stated gap.** _Avoid_: spinning up a skill that an existing one can absorb, or that fits as a brief note inside an existing task block, an `/al-research` finding, or a side-band reference. Propose only when no existing skill fits, and say so in one line.
 - **Express intent and rationale, not enumerated rules with skip conditions.** SKILLs and references state *why a discipline exists and what problem it solves*; the agent maps rationale to situation. Slot prescriptions, `_When earned:_` / `_Skip when:_` enumerations, and templates the agent must fill are rejected by name. The agent is capable of shaping output per feature.
 - **`telemetry.jsonl` is a producer/consumer contract between `/al-build` and `/al-debug-logging`.** `/al-build`'s `test.ps1` produces `.output/TestResults/<dirName>/telemetry.jsonl`; `/al-debug-logging`'s Inspect step reads it. Path, per-app subfolder layout, and `FeatureTelemetry.LogUsage` JSON shape are coupled. Change one side, scan the other in the same edit. The coupling lives here because it crosses skill boundaries; per-skill CLAUDE.md cannot enforce it alone.
@@ -54,7 +54,7 @@ Two tiers, on purpose.
 
 | File | Tier | Notes |
 |---|---|---|
-| `overview.md` | plugin-level | user-facing tour: pipeline diagram, 19-skill catalogue (role + when-to-invoke), persistence layers paragraph, cold-start guidance, pointer to `/al-steer` for state-aware nav; emitted verbatim by `/al-agentic-dev-overview`; edit in lockstep with any skill addition / removal / rename |
+| `overview.md` | plugin-level | user-facing tour: pipeline diagram, 21-skill catalogue (role + when-to-invoke), persistence layers paragraph, cold-start guidance, pointer to `/al-steer` for state-aware nav; emitted verbatim by `/al-agentic-dev-overview`; edit in lockstep with any skill addition / removal / rename |
 | `voice-contract.md` | plugin-level | non-voice rules: BC vocab, names-as-citation, lists-of-findings, tables-of-facts, chat carve-out, no-workflow-chatter, 3 chat shape skeletons (Opener / Gate report / Stop); style itself lives at top of each SKILL.md as a one-line Style declaration; read by every skill that writes prose |
 | `testability.md` | plugin-level | three-phase decoupling, three default seams (IEnvironment / IApiRequest / IFinance), five-kind test-double taxonomy with AL code shapes; read by `/al-design`, `/al-implement`, `/al-refactor` |
 | `test-specification.md` | plugin-level | `Test Specification` / `Verification Plan` grammar: Expected Behaviors, Decision Matrix, AAA cases, Contract notes, Out of automated reach, scopes, traceability, closeout summaries with mutation verdict table; read by `/al-refine`, `/al-implement`, `/al-code-review`, `/al-page-script`, `/al-user-verification` |
@@ -89,7 +89,7 @@ The two former agent-shaped workflows now live as skills:
 
 ```
 references/                      # Plugin-level shared, read by ≥2 skills, or cited by shared templates
-├── overview.md                  # User-facing tour: pipeline + 19-skill catalogue + persistence + cold-start; emitted by /al-agentic-dev-overview
+├── overview.md                  # User-facing tour: pipeline + 21-skill catalogue + persistence + cold-start; emitted by /al-agentic-dev-overview
 ├── voice-contract.md            # Non-voice rules + 3 chat shape skeletons; voice declared inline at top of each SKILL.md
 ├── testability.md               # Three-phase decoupling, three default seams, five-kind test-double taxonomy
 ├── test-specification.md        # Test Specification + Verification Plan grammar (incl. Contract notes, Out of automated reach, mutation verdict table)
@@ -133,6 +133,7 @@ skills/
 ├── al-implement/SKILL.md
 ├── al-mutate/SKILL.md
 ├── al-page-script/SKILL.md
+├── al-provision/SKILL.md        # Run kind=provision task → al-build provision.ps1 → flip status
 ├── al-refactor/
 │   ├── SKILL.md
 │   └── references/
@@ -148,7 +149,8 @@ skills/
 │   ├── SKILL.md
 │   └── references/
 │       └── out-of-scope.template.md
-└── al-user-verification/SKILL.md
+├── al-user-verification/SKILL.md
+└── al-validate-breaking-changes/SKILL.md  # Run kind=breaking-change task → validate-breaking-changes.ps1 → flip status
 ```
 
 Tests live at repo root (`tests/<target>/*.Tests.ps1`), not inside any plugin. `plugins/` carries only deliverables.
