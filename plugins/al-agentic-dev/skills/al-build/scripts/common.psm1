@@ -2447,16 +2447,142 @@ function Clear-PublishState {
 # Build Timing History
 # =============================================================================
 
+function Get-GitBranchName {
+    try {
+        $branch = & git rev-parse --abbrev-ref HEAD 2>$null
+        if ($LASTEXITCODE -eq 0 -and $branch) { return ([string]$branch).Trim() }
+    } catch {
+        # git missing or not a repo — branch stays unrecorded
+    }
+    return $null
+}
+
+function Get-GitRepoRoot {
+    try {
+        $root = & git rev-parse --show-toplevel 2>$null
+        if ($LASTEXITCODE -eq 0 -and $root) { return [IO.Path]::GetFullPath(([string]$root).Trim()) }
+    } catch {
+        # git missing or not a repo — fall back to cwd
+    }
+    return (Get-Location).Path
+}
+
+function Get-GateMetricsGlobalPath {
+    if ($env:ALBT_GATE_METRICS_GLOBAL_PATH) { return $env:ALBT_GATE_METRICS_GLOBAL_PATH }
+    return Join-Path ([Environment]::GetFolderPath('UserProfile')) '.al-build' 'gate-metrics.jsonl'
+}
+
+function Get-DirtyFileCounts {
+    <#
+    .SYNOPSIS
+        Buckets dirty workspace files into app / tests / other counts.
+    .DESCRIPTION
+        Reads `git status --porcelain` (or the supplied lines) and counts
+        changed files — modified, added, deleted, renamed, and untracked —
+        by location: under the main app dir, under any test app dir, or
+        elsewhere. This is the workspace evidence gate metrics record at gate
+        time; phase attribution is derived from it at report time instead of
+        trusting a caller-supplied tag.
+    .PARAMETER AppDir
+        Main app directory (repo-relative, e.g. 'app').
+    .PARAMETER TestDirs
+        Test app directories (repo-relative), including the unit test app.
+    .PARAMETER StatusLines
+        Porcelain lines to classify (for tests). Omit to run git.
+    .OUTPUTS
+        Hashtable @{ app; tests; other } or $null when git is unavailable.
+    #>
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$AppDir,
+
+        [string[]]$TestDirs = @(),
+
+        [string[]]$StatusLines
+    )
+
+    if (-not $PSBoundParameters.ContainsKey('StatusLines')) {
+        try {
+            $StatusLines = @(& git status --porcelain 2>$null)
+            if ($LASTEXITCODE -ne 0) { return $null }
+        } catch {
+            return $null
+        }
+    }
+
+    # Porcelain paths are repo-root-relative; config dirs arrive absolute
+    # (Get-BuildConfig resolves them). Strip the repo root so prefixes match.
+    $repoRoot = [IO.Path]::GetFullPath((Get-GitRepoRoot))
+    $normalizePrefix = {
+        param([string]$Dir)
+        $clean = $Dir.Trim()
+        if (-not $clean) { return $null }
+        if ([IO.Path]::IsPathRooted($clean)) {
+            $full = [IO.Path]::GetFullPath($clean)
+            if (-not $full.StartsWith($repoRoot, [StringComparison]::OrdinalIgnoreCase)) { return $null }
+            $clean = $full.Substring($repoRoot.Length)
+        }
+        $clean = ($clean.Replace('\', '/') -replace '^(\./)+', '').Trim('/')
+        if ($clean) { return "$clean/" }
+        return $null
+    }
+
+    $appPrefix = & $normalizePrefix $AppDir
+    $testPrefixes = @($TestDirs | ForEach-Object { & $normalizePrefix $_ } | Where-Object { $_ })
+
+    $counts = @{ app = 0; tests = 0; other = 0 }
+    foreach ($line in $StatusLines) {
+        if ([string]::IsNullOrWhiteSpace($line) -or $line.Length -le 3) { continue }
+        $path = $line.Substring(3)
+        # Rename lines read 'old -> new'; the new location is the live file
+        if ($path -match '\s->\s') { $path = ($path -split '\s->\s')[-1] }
+        $path = $path.Trim().Trim('"').Replace('\', '/')
+        if (-not $path) { continue }
+        # Compiled artifacts are build output, not source evidence — a repo
+        # that does not gitignore them must not look dirty after a compile
+        if ($path.EndsWith('.app', [StringComparison]::OrdinalIgnoreCase)) { continue }
+
+        if ($appPrefix -and $path.StartsWith($appPrefix, [StringComparison]::OrdinalIgnoreCase)) {
+            $counts.app++
+        } elseif (@($testPrefixes | Where-Object { $path.StartsWith($_, [StringComparison]::OrdinalIgnoreCase) }).Count -gt 0) {
+            $counts.tests++
+        } else {
+            $counts.other++
+        }
+    }
+    return $counts
+}
+
 function Save-BuildTimingEntry {
     <#
     .SYNOPSIS
         Saves a build timing entry to the history log
+    .DESCRIPTION
+        Appends one JSONL entry to the repo-local timing log, and mirrors the
+        same entry (plus repo identity) to the user-level gate-metrics log so
+        history survives .output wipes and aggregates across consumer repos.
+        Gate/Outcome/Tests/Dirty/HeadSha are optional telemetry fields; entries
+        written without them stay valid (legacy shape). Phase attribution is
+        derived at report time from the recorded workspace evidence (Dirty),
+        never from a caller-supplied tag.
     .PARAMETER Task
         The top-level task name (e.g., "test", "build")
     .PARAMETER Steps
         Hashtable of step names to elapsed seconds
     .PARAMETER TotalSeconds
         Optional total elapsed seconds (if not provided, calculated from steps)
+    .PARAMETER Gate
+        Optional gate scope: unit or full.
+    .PARAMETER Outcome
+        Optional run outcome: passed, failed, or error.
+    .PARAMETER Tests
+        Optional per-runner executed-test totals (runner name -> test count).
+    .PARAMETER Dirty
+        Optional dirty-workspace fingerprint captured at gate start
+        (@{ app; tests; other } from Get-DirtyFileCounts).
+    .PARAMETER HeadSha
+        Optional short HEAD sha at gate time.
     .PARAMETER LogPath
         Path to the timing log file (default: .output/logs/build-timing.jsonl)
     #>
@@ -2469,6 +2595,17 @@ function Save-BuildTimingEntry {
         [hashtable]$Steps,
 
         [double]$TotalSeconds = 0,
+
+        [string]$Gate,
+
+        [ValidateSet('passed', 'failed', 'error')]
+        [string]$Outcome,
+
+        [hashtable]$Tests,
+
+        [hashtable]$Dirty,
+
+        [string]$HeadSha,
 
         [string]$LogPath = ".output/logs/build-timing.jsonl"
     )
@@ -2485,14 +2622,39 @@ function Save-BuildTimingEntry {
     # Format total time as mm:ss.f
     $totalFormatted = "{0}:{1:00}.{2}" -f [math]::Floor($totalSeconds / 60), [math]::Floor($totalSeconds % 60), [math]::Floor(($totalSeconds % 1) * 10)
 
-    # Create entry object
+    # Create entry object. Timestamp is culture-invariant: ':' in a format
+    # string is the culture time separator (da-DK renders '.'), which breaks
+    # round-tripping.
     $entry = [ordered]@{
-        timestamp = (Get-Date).ToString("yyyy-MM-dd HH:mm:ss")
+        timestamp = (Get-Date).ToString('yyyy-MM-dd HH:mm:ss', [Globalization.CultureInfo]::InvariantCulture)
         task      = $Task
-        steps     = [ordered]@{}
-        total     = $totalFormatted
-        totalSec  = [math]::Round($totalSeconds, 1)
     }
+    if ($Gate) { $entry.gate = $Gate }
+    if ($Outcome) { $entry.outcome = $Outcome }
+
+    $branch = Get-GitBranchName
+    if ($branch) { $entry.branch = $branch }
+    if ($HeadSha) { $entry.headSha = $HeadSha }
+
+    if ($Dirty) {
+        $entry.dirty = [ordered]@{
+            app   = [int]$Dirty.app
+            tests = [int]$Dirty.tests
+            other = [int]$Dirty.other
+        }
+    }
+
+    if ($Tests -and $Tests.Count -gt 0) {
+        $testsOrdered = [ordered]@{}
+        foreach ($runner in ($Tests.Keys | Sort-Object)) {
+            $testsOrdered[$runner] = $Tests[$runner]
+        }
+        $entry.tests = $testsOrdered
+    }
+
+    $entry.steps = [ordered]@{}
+    $entry.total = $totalFormatted
+    $entry.totalSec = [math]::Round($totalSeconds, 1)
 
     # Add steps sorted by execution order (alphabetically as fallback)
     foreach ($stepName in ($Steps.Keys | Sort-Object)) {
@@ -2501,8 +2663,29 @@ function Save-BuildTimingEntry {
     }
 
     # Append to JSONL file
-    $json = $entry | ConvertTo-Json -Compress
+    $json = $entry | ConvertTo-Json -Compress -Depth 5
     Add-Content -Path $LogPath -Value $json -Encoding UTF8
+
+    # Mirror to the user-level gate-metrics log. Never fail the build over
+    # telemetry: warn and continue.
+    try {
+        $globalPath = Get-GateMetricsGlobalPath
+        $globalDir = Split-Path -Path $globalPath -Parent
+        if ($globalDir -and -not (Test-Path $globalDir)) {
+            New-Item -ItemType Directory -Path $globalDir -Force -ErrorAction Stop | Out-Null
+        }
+
+        $repoRoot = Get-GitRepoRoot
+        $mirrorEntry = [ordered]@{}
+        foreach ($key in $entry.Keys) { $mirrorEntry[$key] = $entry[$key] }
+        $mirrorEntry.repo = Split-Path -Path $repoRoot -Leaf
+        $mirrorEntry.repoPath = $repoRoot
+
+        $mirrorJson = $mirrorEntry | ConvertTo-Json -Compress -Depth 5
+        Add-Content -Path $globalPath -Value $mirrorJson -Encoding UTF8 -ErrorAction Stop
+    } catch {
+        Write-BuildMessage -Type Warning -Message "Gate-metrics mirror write failed: $($_.Exception.Message)"
+    }
 }
 
 function Show-BuildTimingHistory {
@@ -2594,6 +2777,124 @@ function Show-BuildTimingHistory {
     Write-Host $LogPath -ForegroundColor DarkGray
 }
 
+function Get-GateMetricsSummary {
+    <#
+    .SYNOPSIS
+        Aggregates gate timing entries by workspace signature and gate.
+    .DESCRIPTION
+        Reads a build-timing / gate-metrics JSONL log and returns one row per
+        signature × gate combination: run count, outcome counts, total minutes,
+        median and p95 duration.
+
+        The signature is derived from the dirty-workspace evidence recorded at
+        gate time, never from a caller-supplied tag:
+          prod-only — app files dirty, test apps clean. Mutation gates have
+                      exactly this shape (/al-mutate proves a committed clean
+                      baseline, then applies one production mutant).
+          test-only — test app files dirty, app clean. RED-first runs.
+          mixed     — both dirty. TDD inner-loop runs after the first GREEN.
+          clean     — no app/test changes. Closeout and baseline runs.
+          unknown   — entry predates evidence capture.
+
+        Gate falls back from the task name for legacy entries ('unit-test' →
+        unit, 'test' → full, anything else → '-'). Malformed lines are skipped.
+    .PARAMETER LogPath
+        JSONL log to read.
+    .PARAMETER SinceDays
+        Only include entries newer than N days. 0 = no filter.
+    .PARAMETER Task
+        Only include entries whose task is in this list. Empty = all tasks.
+    #>
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$LogPath,
+
+        [int]$SinceDays = 0,
+
+        [string[]]$Task
+    )
+
+    if (-not (Test-Path $LogPath)) { return @() }
+
+    $cutoff = if ($SinceDays -gt 0) { (Get-Date).AddDays(-$SinceDays) } else { $null }
+
+    function Get-EntryProperty {
+        param($Object, [string]$Name)
+        $prop = $Object.PSObject.Properties[$Name]
+        if ($prop) { return $prop.Value }
+        return $null
+    }
+
+    $entries = @()
+    foreach ($line in @(Get-Content -Path $LogPath -ErrorAction SilentlyContinue)) {
+        if ([string]::IsNullOrWhiteSpace($line)) { continue }
+        try { $e = $line | ConvertFrom-Json } catch { continue }
+        if ($null -eq (Get-EntryProperty $e 'totalSec') -or $null -eq (Get-EntryProperty $e 'task')) { continue }
+        if ($Task -and (Get-EntryProperty $e 'task') -notin $Task) { continue }
+        if ($cutoff) {
+            # Two accepted shapes: invariant ':' and legacy culture-written '.'
+            # time separators (entries logged before the invariant fix).
+            [datetime]$ts = [datetime]::MinValue
+            $timestampFormats = [string[]]@('yyyy-MM-dd HH:mm:ss', 'yyyy-MM-dd HH.mm.ss')
+            if (-not [datetime]::TryParseExact([string](Get-EntryProperty $e 'timestamp'), $timestampFormats, [Globalization.CultureInfo]::InvariantCulture, [Globalization.DateTimeStyles]::None, [ref]$ts)) { continue }
+            if ($ts -lt $cutoff) { continue }
+        }
+        $entries += $e
+    }
+
+    $groups = $entries | Group-Object -Property {
+        $dirty = Get-EntryProperty $_ 'dirty'
+        if ($null -eq $dirty) {
+            $signature = 'unknown'
+        } else {
+            $appDirty = [int](Get-EntryProperty $dirty 'app')
+            $testsDirty = [int](Get-EntryProperty $dirty 'tests')
+            $signature = if ($appDirty -gt 0 -and $testsDirty -gt 0) { 'mixed' }
+            elseif ($appDirty -gt 0) { 'prod-only' }
+            elseif ($testsDirty -gt 0) { 'test-only' }
+            else { 'clean' }
+        }
+        $gate = Get-EntryProperty $_ 'gate'
+        if (-not $gate) {
+            $gate = switch (Get-EntryProperty $_ 'task') {
+                'unit-test' { 'unit' }
+                'test' { 'full' }
+                default { '-' }
+            }
+        }
+        "$signature|$gate"
+    }
+
+    $rows = foreach ($group in $groups) {
+        $signature, $gate = $group.Name -split '\|', 2
+        $durations = @($group.Group | ForEach-Object { [double](Get-EntryProperty $_ 'totalSec') } | Sort-Object)
+        $outcomes = @($group.Group | ForEach-Object { Get-EntryProperty $_ 'outcome' })
+        $timestamps = @($group.Group | ForEach-Object { [string](Get-EntryProperty $_ 'timestamp') } | Sort-Object)
+
+        # Nearest-rank percentile on the sorted durations
+        $p50Index = [int][Math]::Max(0, [Math]::Ceiling(0.50 * $durations.Count) - 1)
+        $p95Index = [int][Math]::Max(0, [Math]::Ceiling(0.95 * $durations.Count) - 1)
+
+        [pscustomobject]@{
+            Signature = $signature
+            Gate      = $gate
+            Runs      = $group.Count
+            Passed    = @($outcomes | Where-Object { $_ -eq 'passed' }).Count
+            Failed    = @($outcomes | Where-Object { $_ -eq 'failed' }).Count
+            Errors    = @($outcomes | Where-Object { $_ -eq 'error' }).Count
+            Untagged  = @($outcomes | Where-Object { -not $_ }).Count
+            TotalMin  = [math]::Round((($durations | Measure-Object -Sum).Sum) / 60, 1)
+            MedianSec = [math]::Round($durations[$p50Index], 1)
+            P95Sec    = [math]::Round($durations[$p95Index], 1)
+            FirstSeen = $timestamps[0]
+            LastSeen  = $timestamps[-1]
+        }
+    }
+
+    return @($rows | Sort-Object -Property TotalMin -Descending)
+}
+
 # =============================================================================
 # Module Exports
 # =============================================================================
@@ -2679,6 +2980,9 @@ Export-ModuleMember -Function @(
     # Build Timing History
     'Save-BuildTimingEntry'
     'Show-BuildTimingHistory'
+    'Get-GateMetricsSummary'
+    'Get-GateMetricsGlobalPath'
+    'Get-DirtyFileCounts'
 
     # Incremental Publish
     'Get-ContainerCreatedTime'

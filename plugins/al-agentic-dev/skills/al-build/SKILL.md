@@ -32,6 +32,10 @@ pwsh "<skill-folder>/scripts/test.ps1"
 Always run full gate. Do not filter tests by codeunit.
 Force republish: `pwsh "<skill-folder>/scripts/test.ps1" -Force`
 
+### Gate metrics (automatic)
+
+Every `test.ps1` run self-records one entry — `gate`, `outcome`, `branch`, `headSha`, dirty-workspace fingerprint (`dirty.app`/`dirty.tests`/`dirty.other`), per-runner test totals, step timings — to `.output/logs/build-timing.jsonl` plus a user-level mirror at `~/.al-build/gate-metrics.jsonl` (override: `ALBT_GATE_METRICS_GLOBAL_PATH`). No caller flags; phase attribution derives from the recorded evidence at report time (prod-only dirty ≈ mutation gates, test-only ≈ RED proofs, mixed ≈ TDD inner loop, clean ≈ closeout). Summarize where gate time goes: `pwsh "<skill-folder>/scripts/report-gate-metrics.ps1"` (repo-local) or `-GlobalLog` (cross-repo).
+
 ### Fast unit test (inner loop)
 
 When `unitTestApp` configured in `al-build.json`, run only AL Runner unit tests:
@@ -48,6 +52,7 @@ Compiles all apps, runs AL Runner against unit test app, exits. No container nee
 - `.output/TestResults/<dirName>/al-runner.xml` → JUnit XML from the AL Runner run. Separate file — a full gate must never overwrite the unit result.
 - `.output/TestResults/<dirName>/telemetry.jsonl` → feature telemetry per container run. `/al-debug-logging` reads this.
 - `.output/TestResults/summary.json` → machine-readable summary: `gate` (`full`/`unit`), `totals` per runner, `runs[]` with one record per test run (`runner`, `appName`, `dir`, `passed`, `counts`, `resultFile`, `telemetryFile`).
+- `.output/logs/build-timing.jsonl` → one gate-metrics entry per run (every exit path: pass, fail, throw), mirrored to `~/.al-build/gate-metrics.jsonl`.
 
 Take `resultFile` paths from `summary.json` run records — don't glob; a stale file from an earlier gate may sit beside a fresh one.
 

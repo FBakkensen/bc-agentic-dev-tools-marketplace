@@ -174,6 +174,27 @@ if ($IsWindows -or $env:OS -match 'Windows') {
 $baseResultsPath = Join-Path $repoRoot '.output' 'TestResults'
 $testResults = @()
 
+# Gate metrics: outcome defaults to 'error' and is only upgraded at the
+# verdict points below — any throw (compile, publish, container) keeps it.
+# Workspace evidence (dirty fingerprint + HEAD sha) is captured up front;
+# phase attribution derives from it at report time, never from a caller tag.
+$gateName = if ($UnitTestOnly) { 'unit' } else { 'full' }
+$gateOutcome = 'error'
+
+$headSha = $null
+try {
+    $headSha = & git rev-parse --short HEAD 2>$null
+    if ($LASTEXITCODE -ne 0) { $headSha = $null }
+} catch {
+    $headSha = $null
+}
+
+$dirtyDirs = @($config.TestApps)
+if ($config.UnitTestApp) { $dirtyDirs += $config.UnitTestApp }
+$dirtyCounts = Get-DirtyFileCounts -AppDir $config.AppDir -TestDirs $dirtyDirs
+
+try {
+
 # Step 1: Build main app
 Start-Step 'build'
 Invoke-ALBuild -AppDir $config.AppDir -WarnAsError:(ConvertTo-Boolean $config.WarnAsError)
@@ -184,6 +205,7 @@ if ($config.TestApps.Count -eq 0 -and -not $UnitTestOnly) {
     if (-not $config.UnitTestApp) {
         Write-BuildMessage -Type Warning -Message "No test apps configured. Skipping publish and tests."
         Write-BuildHeader 'Build Complete (no tests)'
+        $gateOutcome = 'passed'
         exit 0
     }
 }
@@ -216,8 +238,6 @@ if ($config.UnitTestApp) {
     $testResults += $unitResult
     Write-Host (ConvertTo-RunRecord $unitResult | ConvertTo-Json -Compress -Depth 4)
 
-    $gateName = if ($UnitTestOnly) { 'unit' } else { 'full' }
-
     if (-not $unitResult.Passed) {
         # Unit tests failed — write summary and fail fast
         $summaryPath = Join-Path $baseResultsPath 'summary.json'
@@ -227,6 +247,7 @@ if ($config.UnitTestApp) {
         Show-RunnerTotals $testResults
         Write-BuildMessage -Type Error -Message "Unit tests failed: $($unitResult.AppName)"
         Write-BuildMessage -Type Error -Message "Results: $($unitResult.ResultFile)"
+        $gateOutcome = 'failed'
         exit 1
     }
 
@@ -235,19 +256,10 @@ if ($config.UnitTestApp) {
         $summaryPath = Join-Path $baseResultsPath 'summary.json'
         Write-TestSummary -Gate 'unit' -Results $testResults -Path $summaryPath
 
-        # Show timing
-        $script:BuildStartTime.Stop()
-        $totalSeconds = $script:BuildStartTime.Elapsed.TotalSeconds
-        $steps = @{}
-        foreach ($name in $script:StepTimings.Keys) {
-            $steps[$name] = $script:StepTimings[$name].Elapsed.TotalSeconds
-        }
-        Save-BuildTimingEntry -Task 'unit-test' -Steps $steps -TotalSeconds $totalSeconds
-        Show-BuildTimingHistory -Count 5
-
         Write-BuildHeader 'Unit Test Complete'
         Show-RunnerTotals $testResults
         Write-BuildMessage -Type Success -Message "All unit tests passed"
+        $gateOutcome = 'passed'
         exit 0
     }
 
@@ -306,18 +318,6 @@ $summaryPath = Join-Path $baseResultsPath 'summary.json'
 Write-TestSummary -Gate 'full' -Results $testResults -Path $summaryPath
 Write-BuildMessage -Type Info -Message "Summary written: $summaryPath"
 
-# Show timing summary
-$script:BuildStartTime.Stop()
-$totalSeconds = $script:BuildStartTime.Elapsed.TotalSeconds
-
-$steps = @{}
-foreach ($name in $script:StepTimings.Keys) {
-    $steps[$name] = $script:StepTimings[$name].Elapsed.TotalSeconds
-}
-
-Save-BuildTimingEntry -Task 'test' -Steps $steps -TotalSeconds $totalSeconds
-Show-BuildTimingHistory -Count 5
-
 # Final pass/fail determination
 $failedRuns = $testResults | Where-Object { -not $_.Passed }
 
@@ -328,9 +328,47 @@ if ($failedRuns) {
     foreach ($failed in $failedRuns) {
         Write-BuildMessage -Type Error -Message "  - $($failed.Runner) - $($failed.AppName): $($failed.ResultFile)"
     }
+    $gateOutcome = 'failed'
     exit 1
 }
 
 Write-BuildHeader 'Test Complete'
 Show-RunnerTotals $testResults
 Write-BuildMessage -Type Success -Message "All tests passed with zero warnings and zero errors"
+$gateOutcome = 'passed'
+
+} finally {
+    # One timing entry per gate, on every exit path: pass, fail, and throw.
+    # PowerShell runs finally on `exit`, so the AL Runner fail-fast path and
+    # compile/publish throws land here too.
+    if ($script:BuildStartTime.IsRunning) { $script:BuildStartTime.Stop() }
+    $finalTotalSeconds = $script:BuildStartTime.Elapsed.TotalSeconds
+
+    $finalSteps = @{}
+    foreach ($name in $script:StepTimings.Keys) {
+        $finalSteps[$name] = $script:StepTimings[$name].Elapsed.TotalSeconds
+    }
+
+    # Executed-test totals per runner (omitted when counts are unavailable)
+    $testsByRunner = @{}
+    $runnerTotals = Get-RunnerTotals $testResults
+    foreach ($runnerName in @($runnerTotals.Keys)) {
+        if ($runnerTotals[$runnerName]) {
+            $testsByRunner[$runnerName] = $runnerTotals[$runnerName].tests
+        }
+    }
+
+    $timingTask = if ($UnitTestOnly) { 'unit-test' } else { 'test' }
+    $saveArgs = @{
+        Task         = $timingTask
+        Steps        = $finalSteps
+        TotalSeconds = $finalTotalSeconds
+        Gate         = $gateName
+        Outcome      = $gateOutcome
+        Tests        = $testsByRunner
+    }
+    if ($dirtyCounts) { $saveArgs.Dirty = $dirtyCounts }
+    if ($headSha) { $saveArgs.HeadSha = $headSha }
+    Save-BuildTimingEntry @saveArgs
+    Show-BuildTimingHistory -Count 5
+}
