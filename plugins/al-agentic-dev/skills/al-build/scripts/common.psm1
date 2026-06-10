@@ -419,6 +419,11 @@ function Write-BuildMessage {
     .DESCRIPTION
         Central output function that ensures all build scripts use consistent message formatting.
         This is the ONLY function scripts should use for console output (except Write-BuildHeader).
+
+        Detail is verbose-gated by design (Write-Verbose): diagnostics for humans
+        re-running with -Verbose, invisible in default runs so agent-driven gates
+        stay lean. Never put verdict payload (findings, error evidence, the reason
+        a script exits non-zero or skips) in Detail — use Error or Info.
     .PARAMETER Type
         Message type: Info, Success, Warning, Error, Step, Detail
     .PARAMETER Message

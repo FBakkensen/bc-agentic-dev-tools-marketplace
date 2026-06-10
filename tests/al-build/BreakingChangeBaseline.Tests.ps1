@@ -144,3 +144,17 @@ Describe 'Get-AlValidationVerdict' {
         $r.Verdict | Should -Be 'Passed'
     }
 }
+
+Describe 'validate-breaking-changes.ps1 Run-AlValidation contract' {
+    It 'passes skipVerification (local and AL-Go CI builds are unsigned; without it every run classifies NotSigned as a finding)' {
+        $scriptPath = Join-Path $base 'validate-breaking-changes.ps1'
+        $ast = [System.Management.Automation.Language.Parser]::ParseFile($scriptPath, [ref]$null, [ref]$null)
+        $pair = $ast.FindAll({ param($node)
+                $node -is [System.Management.Automation.Language.HashtableAst]
+            }, $true) |
+            ForEach-Object { $_.KeyValuePairs } |
+            Where-Object { $_.Item1.Extent.Text -eq 'skipVerification' }
+        $pair | Should -Not -BeNullOrEmpty
+        $pair.Item2.Extent.Text | Should -Be '$true'
+    }
+}

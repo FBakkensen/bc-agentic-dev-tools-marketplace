@@ -39,7 +39,7 @@ $Exit = Get-ExitCode
 Write-BuildHeader 'Breaking Change Validation'
 
 if (-not $config.BreakingChangeEnabled) {
-    Write-BuildMessage -Type Detail -Message "breakingChange.enabled is false - skipping validation."
+    Write-BuildMessage -Type Info -Message "breakingChange.enabled is false - skipping validation."
     exit 0
 }
 
@@ -150,6 +150,12 @@ $validationParams = @{
     validateCurrent    = $validateCurrent
     failOnError        = $true
     includeWarnings    = $false
+    # Locally built apps are unsigned by construction and AL-Go CI builds
+    # unsigned baselines unless codesigning is configured — without this switch
+    # every run yields "...is not signed, result is NotSigned", which classifies
+    # as a finding and the gate can never pass. Signing is the publish
+    # pipeline's concern, not this schema gate's.
+    skipVerification   = $true
     # Mirror the module's default NewBcContainer scriptblock, forcing process
     # isolation: Run-AlValidation has no isolation parameter and auto-detection
     # picks hyperv on host/image kernel mismatch — failing hosts without
@@ -172,7 +178,7 @@ try {
     Write-BuildHeader 'Validation Failed'
     Write-BuildMessage -Type Error -Message "Validation could not run"
     if ($_.Exception.Message) {
-        Write-BuildMessage -Type Detail -Message $_.Exception.Message
+        Write-BuildMessage -Type Error -Message $_.Exception.Message
     }
     exit $Exit.GeneralError
 }
@@ -183,13 +189,15 @@ switch ($verdict.Verdict) {
     'BreakingChange' {
         Write-BuildHeader 'Validation Failed'
         Write-BuildMessage -Type Error -Message "Breaking changes detected"
-        $verdict.Findings | ForEach-Object { Write-BuildMessage -Type Detail -Message $_ }
+        # Verdict evidence, not diagnostics: Detail is verbose-gated and would
+        # leave a detected break undiagnosable in default runs.
+        $verdict.Findings | ForEach-Object { Write-BuildMessage -Type Error -Message $_ }
         exit $Exit.Analysis
     }
     'EnvironmentError' {
         Write-BuildHeader 'Validation Failed'
         Write-BuildMessage -Type Error -Message "Environment failure during validation - no verdict on breaking changes; fix and re-run"
-        $verdict.EnvironmentErrors | ForEach-Object { Write-BuildMessage -Type Detail -Message $_ }
+        $verdict.EnvironmentErrors | ForEach-Object { Write-BuildMessage -Type Error -Message $_ }
         exit $Exit.GeneralError
     }
     default {
