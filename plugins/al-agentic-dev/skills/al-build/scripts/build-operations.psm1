@@ -1429,6 +1429,40 @@ function Clear-AppSourceCopBaseline {
     return $Object
 }
 
+function Get-AlValidationVerdict {
+    <#
+    .SYNOPSIS
+        Classify Run-AlValidation's returned result lines into a verdict.
+    .DESCRIPTION
+        Run-AlValidation (without -throwOnError) returns its accumulated
+        $validationResult strings: AppSourceCop findings from Run-AlCops plus
+        environment errors its internal catch tags with the prefix
+        "Unexpected error while validating app". The two demand different
+        responses — a finding stops for a human, an environment failure is
+        fix-and-re-run — so the verdict splits them. Any finding outranks
+        environment errors: a run that both found a break and hit an
+        environment error is still a detected break.
+    .PARAMETER ValidationResult
+        The lines Run-AlValidation returned. Empty/blank lines are noise
+        (Run-AlCops appends separators) and are ignored.
+    #>
+    param(
+        [AllowEmptyCollection()][string[]]$ValidationResult = @()
+    )
+    $envErrorPattern = '^Unexpected error while validating app'
+    $lines = @($ValidationResult | Where-Object { $_ -and $_.Trim() })
+    $environmentErrors = @($lines | Where-Object { $_ -match $envErrorPattern })
+    $findings = @($lines | Where-Object { $_ -notmatch $envErrorPattern })
+    $verdict = if ($findings.Count -gt 0) { 'BreakingChange' }
+    elseif ($environmentErrors.Count -gt 0) { 'EnvironmentError' }
+    else { 'Passed' }
+    return [PSCustomObject]@{
+        Verdict           = $verdict
+        Findings          = $findings
+        EnvironmentErrors = $environmentErrors
+    }
+}
+
 # =============================================================================
 # Module Exports
 # =============================================================================
@@ -1443,6 +1477,7 @@ Export-ModuleMember -Function @(
     'Get-BaselineVersion'
     'Set-AppSourceCopBaseline'
     'Clear-AppSourceCopBaseline'
+    'Get-AlValidationVerdict'
 
     # Compiler
     'Get-ToolPackageId'

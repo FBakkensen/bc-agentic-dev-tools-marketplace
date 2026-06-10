@@ -34,7 +34,7 @@ Map the exit code, then surgical-Edit the comment-anchor line per [`markdown-spe
 | `0` | no break, or detection disabled | `done` | `[x]` |
 | `3` (`Analysis`) | **breaking change detected** | `blocked` | `[!]` |
 | `4` (`Contract`) | prerequisite failure (empty/missing baseline cache → re-run `/al-provision`; missing `AppSourceCop.json` affixes/countries; current app not built) | `blocked` | `[!]` |
-| any other non-zero (`1`) | unexpected failure (e.g. current-app compile error) | `blocked` | `[!]` |
+| any other non-zero (`1`) | environment or unexpected failure (container creation, image pull, current-app compile error) — **no verdict on breaking changes**; fix, re-run | `blocked` | `[!]` |
 
 ## Breaking change detected → stop for a human
 

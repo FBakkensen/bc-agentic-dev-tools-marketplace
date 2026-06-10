@@ -134,6 +134,12 @@ Write-BuildHeader 'Running Validation'
 
 Import-BCContainerHelper
 
+# No throwOnError: Run-AlValidation RETURNS its result lines (findings and
+# environment errors alike — its internal catch swallows container failures
+# into the same list). The verdict comes from classifying those lines via
+# Get-AlValidationVerdict; a throw-based gate cannot tell a breaking change
+# from a docker hiccup, and an unthrown result is a silent green.
+# Warnings stay at the compile-time AppSourceCop pass; this gate is errors-only.
 $validationParams = @{
     countries          = $supportedCountries
     apps               = @($currentAppPath)
@@ -143,21 +149,51 @@ $validationParams = @{
     supportedCountries = $supportedCountries
     validateCurrent    = $validateCurrent
     failOnError        = $true
-    includeWarnings    = $true
+    includeWarnings    = $false
+    # Mirror the module's default NewBcContainer scriptblock, forcing process
+    # isolation: Run-AlValidation has no isolation parameter and auto-detection
+    # picks hyperv on host/image kernel mismatch — failing hosts without
+    # Hyper-V. al-build standardizes on process isolation everywhere.
+    NewBcContainer     = {
+        Param([Hashtable]$parameters)
+        $parameters.isolation = 'process'
+        New-BcContainer @parameters
+        Invoke-ScriptInBcContainer $parameters.ContainerName -scriptblock { $progressPreference = 'SilentlyContinue' }
+    }
 }
 
 Write-BuildMessage -Type Step -Message "Running AL validation..."
 
 try {
-    Run-AlValidation @validationParams
-
-    Write-BuildHeader 'Validation Complete'
-    Write-BuildMessage -Type Success -Message "No breaking changes detected"
+    $validationResult = @(Run-AlValidation @validationParams)
 } catch {
+    # Backstop for genuine throws (artifact resolution, parameter validation)
+    # that never reach the result list — environment-shaped, never a finding.
     Write-BuildHeader 'Validation Failed'
-    Write-BuildMessage -Type Error -Message "Breaking changes detected"
+    Write-BuildMessage -Type Error -Message "Validation could not run"
     if ($_.Exception.Message) {
         Write-BuildMessage -Type Detail -Message $_.Exception.Message
     }
-    exit $Exit.Analysis
+    exit $Exit.GeneralError
+}
+
+$verdict = Get-AlValidationVerdict -ValidationResult $validationResult
+
+switch ($verdict.Verdict) {
+    'BreakingChange' {
+        Write-BuildHeader 'Validation Failed'
+        Write-BuildMessage -Type Error -Message "Breaking changes detected"
+        $verdict.Findings | ForEach-Object { Write-BuildMessage -Type Detail -Message $_ }
+        exit $Exit.Analysis
+    }
+    'EnvironmentError' {
+        Write-BuildHeader 'Validation Failed'
+        Write-BuildMessage -Type Error -Message "Environment failure during validation - no verdict on breaking changes; fix and re-run"
+        $verdict.EnvironmentErrors | ForEach-Object { Write-BuildMessage -Type Detail -Message $_ }
+        exit $Exit.GeneralError
+    }
+    default {
+        Write-BuildHeader 'Validation Complete'
+        Write-BuildMessage -Type Success -Message "No breaking changes detected"
+    }
 }

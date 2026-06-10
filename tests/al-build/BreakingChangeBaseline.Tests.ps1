@@ -94,3 +94,53 @@ Describe 'Clear-AppSourceCopBaseline' {
         $asc.PSObject.Properties['version'] | Should -BeNullOrEmpty
     }
 }
+
+Describe 'Get-AlValidationVerdict' {
+    It 'passes on an empty result' {
+        $r = Get-AlValidationVerdict -ValidationResult @()
+        $r.Verdict | Should -Be 'Passed'
+        $r.Findings | Should -BeNullOrEmpty
+        $r.EnvironmentErrors | Should -BeNullOrEmpty
+    }
+
+    It 'passes when nothing was returned at all' {
+        $r = Get-AlValidationVerdict
+        $r.Verdict | Should -Be 'Passed'
+    }
+
+    It 'classifies environment-only errors as EnvironmentError, not a breaking change' {
+        $lines = @(
+            'Unexpected error while validating app. Error is: hcs::CreateComputeSystem bcserver: The request is not supported.'
+        )
+        $r = Get-AlValidationVerdict -ValidationResult $lines
+        $r.Verdict | Should -Be 'EnvironmentError'
+        $r.EnvironmentErrors.Count | Should -Be 1
+        $r.Findings | Should -BeNullOrEmpty
+    }
+
+    It 'classifies AppSourceCop findings as BreakingChange' {
+        $lines = @(
+            '2 errors found in MyApp.app on https://bcartifacts.azureedge.net/sandbox/24.0/dk:'
+            'error AS0023: Procedure ''PostSalesOrder'' has been removed.'
+        )
+        $r = Get-AlValidationVerdict -ValidationResult $lines
+        $r.Verdict | Should -Be 'BreakingChange'
+        $r.Findings.Count | Should -Be 2
+    }
+
+    It 'lets a finding outrank an environment error in a mixed result' {
+        $lines = @(
+            'error AS0023: Procedure ''PostSalesOrder'' has been removed.'
+            'Unexpected error while validating app. Error is: docker pull timed out'
+        )
+        $r = Get-AlValidationVerdict -ValidationResult $lines
+        $r.Verdict | Should -Be 'BreakingChange'
+        $r.Findings.Count | Should -Be 1
+        $r.EnvironmentErrors.Count | Should -Be 1
+    }
+
+    It 'ignores blank separator lines (Run-AlCops appends them between blocks)' {
+        $r = Get-AlValidationVerdict -ValidationResult @('', '   ', '')
+        $r.Verdict | Should -Be 'Passed'
+    }
+}
