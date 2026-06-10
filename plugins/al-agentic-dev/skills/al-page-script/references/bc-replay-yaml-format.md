@@ -10,7 +10,8 @@ the BC web client **Settings ⚙ → Page scripting (Preview)** recorder.
 > `client.js` + cross-checking recorder output) and validated by replay.
 >
 > **Reverse-engineered on BC v28** (first mined on `28.0.49873.0`; verified stable across minor
-> bumps — recordings replay green on later `28.1.x` builds with no change). Treat the grammar as
+> bumps — recordings replay green on later `28.1.x` builds with no change; §4 grid-lifecycle and
+> column-filter findings captured on `28.1` w1, bc-replay 0.1.139). Treat the grammar as
 > "true for v28." A platform version number alone is **not** a reason to re-derive or to stop;
 > re-derive only when a replay red is a grammar-**shape** mismatch (a nesting or step type the
 > player rejects), not a missing control or a dialog. To re-derive: mine the web-client bundle's
@@ -125,31 +126,66 @@ recordings from scratch.** [replayed: synthetic-token swap]
 `invokeType` is the *name* of the platform `SystemAction` enum member. Common values: `New`,
 `Edit`, `DrillDown`, `Lookup`, `Refresh`, `RunReport`, `CloseOk`, `Cancel`, `Yes`, `No`,
 `SortColumn` (column-header sort; carries `parameters: { sortOrder: 1|2 }` — see *Anchoring a
-just-created row*, §4). A repeater **row** invoke omits `invokeType` and instead carries
-`parameters: { AlwaysCommit: true }`.
+just-created row*, §4), `FilterByColumn` (column filter — see *Column filter*, §4). A repeater
+**row** invoke omits `invokeType` and instead carries `parameters: { AlwaysCommit: true }`.
 [recorded · replayed: navigate/page-shown/input/focus/invoke/close-page/page-closed]
 
-### Filter fields  [replayed]
+### Column filter — `FilterByColumn` + the Apply Filter dialog  [recorded · replayed]
 
-`input` into a **filter field** (filter pane, modal-page filter row) is not a plain `{field:}`
-leaf — the chain carries two null spacers + a `scope: filter` leaf. Same chain works for
-`validate` (e.g. assert a filter opens blank). Recorder-captured, replayed green:
+Setting a column filter on a list is one composition (recorder-verbatim):
 
 ```yaml
-- type: input
+- type: invoke                # open the filter dialog from the column
   target:
     - page: Item List
       runtimeRef: pg1
-    - part: null
+    - repeater: Control1      # the page's repeater control name
+    - field: No.              # the column to filter
+  invokeType: FilterByColumn
+  parameters: { UseAdvancedFiltering: true }
+- type: page-shown            # anonymous Apply Filter dialog
+  source:
+    page: null
+    automationId: f51cf5e3-31d1-4644-8a26-043efefc68d7   # platform Apply-Filter dialog id
+    caption: Apply Filter     # documentation only — matcher ignores caption
+  modal: true
+  runtimeId: flt1
+- type: input                 # type the filter value into the dialog's field
+  target:
     - page: null
-    - scope: filter
-      field: No.
+      automationId: f51cf5e3-31d1-4644-8a26-043efefc68d7
+      runtimeRef: flt1
+    - field: No.
   value: "1000"
+- type: invoke                # the dialog's OK — leaf is `action: null`, NO invokeType
+  target:
+    - page: null
+      automationId: f51cf5e3-31d1-4644-8a26-043efefc68d7
+      runtimeRef: flt1
+    - action: null
+- type: page-closed
+  source: { page: null }
+  runtimeId: flt1
 ```
 
-Recorder also emits `isFilterAsYouType: true`; dropped flag replayed green → optional artifact.
-Same `{scope: filter, field: <Caption>}` leaf as the row-anchoring `filter` step (below). Not
-derivable from AL.
+Third anonymous-dialog id alongside Error (`00000000-…836bd2d2`) and Confirm (`8da61efd-…`). Like
+those, the automationId is platform-generated — stable within a platform version, re-harvest on a
+BC bump if it reds as a reference mismatch. Do **not** author a filter via `part: null` /
+`page: null` / `{scope: filter}` spacer chains — that shape reds
+`error: { type: reference, message: "Part 'null' was not found." }`.
+
+### Editable-grid new-row lifecycle  [replayed — both directions]
+
+- A new row with a typed value commits on **row-leave** — click another row, or `close-page`.
+- Leaving the pending row via a second `invoke action: Control_New` **discards** the row buffer:
+  no error, the row silently never inserts, downstream `validate`s read fewer rows than authored.
+- A grid `input` advances the cursor onto the trailing blank new-row placeholder — an immediate
+  `validate` reads the placeholder (`Was expecting '37.5' but got '0'`), not the written row.
+  Read row values after a fresh re-open of the page, or re-anchor first.
+- A new row inserts **above** the current row (AutoSplitKey midpoint), not at the bottom.
+
+Authoring rule: **one written row per page visit** — `Control_New` → `input` one cell →
+`close-page`; re-open the page for the next row.
 
 ### `validate` — assert a control value  [replayed: `=`,`<>` · source: rest]
 
@@ -178,14 +214,13 @@ derivable from AL.
 ### Rich steps
 
 ```yaml
-- type: set-current-row   # position a repeater's current row — RELATIVE-ONLY, no absolute/bookmark form
+- type: set-current-row   # position a repeater's current row — RELATIVE-ONLY, no absolute/bookmark
   target: [ {page,runtimeRef}, {repeater: Control1} ]
-  targetRecord: { relative: 1 }
-- type: filter            # add a column filter on a list — pins rows by exact value
+  targetRecord: { relative: 1 }   # can silently fail to move — see Anchoring a just-created row
+- type: filter            # recorder filter-pane artifact — author filters via the FilterByColumn composition (§4 Column filter), not this
   target: [ {page,runtimeRef} ]
   operation: add
   column: { field: No., scope: filter }
-  # the value is then typed via an input on the {scope: filter, field: No.} leaf (see Filter fields)
 - type: copy-value        # copy a control value to the page-scripting clipboard
   source: [ {page,runtimeRef}, {repeater: Control1}, {field: Description} ]
   name: Item List - Description   # clipboard key → later read via Clipboard.'Item List - Description'
@@ -246,16 +281,20 @@ on a BC bump if it reds as a reference mismatch.
 Message = assert via `message`, never invoked · Confirm = `invoke Yes`\|`No` · Error = catch
 `page-shown`, dismiss `invoke Ok`.
 
-**Anchoring a just-created row.** `set-current-row` is relative-only; an accumulating list shifts
-the offset every replay → `relative:` cannot reach a just-created record. Two anchors:
+**Anchoring a just-created row.** Row selection is never serialized — the recorder emits **no**
+step for clicking a row (selection and commit are implicit). Under replay `set-current-row` is
+relative-only AND can silently fail to move: `targetRecord.relative: 1` left the cursor on the
+prior row, the `validate` read the wrong record, no error [replayed-red]. A new row also inserts
+*above* the current row (AutoSplitKey midpoint), never at the bottom. Positional walks are safe
+only when every row asserts the SAME expected value (the `for-each` pattern). For a distinguishing
+read, anchor by value:
 
-- **SortColumn toggle** [replayed] — `invoke invokeType: SortColumn` on the No. column,
-  `parameters: { sortOrder: 1 }` then `sortOrder: 2` → forced re-sort, cursor on top row = highest
-  No. Load-bearing: works only because No. Series sorts monotonic-ascending and the toggle ends
-  descending — any other sort key silently anchors the wrong row.
-- **Filter by captured value** [recorded; not yet replayed] — `filter` step adds the column filter,
-  `input` the `copy-value`-captured No. into the `{scope: filter, field: No.}` leaf (see *Filter
-  fields*) → exact row, sort-independent. Verify by replay on first use.
+- **SortColumn toggle** [replayed; re-confirmed on 28.1] — `invoke invokeType: SortColumn` on the
+  No. column, `parameters: { sortOrder: 1 }` then `sortOrder: 2` → forced re-sort, cursor on top
+  row = highest No. Load-bearing: works only because No. Series sorts monotonic-ascending and the
+  toggle ends descending — any other sort key silently anchors the wrong row.
+- **Column-filter pin** [recorded · replayed] — the *Column filter* composition (above) with the
+  `copy-value`-captured No. as the filter value → exact row, sort-independent.
 
 ---
 
@@ -378,14 +417,20 @@ Don't trust the exit code alone — read the artifacts. They split across two lo
 
 A red is classified from these, not from the console: an `error:` node on a step is a locator/shape or missing-control problem; a timeout with an open dialog in `error-context.md` is the unexpected-dialog case. (Routing: `SKILL.md` › *Failure classification*.)
 
+With Playwright retries enabled, `error-context.md` freezes the **last** attempt's surface while
+`replay-log.yml` carries the failing step — the two can describe different attempts. The
+replay-log `error:` node is authoritative for *which step* failed.
+
 ---
 
 ## 10. Authoring checklist for agents
 
-1. **Targets bind to the live UI.** A perfectly-shaped recording still fails with
-   `Field '<caption>' was not found.` if the `field`/`action`/`page` caption isn't a rendered
-   control at replay time. Read the page AL for exact `Caption` values before authoring, then
-   replay-and-fix. (A removed/obsoleted field is the classic silent rot — confirm it's on the page.)
+1. **Targets bind to the AL control/field NAME on the live UI, not the display caption.**
+   [replayed: `field: Profit %` bound a column captioned 'Margin %'] The recorder writes captions
+   only into `description:`. A perfectly-shaped recording still fails with
+   `Field '<name>' was not found.` if the named control isn't rendered at replay time. Read the
+   page AL for the exact field/control **name** before authoring, then replay-and-fix. (A
+   removed/obsoleted field is the classic silent rot — confirm it's on the page.)
 2. **Mint a `runtimeId` on every `page-shown`; reuse it as `runtimeRef`** on every step acting on
    that page. Tokens are arbitrary but must be consistent within the file.
 3. **`copy-*` use `source:`; everything else uses `target:`.** Don't mix them.
@@ -424,6 +469,7 @@ elements appear, not the grammar. Empirically captured shapes (BC 28.0.49873.0):
 | **Analysis / Query page** | open via a list/role-center action → `page-shown`; close = `invoke invokeType: CloseOk`. Navigate may carry `props: {navigationTreeContext, replaceForm}`. | recorded |
 | **Confirm / dialog** | `page: null` + `automationId` + `caption` (`modal: true`); answer = `invoke invokeType: Yes`\|`No`; its `8da61efd-…` id does NOT match Error dialogs | recorded |
 | **Error dialog** (`Error()`) | `page: null` + `automationId: 00000000-0000-0000-0800-0000836bd2d2` (`modal: true`); catch = `page-shown` (only exempt step), dismiss = `invoke invokeType: Ok` → `page-closed` — §4 | recorded + replayed |
+| **Apply Filter dialog** (column filter) | open = `invoke invokeType: FilterByColumn` + `parameters: {UseAdvancedFiltering: true}` on `repeater`→`field`; dialog = `page: null` + `automationId: f51cf5e3-31d1-4644-8a26-043efefc68d7` (`modal: true`); OK = `invoke` with leaf `action: null`, no invokeType — §4 | recorded + replayed |
 | **Modal vs content** | `page-shown.modal: true` (drilldown/RunModal/dialog) vs `false` (navigate/content) | recorded |
 
 Behaviours beyond a locator variant:
@@ -434,7 +480,7 @@ Behaviours beyond a locator variant:
 - **Wizard / assisted-setup** (NavigatePage) — `page-shown` (`modal: true`) opens the wizard; Back/Next/Finish are `invoke action: ActionBack`/`ActionNext`/`ActionFinish` that **swap content in place** (no per-step `page-shown`); exit X = `invoke CloseOk` → Confirm. Open an assisted-setup entry via `invoke invokeType: OpenTargetSettingsPage`.
 - **Role Center** — navigate via a role-center action = `page: <X> Role Center` + `action: <name>`; cue-tile drilldown = a part-nested `action` invoke (`page: <X> Role Center → part: <CuePart> → page: <ActivitiesPage> → action: <Cue caption>`).
 - **Message dialog** (`Message()`) — asserted by the `message` step (§4), same `automationId` model as the confirm dialog. *[message step replayed (automationId-only); confirm dialog recorded]*
-- **Filter fields** — `input`/`validate` on a filter field (filter pane, modal-page filter row) uses the §4 *Filter fields* chain: `part: null` → `page: null` → `{scope: filter, field: <Caption>}` leaf.
+- **Column filter** — the §4 *Column filter* composition (`FilterByColumn` → Apply Filter dialog → `input` → `invoke action: null`). Never a `part: null`/`page: null`/`{scope: filter}` spacer chain — that reds `Part 'null' was not found.`
 - **Show more / Show less / FastTab expand-collapse are NOT recorded** — they're client-side rendering/density toggles; a session doing all three produces zero steps. And they don't need to be: a field hidden by Show-less (or a collapsed FastTab) is still **reachable on replay** — the player resolves controls via the logical page model, not the rendered DOM. Proven: a `copy-value` on a Show-less-hidden field replayed green. Target hidden fields by name directly; never try to author a Show-more step.
 
 ---
@@ -447,7 +493,9 @@ pass, for the cases below (a blind-authored navigate + `page-shown` recording re
 **Works blind** (targets derivable from AL):
 - `navigate` to a named page + `page-shown`.
 - `input` / `validate` / `focus` on a named `field` — including Show-more-hidden fields (§11).
+  Use the AL control/field **name**, not the caption (§10.1).
 - **System actions** with stable names and already-proven invoke types: `Control_New`, `Control_Refresh`, `Cancel`, `OK`, `CloseOk`, `Yes`, `No`; `invokeType: New|Edit|DrillDown|Lookup|Refresh`.
+- **Column filter** via the §4 composition — `FilterByColumn` + the constant Apply-Filter `automationId`.
 - Mint your own `runtimeId`/`runtimeRef` (file-local, §3); start self-contained (§10.7).
 
 **Needs recorder evidence** (identifiers or invoke shapes not derivable from AL):
@@ -465,7 +513,9 @@ to authoring.
 
 ### Recorder harvesting for un-derivable IDs
 
-Recorder capture is an evidence technique, not the replay oracle. **Drive by pixel coordinates,
+Recorder capture is an evidence technique, not the replay oracle. Know what it can't show: row
+clicks are **never serialized** — selection/commit are implicit, so a harvested gesture that only
+selects a row yields no step (§4 *Anchoring a just-created row*). **Drive by pixel coordinates,
 whatever the path**: BC's iframe stack defeats Playwright locator selectors — every
 role/text/title click → `No visible element found across frames for click target`, recorder
 captured `steps: []` [refuted]. Trusted coordinate input is what the recorder captures
