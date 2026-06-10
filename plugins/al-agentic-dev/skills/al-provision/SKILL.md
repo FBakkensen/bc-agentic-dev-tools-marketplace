@@ -38,7 +38,7 @@ Map the exit code, then surgical-Edit the comment-anchor line per [`markdown-spe
 
 ## Failure
 
-`blocked` → environment is not ready (missing compiler/symbols, container down, `gh` auth, unreachable release for the baseline). Route to `/al-steer`. Under `/al-autopilot`: the infrastructure ladder (restart container → recreate via `new-agent-container.ps1` → `AUTONOMY STOP REPORT`). Never flip `done` without a clean exit — a green flip with a stale environment poisons every downstream compile.
+`blocked` → environment is not ready (missing compiler/symbols, container down, `gh` auth, unreachable release for the baseline). Route to `/al-steer`. Under `/al-autopilot` (seat per `${CLAUDE_SKILL_DIR}/../../references/autonomy-seat.md`): the infrastructure ladder (restart container → recreate via `new-agent-container.ps1` → `AUTONOMY STOP REPORT`). Never flip `done` without a clean exit — a green flip with a stale environment poisons every downstream compile.
 
 ## Composition
 

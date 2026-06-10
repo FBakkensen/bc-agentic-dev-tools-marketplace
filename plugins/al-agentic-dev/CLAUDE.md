@@ -62,6 +62,7 @@ Two tiers, on purpose.
 | `test-strategy.md` | plugin-level | test-execution pyramid mapped to the BC tech stack (Unit=AL-Runner, Integration=container+TestPage, E2E=page-script, Contract=client/harness, Exploration=agent-browser); push-down / oracle-problem / checking-vs-testing feedback rules; frames the verification skills (the *execution* axis, distinct from `tdd.md`'s *cycle* axis); read by `/al-build`, `/al-implement`, `/al-mutate`, `/al-refine`, `/al-page-script`, `/al-user-verification` |
 | `notes-discipline.md` | plugin-level | what lives in the task block vs commit / ADR / `.out-of-scope/`; the eight replan triggers as named patterns; read by skills that write `tasks.md` |
 | `markdown-spec-discipline.md` | plugin-level | pointer to `examples/`, surgical-edit floor (`task=` + `status=` + `slice=` + `kind=` on the comment-anchor line), status-flip Edit shape; read by `/al-design`, `/al-event-model`, `/al-scope`, `/al-refine`, `/al-implement`, `/al-code-review`, `/al-user-verification`, `/al-mutate`, `/al-steer` |
+| `autonomy-seat.md` | plugin-level | one seat-selection rule for every "under `/al-autopilot`" branch: autonomous iff the turn was initiated by the goal evaluator's continuation message; human-typed → interactive, always; files and chat lines never select; ambiguous → interactive; read by `/al-code-review`, `/al-user-verification`, `/al-steer`, `/al-provision`, `/al-validate-breaking-changes`, `/al-autopilot` |
 | `examples/` (folder) | plugin-level | three populated `*.example.md` artifacts; pattern-match source for writing skills |
 | `cross-branch-numbering.md` | plugin-level | algorithm for picking `NNN` (spec folders) and `NNNN` (ADRs) across parallel branches; read by `/al-design`, `/al-event-model`, `/al-grill-adr` |
 | `bc-patterns.md` | plugin-level | BC pattern catalogue; read by `/al-design` |
@@ -100,6 +101,7 @@ references/                      # Plugin-level shared, read by ≥2 skills, or 
 ├── bc-code-intelligence-dispatch.md     # bc-code-intelligence MCP call pattern (find→drop-noise→get_bc_topic), noise drop-list, relevance scales
 ├── notes-discipline.md          # What lives in the task block vs commit / ADR / .out-of-scope/, eight replan triggers
 ├── markdown-spec-discipline.md  # Pointer to examples/, surgical-edit floor (task= + status= + slice= + kind= on comment line)
+├── autonomy-seat.md             # Seat selection: goal-evaluator trigger ⇒ autonomous; human-typed ⇒ interactive; files/chat never select
 ├── cross-branch-numbering.md    # NNN / NNNN picking algorithm across parallel branches
 ├── CONTEXT.template.md
 ├── adr.template.md

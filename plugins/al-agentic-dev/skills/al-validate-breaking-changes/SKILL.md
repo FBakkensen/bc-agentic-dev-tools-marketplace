@@ -41,7 +41,7 @@ Map the exit code, then surgical-Edit the comment-anchor line per [`markdown-spe
 A confirmed break is an **intent decision**, not a defect to auto-patch: *intended* (major bump → accept) vs *accidental* (fix the schema change). Neither this skill nor `/al-autopilot` can read that intent.
 
 - **Manual** → `blocked`, route to `/al-steer`.
-- **`/al-autopilot`** → `AUTONOMY STOP REPORT` (breaking change is a hard-to-reverse pick). Never auto-fix — that may revert an intended break; never auto-accept — that may ship an accidental one. The human decides at merge.
+- **`/al-autopilot`** (seat per `${CLAUDE_SKILL_DIR}/../../references/autonomy-seat.md`) → `AUTONOMY STOP REPORT` (breaking change is a hard-to-reverse pick). Never auto-fix — that may revert an intended break; never auto-accept — that may ship an accidental one. The human decides at merge.
 
 A `4` (`Contract`) or other non-zero prerequisite failure → `blocked`, fix the prereq (re-run `/al-provision` for an empty cache), re-run.
 
