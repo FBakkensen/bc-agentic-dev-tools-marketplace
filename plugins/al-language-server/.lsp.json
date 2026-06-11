@@ -1,0 +1,12 @@
+{
+  "al": {
+    "command": "al",
+    "args": ["launchlspserver"],
+    "extensionToLanguage": {
+      ".al": "al",
+      ".dal": "al"
+    },
+    "transport": "stdio",
+    "maxRestarts": 3
+  }
+}

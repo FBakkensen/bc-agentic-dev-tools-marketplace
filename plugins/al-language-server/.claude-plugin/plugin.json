@@ -1,0 +1,5 @@
+{
+  "name": "al-language-server",
+  "description": "AL (Business Central) language server for the Claude Code LSP tool, backed by the AL compiler's native agentic LSP (al launchlspserver). Requires the AL dotnet tool >= 18.0 on PATH.",
+  "version": "0.1.0"
+}

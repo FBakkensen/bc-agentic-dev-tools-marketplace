@@ -8,6 +8,11 @@
   },
   "plugins": [
     {
+      "name": "al-language-server",
+      "source": "./plugins/al-language-server",
+      "description": "AL (Business Central) language server for the Claude Code LSP tool, backed by the AL compiler's native agentic LSP (al launchlspserver). Requires the AL dotnet tool >= 18.0 on PATH."
+    },
+    {
       "name": "grill-me",
       "source": "./plugins/grill-me",
       "description": "Interview the user relentlessly about a plan or design until reaching shared understanding, resolving each branch of the decision tree. Use when user wants to stress-test a plan, get grilled on their design, or mentions 'grill me'."
