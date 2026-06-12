@@ -32,6 +32,28 @@ Acceptance Intent:
 Release blocking protects posting readiness by preventing Sales Orders from being released when Customer state violates release policy.
 ```
 
+### New and Modified Objects
+
+Mandatory on every technical task. Names the production AL surface the task lands — objects, fields, procedure signatures, events — so `/al-implement` consumes signatures instead of minting them mid-TDD. Production objects only: test codeunits and test procedures live in `AAA Cases` and `Covered By`, never here. A test-only task (red-suite rework, characterization additions) writes the labeled line `New and Modified Objects: none` in place of the `###` section; absence of both, or a section heading with neither entries nor the `none` line, is a `/al-refine` defect — `/al-doc-verify` blocks the `ready-for-implementation` flip on it.
+
+Signature-level, no bodies — bodies are what TDD writes. One object per landing line, `New:` or `Modified:` lede. Procedures carry full signature, visibility (`internal` / `local` / public), and their R → P → W letter from `architecture.md`. Fields carry AL type. Events carry the full publisher signature.
+
+Lede semantics: `New:` = object not in the workspace at this task's start — a fresh extension object on an existing base is `New:` with `extends <base>`. `Modified:` = object already in the workspace, including objects an earlier task in the same feature landed; an object another open task's section already mints is also `Modified:` here — one `New:` owner per object, ordering via `Depends on:`. Any new object a listed signature references (enum, interface) earns its own `New:` entry.
+
+Boundary at implementation time: a production object the task's assertions require but the section never named is replan trigger #2; build-gate scaffolding the assertions never observe (permission set entry, object ID, caption) absorbs as trivia per `/al-implement`. A change whose only effect is behaviour inside a procedure an open sibling task owns is trigger #4 (sibling now wrong), not a `Modified:` entry.
+
+```markdown
+### New and Modified Objects
+
+- New: codeunit `Release Policy`
+  - `internal procedure IsReleaseBlocked(Customer: Record Customer): Boolean` — P
+  - Publishes `OnAfterEvaluateReleasePolicy(Customer: Record Customer; IsBlocked: Boolean)` — W
+- New: tableextension `Customer Release Ext` extends `Customer`
+  - Field: `Release Blocked` (Boolean)
+```
+
+Grounding: minted names meet the evidence bar's minted-name clause in `voice-contract.md`. `/al-refine` proposes; `/al-implement` reconciles the section to actuals before `done`.
+
 ### Contract notes
 
 Include `Contract notes` only when the task carries proof-shaping freight the coverage tables cannot hold: oracle design, scope justification (why zero `Unit` cases), seam or test-double decisions, binding mechanics, transaction model, red-suite rework — or the task's `Researched:` evidence-bar citations (`voice-contract.md`). Most tasks otherwise need none.
@@ -230,6 +252,8 @@ Language priority:
 1. Project domain language from `CONTEXT.md`.
 2. BC display labels.
 3. Exact AL object, field, page, procedure, event, or API names only when needed for traceability or ambiguity.
+
+`New and Modified Objects` is the deliberate exception: exact AL names and signatures are its whole content. Coverage tables, AAA cases, and verify examples keep the priority above.
 
 When exact BC-specific names are written into a task, ground them in current workspace symbols/source or authoritative documentation before writing. Grounding evidence stays in chat — except `Researched:` bullets, which land in `Contract notes` per the evidence bar in `voice-contract.md`.
 

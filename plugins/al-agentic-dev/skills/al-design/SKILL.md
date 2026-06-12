@@ -54,6 +54,8 @@ The split *is* the refactor, not annotation; pulling pure decision logic out of 
 
 Each slice names its AL realisation across its slots: trigger object (page action, subscriber, Job Queue, install hook, API endpoint), codeunit holding the command, publication or subscription that moves the chain, table or field carrying state, page / factbox / API endpoint that renders the view. Void here = slot with no implementation home → `/al-implement` either invents one or stalls. User-facing voids caught at `/al-event-model`; this discipline checks AL coverage.
 
+Mark each named object `new` or `extends <existing object>` — `extends` marks an extension object on an existing base, still a `New:` object at refine; an object another slice already creates is named with its owning slice, not re-marked. `/al-refine` derives each task's `New and Modified Objects` from these markers without re-deciding brownfield scope. Object level only — fields and signatures are refine's altitude; they shift during TDD and rot in a reshape-only artifact.
+
 ## AppSource sanity
 
 Two design-time risks bite at AppSource boundaries: **BaseApp modification** (intercept via published events, table extensions, or AL `interface` implementations; AppSource rejects modified-base-app extensions) and **shipped-field rename or removal** (`ObsoleteState: Pending → Removed` over deprecation window; in-place rename breaks shipped data and shipped callers silently). Both are reshape triggers at design time. Per-task compliance details (IDs, permission sets, `DataClassification`, captions, install / upgrade) bite at `/al-implement`.

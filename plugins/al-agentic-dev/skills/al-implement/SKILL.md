@@ -18,12 +18,13 @@ Pick next `ready-for-implementation` technical task from `tasks.md`. Consume its
 - Target task `kind=technical`. `kind=verify` → **Stop**; route via `/al-steer` or `/al-code-review` based on verification state. `kind=provision` → `/al-provision`; `kind=breaking-change` → `/al-validate-breaking-changes` (ops tasks, run-and-flip, never reach `ready-for-implementation`).
 - Target task `status=ready-for-implementation` with populated `Test Specification`. Plain `ready` → **Stop**, `/al-refine T-NNN`. `ready-for-implementation` with empty or missing `Test Specification` → **Stop**, `/al-steer`; status and proof disagree. `blocked` → `/al-steer`. `done` → downstream evidence exists; do not reopen here.
 - Read [`test-specification.md`](../../references/test-specification.md), [`test-strategy.md`](../../references/test-strategy.md), [`tdd.md`](../../references/tdd.md), and [`testability.md`](../../references/testability.md).
-- Read [`voice-contract.md`](../../references/voice-contract.md) (BC vocabulary + evidence bar + Gate report shape) and [`bc-code-intelligence-dispatch.md`](../../references/bc-code-intelligence-dispatch.md) (write-time construct lookup). This skill mints most production names and constructs; both arrive before code, not at refactor.
+- Read [`voice-contract.md`](../../references/voice-contract.md) (BC vocabulary + evidence bar + Gate report shape) and [`bc-code-intelligence-dispatch.md`](../../references/bc-code-intelligence-dispatch.md) (write-time construct lookup). Production names and signatures arrive minted in the task's `New and Modified Objects`; construct lookups stay this skill's own. Both reads arrive before code, not at refactor.
 
 ## What this session answers
 
 - **Which task in flight?** One `T-NNN`, named in opener. Status stays `ready-for-implementation` during the run; session-local work is not durable status.
 - **Where is the seam?** Read `architecture.md` R → P → W boundary, module map, brownfield touchpoints. Name seam in BC vocab: procedure to extract, event to subscribe, interface to implement, or page/action to wire.
+- **Which AL surface lands?** Read the task's `New and Modified Objects`; build against its signatures. The section names production surface only — test codeunits and test procedures are this skill's to mint. In-object drift — procedure rename, parameter change, visibility flip, helper procedure, field addition on a named object — absorb, reconcile the section to actuals before `done`, note drift in `Contract notes`; no drift → no edit.
 - **Which AAA cases land?** Traverse `Unit` cases first, then `Integration`, in coverage-ID order. One case red → green before the next.
 - **Which BC names and constructs verified this session?** Every exact BC-specific name in the AAA case or implementation path, and every BC construct class it touches, meets the evidence bar in [voice-contract.md](../../references/voice-contract.md): names via workspace hit or quoted fetch, constructs via fetched topic or quoted Learn passage.
 - **What flips at end?** `status=` goes `ready-for-implementation` → `done` on the comment-anchor line; final full `/al-build` green. User/API-facing slice-done opens the slice verify task to `ready` for `/al-refine`. Backend-only slice-done announces `/al-code-review` per-slice. Feature-done announces `/al-code-review` per-feature.
@@ -71,6 +72,7 @@ Before `done`, update the task block so it reflects actual proof:
 - `Covered By` names actual AL test procedures only.
 - `Covers:` references real `B#` / `R#`.
 - `Scope:` is final. Any scope change is edited back into `tasks.md`.
+- `New and Modified Objects` matches the actual diff: objects, fields, signatures, visibility, R → P → W letters.
 - Completed task keeps final `Test Specification`.
 - Implementation discoveries land in `Contract notes` as new bullets, one fact per landing line — never spliced onto an existing bullet, never a `;`-chained paragraph. How a decision was reached goes to the commit message, not the task block.
 - `Researched:` citations from this task land as `Contract notes` bullets (the evidence-bar trace, [voice-contract.md](../../references/voice-contract.md)) — skipped research stays visible to `/al-code-review` and the next session.
@@ -99,7 +101,7 @@ Eight triggers run as gate after mutation, before `done`. Trigger invalidates pl
 | # | Trigger | Detect |
 |---|---|---|
 | 1 | Task too big | Single task balloons past one TDD cycle's worth of scope |
-| 2 | Hidden pre-req | Implementation needs table, codeunit, or permission with no covering task |
+| 2 | Hidden pre-req | Implementation needs table, codeunit, or permission with no covering task, or a production object absent from the task's `New and Modified Objects` |
 | 3 | Wrong order | Task can't land without later task's seam in place |
 | 4 | Sibling now wrong | This task's code invalidates another task's context, `Test Specification`, or `Verification Plan` |
 | 5 | New behaviour emerges | Code path needs its own test, not an appended assertion |
@@ -107,7 +109,7 @@ Eight triggers run as gate after mutation, before `done`. Trigger invalidates pl
 | 7 | Goal drift | What's landing no longer matches feature Goal |
 | 8 | Verification failed | User-facing verify example does not match observed behaviour; surfaced from verify task |
 
-Trivia absorbs inline: missing scaffolding, permission set entry, object ID, caption, or BC-vocab rename. Apply, note, rerun `/al-build`, continue. Schema changes, new event publishers, new codeunits, or test-outcome changes route through `/al-steer`.
+Trivia absorbs inline: missing scaffolding, permission set entry, object ID, caption, or BC-vocab rename — build-gate forcings the spec's assertions never observe. Apply, note, rerun `/al-build`, continue. A production object the assertions require stays trigger #2; schema changes, new event publishers, new codeunits, or test-outcome changes route through `/al-steer`.
 
 <claude-only>
 

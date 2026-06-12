@@ -19,7 +19,7 @@ Turn `architecture.md` into context-only per-task entries in `tasks.md` so `/al-
 
 - **Goal**: lift the one-line outcome from `event-model.md` journey (user/API-facing) or from `architecture.md` trigger-source (backend-only). Do not re-derive.
 - **Context only**: task blocks carry stable non-implementation context: goal, user/API surface, slice intent, dependencies, constraints, risks, source context, acceptance intent. Acceptance intent is context prose, not a `Test Specification` subsection.
-- **No proof artifacts**: do not write `Test Specification`, `Verification Plan`, AAA cases, `Expected Behaviors`, `Decision Matrix`, `Journey Examples`, `Contract Examples`, or `Exploration Charters`. `/al-refine` owns every proof artifact and writes it fresh.
+- **No proof artifacts**: do not write `Test Specification`, `Verification Plan`, `New and Modified Objects`, AAA cases, `Expected Behaviors`, `Decision Matrix`, `Journey Examples`, `Contract Examples`, or `Exploration Charters`. `/al-refine` owns every proof artifact and writes it fresh.
 - **No implementation prescriptions**: do not prescribe new object, procedure, test codeunit, assertion, page-script, or API payload examples. Existing objects, pages, events, APIs, and fields may be named as source context only.
 - **Tasks**: one imperative title + short description per task, each task a coherent behaviour slice or refactor step. Compress with existing BC field, codeunit, table names when they are source context.
 - **Slice grouping**: every `T-NNN` carries `slice=<slug>` on its comment-anchor line. User/API-facing features: slug = `event-model.md` timeline step (`release-sales-order`, `approve-override`). Backend-only: slug names `architecture.md` slice (`job-queue-cleanup`, `install-upgrade-v2`).

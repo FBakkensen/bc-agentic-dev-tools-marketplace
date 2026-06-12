@@ -48,7 +48,7 @@ Patterns the agent learns to recognise, not a checklist to walk. Other skills fl
 | # | Name | Pattern |
 |---|---|---|
 | 1 | Task too big | One task balloons past a session, or its proof items cluster around two distinct subjects. |
-| 2 | Hidden pre-req | Referenced table, codeunit, permission, or behaviour has no task covering it. |
+| 2 | Hidden pre-req | Referenced table, codeunit, permission, or behaviour has no task covering it; or implementation needs a production object the task's assertions require but its `New and Modified Objects` never named — route back through `/al-refine` to extend the section, or open a covering task. |
 | 3 | Wrong order | Task's `Test Specification` or `Verification Plan` references behaviour a later task introduces. |
 | 4 | Sibling now wrong | Current task invalidates another task's context, `Test Specification`, or `Verification Plan`. |
 | 5 | New behaviour emerges | Surfaced code path needs its own test, not an appended assertion. |

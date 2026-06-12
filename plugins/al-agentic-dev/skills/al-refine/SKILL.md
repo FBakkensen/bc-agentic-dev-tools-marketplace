@@ -41,6 +41,7 @@ Spec how one technical task's behaviour is proved so `/al-implement` can drive r
 - **What procedure names should exist?** Propose short PascalCase AL test procedure names. These populate `Covered By`, AAA headers, and `Procedure:`.
 - **What order?** AAA cases list `Unit` first, then `Integration`; within each scope, coverage ID order.
 - **What does codebase actually expose?** Real codeunits, tables, fields, pages, procedures, events, and APIs on the boundary. Every exact name rests on current evidence.
+- **Which objects and signatures does the task land?** Write `New and Modified Objects` per the grammar in [`test-specification.md`](../../references/test-specification.md); `/al-implement` consumes these signatures instead of minting names mid-TDD. Seed `New:` vs `Modified:` from `architecture.md`'s `new` / `extends` markers, then override by workspace state at refine time — an object an earlier task already landed is `Modified:` regardless of its design-time marker. Architecture silent on a needed object → mint it when it serves a listed slice slot; a missing slot is trigger #6, route `/al-steer`.
 - **What vocabulary names the coverage?** Project terms from `CONTEXT.md` first, then BC display labels, then exact AL names only when traceability or ambiguity requires them.
 
 Unanswerable → cannot write the spec yet. Flip or keep `status=blocked` and resolve via `/al-research` (BC behaviour), `/al-grill-adr` (domain rule), `/grill-me` (intent the user must adjudicate), or `/al-steer` (replan).
@@ -67,7 +68,9 @@ Unanswerable → cannot write `Verification Plan` yet. Flip or keep `status=bloc
 
 Every exact BC-specific symbol in a `Test Specification` or `Verification Plan` meets the evidence bar in [voice-contract.md](../../references/voice-contract.md): workspace hit this session or quoted fetch; conflicts and design-artifact facts escalate to `/al-research`. Names already cited by `/al-design` or `/al-event-model` count only when `grep` against those upstream files returns the name this session.
 
-Artifacts stay clean; chat carries the citation, `/al-implement` lands task-scoped ones in `Contract notes`.
+Minted names in `New and Modified Objects` meet the bar's minted-name clause in [voice-contract.md](../../references/voice-contract.md).
+
+Artifacts stay clean; chat carries the citation. `Researched:` bullets land in `Contract notes` — refine's at write, `/al-implement`'s at reconcile.
 
 ## Sharpen vague language inline
 
@@ -80,7 +83,7 @@ Inline replacement examples:
 
 ## Second opinion on non-trivial plans
 
-Cross-check via `/al-second-opinion`. Prompt body for technical tasks: task title + description + proposed `Test Specification` + `CONTEXT.md` language excerpt if resolved + "what behaviours, decision rows, negatives, boundaries, scopes, or procedure mappings are missing or wrong? AND does this surface any of the eight replan triggers? AND does wording use project vocabulary where applicable? Return a bulleted list." Prompt body for verify tasks: task title + slice context from `event-model.md` + proposed `Verification Plan` + "what user-facing journeys, contract checks, exploration prompts, boundaries, or exception paths are missing or wrong? AND do examples name real surfaces? AND does this surface any of the eight replan triggers? Return a bulleted list."
+Cross-check via `/al-second-opinion`. Prompt body for technical tasks: task title + description + proposed `Test Specification` + `CONTEXT.md` language excerpt if resolved + "what behaviours, decision rows, negatives, boundaries, scopes, procedure mappings, or object/signature landings are missing or wrong? AND does this surface any of the eight replan triggers? AND does wording use project vocabulary where applicable? Return a bulleted list." Prompt body for verify tasks: task title + slice context from `event-model.md` + proposed `Verification Plan` + "what user-facing journeys, contract checks, exploration prompts, boundaries, or exception paths are missing or wrong? AND do examples name real surfaces? AND does this surface any of the eight replan triggers? Return a bulleted list."
 
 Reconcile each returned bullet; accept by updating or reject with session rationale. If a rejection encodes a durable principle, escalate via `/al-steer` to `/al-grill-adr` or `/al-design`.
 

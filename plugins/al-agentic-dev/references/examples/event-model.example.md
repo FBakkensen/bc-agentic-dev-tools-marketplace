@@ -1,6 +1,6 @@
 # Sales Document Posting: Item Charge Allocation Validation
 
-User-facing journey for catching item charge allocation mismatches at posting time. Two Roles cooperate across four event chains. Posting Engine takes the document the moment Order Processor hands over.
+User-facing journey for catching item charge allocation mismatches at posting time. Two Roles cooperate across one four-step chain. Posting Engine takes the document the moment Order Processor hands over.
 
 | | |
 |---|---|

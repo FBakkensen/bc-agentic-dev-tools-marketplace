@@ -24,6 +24,11 @@ Resolve `Item Charge Assignment (Sales)` rows for released `Sales Header`, group
 
 Test Specification:
 
+### New and Modified Objects
+
+- New: codeunit `Charge Validation`
+  - `internal procedure FindItemChargeAssignments(SalesHeader: Record "Sales Header"; var TempItemChargeAssignmentSales: Record "Item Charge Assignment (Sales)" temporary)` — R
+
 ### Expected Behaviors
 
 | ID | Expected Behavior | Covered By |
@@ -72,6 +77,11 @@ Test Specification:
 
 Acceptance Intent:
 Allocation validation protects posting correctness by rejecting Sales Orders where item charge quantity and assigned quantity do not balance.
+
+### New and Modified Objects
+
+- Modified: codeunit `Charge Validation`
+  - `internal procedure ValidateAllocatedQuantity(ChargeQty: Decimal; AllocatedQty: Decimal; var Imbalance: Decimal): Boolean` — P
 
 ### Decision Matrix
 
@@ -149,6 +159,11 @@ Test Specification:
 Acceptance Intent:
 Posting validation prevents Sales Orders with unbalanced item charge allocations from creating posted documents or partial posting state.
 
+### New and Modified Objects
+
+- New: codeunit `Charge Post Subscribers`
+  - `local procedure OnAfterCheckSalesDoc(var SalesHeader: Record "Sales Header")` subscribes `Sales-Post` `OnAfterCheckSalesDoc` — W
+
 Contract notes:
 - Oracle: posted-document absence — `BlocksPostingWithMismatchedAllocation` asserts no Posted Sales Invoice exists, not the error text alone.
 - Zero Unit cases — structural: the subscriber delegates to `Charge Validation` and adds no decision logic of its own.
@@ -221,6 +236,12 @@ Test Specification:
 
 Acceptance Intent:
 The Sales Order Card explains allocation mismatch at the point of correction so the Order Processor can fix the affected Sales Lines.
+
+### New and Modified Objects
+
+- New: page `Allocation Mismatch Breakdown` (ListPart)
+- New: pageextension `Sales Order Ext` extends `Sales Order`
+  - Part: `Allocation Mismatch Breakdown`, visible on mismatch
 
 ### Expected Behaviors
 
@@ -333,6 +354,23 @@ Test Specification:
 
 Acceptance Intent:
 Allocation audit entries preserve posting traceability by recording the source and receiving Sales Lines for each posted allocation.
+
+### New and Modified Objects
+
+- New: table `Allocation Ledger Entry`
+  - Field: `Entry No.` (Integer)
+  - Field: `Document No.` (Code[20])
+  - Field: `Source Sales Line No.` (Integer)
+  - Field: `Receiving Sales Line No.` (Integer)
+  - Field: `Allocated Quantity` (Decimal)
+  - Field: `Posting Date` (Date)
+- New: page `Allocation Ledger Entries` (List)
+- Modified: codeunit `Charge Post Subscribers`
+  - `local procedure InsertAllocationLedgerEntries(SalesHeader: Record "Sales Header")` — W
+
+Contract notes:
+- Zero Unit cases — structural: insert wiring only.
+- Decision surface proved: T-002.
 
 ### Expected Behaviors
 

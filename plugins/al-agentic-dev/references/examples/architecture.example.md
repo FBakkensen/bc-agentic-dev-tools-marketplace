@@ -1,6 +1,6 @@
 # Item charge allocation, validated at posting
 
-Three modules cooperate under strict R → P → W discipline. Feature touches BaseApp at exactly one place: event subscribers on `Sales-Post` codeunit 80.
+Two modules cooperate under strict R → P → W discipline. Feature touches BaseApp at exactly one place: event subscribers on `Sales-Post` codeunit 80.
 
 | | |
 |---|---|
@@ -17,17 +17,16 @@ Catch item charge allocation mismatches at posting before invoice posts, surface
 
 | Module | R → P → W | Touchpoint |
 |---|---|---|
-| `Charge Validation` | Read → Process | Reads `Item Charge Assignment (Sales)`; emits validated allocations. |
-| `Allocation Resolver` | Process | Pure. Builds allocation graph; no BaseApp dependency. |
-| `Posting Subscribers` | Write | Brownfield touchpoint in `Sales-Post` codeunit 80. |
+| `Charge Validation` (new) | Read → Process | Reads `Item Charge Assignment (Sales)`; pure allocation-balance decisions, no BaseApp write. |
+| `Charge Post Subscribers` (new) | Write | Brownfield touchpoint in `Sales-Post` codeunit 80. |
 
 ## R → P → W boundary
 
 Reads sit on released document. `Charge Validation` opens `Sales Header` by `No.`, iterates `Sales Line` rows it owns, resolves each related `Item Charge Assignment (Sales)`. Reads never reach outside the document.
 
-Processing is pure. `Allocation Resolver` takes read rows, produces in-memory graph mapping each charge to its receiving lines. No `Insert` or `Modify`. Returns value object. Reproducible from inputs.
+Processing is pure. `Charge Validation` takes read rows, decides allocation balance per charge against its receiving lines. No `Insert` or `Modify`. Returns decision outcome. Reproducible from inputs.
 
-Writes go through BaseApp. `Posting Subscribers` subscribes to `OnAfterCheckSalesDoc` and `OnBeforePostSalesDoc` from `Sales-Post`. Calls `Charge Validation` and `Allocation Resolver`, then writes through `Sales-Post`. Success → posting proceeds; failure → `Error` aborts. Audit entries `Insert` into feature-owned table.
+Writes go through BaseApp. `Charge Post Subscribers` subscribes to `OnAfterCheckSalesDoc` from `Sales-Post`. Calls `Charge Validation`, then writes through `Sales-Post`. Success → posting proceeds; failure → `Error` aborts. Audit entries `Insert` into feature-owned table.
 
 ## Brownfield touchpoints
 
@@ -35,7 +34,11 @@ Writes go through BaseApp. `Posting Subscribers` subscribes to `OnAfterCheckSale
 |---|---|---|
 | `Sales-Post` codeunit 80 | Event source | Subscribe; never modify. |
 | `OnAfterCheckSalesDoc` | Event subscriber | Run `Charge Validation`, raise `Error` on mismatch. |
-| `OnBeforePostSalesDoc` | Event subscriber | Defensive only; main check on `OnAfterCheckSalesDoc`. |
+
+## AL realisation per slice
+
+- Slice `post-validates-allocation`: trigger — subscriber on `Sales-Post` `OnAfterCheckSalesDoc` (new codeunit `Charge Post Subscribers`); decision — new codeunit `Charge Validation`; view — new page `Allocation Mismatch Breakdown` (ListPart), new pageextension extends `Sales Order`; state — none, validation is stateless.
+- Slice `audit-trail`: state — new table `Allocation Ledger Entry`; write — `Charge Post Subscribers` (new in posting slice; this slice modifies it); view — new page `Allocation Ledger Entries` (List), drill from `Posted Sales Invoice`.
 
 ## BC patterns
 
