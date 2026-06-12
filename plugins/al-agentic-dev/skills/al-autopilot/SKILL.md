@@ -1,13 +1,13 @@
 ---
 name: al-autopilot
-description: Drive the AL/Business Central slice cycle unattended under the runtime goal feature. Use after /al-scope when the user wants the remaining tasks.md work completed autonomously — refine, implement, review, page-script, user-verification, feature-done review rounds — with self-answered triage and a decision log. Composes the goal line; the user fires it once.
+description: Drive the AL/Business Central slice cycle unattended under the runtime goal feature. Use after /al-scope when the user wants the remaining tasks.md work completed autonomously — refine, implement, review, page-script, feature-done review rounds — with self-answered triage and a decision log; parks at each user-facing verify task for the human-driven /al-user-verification walk. Composes the goal line; the user fires it once.
 ---
 
 **Style:** Be extremely concise. Sacrifice grammar for concision. Opinionated — pick a side. Arrows (→) for causality. Technical terms exact, code and errors quoted verbatim.
 
 # /al-autopilot, Unattended slice-cycle driver
 
-Drive `specs/<NNN>-<slug>/tasks.md` from its current state to feature-done without waiting on a human, under the runtime's goal feature (`/goal` on Claude Code and Codex). Entry is post-`/al-scope`; the upstream pipeline (`/al-grill-adr` → `/al-event-model` → `/al-design` → `/al-scope`) settles intent and stays off-limits — an agent self-answering intent questions compounds its own assumptions through every slice. Resume-aware: `tasks.md` status lines are the state machine; tasks the user already drove to `done` manually stay trusted as-is.
+Drive `specs/<NNN>-<slug>/tasks.md` from its current state to feature-done without waiting on a human — parking at user-driven verify walks rather than substituting them — under the runtime's goal feature (`/goal` on Claude Code and Codex). Entry is post-`/al-scope`; the upstream pipeline (`/al-grill-adr` → `/al-event-model` → `/al-design` → `/al-scope`) settles intent and stays off-limits — an agent self-answering intent questions compounds its own assumptions through every slice. Resume-aware: `tasks.md` status lines are the state machine; tasks the user already drove to `done` manually stay trusted as-is.
 
 ## Per-turn protocol
 
@@ -25,7 +25,7 @@ This section leads the file on purpose: skill bodies are re-injected after compa
    | verify task `ready-for-verification` without `review=clean` on its comment line | `/al-code-review T-NNN` |
    | backend-only slice all `done` (no `kind=verify`), and the next slice's first task **or** the `kind=breaking-change` task still `blocked` | `/al-code-review` per-slice — its clean-review gate opens the next slice, or (at the last backend slice) opens the `kind=breaking-change` task |
    | verify task carries `review=clean`, `Journey Examples` present, no `.yml` recording | `/al-page-script T-NNN` |
-   | verify task carries `review=clean`, `.yml` present or no E2E recording needed | `/al-user-verification T-NNN` |
+   | verify task carries `review=clean`, `.yml` present or no E2E recording needed | **park** — `AUTONOMY STOP REPORT`, blocker `verify walk T-NNN is user-driven`, resume `/al-user-verification T-NNN` then relaunch `/al-autopilot`. The walk is the human's; no autonomous turn runs it |
    | `kind=breaking-change` task `ready` (all feature work `done`, its `Depends on:` satisfied) | `/al-validate-breaking-changes T-NNN` — a detected break flips it `blocked` → `AUTONOMY STOP REPORT` (intent decision: accept vs fix is the human's at merge) |
    | every task in feature `done` | feature-done `/al-code-review` rounds |
 
@@ -62,7 +62,7 @@ Mechanical clauses (status values, gate exit, review closer) are mandatory, not 
 No autonomous turn waits on a human. Seats that contracts reserve for one:
 
 - **Interview seats** (`/al-code-review`'s per-finding triage, any question a skill would put to the user) → `/al-second-opinion` answers; the agent reconciles against the independent view and records the entry in `decision-log.md`. Disagreement on drop-vs-fix → fix wins. Correctness findings always become tasks; hygiene may settle as notes.
-- **Physical-presence fallbacks** (`/al-user-verification`'s human walk) → never substituted; that gate's point is the surface got exercised. Infrastructure ladder below, then stop report.
+- **Physical-presence seats** (`/al-user-verification`'s guided user walk) → never substituted, never run autonomously; the state table parks the run with a stop report before the skill. That gate's point is a human exercised the surface. Verify-walk parks are the run's natural checkpoints: autopilot completes a slice up to the walk, the human walks, relaunches.
 - **Hard-to-reverse picks** (data loss, breaking change, AppSource compliance) → don't wait, but take the most reversible option available and flag the entry `irreversible-class`. The human's merge-time read of the log is the checkpoint that replaces waiting.
 
 ## Decision log
@@ -88,11 +88,11 @@ Reversible: yes — re-walk any time; evidence retained.
 **Turn entry** — one per gate verdict (review verdict, verification outcome, build gate at a status flip), never per housekeeping turn:
 
 ```markdown
-### 2026-06-07 — /al-user-verification T-003: PASS
+### 2026-06-07 — /al-implement T-003: PASS
 
-Step: /al-user-verification T-003 → done
-Evidence: replay 15/15 green; agent walk V1–V6 pass; SetRecFilter survivor net discharged (WALK-V7/V9)
-Next: /al-refine T-007
+Step: /al-implement T-003 → done
+Evidence: full /al-build gate green 14/14; mutation round clean, zero survivors
+Next: /al-refine T-004
 ```
 
 The shape's standing corrective is in the tail, not the header: the `## Entries` marker reads `(append-only below — every entry follows the Decision or Turn skeleton above)`, and the previous entry is the live template every later turn mimics. One blobbed entry propagates; the marker is what breaks the chain.
@@ -143,6 +143,6 @@ Gate events report per the Gate report skeleton in [voice-contract.md](../../ref
 | | |
 |---|---|
 | **Invoked from**     | user at launch (post-`/al-scope`, any amount of manual progress already in `tasks.md`); every later turn re-enters via the goal loop, not re-invocation |
-| **Routes to**        | `/al-refine`, `/al-implement`, `/al-code-review`, `/al-page-script`, `/al-user-verification` per the state table; `/al-steer` for in-loop additive insertion only |
+| **Routes to**        | `/al-refine`, `/al-implement`, `/al-code-review`, `/al-page-script` per the state table; **parks before `/al-user-verification`** (walk is user-driven); `/al-steer` for in-loop additive insertion only |
 | **Sidebands**        | `/al-second-opinion` (every interview seat), `/al-research` (evidence-bar escalation mid-task), `/al-build` (via owning skills) |
 | **Stops to**         | `AUTONOMY STOP REPORT` → human reads, clears blocker, relaunches `/al-autopilot` (resume-aware by state) |
