@@ -275,7 +275,7 @@ dialog. <value>{error text}</value>` on the first later step carrying a foreign 
 dialog's own ref). Anonymous-dialog matching: `automationId` or `runtimeRef` only, `caption:`
 ignored, neither → `No page found`; Confirm/Message's `8da61efd-…` id does NOT match Error. Error
 text not assertable (caption is literal `Error`, no `contains` — §5) → wording checks stay
-agent-walk. The automationId is platform-generated — stable within a platform version, re-harvest
+Exploration-Charter territory (the guided user walk). The automationId is platform-generated — stable within a platform version, re-harvest
 on a BC bump if it reds as a reference mismatch.
 
 Message = assert via `message`, never invoked · Confirm = `invoke Yes`\|`No` · Error = catch
@@ -401,7 +401,7 @@ npx replay .\recordings\*.yml -StartAddress http://<host>/<instance>/ -ResultDir
 | `-Headed` | show the browser |
 | `-UseServerReplay` | swap the browser for the bundled .NET client-service engine |
 
-**`-UseServerReplay`** runs against `Microsoft.BusinessCentral.Replay.dll` over the UI-client protocol — headless, faster, no browser. It **cannot render control add-ins / canvas**: a feature whose deliverable paints inside a canvas is unverifiable this way (use browser mode, or the exploratory agent-browser walk). `npx replay` runs `npx playwright install` **unconditionally**, even under `-UseServerReplay` — so the Chromium download (and the Node-26 install hang) still applies regardless of the flag. *(Minor upstream bug: the script's `-Headed` guard and doc comment reference `$UseClientService`, but the parameter is `$UseServerReplay`.)*
+**`-UseServerReplay`** runs against `Microsoft.BusinessCentral.Replay.dll` over the UI-client protocol — headless, faster, no browser. It **cannot render control add-ins / canvas**: a feature whose deliverable paints inside a canvas is unverifiable this way (use browser mode, or the exploratory guided user walk). `npx replay` runs `npx playwright install` **unconditionally**, even under `-UseServerReplay` — so the Chromium download (and the Node-26 install hang) still applies regardless of the flag. *(Minor upstream bug: the script's `-Headed` guard and doc comment reference `$UseClientService`, but the parameter is `$UseServerReplay`.)*
 
 `replay` exits **non-zero** if any recording fails — that is the green/red gate.
 

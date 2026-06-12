@@ -159,7 +159,7 @@ Allowed verify scopes:
 |---|---|---|
 | `E2E` | Page script / bc-replay | BC Web Client workflow acceptance check. |
 | `Contract` | Postman, curl, integration harness, or named client | API or external-client acceptance check. |
-| `Exploration` | Agent-driven browser or human walk | UX/usability judgement and observational testing. |
+| `Exploration` | Guided user walk (user drives the browser, agent guides) | UX/usability judgement and observational testing. |
 
 Normal user-facing verify tasks require at least one `E2E` example. API/client-facing verify tasks require at least one `Contract` example. `Exploration` is optional, recommended for new workflows, changed workflows, and error-guidance changes.
 
