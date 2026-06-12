@@ -18,7 +18,6 @@ Composable skills for AL/Business Central agentic development. One feature flows
 | **Infrastructure** | `/al-build` (compile, publish, run tests), `/al-debug-logging` (transient `FeatureTelemetry.LogUsage` probes) |
 | **Ops** (bracket the feature; run an `/al-build` script + flip task status) | `/al-provision` (`T-001`, refresh the build environment), `/al-validate-breaking-changes` (last, validate against the released baseline) |
 | **Shaping** (inside `/al-implement` or standalone on legacy) | `/al-refactor`, `/al-mutate`, `/al-page-script` |
-| **Autonomous** (wraps the slice cycle under the runtime goal feature) | `/al-autopilot` |
 | **Meta** | `/al-agentic-dev-overview` (this skill) |
 
 Slice mechanics: `/al-refine` opens one `ready` task at a time. Technical tasks become `ready-for-implementation`, then `/al-implement` drives them to `done`. When a user/API-facing slice's technical tasks are done, `/al-implement` opens the verify task to `ready`; `/al-refine` writes its `Verification Plan` and flips it to `ready-for-verification`; `/al-code-review` validates that slice before page-script/user-verification. `/al-page-script` generates the slice's bc-replay recording from E2E Journey Examples, then `/al-user-verification` pre-flights the recording batch against a fresh container, runs Contract Examples, and guides you through Journey Examples / Exploration Charters in your own browser before the next slice opens to `ready` for refinement. Backend-only slices skip page-script and user-verification, chaining through `/al-code-review` into the next slice. `/al-scope` brackets the feature with two ops tasks: a `kind=provision` task first (`/al-provision` refreshes the build environment — compiler, symbols, breaking-change baseline) and a `kind=breaking-change` task last (`/al-validate-breaking-changes` checks the feature against the released baseline before merge); both run a script and flip status, bypassing `/al-refine`. At feature-done (every task in feature `done`), `/al-code-review` fires per-feature before merge. Separately, `/al-doc-verify` checks newly written markdown artifacts for structure, boundary, and sibling consistency before the producer reports gate or hands off.
@@ -47,7 +46,6 @@ Slice mechanics: `/al-refine` opens one `ready` task at a time. Technical tasks 
 | `/al-build` | Compile, publish, run tests; writes results to `.output/TestResults/<dirName>/`. | After modifying AL code or tests. Required gate before commit. |
 | `/al-debug-logging` | Temporary `DEBUG-*` `FeatureTelemetry.LogUsage` probes; read `telemetry.jsonl`; remove probes. Final state: zero `DEBUG-*` in tree. | Runtime behaviour diverges from source and tests can't reveal which path ran. |
 | `/al-page-script` | Generate the slice's bc-replay recording (`.yml`) from the verify task's E2E Journey Examples; example-by-example inner loop against a fresh container; commits the file on green. Produces the recording `/al-user-verification` pre-flights. | After `/al-code-review` per-slice stamps `review=clean` on the verify task (user-facing slice only). |
-| `/al-autopilot` | Drives the slice cycle unattended under the runtime goal feature (`/goal`): one step per turn, self-answered triage via `/al-second-opinion`, decisions audited in `specs/<NNN>-<slug>/decision-log.md`, fail-fast stop report on infrastructure or replan-class blockers. Parks at each walkable verify task (Journey/Exploration scopes) — the walk is yours; relaunch after it; Contract-only verify tasks run in-loop. Never pushes. | After `/al-scope`, when you want the remaining `tasks.md` work completed autonomously; resume-aware from any manual progress. |
 
 ## Persistence layers
 
@@ -68,8 +66,6 @@ You have an AL repo, no `specs/<NNN>-<slug>/` yet, on the default branch. The ch
 `/al-doc-verify` runs inside the document-writing skills after each canonical markdown write, not as a standalone cold-start step.
 
 If the idea is already crystallised, skip `/al-grill-adr`. Most features benefit from it.
-
-Once `tasks.md` exists, `/al-autopilot` can drive the remaining slice cycle unattended — it composes the runtime `/goal` line, you fire it once. It parks at each walkable verify task: you walk the slice via `/al-user-verification`, then relaunch.
 
 ## State-aware navigation
 
