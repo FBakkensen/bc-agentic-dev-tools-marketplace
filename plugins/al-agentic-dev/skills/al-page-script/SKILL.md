@@ -81,6 +81,8 @@ Read `Scope: E2E` Journey Examples from the verify task's `Verification Plan` in
 
 A red is a question — *can this layer pin the truth, and if not, which layer can?* Classify by the **outcome** read from `error-context.md` + `replay-log` (error / hang / false-green / wrong-behaviour), then route by **push-down** (see [`test-strategy.md`](../../references/test-strategy.md)). Three resolutions stay in-loop; the rest move the test to another layer.
 
+**Isolate before you debug.** A red buried deep in a long recording masks its own cause, and every full replay costs ~10 minutes. Build a throwaway minimal recording instead: reproduce the smallest shape that triggers the failure, drop `timeout:` low so a hang fails fast, and bisect one variable per run. A 10-step probe finds in 30 seconds what a 100-step replay hides for an hour; delete the probe once the cause is named.
+
 **Stay in-loop — the recording is wrong, not the system:**
 
 - **YAML defect.** Error reads as a shape/locator problem (wrong `target:` nest, `invokeType` typo, missing `runtimeRef` after `page-shown`, `operation:` outside the enum) — or an *expected* dialog the recording forgot to answer. Self-fix against the grammar reference (a Confirm is answered with `invoke invokeType: Yes`|`No`), retry. No prompt. An `Error()` the Journey Example *expects* (a guard error, e.g. blank-filter) is this case, not push-down: script the grammar §4 composition (`page-shown` on the Error automationId immediately after the trigger → `invoke Ok` → `page-closed`). Error *text* not assertable (no `contains`) → wording checks stay Exploration Charters. Expected per plan → script; unexpected → route below.

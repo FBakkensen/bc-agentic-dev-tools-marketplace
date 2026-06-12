@@ -19,7 +19,7 @@ Fill one named `status=ready` task in `tasks.md`. Branch by `kind=` on the comme
 - Target task is named and has `status=ready`. `ready` means context exists for `/al-refine` only.
 - Any other status is not a refine target: `blocked` → `/al-steer`; `ready-for-implementation` → `/al-implement`; `ready-for-verification` → `/al-page-script` or `/al-user-verification` after `/al-code-review`; `done` → downstream evidence exists, reopen only through `/al-steer`.
 - Verify task (`kind=verify`) but no `event-model.md` → contract violation, **Stop**, route to `/al-steer`. Verify tasks only exist for user/API-facing features.
-- Read [`test-specification.md`](../../references/test-specification.md), [`test-strategy.md`](../../references/test-strategy.md), [`voice-contract.md`](../../references/voice-contract.md), and [`markdown-spec-discipline.md`](../../references/markdown-spec-discipline.md) before writing.
+- Read [`test-specification.md`](../../references/test-specification.md), [`test-strategy.md`](../../references/test-strategy.md), [`test-layout.md`](../../references/test-layout.md) (the Unit-vs-Integration scope call is the placement rule there — a case whose codepath needs real BaseApp behaviour cannot be scoped `Unit`), [`voice-contract.md`](../../references/voice-contract.md), and [`markdown-spec-discipline.md`](../../references/markdown-spec-discipline.md) before writing.
 
 ## Branch by task kind
 

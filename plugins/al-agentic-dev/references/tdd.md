@@ -62,6 +62,10 @@ Each AAA case becomes one short PascalCase test procedure name in BaseApp style:
 - `RuleSetWithBlockedRecordThrowsError`
 - `RuleSetCopyPreservesIntervals`
 
+### Fixture tokens
+
+Fixture-data literals (the right-hand side of `TemplateID := '...'` and peers) carry UPPER_SNAKE role tokens derived from the scenario — never workflow identifiers. A task ID, scenario number, PR number, or ticket ID inside fixture data is process noise: the test procedure name already carries scenario identity, and the literal outlives the workflow that minted it. Paired variables sharing a fixture role share a role prefix (`CLONE_BASE_SRC` / `CLONE_BASE_TGT`), so the relationship reads off the data. Respect the target field's width — a `Code[20]` field rejects a 21-character token at the first `Insert`. Keep tokens distinct across test procedures: per-test isolation in both runners depends on fixtures not colliding.
+
 ## Mutation operators
 
 Apply when prod or tests moved in the cycle: prod move catches under-tested new logic; test move catches new assertions that don't actually pin prod behaviour. The operators below apply at qualifying sites only: branching, comparisons, boolean ops, guards, arithmetic. Plain delegation, property-only, and metadata edits carry no test-rigor signal at the site level.

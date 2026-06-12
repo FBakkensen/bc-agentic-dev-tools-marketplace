@@ -33,7 +33,7 @@ Architectural vocabulary (Module, Interface, Implementation, Seam, Adapter, Dept
 
 Spawn 4 lens sub-agents in parallel on the task diff. Each returns reshape opportunities; main session merges into one ordered apply queue.
 
-Sub-agents inherit neither hooks nor `CLAUDE.md`. Every lens spawn prompt carries the **BC vocabulary** line from [voice-contract.md](../../references/voice-contract.md) verbatim — a lens that quotes or proposes names without the vocabulary in its own context repairs naming with the generic verbs the repair exists to remove.
+Sub-agents inherit neither hooks nor `CLAUDE.md`. Every lens spawn prompt carries the **BC vocabulary** line from [voice-contract.md](../../references/voice-contract.md) verbatim — a lens that quotes or proposes names without the vocabulary in its own context repairs naming with the generic verbs the repair exists to remove. When the diff touches test code, the spawn prompt also names [test-layout.md](../../references/test-layout.md): its authoring contract is exactly what tidy passes break silently — consolidating "duplicate" integration-test library procedures violates duplicate-before-share, hoisting handlers off a test codeunit breaks the `[HandlerFunctions]` string binding, relocating a double breaks the per-app independence rule. Moving a test across the unit/integration boundary is never a lens call — that is replan, route `/al-steer`.
 
 After lens outputs are collected and merged, close the completed lens sub-agent threads. Do not leave completed lens agents open as passive state.
 

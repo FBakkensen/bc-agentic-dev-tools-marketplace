@@ -42,7 +42,7 @@ Verify task at end of each slice is where user-vertical becomes a status flip. C
 
 ## Task order inside slice
 
-Task order inside one slice optimizes for fast proof and stable seams: decision/policy primitives first, BC wiring second, page/API surface last, verify task at the end. Across slices, order follows `event-model.md` timeline order so the user can verify slice A end-to-end before slice B's primitives interleave with it. Cross-slice interleaving defeats the per-slice verification gate; slice A is half-done when slice B work lands and the gate has nothing coherent to verify.
+Task order inside one slice optimizes for fast proof and stable seams: decision/policy primitives first, BC wiring second, page/API surface last, verify task at the end. The unit/integration boundary is mechanical, not aspirational — see [test-layout.md](../../references/test-layout.md); shape primitives so their proof can live at the unit tier instead of presuming a container. Across slices, order follows `event-model.md` timeline order so the user can verify slice A end-to-end before slice B's primitives interleave with it. Cross-slice interleaving defeats the per-slice verification gate; slice A is half-done when slice B work lands and the gate has nothing coherent to verify.
 
 A primitive used by two slices belongs to first slice that needs it. Later slices reference produced behaviour without re-listing.
 
