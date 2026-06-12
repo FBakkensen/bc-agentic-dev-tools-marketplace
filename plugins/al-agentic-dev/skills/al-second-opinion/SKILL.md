@@ -9,7 +9,7 @@ description: Independent read-only advisory review via cross-runtime CLI dispatc
 
 Ask a different runtime to read the artifact and name what is missing. Point is independence: same-model self-review confirms its own blind spots. Script `scripts/Invoke-AlSecondOpinion.ps1` runs the dispatch; this file is the contract for when to reach for it, what to put in front of it, what envelope it runs under.
 
-Caller (`/al-implement`, `/al-refine`, `/al-refactor`, `/al-user-verification`) owns the artifact and reconciles bullets that come back. This skill owns the call. (For `/al-user-verification` the artifact is the walk verdict — the user's verbatim reported observations per example; the gate reviews coverage and routing — every observable check asked and answered, no pass resting on a led question or inferred value, remarks routed functional-vs-usability — not the user's observation; the user saw the screen directly.)
+Caller (`/al-implement`, `/al-refine`, `/al-refactor`, `/al-user-verification`) owns the artifact and reconciles bullets that come back. This skill owns the call. (For `/al-user-verification` the artifact is the walk verdict — per example, the exact question as posed and the user's verbatim reported observation, or captured client output for Contract examples; the gate reviews coverage and routing — every observable check asked and answered, no pass resting on a led question or inferred value, remarks routed functional-vs-usability — not the user's observation; the user saw the screen directly.)
 
 ## Preconditions
 
@@ -83,7 +83,7 @@ Every other skip variant (target CLI unavailable, timeout, pwsh exception, non-z
 
 | | |
 |---|---|
-| **Invoked from**     | `/al-implement`, `/al-refine`, `/al-refactor` before reconciling non-trivial work |
+| **Invoked from**     | `/al-implement`, `/al-refine`, `/al-refactor`, `/al-user-verification` before reconciling non-trivial work |
 | **Returns to caller** | reviewer's bulleted gap list verbatim, or `Second opinion skipped: <reason>` line |
 
 Script at `scripts/Invoke-AlSecondOpinion.ps1` is source of truth for CLI flags, dispatch, timeout, skip-line emission. Validated by `Validate-PowerShell.ps1`; inline copies bypass that gate.

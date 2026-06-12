@@ -154,7 +154,7 @@ npx replay .\recordings\*.yml -StartAddress http://<host>/<instance>/ -ResultDir
 - **Auth** (supplied at invocation, never hard-coded): `-Authentication Windows` (default) | `AAD` | `UserPassword`, plus `-UserNameKey` / `-PasswordKey` naming the env vars that hold the values. Full option surface in [`references/bc-replay-yaml-format.md`](references/bc-replay-yaml-format.md).
 - `replay` exits **non-zero** if any recording fails — that is the green/red gate.
 - **Where the artifacts land** (verified, bc-replay 0.1.139): `-ResultDir` gets only `results.xml` + `playwright-report/`. The **diagnosis** artifacts — `error-context.md`, `replay-log.yml`, `attachments/Replay-log-*.yml`, `video.webm` — write to `<cwd>/test-results/dist-player--…--chromium/`, *not* `-ResultDir`. Read a red there, not in the report.
-- `-UseServerReplay` swaps the browser for a bundled .NET client-service engine (faster, headless) — but it **cannot render control add-ins / canvas**, so a feature whose deliverable paints inside a canvas is unverifiable this way (only the browser path, or the exploratory agent-browser walk, can see it). `npx playwright install` still runs unconditionally regardless of the flag.
+- `-UseServerReplay` swaps the browser for a bundled .NET client-service engine (faster, headless) — but it **cannot render control add-ins / canvas**, so a feature whose deliverable paints inside a canvas is unverifiable this way (only the browser path, or the exploratory guided user walk, can see it). `npx playwright install` still runs unconditionally regardless of the flag.
 
 ## Gate event
 

@@ -47,7 +47,7 @@ Slice mechanics: `/al-refine` opens one `ready` task at a time. Technical tasks 
 | `/al-build` | Compile, publish, run tests; writes results to `.output/TestResults/<dirName>/`. | After modifying AL code or tests. Required gate before commit. |
 | `/al-debug-logging` | Temporary `DEBUG-*` `FeatureTelemetry.LogUsage` probes; read `telemetry.jsonl`; remove probes. Final state: zero `DEBUG-*` in tree. | Runtime behaviour diverges from source and tests can't reveal which path ran. |
 | `/al-page-script` | Generate the slice's bc-replay recording (`.yml`) from the verify task's E2E Journey Examples; example-by-example inner loop against a fresh container; commits the file on green. Produces the recording `/al-user-verification` pre-flights. | After `/al-code-review` per-slice stamps `review=clean` on the verify task (user-facing slice only). |
-| `/al-autopilot` | Drives the slice cycle unattended under the runtime goal feature (`/goal`): one step per turn, self-answered triage via `/al-second-opinion`, decisions audited in `specs/<NNN>-<slug>/decision-log.md`, fail-fast stop report on infrastructure or replan-class blockers. Parks at each user-facing verify task — the walk is yours; relaunch after it. Never pushes. | After `/al-scope`, when you want the remaining `tasks.md` work completed autonomously; resume-aware from any manual progress. |
+| `/al-autopilot` | Drives the slice cycle unattended under the runtime goal feature (`/goal`): one step per turn, self-answered triage via `/al-second-opinion`, decisions audited in `specs/<NNN>-<slug>/decision-log.md`, fail-fast stop report on infrastructure or replan-class blockers. Parks at each walkable verify task (Journey/Exploration scopes) — the walk is yours; relaunch after it; Contract-only verify tasks run in-loop. Never pushes. | After `/al-scope`, when you want the remaining `tasks.md` work completed autonomously; resume-aware from any manual progress. |
 
 ## Persistence layers
 
@@ -69,7 +69,7 @@ You have an AL repo, no `specs/<NNN>-<slug>/` yet, on the default branch. The ch
 
 If the idea is already crystallised, skip `/al-grill-adr`. Most features benefit from it.
 
-Once `tasks.md` exists, `/al-autopilot` can drive the remaining slice cycle unattended — it composes the runtime `/goal` line, you fire it once. It parks at each user-facing verify task: you walk the slice via `/al-user-verification`, then relaunch.
+Once `tasks.md` exists, `/al-autopilot` can drive the remaining slice cycle unattended — it composes the runtime `/goal` line, you fire it once. It parks at each walkable verify task: you walk the slice via `/al-user-verification`, then relaunch.
 
 ## State-aware navigation
 
