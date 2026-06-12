@@ -23,7 +23,7 @@ Reshape AL so modules that earn their keep deepen and the ones that don't dissol
 - **Which names lie?** Name lies when it describes generic operation while body does BC-specific one, when it uses CRUD vocabulary where BC verb exists, when project's `CONTEXT.md` term has drifted out of code.
 - **What crosses a published API?** Constrains rename, removal, signature change.
 - **Does reshape surface new behaviour or hidden requirement?** Yes → route the discovery; do not absorb.
-- **Which BC names verified this session?** Every BC-specific name a rename pulls from outside codebase (verb picked because "Insert is right for Customer", BaseApp subscriber signature, System Application call) meets the evidence bar in [voice-contract.md](../../references/voice-contract.md). See *Lens 4 citation chain* below.
+- **Which BC names verified this session?** Every BC-specific name a rename pulls from outside codebase (verb picked because "Insert is right for Customer", BaseApp subscriber signature, System Application call) meets the evidence bar in [voice-contract.md](../../references/voice-contract.md). See *Lens 4, naming* below.
 
 Unanswerable from the diff → area not ready. Resolve via `/al-research`, `/al-grill-adr`, or `/al-steer`.
 

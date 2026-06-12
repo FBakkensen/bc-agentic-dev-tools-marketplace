@@ -32,7 +32,7 @@ Never write `tasks.md`. Never write task-level AAA cases, `Test Specification`, 
 - **Module map**: modules under `src/<module>/`. Use CONTEXT.md vocabulary ("the Settlement intake module", never "the FooBarHandler").
 - **BC pattern per module**: pick from [bc-patterns.md](../../references/bc-patterns.md). Verify against current BaseApp via `/al-research` before committing.
 - **R → P → W boundary**: R = reads / inputs / events subscribed; P = pure procedure (no DB, no side effects, unit-test surface); W = effects (Insert / Modify / Delete, telemetry, errors, events published).
-- **Brownfield touchpoints**: objects, procedures, events, table fields the feature touches. Verify every name + signature via `/al-research`; stale memory ships fiction.
+- **Brownfield touchpoints**: objects, procedures, events, table fields the feature touches. Verify every name + signature against workspace evidence (`al-symbols-mcp` / `grep`); behaviour and contracts the workspace cannot answer route through `/al-research`. Stale memory ships fiction.
 - **Testability constraints**: name where architecture should expose isolated decision logic behind the P layer and where behaviour necessarily crosses BC runtime, database, page/TestPage, event wiring, table triggers, telemetry shape, install / upgrade, permissions, or public surface. Do not write task-level proof, AAA cases, or assertions.
 - **Which BC names verified this session?** Every BC-specific name landing in `architecture.md` (pattern, event, codeunit, table, field, procedure) meets the evidence bar in [voice-contract.md](../../references/voice-contract.md); durable design facts route through `/al-research`. See *Citation chain in chat, before write* below.
 

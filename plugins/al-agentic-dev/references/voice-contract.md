@@ -8,15 +8,15 @@ Insert / Modify / Delete (not Create / Update / Remove). Post (not Submit). Vali
 
 ## Names are the citation
 
-Use the test codeunit, procedure, table, field, event publisher by name. `NALICFCopyDocSubscribers.OnAfterInsertToSalesLine` is the address; future readers grep, no inline `(see: file.al:120)` annotations.
+Use the test codeunit, procedure, table, field, event publisher by name. `ABCCopyDocSubscribers.OnAfterInsertToSalesLine` is the address; future readers grep, no inline `(see: file.al:120)` annotations.
 
 ## Evidence bar (citation chain)
 
 BC training data is stale fiction; your confidence about a name, signature, or pattern is not evidence any are right. One bar, stated here once; writing skills point at it.
 
 - **Names.** Every exact BC-specific name (object, procedure, event, table, field, enum value, caption) landing in an artifact or AL code: backed this session by `al-symbols-mcp` / `grep` hit, or a quoted fetch. Recall does not satisfy. Names cited upstream count only when `grep` against the upstream file returns them this session.
-- **Constructs.** Workspace evidence stops at names. A BC construct class — record loop + modify, partial records (`SetLoadFields`), temp record lifecycle, page/report surface, transaction boundary (`Commit`) — carries execution-order and platform-cost semantics legacy code cannot vouch for: legacy is precedent, not authority. First write of a construct class in a task → fetch the matching topic per [bc-code-intelligence-dispatch.md](bc-code-intelligence-dispatch.md) or a Microsoft Learn passage, apply it yourself.
-- **Satisfiers.** Any verbatim-quoted fetch with one-line citation counts: `bc-code-intelligence` topic, Microsoft Learn, `/bc-standard-reference`. `/al-research` is the escalation seat — mandatory when sources disagree or the fact lands in a durable design artifact (`event-model.md`, `architecture.md`, `CONTEXT.md`, ADRs).
+- **Constructs.** Workspace evidence stops at names. A BC construct class — record loop + modify, partial records (`SetLoadFields`), temp record lifecycle, page/report surface, transaction boundary (`Commit`) — carries execution-order and platform-cost semantics legacy code cannot vouch for: legacy is precedent, not authority. First write of a construct class in a task → fetch the matching topic per [bc-code-intelligence-dispatch.md](bc-code-intelligence-dispatch.md) or a Microsoft Learn passage, apply it yourself, and declare it: `Researched: <construct> → <topic id / Learn URL>`.
+- **Satisfiers.** Any verbatim-quoted fetch with one-line citation counts. Names: `bc-code-intelligence` topic, Microsoft Learn, or `/bc-standard-reference`. Constructs: topic or Learn passage only — BaseApp source shows an instance, not the rule, and carries its own legacy debt. `/al-research` is the escalation seat — mandatory when sources disagree or a fetched fact lands in a durable design artifact (`event-model.md`, `architecture.md`, `CONTEXT.md`, ADRs); workspace-backed names stay direct.
 - **Trace.** Citation declares in chat as `Researched: <fact> → <source path / URL / topic id>`; task-scoped citations also land as `Contract notes` bullets at task reconcile — the one inline-citation carve-out, making skipped research visible to `/al-code-review` and the next session. Everything else in artifacts stays names-only.
 
 ## Artifacts get scanned, not slow-read

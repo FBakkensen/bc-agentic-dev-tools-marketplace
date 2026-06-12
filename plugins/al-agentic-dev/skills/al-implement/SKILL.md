@@ -25,7 +25,7 @@ Pick next `ready-for-implementation` technical task from `tasks.md`. Consume its
 - **Which task in flight?** One `T-NNN`, named in opener. Status stays `ready-for-implementation` during the run; session-local work is not durable status.
 - **Where is the seam?** Read `architecture.md` R → P → W boundary, module map, brownfield touchpoints. Name seam in BC vocab: procedure to extract, event to subscribe, interface to implement, or page/action to wire.
 - **Which AAA cases land?** Traverse `Unit` cases first, then `Integration`, in coverage-ID order. One case red → green before the next.
-- **Which BC names and constructs verified this session?** Every exact BC-specific name in the AAA case or implementation path, and every BC construct class it touches, meets the evidence bar in [voice-contract.md](../../references/voice-contract.md): names via workspace hit, constructs via fetched topic or quoted Learn passage.
+- **Which BC names and constructs verified this session?** Every exact BC-specific name in the AAA case or implementation path, and every BC construct class it touches, meets the evidence bar in [voice-contract.md](../../references/voice-contract.md): names via workspace hit or quoted fetch, constructs via fetched topic or quoted Learn passage.
 - **What flips at end?** `status=` goes `ready-for-implementation` → `done` on the comment-anchor line; final full `/al-build` green. User/API-facing slice-done opens the slice verify task to `ready` for `/al-refine`. Backend-only slice-done announces `/al-code-review` per-slice. Feature-done announces `/al-code-review` per-feature.
 
 Unanswerable question → task not ready. Resolve via `/al-research`, `/al-refine`, or `/al-steer`.
@@ -48,7 +48,7 @@ Exception: when a Unit seam should exist but current code is tangled, write an I
 
 ### Evidence before RED, names and constructs
 
-Before first RED of any AAA case, the evidence bar in [voice-contract.md](../../references/voice-contract.md) is met for every exact BC-specific name in its Arrange / Act / Assert **and** for every BC construct class on the implementation path (record loop + modify, partial records, temp record lifecycle, page/report surface, transaction boundary). Names → workspace evidence this session. Constructs → fetched topic per [bc-code-intelligence-dispatch.md](../../references/bc-code-intelligence-dispatch.md) or quoted Learn passage; legacy code is precedent, not authority — a construct copied from the workspace still earns its fetch, because that is exactly how a repo's `SetLoadFields`-after-filters debt replicates. Sources disagree, or the fact belongs in a design artifact → `/al-research`.
+Before first RED of any AAA case, the evidence bar in [voice-contract.md](../../references/voice-contract.md) is met for every exact BC-specific name in its Arrange / Act / Assert **and** for every BC construct class on the implementation path (the classes the bar's Constructs bullet names). Names → workspace evidence this session or quoted fetch. Constructs → fetched topic per [bc-code-intelligence-dispatch.md](../../references/bc-code-intelligence-dispatch.md) or quoted Learn passage, declared as `Researched:`; legacy code is precedent, not authority — a construct copied from the workspace still earns its fetch, because that is exactly how a repo's `SetLoadFields`-after-filters debt replicates. Sources disagree, or the fact belongs in a design artifact → `/al-research`.
 
 ### Test the Process seam, not incidental implementation
 

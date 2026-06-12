@@ -34,7 +34,7 @@ Release blocking protects posting readiness by preventing Sales Orders from bein
 
 ### Contract notes
 
-Include `Contract notes` only when the task carries proof-shaping freight the coverage tables cannot hold: oracle design, scope justification (why zero `Unit` cases), seam or test-double decisions, binding mechanics, transaction model, red-suite rework. Most tasks need none.
+Include `Contract notes` only when the task carries proof-shaping freight the coverage tables cannot hold: oracle design, scope justification (why zero `Unit` cases), seam or test-double decisions, binding mechanics, transaction model, red-suite rework — or the task's `Researched:` evidence-bar citations (`voice-contract.md`). Most tasks otherwise need none.
 
 Shape: bulleted, one fact per landing line, lede word first. A `;`-spliced multi-fact paragraph is density, not concision — the reader scans landing lines, then slow-reads one.
 
@@ -46,9 +46,10 @@ Contract notes:
 - Decision surface proved: T-001.
 - Transaction: service commits before first dialog → `[TransactionModel(TransactionModel::AutoCommit)]`.
 - Red-suite rework: `PostsWithCompletionMessage` sheds its `MessageHandler` for a Yes ConfirmHandler — part of this task's green gate.
+- Researched: `FindSet(true)` required for modify-in-loop → Learn al-record-findset.
 ```
 
-A bullet survives only if the next agent acts differently because of it. How a decision was reached never survives: provenance ("settled:", "second-opinion added", "resolved by user decision") belongs in the commit message, per the no-workflow-chatter rule in `voice-contract.md` and the session-internal-reasoning row in `notes-discipline.md`. Cross-task retelling trims to a pointer — `proved: T-001` — not the story.
+A bullet survives only if the next agent acts differently because of it. How a decision was reached never survives: provenance ("settled:", "second-opinion added", "resolved by user decision") belongs in the commit message, per the no-workflow-chatter rule in `voice-contract.md` and the session-internal-reasoning row in `notes-discipline.md`. `Researched: <fact> → <source>` is not decision provenance — it is the evidence-bar trace (`voice-contract.md`), the one citation that lands here; `/al-code-review` audits its absence on construct-touching tasks. Cross-task retelling trims to a pointer — `proved: T-001` — not the story.
 
 ### Out of automated reach
 
@@ -230,7 +231,7 @@ Language priority:
 2. BC display labels.
 3. Exact AL object, field, page, procedure, event, or API names only when needed for traceability or ambiguity.
 
-When exact BC-specific names are written into a task, ground them in current workspace symbols/source or authoritative documentation before writing. Keep grounding evidence in chat, not in `tasks.md`.
+When exact BC-specific names are written into a task, ground them in current workspace symbols/source or authoritative documentation before writing. Grounding evidence stays in chat — except `Researched:` bullets, which land in `Contract notes` per the evidence bar in `voice-contract.md`.
 
 If `event-model.md` exists, `Verification Plan` wording uses its Role, Action, Business Event, View, and Status vocabulary.
 
