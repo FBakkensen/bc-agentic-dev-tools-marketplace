@@ -38,10 +38,9 @@ Map the exit code, then surgical-Edit the comment-anchor line per [`markdown-spe
 
 ## Breaking change detected → stop for a human
 
-A confirmed break is an **intent decision**, not a defect to auto-patch: *intended* (major bump → accept) vs *accidental* (fix the schema change). Neither this skill nor `/al-autopilot` can read that intent.
+A confirmed break is an **intent decision**, not a defect to auto-patch: *intended* (major bump → accept) vs *accidental* (fix the schema change). This skill cannot read that intent — the human decides at merge.
 
-- **Manual** → `blocked`, route to `/al-steer`.
-- **`/al-autopilot`** (seat per `${CLAUDE_SKILL_DIR}/../../references/autonomy-seat.md`) → `AUTONOMY STOP REPORT` (breaking change is a hard-to-reverse pick). Never auto-fix — that may revert an intended break; never auto-accept — that may ship an accidental one. The human decides at merge.
+- **`blocked`** → route to `/al-steer`. Never auto-fix — that may revert an intended break; never auto-accept — that may ship an accidental one.
 
 A `4` (`Contract`) or other non-zero prerequisite failure → `blocked`, fix the prereq (re-run `/al-provision` for an empty cache), re-run.
 
@@ -51,4 +50,4 @@ A `4` (`Contract`) or other non-zero prerequisite failure → `blocked`, fix the
 |---|---|
 | **Runs after** | every feature task `done` (its `Depends on:` dependency satisfied) — the last task |
 | **Calls** | `/al-build`'s `validate-breaking-changes.ps1` (standalone helper; reads the `/al-provision` baseline cache) |
-| **Break / failure venue** | `/al-steer` (manual) · `AUTONOMY STOP REPORT` (`/al-autopilot`) |
+| **Break / failure venue** | `/al-steer` |
