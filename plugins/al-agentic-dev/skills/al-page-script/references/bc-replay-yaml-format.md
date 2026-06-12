@@ -275,7 +275,7 @@ dialog. <value>{error text}</value>` on the first later step carrying a foreign 
 dialog's own ref). Anonymous-dialog matching: `automationId` or `runtimeRef` only, `caption:`
 ignored, neither → `No page found`; Confirm/Message's `8da61efd-…` id does NOT match Error. Error
 text not assertable (caption is literal `Error`, no `contains` — §5) → wording checks stay
-Exploration Charters (the guided user walk). The automationId is platform-generated — stable within a platform version, re-harvest
+Exploration-Charter territory (the guided user walk). The automationId is platform-generated — stable within a platform version, re-harvest
 on a BC bump if it reds as a reference mismatch.
 
 Message = assert via `message`, never invoked · Confirm = `invoke Yes`\|`No` · Error = catch
