@@ -1,6 +1,6 @@
 ---
 name: al-research
-description: Verify AL/Business Central specifics from authoritative sources, quote them, return. Use when prior AL/BC knowledge is unverified, the workspace itself does not answer, and a downstream skill (`/al-design`, `/al-grill-adr`, `/al-implement`, `/al-refactor`, `/al-refine`) is about to lean on the fact.
+description: Verify AL/Business Central specifics from authoritative sources, quote them, return. The escalation seat of the evidence bar — use when two sources disagree, when a fact lands in a durable design artifact (`event-model.md`, `architecture.md`, `CONTEXT.md`, ADRs), or when a fuzzy question needs framing plus cross-family verification. Implement-time single-fact lookups go direct (quoted fetch per the evidence bar in voice-contract.md); this skill arbitrates.
 ---
 
 **Style:** Be extremely concise. Sacrifice grammar for concision. Opinionated — pick a side. Arrows (→) for causality. Technical terms exact, code and errors quoted verbatim.
@@ -8,6 +8,10 @@ description: Verify AL/Business Central specifics from authoritative sources, qu
 # /al-research, Verify BC specifics
 
 Treat your own AL/BC knowledge as untrusted. Verify the specific BC fact the caller leans on, quote the canonical source, return. Read-only: never writes AL, never edits artifacts, never picks designs. Side-band only, never standalone.
+
+## Escalation seat, not toll booth
+
+Direct quoted fetch satisfies the implement-time evidence bar ([voice-contract.md](../../references/voice-contract.md)): a caller needing one fact fetches it, quotes it, cites it, moves on. This skill earns invocation when arbitration is the work — two sources disagree, the question needs framing plus cross-family verification, or the fact lands in a durable design artifact (`event-model.md`, `architecture.md`, `CONTEXT.md`, ADRs) where single-source staleness compounds through every downstream skill.
 
 ## Preconditions
 
@@ -60,7 +64,7 @@ What each source family is for, reach for whichever answers the specific questio
 
 ## Output
 
-Findings note to the caller. Verbatim quotes, one-line citations, no editorialising. Citations live in return note, never inline into durable artifacts (caller decides what survives into `architecture.md`, `CONTEXT.md`, ADRs, or task scaffolding). When two sources agree, name both: `Microsoft Learn <page> + al-symbols-mcp <object>.<procedure> agree on <signature>`. When two disagree, return both quotes with citations and name the conflict; caller resolves.
+Findings note to the caller. Verbatim quotes, one-line citations, no editorialising. Citations live in return note, never inline into durable artifacts (caller decides what survives into `architecture.md`, `CONTEXT.md`, ADRs, or task scaffolding); task-scoped citations the caller lands as `Contract notes` bullets at reconcile per the evidence bar. When two sources agree, name both: `Microsoft Learn <page> + al-symbols-mcp <object>.<procedure> agree on <signature>`. When two disagree, return both quotes with citations and name the conflict; caller resolves.
 
 ## Composition
 

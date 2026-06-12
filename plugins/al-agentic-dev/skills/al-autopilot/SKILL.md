@@ -144,5 +144,5 @@ Gate events report per the Gate report skeleton in [voice-contract.md](../../ref
 |---|---|
 | **Invoked from**     | user at launch (post-`/al-scope`, any amount of manual progress already in `tasks.md`); every later turn re-enters via the goal loop, not re-invocation |
 | **Routes to**        | `/al-refine`, `/al-implement`, `/al-code-review`, `/al-page-script`, `/al-user-verification` per the state table; `/al-steer` for in-loop additive insertion only |
-| **Sidebands**        | `/al-second-opinion` (every interview seat), `/al-research` (unverified BC fact mid-task), `/al-build` (via owning skills) |
+| **Sidebands**        | `/al-second-opinion` (every interview seat), `/al-research` (evidence-bar escalation mid-task), `/al-build` (via owning skills) |
 | **Stops to**         | `AUTONOMY STOP REPORT` → human reads, clears blocker, relaunches `/al-autopilot` (resume-aware by state) |

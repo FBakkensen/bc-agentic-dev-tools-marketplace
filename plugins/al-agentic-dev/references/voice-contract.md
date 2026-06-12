@@ -8,7 +8,16 @@ Insert / Modify / Delete (not Create / Update / Remove). Post (not Submit). Vali
 
 ## Names are the citation
 
-Use the test codeunit, procedure, table, field, event publisher by name. `NALICFCopyDocSubscribers.OnAfterInsertToSalesLine` is the address; future readers grep, no inline `(see: file.al:120)` annotations. Same principle drives the citation chain: BC training data is stale fiction, so before writing any BC-specific name into an artifact, declare its citation in chat via `/al-research`: `Researched: <name> → <source path / URL / topic id>`. Artifact stays clean of inline citations; chat carries the audit trail.
+Use the test codeunit, procedure, table, field, event publisher by name. `NALICFCopyDocSubscribers.OnAfterInsertToSalesLine` is the address; future readers grep, no inline `(see: file.al:120)` annotations.
+
+## Evidence bar (citation chain)
+
+BC training data is stale fiction; your confidence about a name, signature, or pattern is not evidence any are right. One bar, stated here once; writing skills point at it.
+
+- **Names.** Every exact BC-specific name (object, procedure, event, table, field, enum value, caption) landing in an artifact or AL code: backed this session by `al-symbols-mcp` / `grep` hit, or a quoted fetch. Recall does not satisfy. Names cited upstream count only when `grep` against the upstream file returns them this session.
+- **Constructs.** Workspace evidence stops at names. A BC construct class — record loop + modify, partial records (`SetLoadFields`), temp record lifecycle, page/report surface, transaction boundary (`Commit`) — carries execution-order and platform-cost semantics legacy code cannot vouch for: legacy is precedent, not authority. First write of a construct class in a task → fetch the matching topic per [bc-code-intelligence-dispatch.md](bc-code-intelligence-dispatch.md) or a Microsoft Learn passage, apply it yourself.
+- **Satisfiers.** Any verbatim-quoted fetch with one-line citation counts: `bc-code-intelligence` topic, Microsoft Learn, `/bc-standard-reference`. `/al-research` is the escalation seat — mandatory when sources disagree or the fact lands in a durable design artifact (`event-model.md`, `architecture.md`, `CONTEXT.md`, ADRs).
+- **Trace.** Citation declares in chat as `Researched: <fact> → <source path / URL / topic id>`; task-scoped citations also land as `Contract notes` bullets at task reconcile — the one inline-citation carve-out, making skipped research visible to `/al-code-review` and the next session. Everything else in artifacts stays names-only.
 
 ## Artifacts get scanned, not slow-read
 
@@ -34,7 +43,7 @@ Claude Code only. The `<claude-only>` block is the single venue for `advisor()` 
 
 ## Chat shape skeletons
 
-Style fills the shape; the skeleton stays. Three skeletons, named defaults.
+Style fills the shape; the skeleton stays. Four skeletons, named defaults.
 
 ### Opener (session start)
 
@@ -52,6 +61,10 @@ Four lines at app altitude. Mechanics (procedure names, line numbers, mutant IDs
 | **Next:** | what is on the user, or nothing if the agent moves on |
 
 Verify-task variant (`/al-user-verification` closing a slice, `kind=verify`): four answers shift altitude. **Did** = what the user just confirmed (not what the code does). **Was** = user-facing problem the slice solved. **Fits** = journey in `event-model.md` vocabulary (Role / Action / Business Event / View / Status, no AL names). **Next** = handoff. The verify task's point is that the user touched the surface; report cites their observation, not the implementation.
+
+### Answer (user question)
+
+Answer only what was asked, ≤3 lines at the question's altitude. No status recap, no background section, no "why it matters", no deferred-questions list; the user pulls detail by asking. A question is not a gate event — do not promote it to a briefing.
 
 ### Stop (halt)
 

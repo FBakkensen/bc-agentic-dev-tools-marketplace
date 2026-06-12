@@ -23,7 +23,7 @@ Reshape AL so modules that earn their keep deepen and the ones that don't dissol
 - **Which names lie?** Name lies when it describes generic operation while body does BC-specific one, when it uses CRUD vocabulary where BC verb exists, when project's `CONTEXT.md` term has drifted out of code.
 - **What crosses a published API?** Constrains rename, removal, signature change.
 - **Does reshape surface new behaviour or hidden requirement?** Yes → route the discovery; do not absorb.
-- **Which BC names verified this session?** Every BC-specific name a rename pulls from outside codebase (verb picked because "Insert is right for Customer", BaseApp subscriber signature, System Application call): backed this session by `al-symbols-mcp` / `grep` hit, or `/al-research` citation. Recall does not satisfy. See *Lens 4 citation chain* below.
+- **Which BC names verified this session?** Every BC-specific name a rename pulls from outside codebase (verb picked because "Insert is right for Customer", BaseApp subscriber signature, System Application call) meets the evidence bar in [voice-contract.md](../../references/voice-contract.md). See *Lens 4 citation chain* below.
 
 Unanswerable from the diff → area not ready. Resolve via `/al-research`, `/al-grill-adr`, or `/al-steer`.
 
@@ -32,6 +32,8 @@ Architectural vocabulary (Module, Interface, Implementation, Seam, Adapter, Dept
 ## Lenses
 
 Spawn 4 lens sub-agents in parallel on the task diff. Each returns reshape opportunities; main session merges into one ordered apply queue.
+
+Sub-agents inherit neither hooks nor `CLAUDE.md`. Every lens spawn prompt carries the **BC vocabulary** line from [voice-contract.md](../../references/voice-contract.md) verbatim — a lens that quotes or proposes names without the vocabulary in its own context repairs naming with the generic verbs the repair exists to remove.
 
 After lens outputs are collected and merged, close the completed lens sub-agent threads. Do not leave completed lens agents open as passive state.
 
@@ -84,7 +86,7 @@ Scope: objects, procedures, parameters, variables, record vars, table fields, pa
 
 Rename safety: editing a test procedure name requires task-spec reconciliation: update AAA header, `Procedure:`, and `Covered By` in the same change when the task is active. Intent shift → update via `/al-refine`. `[HandlerFunctions('...')]` strings are invisible to symbol tools; grep before any test-procedure rename per [tdd.md](../../references/tdd.md).
 
-Citation chain: when rename pulls a BC name from outside codebase (verb picked because "Insert is right for Customer", BaseApp subscriber signature, System Application call), name either appears in `al-symbols-mcp` / `grep` result you ran this session, or cited via `/al-research`: `Researched: <name> → <source>` before rename lands. Workspace lookup is empirical anchor; memory of training data or past sessions is not. Your confidence about whether "Insert" or "Create" is the BC-correct verb is not evidence either is right. This is exactly where confidently-wrong verb corrupts every downstream artifact.
+Citation chain: when a rename pulls a BC name or verb from outside the codebase, the evidence bar in [voice-contract.md](../../references/voice-contract.md) applies before the rename lands — workspace hit or quoted fetch; conflicts escalate to `/al-research`. This is exactly where a confidently-wrong verb corrupts every downstream artifact.
 
 ## Cross-cutting
 

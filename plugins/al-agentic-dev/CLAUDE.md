@@ -33,8 +33,8 @@ Skills compose by name. When you change a skill, scan the others for cross-refer
 
 ## Editing rules
 
-- **Each SKILL.md states naming and BC vocabulary inline.** Skills run in projects without this CLAUDE.md present. Do not lean on it.
-- **No inline citations in durable artifacts.** `(see: file.al:120)` is forbidden in `architecture.md`, `tasks.md`, `CONTEXT.md`, ADRs, `.out-of-scope/`. Names are the citation; `NALICFCopyDocSubscribers.OnAfterInsertToSalesLine` is the address. Future readers grep; the IDE gives line numbers for free.
+- **Naming, BC vocabulary, and the evidence bar live in `references/voice-contract.md`.** One runtime home; writing skills read it before writing, and skills that spawn sub-agents (`/al-refactor`, `/al-code-review`) carry the vocabulary line verbatim in every spawn prompt — sub-agents inherit neither hooks nor CLAUDE.md. Skills run in projects without this CLAUDE.md present. Do not lean on it.
+- **No inline citations in durable artifacts.** `(see: file.al:120)` is forbidden in `architecture.md`, `tasks.md`, `CONTEXT.md`, ADRs, `.out-of-scope/`. Names are the citation; `NALICFCopyDocSubscribers.OnAfterInsertToSalesLine` is the address. Future readers grep; the IDE gives line numbers for free. One carve-out: `Researched: <fact> → <source>` provenance bullets in a task's `Contract notes`, written at `/al-implement` reconcile, read by `/al-code-review` — without them, skipped research is indistinguishable from research that ran. Location pointers stay forbidden.
 - **Spec artifacts are text-only.** Name relationships in prose; gates in `Depends on:` lines on tasks. No mermaid fences; Claude Desktop's markdown preview and other viewers lack mermaid support, and a second encoding alongside text just drifts.
 - **Spec artifacts are pure markdown.** Visual polish is a separate dev-server concern; the spec is text.
 - **`architecture.md` is reshape-only.** Written by `/al-design`, read by everyone downstream. Never edit in place; re-run `/al-design`. No surgical-edit contract.
@@ -55,7 +55,7 @@ Two tiers, on purpose.
 | File | Tier | Notes |
 |---|---|---|
 | `overview.md` | plugin-level | user-facing tour: pipeline diagram, 21-skill catalogue (role + when-to-invoke), persistence layers paragraph, cold-start guidance, pointer to `/al-steer` for state-aware nav; emitted verbatim by `/al-agentic-dev-overview`; edit in lockstep with any skill addition / removal / rename |
-| `voice-contract.md` | plugin-level | non-voice rules: BC vocab, names-as-citation, lists-of-findings, tables-of-facts, chat carve-out, no-workflow-chatter, 3 chat shape skeletons (Opener / Gate report / Stop); style itself lives at top of each SKILL.md as a one-line Style declaration; read by every skill that writes prose |
+| `voice-contract.md` | plugin-level | non-voice rules: BC vocab, names-as-citation, evidence bar (citation chain: names → workspace, constructs → fetched topic, `/al-research` escalation, `Contract notes` trace), lists-of-findings, tables-of-facts, chat carve-out, no-workflow-chatter, 4 chat shape skeletons (Opener / Gate report / Answer / Stop); style itself lives at top of each SKILL.md as a one-line Style declaration; read by every skill that writes prose or AL names |
 | `testability.md` | plugin-level | three-phase decoupling, three default seams (IEnvironment / IApiRequest / IFinance), five-kind test-double taxonomy with AL code shapes; read by `/al-design`, `/al-implement`, `/al-refactor` |
 | `test-specification.md` | plugin-level | `Test Specification` / `Verification Plan` grammar: Expected Behaviors, Decision Matrix, AAA cases, Contract notes, Out of automated reach, scopes, traceability, closeout summaries with mutation verdict table; read by `/al-refine`, `/al-implement`, `/al-code-review`, `/al-page-script`, `/al-user-verification` |
 | `tdd.md` | plugin-level | three layers of trust, three laws, five phases, Unit-first execution, mutation operators + revert cycle, no-touch invariants; read by `/al-implement`, `/al-mutate` |
@@ -66,7 +66,7 @@ Two tiers, on purpose.
 | `examples/` (folder) | plugin-level | three populated `*.example.md` artifacts; pattern-match source for writing skills |
 | `cross-branch-numbering.md` | plugin-level | algorithm for picking `NNN` (spec folders) and `NNNN` (ADRs) across parallel branches; read by `/al-design`, `/al-event-model`, `/al-grill-adr` |
 | `bc-patterns.md` | plugin-level | BC pattern catalogue; read by `/al-design` |
-| `bc-code-intelligence-dispatch.md` | plugin-level | bc-code-intelligence MCP call pattern (`find_bc_knowledge` → drop-noise → `get_bc_topic`), noise drop-list, relevance scales; read by `/al-refactor`, `/al-code-review`, `/al-research` |
+| `bc-code-intelligence-dispatch.md` | plugin-level | bc-code-intelligence MCP call pattern (`find_bc_knowledge` → drop-noise → `get_bc_topic`), noise drop-list, relevance scales; read by `/al-implement` (write-time construct lookup), `/al-refactor`, `/al-code-review`, `/al-research` |
 | `LANGUAGE.md` | plugin-level | architectural vocabulary (incl. Connascence, CQS), testability pillars; read by `/al-design`, `/al-grill-adr`, `/al-event-model`, `/al-refactor`, `/al-code-review` |
 | `CONTEXT.template.md` | plugin-level | template materialised into the target repo's `CONTEXT.md` |
 | `adr.template.md` | plugin-level | template materialised into the target repo's `docs/adr/NNNN-<slug>.md` |
@@ -91,7 +91,7 @@ The two former agent-shaped workflows now live as skills:
 ```
 references/                      # Plugin-level shared, read by ≥2 skills, or cited by shared templates
 ├── overview.md                  # User-facing tour: pipeline + 21-skill catalogue + persistence + cold-start; emitted by /al-agentic-dev-overview
-├── voice-contract.md            # Non-voice rules + 3 chat shape skeletons; voice declared inline at top of each SKILL.md
+├── voice-contract.md            # Non-voice rules + evidence bar + 4 chat shape skeletons; voice declared inline at top of each SKILL.md
 ├── testability.md               # Three-phase decoupling, three default seams, five-kind test-double taxonomy
 ├── test-specification.md        # Test Specification + Verification Plan grammar (incl. Contract notes, Out of automated reach, mutation verdict table)
 ├── tdd.md                       # Three layers, three laws, five phases, Unit-first execution, mutation operators, no-touch invariants

@@ -34,7 +34,7 @@ Never write `tasks.md`. Never write task-level AAA cases, `Test Specification`, 
 - **R → P → W boundary**: R = reads / inputs / events subscribed; P = pure procedure (no DB, no side effects, unit-test surface); W = effects (Insert / Modify / Delete, telemetry, errors, events published).
 - **Brownfield touchpoints**: objects, procedures, events, table fields the feature touches. Verify every name + signature via `/al-research`; stale memory ships fiction.
 - **Testability constraints**: name where architecture should expose isolated decision logic behind the P layer and where behaviour necessarily crosses BC runtime, database, page/TestPage, event wiring, table triggers, telemetry shape, install / upgrade, permissions, or public surface. Do not write task-level proof, AAA cases, or assertions.
-- **Which BC names verified this session?** Every BC-specific name landing in `architecture.md` (pattern, event, codeunit, table, field, procedure): backed this session by `al-symbols-mcp` / `grep` hit, including `grep` against `event-model.md` for upstream-cited names, or `/al-research` citation. Recall does not satisfy. See *Citation chain in chat, before write* below.
+- **Which BC names verified this session?** Every BC-specific name landing in `architecture.md` (pattern, event, codeunit, table, field, procedure) meets the evidence bar in [voice-contract.md](../../references/voice-contract.md); durable design facts route through `/al-research`. See *Citation chain in chat, before write* below.
 
 Unanswerable → not ready for `/al-scope`. Resolve via `/al-research` (BC behaviour), `/al-grill-adr` (domain rule), or `/al-steer` (replan).
 
@@ -60,7 +60,7 @@ Two design-time risks bite at AppSource boundaries: **BaseApp modification** (in
 
 ## Citation chain in chat, before write
 
-Before writing any BC-specific name into `architecture.md` (pattern, event, codeunit, table, field, procedure), the name either appears in `al-symbols-mcp` / `grep` result you ran this session, or cited via `/al-research`: `Researched: <name> → <source path / URL / topic id>`. Workspace lookup is empirical anchor; memory of training data or past sessions is not. Training data for BC is stale fiction; workspace + `/al-research` are the empirical anchor. Names already research-backed by `/al-event-model` upstream count when `grep` against `event-model.md` returns the name this session, not when you recall they're there. Your confidence about a name, signature, or pattern label is not evidence any are right.
+Evidence bar per [voice-contract.md](../../references/voice-contract.md). `architecture.md` is a durable design artifact: workspace evidence covers names already in the dependency graph; everything else — pattern fitness, BaseApp behaviour, event contracts — routes through `/al-research`, mandatory, not a single-source fetch. Names research-backed by `/al-event-model` upstream count when `grep` against `event-model.md` returns them this session, not when you recall they're there.
 
 ## Architecture trade-off criteria
 

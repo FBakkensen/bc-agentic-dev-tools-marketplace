@@ -34,7 +34,7 @@ Do not choose implementation structure: no modules, codeunits, table fields, eve
 - **View**: surface + its location (*Sales Order page → Status flips to Released*, *Pending Overrides cue increments*, *API response carries the Override decision*). Surface type settles here, AL control name settles in `/al-design`.
 - **Status**: when Business Event flips a field on aggregate's record, name field + new value (*Sales Header Status → Override Pending*).
 - **BaseApp portions**: if journey starts or passes through BaseApp, include those steps under canonical BaseApp names. Seam between BaseApp and our extension is named by canonical names themselves.
-- **Which BC names verified this session?** Every Role / Action verb / Business Event name / View page caption / Status value landing in `event-model.md`: backed this session by `al-symbols-mcp` / `grep` hit (Role Center pages, Status enums, BaseApp captions are all workspace-resolvable), or `/al-research` citation. Recall does not satisfy. See *Citation chain in chat, before write* below.
+- **Which BC names verified this session?** Every Role / Action verb / Business Event name / View page caption / Status value landing in `event-model.md` meets the evidence bar in [voice-contract.md](../../references/voice-contract.md) (Role Center pages, Status enums, BaseApp captions are all workspace-resolvable). See *Citation chain in chat, before write* below.
 
 Unanswerable → not ready for `/al-design`. Resolve via `/al-research`, `/al-grill-adr`, or `/grill-me`.
 
@@ -56,7 +56,7 @@ Draft two timelines diverging on one structural decision, present both with reco
 
 ## Citation chain in chat, before write
 
-Before writing `event-model.md`, every Role / Action verb / Business Event name / View page caption / Status value either appears in `al-symbols-mcp` / `grep` result you ran this session, or cited via `/al-research`: `Researched: <name> → <source path / URL / topic id>`. Workspace lookup is empirical anchor; memory of training data or past sessions is not. Renamed Role Centers, removed BusinessEvents, and drifted Status enums in training data corrupt every downstream skill that reads the file. Your confidence about a Role Center's standard name or a Status enum's values is not evidence either is right.
+Evidence bar per [voice-contract.md](../../references/voice-contract.md). `event-model.md` is a durable design artifact: workspace evidence covers what the dependency graph resolves; Role Centers, BaseApp BusinessEvents, and Status enums the workspace cannot answer route through `/al-research`, mandatory. Renamed Role Centers and drifted Status enums in training data corrupt every downstream skill that reads the file.
 
 ## Branch + folder + write
 

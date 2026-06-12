@@ -65,9 +65,9 @@ Unanswerable → cannot write `Verification Plan` yet. Flip or keep `status=bloc
 
 ## Ground exact names
 
-Before writing any exact BC-specific symbol into a `Test Specification` or `Verification Plan`, the symbol either appears in `al-symbols-mcp` / `grep` result you ran this session, or is cited via `/al-research`: `Researched: <name> → <source path / URL / topic id>`. Workspace lookup is empirical anchor; memory of past sessions or training data is not. Names already cited by `/al-design` or `/al-event-model` count only when `grep` against those upstream files returns the name this session.
+Every exact BC-specific symbol in a `Test Specification` or `Verification Plan` meets the evidence bar in [voice-contract.md](../../references/voice-contract.md): workspace hit this session or quoted fetch; conflicts and design-artifact facts escalate to `/al-research`. Names already cited by `/al-design` or `/al-event-model` count only when `grep` against those upstream files returns the name this session.
 
-Artifacts stay clean. Chat carries audit trail.
+Artifacts stay clean; chat carries the citation, `/al-implement` lands task-scoped ones in `Contract notes`.
 
 ## Sharpen vague language inline
 

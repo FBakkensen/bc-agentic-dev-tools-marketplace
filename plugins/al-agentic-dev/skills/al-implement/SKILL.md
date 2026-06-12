@@ -18,13 +18,14 @@ Pick next `ready-for-implementation` technical task from `tasks.md`. Consume its
 - Target task `kind=technical`. `kind=verify` → **Stop**; route via `/al-steer` or `/al-code-review` based on verification state. `kind=provision` → `/al-provision`; `kind=breaking-change` → `/al-validate-breaking-changes` (ops tasks, run-and-flip, never reach `ready-for-implementation`).
 - Target task `status=ready-for-implementation` with populated `Test Specification`. Plain `ready` → **Stop**, `/al-refine T-NNN`. `ready-for-implementation` with empty or missing `Test Specification` → **Stop**, `/al-steer`; status and proof disagree. `blocked` → `/al-steer`. `done` → downstream evidence exists; do not reopen here.
 - Read [`test-specification.md`](../../references/test-specification.md), [`test-strategy.md`](../../references/test-strategy.md), [`tdd.md`](../../references/tdd.md), and [`testability.md`](../../references/testability.md).
+- Read [`voice-contract.md`](../../references/voice-contract.md) (BC vocabulary + evidence bar + Gate report shape) and [`bc-code-intelligence-dispatch.md`](../../references/bc-code-intelligence-dispatch.md) (write-time construct lookup). This skill mints most production names and constructs; both arrive before code, not at refactor.
 
 ## What this session answers
 
 - **Which task in flight?** One `T-NNN`, named in opener. Status stays `ready-for-implementation` during the run; session-local work is not durable status.
 - **Where is the seam?** Read `architecture.md` R → P → W boundary, module map, brownfield touchpoints. Name seam in BC vocab: procedure to extract, event to subscribe, interface to implement, or page/action to wire.
 - **Which AAA cases land?** Traverse `Unit` cases first, then `Integration`, in coverage-ID order. One case red → green before the next.
-- **Which BC names verified this session?** Every exact BC-specific name in the AAA case or implementation path is backed this session by `al-symbols-mcp` / `grep` hit, or `/al-research` citation.
+- **Which BC names and constructs verified this session?** Every exact BC-specific name in the AAA case or implementation path, and every BC construct class it touches, meets the evidence bar in [voice-contract.md](../../references/voice-contract.md): names via workspace hit, constructs via fetched topic or quoted Learn passage.
 - **What flips at end?** `status=` goes `ready-for-implementation` → `done` on the comment-anchor line; final full `/al-build` green. User/API-facing slice-done opens the slice verify task to `ready` for `/al-refine`. Backend-only slice-done announces `/al-code-review` per-slice. Feature-done announces `/al-code-review` per-feature.
 
 Unanswerable question → task not ready. Resolve via `/al-research`, `/al-refine`, or `/al-steer`.
@@ -45,9 +46,9 @@ Default order:
 
 Exception: when a Unit seam should exist but current code is tangled, write an Integration characterization test first to anchor behaviour, then extract the Unit seam and add the Unit case. Reconcile scope changes in `tasks.md`.
 
-### Citation chain in chat, per AAA case before RED
+### Evidence before RED, names and constructs
 
-Before first RED of any AAA case, every exact BC-specific name in its Arrange / Act / Assert either appears in workspace evidence you ran this session or is cited via `/al-research`: `Researched: <fact> → <source path / URL / topic id>`. Workspace lookup is empirical anchor; memory of past sessions or training data is not.
+Before first RED of any AAA case, the evidence bar in [voice-contract.md](../../references/voice-contract.md) is met for every exact BC-specific name in its Arrange / Act / Assert **and** for every BC construct class on the implementation path (record loop + modify, partial records, temp record lifecycle, page/report surface, transaction boundary). Names → workspace evidence this session. Constructs → fetched topic per [bc-code-intelligence-dispatch.md](../../references/bc-code-intelligence-dispatch.md) or quoted Learn passage; legacy code is precedent, not authority — a construct copied from the workspace still earns its fetch, because that is exactly how a repo's `SetLoadFields`-after-filters debt replicates. Sources disagree, or the fact belongs in a design artifact → `/al-research`.
 
 ### Test the Process seam, not incidental implementation
 
@@ -72,6 +73,7 @@ Before `done`, update the task block so it reflects actual proof:
 - `Scope:` is final. Any scope change is edited back into `tasks.md`.
 - Completed task keeps final `Test Specification`.
 - Implementation discoveries land in `Contract notes` as new bullets, one fact per landing line — never spliced onto an existing bullet, never a `;`-chained paragraph. How a decision was reached goes to the commit message, not the task block.
+- `Researched:` citations from this task land as `Contract notes` bullets (the evidence-bar trace, [voice-contract.md](../../references/voice-contract.md)) — skipped research stays visible to `/al-code-review` and the next session.
 - Closeout follows the [test-specification.md](../../references/test-specification.md) shape: pyramid bullets plus the mutation verdict table with labeled `Survivor:` / `Why kept:` lines.
 
 ### One `/al-refactor` pass on full task diff
@@ -122,6 +124,10 @@ new_string: <!-- task=T-007 status=done slice=release-sales-order kind=technical
 
 Heading marker stays in sync (`[>]` → `[x]`) but is fallback rendering, not the anchor. Everything else inside task block follows the task shape. See [notes-discipline.md](../../references/notes-discipline.md), [markdown-spec-discipline.md](../../references/markdown-spec-discipline.md), [voice-contract.md](../../references/voice-contract.md).
 
+### Gate report at done
+
+The `done` flip is a gate event: emit the four-line Gate report (Did / Was / Fits / Next) per [voice-contract.md](../../references/voice-contract.md). Mechanics — procedure names, RED/GREEN beats, mutant IDs, build counts, commit hashes — live in commits and the task block; the user pulls detail by asking. No "What landed" / "Things you should know" dumps; invented closeout shapes are how the highest-traffic gate drifts into ceremony.
+
 At user/API-facing slice-done, flip the slice verify task from `blocked` to `ready` only when every in-slice technical dependency is `done` and no replan flag remains. That opens `/al-refine` to write the fresh `Verification Plan`. Do not run `/al-code-review` until the verify task is `ready-for-verification`.
 
 ## Composition
@@ -131,4 +137,4 @@ At user/API-facing slice-done, flip the slice verify task from `blocked` to `rea
 | **Runs after**     | `/al-refine` (filled `Test Specification` in `tasks.md` and flipped task to `ready-for-implementation`) |
 | **Hands off to**   | next `ready-for-implementation` technical task; `/al-refine` on the slice verify task at user/API-facing slice-done; `/al-code-review` per-slice for backend-only slice-done; `/al-code-review` per-feature at feature-done |
 | **Replan venue**   | `/al-steer` |
-| **Sidebands**      | `/al-research` (BC facts), `/al-debug-logging` (execution path unclear), `/grill-me` (judgement needs user), `/bc-standard-reference` (BaseApp questions) |
+| **Sidebands**      | `/al-research` (evidence-bar escalation: source conflict, design-artifact fact), `/al-debug-logging` (execution path unclear), `/grill-me` (judgement needs user), `/bc-standard-reference` (BaseApp questions) |

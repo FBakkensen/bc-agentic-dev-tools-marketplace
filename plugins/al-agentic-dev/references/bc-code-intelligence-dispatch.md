@@ -1,6 +1,6 @@
 # bc-code-intelligence dispatch
 
-How to consume the `bc-code-intelligence` MCP for AL/Business Central review and refactor. Read by `/al-refactor` (structural anti-patterns, light touch), `/al-code-review` (in-depth, broad sweep), and `/al-research` (BC fact verification). The MCP is knowledge plumbing: it surfaces relevance-ranked topics; the calling skill (you) is the reviewer. Fetch the topic, match its anti-pattern indicators against the diff yourself.
+How to consume the `bc-code-intelligence` MCP for AL/Business Central writing, review, and refactor. Read by `/al-implement` (write-time construct lookup, narrowest fetch), `/al-refactor` (structural anti-patterns, light touch), `/al-code-review` (in-depth, broad sweep), and `/al-research` (BC fact verification). The MCP is knowledge plumbing: it surfaces relevance-ranked topics; the calling skill (you) is the reviewer. Fetch the topic, match its anti-pattern indicators against the diff yourself.
 
 ## The misread that wastes the tool
 
@@ -32,7 +32,7 @@ The MCP does **no server-side LLM inference**. It pattern-matches AL constructs 
 
 6. **Vanilla pass alongside.** The MCP is the BC-specific lens; a vanilla pass on the same code catches generic wins it misses (memoize a DFS, dedupe a procedure, drop a dead parameter). Both passes, then dedupe.
 
-**Topic caching within one run.** The topic universe is small; the same `setloadfields-placement-before-filters` resurfaces across files. Cache `get_bc_topic` responses within one `/al-refactor` / `/al-code-review` / `/al-research` invocation; fetch fresh across invocations.
+**Topic caching within one run.** The topic universe is small; the same `setloadfields-placement-before-filters` resurfaces across files. Cache `get_bc_topic` responses within one `/al-implement` task / `/al-refactor` / `/al-code-review` / `/al-research` invocation; fetch fresh across invocations.
 
 ## `analyze_al_code` — optional whole-file signal scan
 
@@ -47,7 +47,7 @@ There is **no universal threshold** — the entry tools report on incompatible s
 | `find_bc_knowledge` | `relevance_score` | raw, unbounded (single digits → hundreds) |
 | `analyze_al_code` | `relevance_score` | float `0.0–1.0` |
 
-A fixed number (the former flat `>=70` / `>=50`) is meaningless across these and was the bug: it discarded real topics while noise outranked them. **The lever is the drop-list, not a cutoff** — once noise is gone, the genuinely relevant topics rank at the top of `find_bc_knowledge` natively. Take the top-ranked on-domain survivors and fetch them. Keep only a light per-tool floor as a backstop against a long tail, and tune it per call when context demands; the floor is a default, not a contract. `/al-refactor` fetches fewer (structural anti-patterns to fix this pass); `/al-code-review` casts wider (gate can afford the sweep); `/al-research` fetches whatever answers the framed question.
+A fixed number (the former flat `>=70` / `>=50`) is meaningless across these and was the bug: it discarded real topics while noise outranked them. **The lever is the drop-list, not a cutoff** — once noise is gone, the genuinely relevant topics rank at the top of `find_bc_knowledge` natively. Take the top-ranked on-domain survivors and fetch them. Keep only a light per-tool floor as a backstop against a long tail, and tune it per call when context demands; the floor is a default, not a contract. `/al-implement` fetches narrowest: one query per construct class the task touches (record loop + modify, partial records, temp lifecycle, page/report surface, transaction boundary), top on-domain survivor only, before first RED — topics cached for the rest of the task; `/al-refactor` fetches fewer (structural anti-patterns to fix this pass); `/al-code-review` casts wider (gate can afford the sweep); `/al-research` fetches whatever answers the framed question.
 
 ## What the MCP catches that vanilla Claude misses
 
@@ -68,5 +68,5 @@ Refactor wins vanilla Claude already catches (memoize, dedupe, dead-param, guard
 
 ## Composition
 
-- Read by `/al-refactor` (structural-anti-pattern discipline), `/al-code-review` (per-file consultation + cross-file routing), `/al-research` (one of the source families, governed by its own topic-recommender discipline).
+- Read by `/al-implement` (write-time construct lookup per the evidence bar in `voice-contract.md`), `/al-refactor` (structural-anti-pattern discipline), `/al-code-review` (per-file consultation + cross-file routing), `/al-research` (one of the source families, governed by its own topic-recommender discipline).
 - Upstream source: `JeremyVyska/bc-code-intelligence-mcp` (server) and `JeremyVyska/bc-code-intelligence` (knowledge). Advisory-grade, single-maintainer; pair its output with the deterministic gates (`/al-build`, CodeCop/AppSourceCop) and never make a gate depend on it alone. When a call returns nothing useful, check the source for the handler shape before concluding the tool is broken.
