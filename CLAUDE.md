@@ -13,7 +13,7 @@ Top-level layout:
 
 ```
 .claude-plugin/marketplace.json   # Claude marketplace manifest — every plugin listed here
-.agents/plugins/marketplace.json  # Codex marketplace manifest — same plugin set
+.agents/plugins/marketplace.json  # Codex marketplace manifest — same plugin set minus Claude-only plugins (capability-gated, listed in Validate-PluginStructure.ps1)
 plugins/<name>/                   # One folder per plugin
 scripts/                          # PowerShell 7.2+ validation scripts (CI gates)
 .github/workflows/                # ci.yml, claude.yml, claude-code-review.yml

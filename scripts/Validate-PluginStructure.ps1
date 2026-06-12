@@ -6,12 +6,18 @@
     Checks that every plugin listed in the Claude marketplace has a folder
     under plugins/, both Claude and Codex per-plugin manifests, and a matching
     Codex marketplace entry. Also checks that every CLAUDE.md instruction file
-    has a colocated AGENTS.md bridge for Codex.
+    has a colocated AGENTS.md bridge for Codex. Plugins in $claudeOnlyPlugins
+    are capability-gated to Claude Code and skip all Codex parity checks.
 .EXAMPLE
     pwsh scripts/Validate-PluginStructure.ps1
 #>
 [CmdletBinding()]
 param()
+
+# Claude-only plugins: capability-gated, no Codex equivalent surface exists.
+# al-language-server ships only .lsp.json for Claude Code's LSP tool; Codex plugins
+# bundle skills/hooks/MCP/apps and have no LSP mechanism (openai/codex#8633).
+$claudeOnlyPlugins = @('al-language-server')
 
 $errors = @()
 
@@ -101,12 +107,18 @@ if ($codexPlugins.Count -eq 0) {
     Write-Host "WARN: No plugins found in Codex marketplace." -ForegroundColor Yellow
 }
 
-$missingFromCodex = @($claudePlugins | Where-Object { $_ -notin $codexPlugins })
+$missingFromCodex = @($claudePlugins | Where-Object { $_ -notin $codexPlugins -and $_ -notin $claudeOnlyPlugins })
 $extraInCodex = @($codexPlugins | Where-Object { $_ -notin $claudePlugins })
+$claudeOnlyInCodex = @($codexPlugins | Where-Object { $_ -in $claudeOnlyPlugins })
 
 foreach ($pluginName in $missingFromCodex) {
     $errors += "Plugin listed in Claude marketplace but missing from Codex marketplace: $pluginName"
     Write-Host "FAIL: $pluginName missing from Codex marketplace" -ForegroundColor Red
+}
+
+foreach ($pluginName in $claudeOnlyInCodex) {
+    $errors += "Claude-only plugin must not appear in Codex marketplace: $pluginName"
+    Write-Host "FAIL: $pluginName is claude-only but listed in Codex marketplace" -ForegroundColor Red
 }
 
 foreach ($pluginName in $extraInCodex) {
@@ -131,6 +143,15 @@ foreach ($pluginName in $claudePlugins) {
     }
 
     $codexPluginJson = Join-Path $pluginPath ".codex-plugin\plugin.json"
+    if ($pluginName -in $claudeOnlyPlugins) {
+        if (Test-Path $codexPluginJson) {
+            $errors += "Claude-only plugin carries a Codex manifest; remove it or drop the plugin from `$claudeOnlyPlugins: $pluginName"
+            Write-Host "FAIL: $pluginName is claude-only but has .codex-plugin/plugin.json" -ForegroundColor Red
+        } else {
+            Write-Host "OK: $pluginName is claude-only (no Codex manifest expected)" -ForegroundColor Green
+        }
+        continue
+    }
     if (Test-Path $codexPluginJson) {
         Write-Host "OK: $pluginName/.codex-plugin/plugin.json exists" -ForegroundColor Green
     } else {
