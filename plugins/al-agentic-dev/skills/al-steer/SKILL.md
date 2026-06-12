@@ -20,8 +20,6 @@ User invokes `/al-steer` in natural language ("where are we?", "what's next?", "
 
 Read anything in workspace. Write `tasks.md` structurally, only after explicit user ack; silent restructuring is the anti-pattern that loses the audit trail. Write `.out-of-scope/<concept>.md` when substantive rejection earns durable memory. Nothing else.
 
-**Autonomous seat** (selected per the goal evaluator turn, not a human-typed message): the ack seat is empty by design. Additive single-task insertion in the current slice → write it, record the entry in `specs/<NNN>-<slug>/decision-log.md`; the log replaces the ack as the audit trail. Reshaping mutations (split, reorder, delete, slice or `kind` changes) always require explicit user ack; if one is requested under autonomy, refuse and return the replan-class verdict to the caller.
-
 ## Read first, then name
 
 Read `tasks.md`, scan `architecture.md`, `event-model.md` when present, recent commits, `.out-of-scope/` before opening your mouth. Surface what the state already says; coaching from stale memory is the failure mode that drove the user here. Name entries that need a decision: severity, ID, symptom in codebase's terms (object names, table fields, codeunit calls), one line per entry. Distinguish kinds explicitly:

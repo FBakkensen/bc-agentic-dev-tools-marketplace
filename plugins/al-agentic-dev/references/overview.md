@@ -67,7 +67,6 @@ You have an AL repo, no `specs/<NNN>-<slug>/` yet, on the default branch. The ch
 
 If the idea is already crystallised, skip `/al-grill-adr`. Most features benefit from it.
 
-
 ## State-aware navigation
 
 This overview is static; it does not read your branch, `tasks.md`, or recent commits. For "where am I now?" / "what should I do next?" / "T-007 is blocked, walk me through it", invoke `/al-steer`. It reads state, names the next step, routes to the right skill.
