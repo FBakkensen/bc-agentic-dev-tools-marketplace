@@ -3,7 +3,7 @@ name: al-page-script
 description: Generate the slice's BC Page Scripting recording (`.yml` replayed by `@microsoft/bc-replay`) from a verify task's `Verification Plan` Journey Examples in `tasks.md`. Example-by-example inner loop against a fresh container; commits the file on green. Used as a prerequisite to `/al-user-verification`; also covers standalone authoring against the reverse-engineered grammar.
 ---
 
-**Style:** Be extremely concise. Sacrifice grammar for concision. Opinionated — pick a side. Arrows (→) for causality. Technical terms exact, code and errors quoted verbatim.
+**Style:** Concise — cut filler, keep grammar. Opinionated — pick a side. Arrows (→) for causality. Technical terms exact, code and errors quoted verbatim.
 
 # /al-page-script — Generate slice bc-replay recording
 

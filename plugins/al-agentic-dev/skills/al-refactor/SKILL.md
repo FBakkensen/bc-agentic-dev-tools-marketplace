@@ -3,7 +3,7 @@ name: al-refactor
 description: Reshape AL/Business Central production and test code while tests stay green, via four parallel lens sub-agents then serial apply with `/al-build` between. Use after green inside `/al-implement` (full task diff, once per task) or standalone on legacy code.
 ---
 
-**Style:** Be extremely concise. Sacrifice grammar for concision. Opinionated — pick a side. Arrows (→) for causality. Technical terms exact, code and errors quoted verbatim.
+**Style:** Concise — cut filler, keep grammar. Opinionated — pick a side. Arrows (→) for causality. Technical terms exact, code and errors quoted verbatim.
 
 # /al-refactor, Improve shape while green
 

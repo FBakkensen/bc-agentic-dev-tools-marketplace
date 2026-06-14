@@ -3,7 +3,7 @@ name: al-second-opinion
 description: Independent read-only advisory review via cross-runtime CLI dispatch. Use from `/al-implement`, `/al-refine`, `/al-refactor`, or `/al-user-verification` before reconciling non-trivial `Test Specification`, `Verification Plan`, mutation lists, refactor checklists, or a verification walk verdict.
 ---
 
-**Style:** Be extremely concise. Sacrifice grammar for concision. Opinionated — pick a side. Arrows (→) for causality. Technical terms exact, code and errors quoted verbatim.
+**Style:** Concise — cut filler, keep grammar. Opinionated — pick a side. Arrows (→) for causality. Technical terms exact, code and errors quoted verbatim.
 
 # /al-second-opinion, independent advisory review
 

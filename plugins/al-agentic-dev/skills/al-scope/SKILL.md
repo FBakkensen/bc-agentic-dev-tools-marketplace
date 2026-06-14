@@ -3,7 +3,7 @@ name: al-scope
 description: Decompose `architecture.md` into a slice-grouped task list in `tasks.md` for AL/Business Central, with one verification task per slice when `event-model.md` is present. Use after `/al-design`, before `/al-refine` on the first task.
 ---
 
-**Style:** Be extremely concise. Sacrifice grammar for concision. Opinionated — pick a side. Arrows (→) for causality. Technical terms exact, code and errors quoted verbatim.
+**Style:** Concise — cut filler, keep grammar. Opinionated — pick a side. Arrows (→) for causality. Technical terms exact, code and errors quoted verbatim.
 
 # /al-scope, architecture.md → task list
 

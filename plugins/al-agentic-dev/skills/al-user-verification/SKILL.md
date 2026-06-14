@@ -3,7 +3,7 @@ name: al-user-verification
 description: Guide the user through one slice's `ready-for-verification` verify task in tasks.md for AL/Business Central. User drives the browser and reports observations; agent runs containers, publish, pre-flight, and Contract checks, asks one check at a time, records, and routes. Functional outcomes gate, usability observations become findings → tasks; ask-before-reveal + al-second-opinion coverage review guard against leading the witness.
 ---
 
-**Style:** Be extremely concise. Sacrifice grammar for concision. Opinionated — pick a side. Arrows (→) for causality. Technical terms exact, code and errors quoted verbatim.
+**Style:** Concise — cut filler, keep grammar. Opinionated — pick a side. Arrows (→) for causality. Technical terms exact, code and errors quoted verbatim.
 
 # /al-user-verification, Run a slice's Verification Plan
 

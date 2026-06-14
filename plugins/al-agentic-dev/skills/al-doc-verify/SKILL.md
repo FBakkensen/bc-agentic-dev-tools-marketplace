@@ -3,7 +3,7 @@ name: al-doc-verify
 description: Read-only cheap verifier for canonical markdown artifacts written by /al-grill-adr, /al-event-model, /al-design, /al-scope, and /al-refine, plus structural tasks.md rewrites by /al-steer. Checks document integrity and sibling consistency only; blocks structural and boundary failures, warns wording or ambiguity, and runs after write before gate report or downstream handoff.
 ---
 
-**Style:** Be extremely concise. Sacrifice grammar for concision. Opinionated - pick a side. Arrows (->) for causality. Technical terms exact, code and errors quoted verbatim.
+**Style:** Concise — cut filler, keep grammar. Opinionated - pick a side. Arrows (->) for causality. Technical terms exact, code and errors quoted verbatim.
 
 # /al-doc-verify, Markdown artifact verifier
 

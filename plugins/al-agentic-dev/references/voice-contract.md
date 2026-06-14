@@ -2,6 +2,17 @@
 
 Style rule lives at the top of each SKILL.md as a one-line inline declaration. This file carries the non-style disciplines: lexical, citation, shape, and artifact-vs-chat scoping. Disciplines below apply to durable artifacts (`event-model.md`, `architecture.md`, `tasks.md`, ADRs, `CONTEXT.md`, `.out-of-scope/`) and to chat output.
 
+## Format
+
+Applies everywhere — chat output and artifacts — unless a specific skeleton below dictates otherwise.
+
+**Bold header** on every section.
+
+Short paragraphs. One point per paragraph. Empty line between paragraphs.
+
+- Bullets for lists.
+- Not prose dressed as a list.
+
 ## BC vocabulary
 
 Insert / Modify / Delete (not Create / Update / Remove). Post (not Submit). Validate (not Check). Get / Find (not Fetch). Ledger Entry (not Transaction). No. (not ID). Procedure (not Method). Codeunit (not class). Name the specific object and procedure: "extract `PostSalesOrder` from codeunit 80 into `Sales-Post Impl`", not "refactor the codeunit".
@@ -50,9 +61,17 @@ Style fills the shape; the skeleton stays. Four skeletons, named defaults.
 
 Chip line `**T-NNN <Title>** · status → status`, then 2-col table of skill-specific rows.
 
-### Gate report (every gate event)
+### Gate report
 
-Four lines at app altitude. Mechanics (procedure names, line numbers, mutant IDs, RED/GREEN beats, build counts) belong in commits and the task block; user pulls detail by asking.
+Two tiers. The event type determines the tier.
+
+**Mid-task gate** — a RED→GREEN that does not flip task status:
+
+One line. `**GREEN** <what changed> → <next step>.` or `**RED** <what failed> → <next step>.`
+
+**Task-close gate** — status flips to `done` or `blocked`:
+
+Four lines.
 
 | Line | Carries |
 |---|---|
@@ -61,7 +80,9 @@ Four lines at app altitude. Mechanics (procedure names, line numbers, mutant IDs
 | **Fits:** | how the change fits the app at BC-shape altitude (module, BC pattern, seam, names like `Sales-Post Impl`) |
 | **Next:** | what is on the user, or nothing if the agent moves on |
 
-Verify-task variant (`/al-user-verification` closing a slice, `kind=verify`): four answers shift altitude. **Did** = what the user just confirmed (not what the code does). **Was** = user-facing problem the slice solved. **Fits** = journey in `event-model.md` vocabulary (Role / Action / Business Event / View / Status, no AL names). **Next** = handoff. The verify task's point is that the user touched the surface; report cites their observation, not the implementation.
+Mechanics (procedure names, line numbers, mutant IDs, build counts) belong in the commit and the task block.
+
+**Verify-task variant** (`/al-user-verification` closing a slice, `kind=verify`): same four lines, shifted altitude. **Did** = what the user confirmed. **Was** = user-facing problem the slice solved. **Fits** = journey in `event-model.md` vocabulary (Role / Action / Business Event / View / Status, no AL names). **Next** = handoff.
 
 ### Answer (user question)
 
