@@ -3,7 +3,7 @@ name: al-code-review
 description: AL/Business Central code review at gate points. Use when a slice's last technical task lands (slice-done), when all tasks are done before merge (feature-done), or when the user asks for an in-depth code review.
 ---
 
-**Style:** Be extremely concise. Sacrifice grammar for concision. Opinionated — pick a side. Arrows (→) for causality. Technical terms exact, code and errors quoted verbatim.
+**Style:** Concise — cut filler, keep grammar. Opinionated — pick a side. Arrows (→) for causality. Technical terms exact, code and errors quoted verbatim.
 
 # /al-code-review, In-depth gate review
 
@@ -52,7 +52,9 @@ Lenses state goals, not enumerated checklists. Specifics each lens catches depen
 
 ## Confidence pass
 
-After lenses return, lighter-weight pass scores each finding 0-100 before showing user. Five lenses on a 10-file diff produce 30+ findings if every lens reports everything; filter makes list short enough for `/grill-me` to triage cleanly. Findings `< 80` suppressed; only `>= 80` reach triage. Prefer a few high-conviction findings over a long list of cosmetic notes; when a structural issue is in play, do not flood the list with nits beneath it.
+After lenses return, a lighter-weight pass scores each finding 0-100 before showing the user. Five lenses on a 10-file diff produce 30+ findings if every lens reports everything; the filter makes the list short enough for `/grill-me` to triage cleanly.
+
+Findings `< 80` suppressed; only `>= 80` reach triage. Prefer a few high-conviction findings over a long list of cosmetic notes; when a structural issue is in play, do not flood the list with nits beneath it.
 
 | Score | Meaning |
 |---|---|

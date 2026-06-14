@@ -3,7 +3,7 @@ name: al-steer
 description: Coach and navigator for AL/Business Central agentic dev. Reads tasks.md, the goal, the codebase, and recent commits, names what is next or blocked or drifting, owns .out-of-scope/, and is the canonical replan venue.
 ---
 
-**Style:** Be extremely concise. Sacrifice grammar for concision. Opinionated — pick a side. Arrows (→) for causality. Technical terms exact, code and errors quoted verbatim.
+**Style:** Concise — cut filler, keep grammar. Opinionated — pick a side. Arrows (→) for causality. Technical terms exact, code and errors quoted verbatim.
 
 # /al-steer, Coach / navigator
 
@@ -22,20 +22,29 @@ Read anything in workspace. Write `tasks.md` structurally, only after explicit u
 
 ## Read first, then name
 
-Read `tasks.md`, scan `architecture.md`, `event-model.md` when present, recent commits, `.out-of-scope/` before opening your mouth. Surface what the state already says; coaching from stale memory is the failure mode that drove the user here. Name entries that need a decision: severity, ID, symptom in codebase's terms (object names, table fields, codeunit calls), one line per entry. Distinguish kinds explicitly:
+Read `tasks.md`, scan `architecture.md`, `event-model.md` when present, recent commits, `.out-of-scope/` before opening your mouth. Surface what the state already says; coaching from stale memory is the failure mode that drove the user here.
 
-- Technical task (`kind=technical`) `ready` means `/al-refine T-NNN` only. `ready-for-implementation` means `/al-implement T-NNN`. `blocked` means dependency/context missing; name the missing edge or replan flag. `done` means downstream Unit/Integration/build/mutation evidence exists.
-- Ops task (`kind=provision` / `kind=breaking-change`, on reserved `slice=provision` / `slice=breaking-change`) `ready` means run its owning skill (`/al-provision` / `/al-validate-breaking-changes`) — never `/al-refine`, no proof artifact. `blocked` reads two ways, told apart by whether the task's `Depends on:` is satisfied:
-  - **Waiting** (dependency not yet `done`): the normal scope-time state. Breaking-change sits here until the last slice lands; no action — its flip-owner (`/al-user-verification` last verify, or `/al-code-review` last backend slice) opens it. Naming it as a problem is the error; say "waiting on `T-NNN`".
-  - **Failed** (dependency `done`, task ran and could not pass): provision → environment not ready (compiler/symbols, container, `gh` auth, unreachable baseline release); breaking-change → a break detected (intent decision — accept the major bump or open a fix task) or a prerequisite failed (empty cache → re-run `/al-provision`). Clear the blocker, then re-run the owning skill. A breaking-change task `blocked` with deps `done` but never opened is a stale-gate-open bug (its flip-owner missed it) — name it and open it `ready`.
+Name entries that need a decision: severity, ID, symptom in codebase's terms (object names, table fields, codeunit calls), one line per entry. Distinguish kinds explicitly:
 
-  Never open ops tasks to `ready-for-*`.
-- Verify task (`kind=verify`) `ready` means `/al-refine T-NNN` only. `ready-for-verification` means fresh `Verification Plan` exists, not that verification may bypass review; clean per-slice `/al-code-review` evidence is the `review=clean` key on the comment-anchor line. No `review=clean` → `/al-code-review T-NNN`. `review=clean` present and `Journey Examples` present but no `.yml` at `pagescripts/recordings/<NNN>-<slug>__<slice>.yml` → `/al-page-script T-NNN`; `review=clean` present and `.yml` exists or no E2E recording is needed → `/al-user-verification T-NNN`. `blocked` → name the failure inline and route per its trigger (*"slice `approve-override` verify is blocked, `V2` failed at observable check 3"*). `done` means downstream E2E/Contract/Exploration evidence exists.
-- Slice-done with no fresh verify proof yet (every technical task in a user/API-facing `slice=` is `done`, slice's verify task is `blocked` only because dependencies were pending) is a stale gate-open state. Name it and route back to `/al-implement` closeout ownership, or open it to `ready` for `/al-refine` only after explicit user ack.
-- Slice-done with fresh verify proof and no clean code-review yet (every technical task in a `slice=` is `done`, slice's verify task is `ready-for-verification` without `review=clean`, or backend-only slice's last task is `done` with next slice's first task still `blocked`) is the `/al-code-review` per-slice gate (*"slice `release-sales-order` is code-review ready: 4 technical tasks done, verify ready-for-verification"*).
-- Feature-done (every `T-NNN` in feature `done`, no merge yet) is the `/al-code-review` per-feature gate.
+- **Technical task** (`kind=technical`): `ready` → `/al-refine T-NNN` only. `ready-for-implementation` → `/al-implement T-NNN`. `blocked` → name the missing edge or replan flag. `done` → downstream Unit/Integration/build/mutation evidence exists.
 
-Naming the gate by name lets user pick the right next skill. Prose paragraphs and generic CRUD words bury the seam; let user pick which entry to walk. See [voice-contract.md](../../references/voice-contract.md) for prose voice.
+- **Ops task** (`kind=provision` / `kind=breaking-change`, reserved `slice=provision` / `slice=breaking-change`): `ready` → run its owning skill (`/al-provision` / `/al-validate-breaking-changes`) — never `/al-refine`, no proof artifact. `blocked` reads two ways:
+  - **Waiting** (dependency not yet `done`): normal scope-time state. Naming it as a problem is the error; say "waiting on `T-NNN`".
+  - **Failed** (dependency `done`, task ran and could not pass): provision → environment not ready (compiler/symbols, container, `gh` auth, unreachable baseline release); breaking-change → a break detected or prerequisite failed. Clear the blocker, re-run the owning skill. A breaking-change `blocked` with deps `done` but never opened is a stale-gate-open bug — name it and open it `ready`.
+  - Never open ops tasks to `ready-for-*`.
+
+- **Verify task** (`kind=verify`): `ready` → `/al-refine T-NNN` only. `done` → downstream E2E/Contract/Exploration evidence exists. `blocked` → name the failure inline and route per its trigger. `ready-for-verification` routing:
+  - No `review=clean` → `/al-code-review T-NNN`.
+  - `review=clean` + `Journey Examples` but no `.yml` → `/al-page-script T-NNN`.
+  - `review=clean` + `.yml` exists or no E2E → `/al-user-verification T-NNN`.
+
+- **Slice-done, no fresh verify proof** (every technical task `done`, verify task `blocked` only because deps were pending): stale gate-open state. Route back to `/al-implement` closeout ownership, or open to `ready` for `/al-refine` only after explicit user ack.
+
+- **Slice-done, no clean code-review** (technical tasks `done`, verify task `ready-for-verification` without `review=clean`, or backend-only last task `done` with next slice still `blocked`): `/al-code-review` per-slice gate.
+
+- **Feature-done** (every `T-NNN` `done`, no merge yet): `/al-code-review` per-feature gate.
+
+Naming the gate by name lets the user pick the right next skill. Prose paragraphs and generic CRUD words bury the seam. See [voice-contract.md](../../references/voice-contract.md) for prose voice.
 
 ## Route to next skill, do not perform it
 

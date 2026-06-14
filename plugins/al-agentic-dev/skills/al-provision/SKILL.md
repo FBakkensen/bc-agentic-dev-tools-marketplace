@@ -3,7 +3,7 @@ name: al-provision
 description: Execute the `kind=provision` task in `tasks.md` for AL/Business Central — refresh the build environment (compiler, symbols, and — when enabled — the breaking-change baseline) by running al-build's `provision.ps1`, then flip the task `done` or `blocked`. Use on the first task of a feature, or whenever a `kind=provision` task sits at `status=ready`.
 ---
 
-**Style:** Be extremely concise. Sacrifice grammar for concision. Opinionated — pick a side. Arrows (→) for causality. Technical terms exact, code and errors quoted verbatim.
+**Style:** Concise — cut filler, keep grammar. Opinionated — pick a side. Arrows (→) for causality. Technical terms exact, code and errors quoted verbatim.
 
 # /al-provision — run the provision task
 

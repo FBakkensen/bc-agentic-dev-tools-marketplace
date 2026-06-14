@@ -3,7 +3,7 @@ name: al-research
 description: Verify AL/Business Central specifics from authoritative sources, quote them, return. The escalation seat of the evidence bar — use when two sources disagree, when a fact lands in a durable design artifact (`event-model.md`, `architecture.md`, `CONTEXT.md`, ADRs), or when a fuzzy question needs framing plus cross-family verification. Implement-time single-fact lookups go direct (quoted fetch per the evidence bar in voice-contract.md); this skill arbitrates.
 ---
 
-**Style:** Be extremely concise. Sacrifice grammar for concision. Opinionated — pick a side. Arrows (→) for causality. Technical terms exact, code and errors quoted verbatim.
+**Style:** Concise — cut filler, keep grammar. Opinionated — pick a side. Arrows (→) for causality. Technical terms exact, code and errors quoted verbatim.
 
 # /al-research, Verify BC specifics
 
