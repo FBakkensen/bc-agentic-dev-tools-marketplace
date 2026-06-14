@@ -17,7 +17,18 @@ Verdict, conclusion, or status on line 1. Context and detail after.
 
 ## BC vocabulary
 
-Insert / Modify / Delete (not Create / Update / Remove). Post (not Submit). Validate (not Check). Get / Find (not Fetch). Ledger Entry (not Transaction). No. (not ID). Procedure (not Method). Codeunit (not class). Name the specific object and procedure: "extract `PostSalesOrder` from codeunit 80 into `Sales-Post Impl`", not "refactor the codeunit".
+| Use | Not |
+|---|---|
+| Insert / Modify / Delete | Create / Update / Remove |
+| Post | Submit |
+| Validate | Check |
+| Get / Find | Fetch |
+| Ledger Entry | Transaction |
+| No. | ID |
+| Procedure | Method |
+| Codeunit | Class |
+
+Name the specific object and procedure: "extract `PostSalesOrder` from codeunit 80 into `Sales-Post Impl`", not "refactor the codeunit".
 
 ## Names are the citation
 
@@ -27,15 +38,29 @@ Use the test codeunit, procedure, table, field, event publisher by name. `ABCCop
 
 BC training data is stale fiction; your confidence about a name, signature, or pattern is not evidence any are right. One bar, stated here once; writing skills point at it.
 
-- **Names.** Every exact BC-specific name (object, procedure, event, table, field, enum value, caption) landing in an artifact or AL code: backed this session by `al-symbols-mcp` / `grep` hit, or a quoted fetch. Recall does not satisfy. Names cited upstream count only when `grep` against the upstream file returns them this session.
-- **Minted names.** A name that does not exist yet (new object, field, procedure, or event landing in `New and Modified Objects` or fresh AL code) cannot have a workspace hit; its bar is a zero-hit collision lookup this session (`al-symbols-mcp` / `grep` — genuinely new, not shadowing) plus BC-vocabulary compliance above. Collision scope follows AL: object names against workspace object declarations, fields against the target table and its extensions, procedures against the target object only — a minted `Initialize` on a new codeunit collides with nothing — and enum values against the target enum and its extensions. The base object of a `Modified:` or `extends` entry keeps the Names bar. Base object in a dependency rather than workspace source: grep covers workspace extensions only; the `/al-build` compiler is the backstop for base-field collisions. A `New and Modified Objects` section is proposal, not carried evidence: the skill that lands the object re-runs the collision lookup in its own session.
-- **Constructs.** Workspace evidence stops at names. A BC construct class — record loop + modify, partial records (`SetLoadFields`), temp record lifecycle, page/report surface, transaction boundary (`Commit`) — carries execution-order and platform-cost semantics legacy code cannot vouch for: legacy is precedent, not authority. First write of a construct class in a task → fetch the matching topic per [bc-code-intelligence-dispatch.md](bc-code-intelligence-dispatch.md) or a Microsoft Learn passage, apply it yourself, and declare it: `Researched: <construct> → <topic id / Learn URL>`.
-- **Satisfiers.** Any verbatim-quoted fetch with one-line citation counts. Names: `bc-code-intelligence` topic, Microsoft Learn, or `/bc-standard-reference`. Constructs: topic or Learn passage only — BaseApp source shows an instance, not the rule, and carries its own legacy debt. `/al-research` is the escalation seat — mandatory when sources disagree or a fetched fact lands in a durable design artifact (`event-model.md`, `architecture.md`, `CONTEXT.md`, ADRs); workspace-backed names stay direct.
-- **Trace.** Citation declares in chat as `Researched: <fact> → <source path / URL / topic id>`; task-scoped citations also land as `Contract notes` bullets at task reconcile — the one inline-citation carve-out, making skipped research visible to `/al-code-review` and the next session. Everything else in artifacts stays names-only.
+- **Names.** Every exact BC-specific name (object, procedure, event, table, field, enum value, caption) in an artifact or AL code must be backed this session by `al-symbols-mcp` / `grep` hit, or a quoted fetch. Recall does not satisfy. Names cited upstream count only when `grep` against the upstream file returns them this session.
+
+- **Minted names.** A name that does not exist yet cannot have a workspace hit. Its bar is a zero-hit collision lookup this session (`al-symbols-mcp` / `grep` — genuinely new, not shadowing) plus BC-vocabulary compliance.
+  - Collision scope: object names against workspace object declarations; fields against the target table and its extensions; procedures against the target object only; enum values against the target enum and its extensions.
+  - Base object in a dependency (not workspace source): grep covers workspace extensions only — the `/al-build` compiler is the backstop for base-field collisions.
+  - `New and Modified Objects` is proposal, not carried evidence. The skill that lands the object re-runs the collision lookup in its own session.
+
+- **Constructs.** Workspace evidence stops at names. BC construct classes — record loop + modify, `SetLoadFields`, temp record lifecycle, page/report surface, `Commit` — carry execution-order and platform-cost semantics legacy code cannot vouch for. First write of a construct class in a task → fetch the matching topic per [bc-code-intelligence-dispatch.md](bc-code-intelligence-dispatch.md) or a Microsoft Learn passage, and declare it: `Researched: <construct> → <topic id / Learn URL>`.
+
+- **Satisfiers.** Any verbatim-quoted fetch with one-line citation counts.
+  - Names: `bc-code-intelligence` topic, Microsoft Learn, or `/bc-standard-reference`.
+  - Constructs: topic or Learn passage only — BaseApp source shows an instance, not the rule.
+  - `/al-research` is mandatory when sources disagree or a fetched fact lands in a durable design artifact (`event-model.md`, `architecture.md`, `CONTEXT.md`, ADRs).
+
+- **Trace.** Declare in chat as `Researched: <fact> → <source path / URL / topic id>`. Task-scoped citations also land as `Contract notes` bullets at task reconcile — the one inline-citation carve-out, making skipped research visible to `/al-code-review` and the next session. Everything else in artifacts stays names-only.
 
 ## Artifacts get scanned, not slow-read
 
-Reader lands to decide one task. Scans landing points top to bottom (IDs, statuses, ledes, labels, table rows), slow-reads the one block that catches the eye. Multi-fact passages get one fact per landing line; container is your call (bullets, callouts, table rows, sub-`<details>`). Read only the first line of each landing point in your draft. If that vertical strip says what is there, ship.
+Reader lands to decide one task. They scan landing points top to bottom (IDs, statuses, ledes, labels, table rows) and slow-read only the one block that catches the eye.
+
+Multi-fact passages get one fact per landing line — bullets, callouts, table rows, or sub-`<details>`, your call.
+
+Read only the first line of each landing point in your draft. If that vertical strip says what is there, ship.
 
 ## Lists of findings
 
@@ -47,7 +72,11 @@ Field/value recaps: borderless two-column table, not bullets.
 
 ## No workflow chatter in artifacts
 
-DO NOT prefix artifact lines with the agent that decided (`/al-implement decision:`). DO NOT narrate TDD steps as prose ("bullet 1 went red on stub, green on body fill"). DO NOT cite second-opinion or `advisor()` reconciliation. Workflow log belongs in the commit message; artifact carries the forward-facing fact in declarative voice.
+Artifact carries the forward-facing fact in declarative voice. Workflow log belongs in the commit message.
+
+- Do NOT prefix lines with the agent that decided (`/al-implement decision:`).
+- Do NOT narrate TDD steps as prose ("bullet 1 went red on stub, green on body fill").
+- Do NOT cite second-opinion or `advisor()` reconciliation.
 
 <claude-only>
 
@@ -88,7 +117,11 @@ Mechanics (procedure names, line numbers, mutant IDs, build counts) belong in th
 
 ### Answer (user question)
 
-Answer only what was asked, ≤3 lines at the question's altitude. No status recap, no background section, no "why it matters", no deferred-questions list; the user pulls detail by asking. A question is not a gate event — do not promote it to a briefing.
+Answer on line 1. 3 sentences max at the question's altitude.
+
+- No status recap, no background section, no "why it matters."
+- Flag open questions explicitly — don't silently drop them.
+- A question is not a gate event — do not promote it to a briefing.
 
 ### Stop (halt)
 
