@@ -30,6 +30,7 @@ pwsh "<skill-folder>/scripts/test.ps1"
 ```
 
 Always run full gate. Do not filter tests by codeunit.
+
 Force republish: `pwsh "<skill-folder>/scripts/test.ps1" -Force`
 
 ### Gate metrics (automatic)

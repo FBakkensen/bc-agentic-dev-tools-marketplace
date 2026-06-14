@@ -48,7 +48,12 @@ Lens 1 typically dominates queue; Lens 2 surfaces small number of high-value BC 
 
 ## Apply discipline
 
-One reshape at a time, `/al-build` after each. Red → revert that step; recover before next. Renames and seam-introduction land before dedup (touch many call sites, conflict otherwise). Lens 1 dead-code removal usually batches safely; Lens 3 structural reshape lands one at a time. `/al-second-opinion` when apply queue is non-trivial.
+One reshape at a time, `/al-build` after each. Red → revert that step; recover before next.
+
+- Renames and seam-introduction land before dedup — they touch many call sites and conflict otherwise.
+- Lens 1 dead-code removal usually batches safely.
+- Lens 3 structural reshape lands one at a time.
+- `/al-second-opinion` when apply queue is non-trivial.
 
 ## Lens 1, simplify and dedup
 

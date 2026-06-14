@@ -52,7 +52,9 @@ Lenses state goals, not enumerated checklists. Specifics each lens catches depen
 
 ## Confidence pass
 
-After lenses return, lighter-weight pass scores each finding 0-100 before showing user. Five lenses on a 10-file diff produce 30+ findings if every lens reports everything; filter makes list short enough for `/grill-me` to triage cleanly. Findings `< 80` suppressed; only `>= 80` reach triage. Prefer a few high-conviction findings over a long list of cosmetic notes; when a structural issue is in play, do not flood the list with nits beneath it.
+After lenses return, a lighter-weight pass scores each finding 0-100 before showing the user. Five lenses on a 10-file diff produce 30+ findings if every lens reports everything; the filter makes the list short enough for `/grill-me` to triage cleanly.
+
+Findings `< 80` suppressed; only `>= 80` reach triage. Prefer a few high-conviction findings over a long list of cosmetic notes; when a structural issue is in play, do not flood the list with nits beneath it.
 
 | Score | Meaning |
 |---|---|
