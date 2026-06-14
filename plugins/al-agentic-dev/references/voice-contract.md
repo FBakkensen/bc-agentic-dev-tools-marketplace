@@ -8,7 +8,9 @@ Applies everywhere — chat output and artifacts — unless a specific skeleton 
 
 **Bold header** on every section.
 
-Short paragraphs. One point per paragraph. Empty line between paragraphs.
+Verdict, conclusion, or status on line 1. Context and detail after.
+
+3 sentences max per paragraph. Empty line between paragraphs.
 
 - Bullets for lists.
 - Not prose dressed as a list.
