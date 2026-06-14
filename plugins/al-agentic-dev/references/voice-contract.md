@@ -96,7 +96,7 @@ Chip line `**T-NNN <Title>** · status → status`, then 2-col table of skill-sp
 
 Two tiers. The event type determines the tier.
 
-**Mid-task gate** — a RED→GREEN that does not flip task status:
+**Mid-task gate** — any gate event that does not flip task status:
 
 One line. `**GREEN** <what changed> → <next step>.` or `**RED** <what failed> → <next step>.`
 
