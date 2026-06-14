@@ -18,15 +18,25 @@ Turn `architecture.md` into context-only per-task entries in `tasks.md` so `/al-
 ## What goes into tasks.md
 
 - **Goal**: lift the one-line outcome from `event-model.md` journey (user/API-facing) or from `architecture.md` trigger-source (backend-only). Do not re-derive.
+
 - **Context only**: task blocks carry stable non-implementation context: goal, user/API surface, slice intent, dependencies, constraints, risks, source context, acceptance intent. Acceptance intent is context prose, not a `Test Specification` subsection.
+
 - **No proof artifacts**: do not write `Test Specification`, `Verification Plan`, `New and Modified Objects`, AAA cases, `Expected Behaviors`, `Decision Matrix`, `Journey Examples`, `Contract Examples`, or `Exploration Charters`. `/al-refine` owns every proof artifact and writes it fresh.
+
 - **No implementation prescriptions**: do not prescribe new object, procedure, test codeunit, assertion, page-script, or API payload examples. Existing objects, pages, events, APIs, and fields may be named as source context only.
+
 - **Tasks**: one imperative title + short description per task, each task a coherent behaviour slice or refactor step. Compress with existing BC field, codeunit, table names when they are source context.
+
 - **Slice grouping**: every `T-NNN` carries `slice=<slug>` on its comment-anchor line. User/API-facing features: slug = `event-model.md` timeline step (`release-sales-order`, `approve-override`). Backend-only: slug names `architecture.md` slice (`job-queue-cleanup`, `install-upgrade-v2`).
+
 - **Verify tasks**: when `event-model.md` present, every slice closes with one verify task: `kind=verify` on the comment-anchor line, same `slice=` as gated slice, `Depends on:` every technical `T-NNN` in slice. Backend-only skips verify tasks; no user/API surface to verify.
-- **Bracketing ops tasks**: always emit, both modes (user-facing and backend-only). `T-001 kind=provision slice=provision` first (refresh the build environment); a `kind=breaking-change slice=breaking-change` task last (validate against the released baseline). Neither carries a proof artifact, neither runs `/al-refine` — they run a script and flip status (`/al-provision`, `/al-validate-breaking-changes`). Provision opens `ready`; the first slice's technical tasks open `blocked` with the slice's first technical task carrying `Depends on: T-001`, and `/al-provision` opens them on its `done`. Breaking-change opens `blocked`, `Depends on:` the final terminal task (last `verify`, or last technical for backend-only) → transitively gates on every feature task, and the skill that lands that terminal task `done` opens it. Every `blocked` → `ready` flip has a named owner — no stranded task. Emit the breaking-change task unconditionally; `/al-validate-breaking-changes` self-skips when detection is off, so `/al-scope` never reads `al-build.json`.
-- **Order**: slices follow `event-model.md` timeline order (or `architecture.md` slice declaration order for backend-only). Inside a slice, task order follows dependency and seam readiness: decision/policy primitives before BC wiring, wiring before verify task. `/al-refine` decides proof shape per task.
-- **Edges**: `Depends on:` (cannot land without those), `Refactors:` (reshapes shipped code under invariant), `Fixes:` (corrects defect or wrong contract). Omit kinds that do not apply. **Cross-slice gate**: every slice N+1's first technical task carries `Depends on:` slice N's verify task → gate is explicit in dependency row and the `status=` flip from `blocked` to `ready` reads as normal dep-satisfied flip. `Depends on:` lines are the dependency graph; no mermaid fence.
+
+- **Bracketing ops tasks**: always emit, both modes. `T-001 kind=provision slice=provision` first; `kind=breaking-change slice=breaking-change` last. Neither carries a proof artifact — they run a script and flip status. Provision opens `ready`; first-slice technical tasks open `blocked` with `Depends on: T-001`, opened by `/al-provision` on `done`. Breaking-change opens `blocked`, `Depends on:` the final terminal task — the skill landing that task `done` opens it. Every `blocked` → `ready` flip has a named owner. Emit breaking-change unconditionally; `/al-validate-breaking-changes` self-skips when detection is off.
+
+- **Order**: slices follow `event-model.md` timeline order (or `architecture.md` slice declaration order for backend-only). Inside a slice: decision/policy primitives first, BC wiring second, verify task last. `/al-refine` decides proof shape per task.
+
+- **Edges**: `Depends on:` (cannot land without those), `Refactors:` (reshapes shipped code under invariant), `Fixes:` (corrects defect or wrong contract). Omit kinds that do not apply. Cross-slice gate: every slice N+1's first technical task carries `Depends on:` slice N's verify task. `Depends on:` lines are the dependency graph; no mermaid fence.
+
 - **Scaffolding context**: permission, caption, translation, and packaging constraints bundle into the task that needs them. Name the constraint, not a code shape.
 
 Unanswerable from `architecture.md` → architecture incomplete. **Stop**, run `/al-steer`.

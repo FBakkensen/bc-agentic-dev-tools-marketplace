@@ -31,9 +31,20 @@ Pick a `ready-for-verification` verify task. Run its fresh `Verification Plan`: 
 
 Three `new-agent-container.ps1` spawns per cycle. Fresh-each-time discipline isolates verification from prior session state and leaves the next consumer with a clean container.
 
-**Spawn #1 (pre-flight).** `new-agent-container.ps1` → `publish-apps.ps1` → `pagescript-replay.ps1` (batch mode, every `pagescripts/recordings/*.yml`) when E2E recordings exist. Three explicit primitives: fresh container, publish all configured apps, run the regression batch. Catches both current-slice regressions and cross-slice collisions before the user spends a minute walking. Green → continue. Red → flip verify task `status=blocked`, record transcript with `**Replan flag**: trigger #4 (sibling now wrong)` for any prior-slice `.yml` red, `**Replan flag**: trigger #8 (verification failed)` for current-slice red. Announce route to `/al-steer T-NNN`. Run spawn #3 for cleanup and exit. No `.yml` recordings at all → skip spawn #1 entirely; spawn #2 publishes to its own fresh container, so a publish-only spawn #1 is pure churn (two multi-minute container builds for zero checks).
+**Spawn #1 (pre-flight).** `new-agent-container.ps1` → `publish-apps.ps1` → `pagescript-replay.ps1` (batch mode, every `pagescripts/recordings/*.yml`) when E2E recordings exist. Catches both current-slice regressions and cross-slice collisions before the user spends a minute walking.
 
-**Spawn #2 (contract check + guided walk).** Only on pre-flight green. `new-agent-container.ps1` → `publish-apps.ps1` → run Contract examples through their named client/harness (agent-run, no user involvement; they re-run on every spawn #2 — fresh container, agent-side, free — only walk examples stay closed on resume), then — when walkable scope exists — hand the user the Web Client URL (`http://<container-name>/BC/`), the credentials per the Preconditions login grant, and a deep link to the starting page (`http://<container>/BC/?page=<id>`, page ID read from the page AL — the user's first action lands on the right screen, not hunting Tell Me), and guide the walk one instruction at a time. Contract-only plan → no handover, no walk; the gate judges the captured client output. This handover lives here and only here: spawn #1/#2 each recreate the container, so a user invited in earlier gets their session killed mid-walk or clicks against a container the replay batch is mutating. Symmetric with spawn #1's first two primitives; no replay step (batch already greened on spawn #1). Evidence is the transcript of the user's verbatim answers plus any saved screenshots.
+- Green → continue to spawn #2.
+- Red → flip verify task `status=blocked`, record `**Replan flag**: trigger #4` for any prior-slice `.yml` red, `**Replan flag**: trigger #8` for current-slice red. Route `/al-steer T-NNN`. Run spawn #3 for cleanup and exit.
+- No `.yml` recordings at all → skip spawn #1 entirely; spawn #2 publishes to its own fresh container.
+
+**Spawn #2 (contract check + guided walk).** Only on pre-flight green. `new-agent-container.ps1` → `publish-apps.ps1` → Contract examples (agent-run, no user involvement; re-run on every spawn #2) → guided walk when walkable scope exists.
+
+Hand the user:
+- Web Client URL: `http://<container-name>/BC/`
+- Credentials per the Preconditions login grant
+- Deep link to starting page: `http://<container>/BC/?page=<id>` (page ID read from the page AL)
+
+Contract-only plan → no handover, no walk; gate judges captured client output. This handover lives here and only here: spawn #1/#2 each recreate the container, so a user invited in earlier gets their session killed mid-walk. Evidence is the transcript of the user's verbatim answers plus any saved screenshots.
 
 **Spawn #3 (exit).** Always runs at end of cycle, pass or fail. `new-agent-container.ps1` only — leaves a fresh container for the next consumer (next slice's `/al-implement`, or merge prep). Skill exits after spawn returns.
 
@@ -60,10 +71,11 @@ Announce verify task: `T-NNN` ID, slice slug, counts by scope (`E2E`, `Contract`
 
 ### Guide the walk, ask before revealing
 
-Per `E2E` action: give one concrete instruction in BC vocabulary — *"You're on Sales Orders. Click **Post**, choose **Ship and Invoice**."* — and wait. Never a wall of steps to follow from memory. Per `Contract` action: agent runs the named client/harness and captures request/response or harness output; no user involvement. Then judge two dimensions:
+Per `E2E` action: give one concrete instruction in BC vocabulary — *"You're on Sales Orders. Click **Post**, choose **Ship and Invoice**."* — and wait. Never a wall of steps to follow from memory. Per `Contract` action: agent runs the named client/harness and captures request/response; no user involvement.
 
-- **Functional (checking, gates).** Ask for the observed value **before** naming the expected one: *"What does the Status field show now?"*, never *"Does Status say Released?"*. Where the runtime offers a structured question UI (Claude Code: `AskUserQuestion`) **and the observable is a closed enumerable field** (an option field like `Status`), present the field's full value range as options plus *"Something else — describe"*; never flag the expected value, never a bare yes/no on it. Open-ended observables (counts, error text, HTTP bodies) get a free-text question — improvising a short option list around the expected value re-introduces leading by inclusion. Record observed-vs-expected verbatim from the user's words (*"Status = Released"* / *"cue stayed at 2, expected 3"* / *"HTTP 400 returned"*). The value comes from the user's screen or the captured client output; never infer it from what the AL "should" do.
-- **Usability (testing, findings).** For Exploration Charters, give the prompt, let the user wander and narrate. Friction in their own words — clunky sequencing, ambiguous caption, slow or missing refresh, error message that reads wrong — the agent classifies each remark (functional fail vs usability finding) and confirms the classification in one line so misfiles are catchable. Observations, not gate signals unless a functional failure surfaces.
+**Functional (checking, gates).** Ask for the observed value **before** naming the expected one: *"What does the Status field show now?"*, never *"Does Status say Released?"*. For closed enumerable fields (an option field like `Status`), use `AskUserQuestion` with the field's full value range plus *"Something else — describe"*. For open-ended observables (counts, error text, HTTP bodies), use a free-text question. Record observed-vs-expected verbatim from the user's words. Never infer the value from what the AL "should" do.
+
+**Usability (testing, findings).** For Exploration Charters, give the prompt, let the user wander and narrate. Friction in their own words — clunky sequencing, ambiguous caption, slow refresh — the agent classifies each remark (functional fail vs usability finding) and confirms the classification in one line so misfiles are catchable. Usability observations are never gate signals.
 
 An action's expected outcome is implicit and observable checks are listed later → wait for the check to ask for the functional observation; do not gate on the action alone.
 
@@ -83,7 +95,12 @@ Flip `status=blocked` on the comment-anchor line, stripping `review=clean` in th
 
 ### Functional fail: stop the example, flip blocked, route
 
-First functional fail in any E2E/Contract example, or functional failure discovered during Exploration: stop the walk/check. Do not continue to later steps in the same example, do not move to later examples. E2E/Exploration fail → ask the user to save a screenshot of the failure moment under `.output/verification/T-NNN/` (gitignored; transient triage evidence belongs there — and the agent cannot persist a chat-pasted image itself) and reference that path in the inline record so `/al-steer` finds it in a later session. Contract fail → the captured request/response is the evidence; there is no screen to shoot. Record inside the task block:
+First functional fail in any E2E/Contract example, or functional failure during Exploration: **stop**. Do not continue to later steps in the same example, do not move to later examples.
+
+- E2E/Exploration fail → ask the user to save a screenshot under `.output/verification/T-NNN/` (gitignored; agent cannot persist a chat-pasted image) and reference that path in the inline record so `/al-steer` finds it in a later session.
+- Contract fail → captured request/response is the evidence; no screenshot needed.
+
+Record inside the task block:
 
 - Which example (`V#`, `C#`, or `X#`) and which step/check/prompt.
 - Observed vs expected, verbatim from the user's report (or captured client output), with any saved screenshot referenced by its `.output/verification/T-NNN/` path.
@@ -104,7 +121,13 @@ All checkable examples pass → before flipping `done`, run `/al-second-opinion`
 
 ### Pass: continue, then flip on the functional gate
 
-Functional outcome matches → move to next check. Last check of example → append the example's line to the inline partial-run record inside the task block (example ID, verdict, observed values, and the exact questions as posed — the second-opinion artifact needs them verbatim, and a session boundary erases the chat transcript) — this incremental append is what makes interruption survivable; an interruption gives no exit moment to write — then next example/charter. All checkable examples pass + required pre-flight checks green + second-opinion reconciled → flip `status=done` on the comment-anchor line, stripping `review=clean` in the same Edit (the marker is transient evidence; `done` already means downstream evidence exists), sync heading marker to `[x]`. Materialise usability findings as candidate tasks in the slice (non-gating; triaged like `/al-code-review` findings — `/grill-me` adjudicates ambiguous ones). Candidate tasks open `ready`, `kind=technical`, in this slice; non-gating by contract, so they do not re-open the verify task and they are exempt from the per-feature closed-slice defect rule — they queue *after* the next slice's opened tasks unless the user promotes one. Collapse the inline partial-run record into the Closeout shape from [`test-specification.md`](../../references/test-specification.md) when flipping `done`. Then flip every technical task in the *next* slice (slice whose first task carries `Depends on:` this verify task) from `blocked` to `ready`, so `/al-refine` picks up cleanly. Cross-slice gate is the only mechanism that opens the next slice; without this flip the pipeline stalls. Run the Gate report. The gate flips on the user's own reported observations (Contract-only: on captured client output); the user can halt or veto at any step.
+- **Check passes** → move to next check.
+- **Last check of example** → append the example's line to the inline partial-run record (example ID, verdict, observed values, exact questions as posed — the second-opinion artifact needs them verbatim, and a session boundary erases the chat transcript). Then move to next example/charter. Incremental append is what makes interruption survivable.
+- **All checkable examples pass + pre-flight green + second-opinion reconciled** → flip `status=done` on the comment-anchor line, stripping `review=clean` in the same Edit. Sync heading marker to `[x]`. Collapse the inline partial-run record into the Closeout shape from [`test-specification.md`](../../references/test-specification.md).
+- **Usability findings** → materialise as candidate tasks in the slice (`ready`, `kind=technical`). Non-gating; `/grill-me` adjudicates ambiguous ones. They queue *after* the next slice's opened tasks unless the user promotes one.
+- **Next slice** → flip every technical task in the next slice (whose first task carries `Depends on:` this verify task) from `blocked` to `ready`. Cross-slice gate is the only mechanism that opens the next slice; without this flip the pipeline stalls.
+
+Run the Gate report. The gate flips on the user's own reported observations (Contract-only: captured client output); the user can halt or veto at any step.
 
 ### Partial walks survive session boundaries
 
