@@ -63,7 +63,7 @@ After the worker returns its mutation report, close the completed worker thread 
 
 Model:
 - Codex `spawn_agent`: `gpt-5.4-mini`, `reasoning_effort=low`
-- Claude Code `Agent`: `haiku`
+- Claude Code `Agent`: `sonnet`
 
 ### Worker rules
 
