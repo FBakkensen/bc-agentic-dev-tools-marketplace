@@ -15,7 +15,7 @@ Settle the journey at altitude of what an external observer sees, before `/al-de
 
 Writes only `event-model.md`.
 
-Never write `architecture.md` or `tasks.md`. Branch and spec-folder creation do not grant permission to create sibling artifacts.
+Never write `architecture.md` or the `tasks/` folder. Branch and spec-folder creation do not grant permission to create sibling artifacts.
 
 Do not choose implementation structure: no modules, codeunits, table fields, event subscribers, AL object responsibilities, or test surfaces. Do not write task proof: no task-level AAA cases, `Test Specification`, `Verification Plan`, Journey Examples, Contract Examples, or Exploration Charters.
 

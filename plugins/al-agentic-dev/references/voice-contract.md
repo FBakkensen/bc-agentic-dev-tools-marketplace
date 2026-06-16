@@ -1,6 +1,6 @@
 # Voice contract
 
-Style rule lives at the top of each SKILL.md as a one-line inline declaration. This file carries the non-style disciplines: lexical, citation, shape, and artifact-vs-chat scoping. Disciplines below apply to durable artifacts (`event-model.md`, `architecture.md`, `tasks.md`, ADRs, `CONTEXT.md`, `.out-of-scope/`) and to chat output.
+Style rule lives at the top of each SKILL.md as a one-line inline declaration. This file carries the non-style disciplines: lexical, citation, shape, and artifact-vs-chat scoping. Disciplines below apply to durable artifacts (`event-model.md`, `architecture.md`, the per-task files under `tasks/`, ADRs, `CONTEXT.md`, `.out-of-scope/`) and to chat output.
 
 ## Format
 
@@ -111,9 +111,9 @@ Four lines.
 | **Fits:** | how the change fits the app at BC-shape altitude (module, BC pattern, seam, names like `Sales-Post Impl`) |
 | **Next:** | what is on the user, or nothing if the agent moves on |
 
-Mechanics (procedure names, line numbers, mutant IDs, build counts) belong in the commit and the task block.
+Mechanics (procedure names, line numbers, mutant IDs, build counts) belong in the commit and the task file.
 
-**Verify-task variant** (`/al-user-verification` closing a slice, `kind=verify`): same four lines, shifted altitude. **Did** = what the user confirmed. **Was** = user-facing problem the slice solved. **Fits** = journey in `event-model.md` vocabulary (Role / Action / Business Event / View / Status, no AL names). **Next** = handoff.
+**Verify-task variant** (`/al-user-verification` closing a slice, `kind: verify`): same four lines, shifted altitude. **Did** = what the user confirmed. **Was** = user-facing problem the slice solved. **Fits** = journey in `event-model.md` vocabulary (Role / Action / Business Event / View / Status, no AL names). **Next** = handoff.
 
 ### Answer (user question)
 
@@ -137,4 +137,4 @@ SKILL-specific shapes live in the owning SKILL.md and follow the same rule: shap
 
 ## Chat carve-out
 
-Chat requires a closing line stating what landed (the user has no `tasks.md` open). Closing line follows the Style rule; not a pleasantry. Workflow markers (`**RED**`, `**GREEN**`, `**Second opinion**`) permitted in chat; workflow narrative prose still banned.
+Chat requires a closing line stating what landed (the user has no task file open). Closing line follows the Style rule; not a pleasantry. Workflow markers (`**RED**`, `**GREEN**`, `**Second opinion**`) permitted in chat; workflow narrative prose still banned.

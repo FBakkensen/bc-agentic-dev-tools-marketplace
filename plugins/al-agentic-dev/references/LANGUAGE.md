@@ -69,7 +69,7 @@ Settlement is two-artifact for user/API-facing slices. User-facing slots (Role, 
 The pattern qualifies the slice in `architecture.md`: `Slice (Automation): trigger ...`. _Avoid_: user story (too unstructured), use case (too OO), flow (already used for the diagram).
 
 **Vertical slicing** _(predates VSA, implicit in Kent Beck's TDD, 2002)_
-Per-task / per-PR rule: every task ships tests + production code together; never data-only, logic-only, or wire-up-only; always leaves the system green. Applies to every `T-NNN` in `tasks.md`. The opposite, *horizontal phasing*, is rejected by name. Lower-altitude than Vertical Slice Architecture; folder structure is VSA, per-task discipline is vertical slicing.
+Per-task / per-PR rule: every task ships tests + production code together; never data-only, logic-only, or wire-up-only; always leaves the system green. Applies to every task in the `tasks/` folder. The opposite, *horizontal phasing*, is rejected by name. Lower-altitude than Vertical Slice Architecture; folder structure is VSA, per-task discipline is vertical slicing.
 _Avoid_: horizontal phasing, layer-by-layer build, big-bang integration.
 
 ## Pillars

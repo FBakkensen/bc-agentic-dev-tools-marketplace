@@ -1,6 +1,6 @@
 # Test specification grammar
 
-Shared grammar for `tasks.md` `Test Specification` and `Verification Plan` sections. Cited by `/al-refine`, `/al-implement`, `/al-code-review`, `/al-page-script`, and `/al-user-verification`.
+Shared grammar for the `Test Specification` and `Verification Plan` sections in a per-task file (`specs/<NNN>-<slug>/tasks/NNN-T-MMM-<slug>.md`). Cited by `/al-refine`, `/al-implement`, `/al-code-review`, `/al-page-script`, and `/al-user-verification`.
 
 Read-only. Read in place via `${CLAUDE_SKILL_DIR}/../../references/test-specification.md`.
 
@@ -38,7 +38,7 @@ Mandatory on every technical task. Names the production AL surface the task land
 
 Signature-level, no bodies — bodies are what TDD writes. One object per landing line, `New:` or `Modified:` lede. Procedures carry full signature, visibility (`internal` / `local` / public), and their R → P → W letter from `architecture.md`. Fields carry AL type. Events carry the full publisher signature.
 
-Lede semantics: `New:` = object not in the workspace at this task's start — a fresh extension object on an existing base is `New:` with `extends <base>`. `Modified:` = object already in the workspace, including objects an earlier task in the same feature landed; an object another open task's section already mints is also `Modified:` here — one `New:` owner per object, ordering via `Depends on:`. Any new object a listed signature references (enum, interface) earns its own `New:` entry.
+Lede semantics: `New:` = object not in the workspace at this task's start — a fresh extension object on an existing base is `New:` with `extends <base>`. `Modified:` = object already in the workspace, including objects an earlier task in the same feature landed; an object another open task's section already mints is also `Modified:` here — one `New:` owner per object, ordering via `depends_on:`. Any new object a listed signature references (enum, interface) earns its own `New:` entry.
 
 Boundary at implementation time: a production object the task's assertions require but the section never named is replan trigger #2; build-gate scaffolding the assertions never observe (permission set entry, object ID, caption) absorbs as trivia per `/al-implement`. A change whose only effect is behaviour inside a procedure an open sibling task owns is trigger #4 (sibling now wrong), not a `Modified:` entry.
 
@@ -297,4 +297,4 @@ Closeout:
 - Exploration: `X1` produced 1 follow-up UX task, no functional failures
 ```
 
-Mutation targets are execution work, not durable task specification. The verdict table and survivor lines are the only mutation content in `tasks.md`; the full mutation table lives in the `.output` report.
+Mutation targets are execution work, not durable task specification. The verdict table and survivor lines are the only mutation content in the per-task file; the full mutation table lives in the `.output` report.

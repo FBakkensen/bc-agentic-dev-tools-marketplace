@@ -11,7 +11,7 @@ Read `${CLAUDE_SKILL_DIR}/../../references/overview.md` and emit verbatim. No fr
 
 ## Power model
 
-Read `references/overview.md`. Write nothing. Inspect no repo state — not `tasks.md`, not the branch, not recent commits, not the codebase. Pure static emit is the design rationale: this skill answers "what does the plugin contain", `/al-steer` answers "what should I do right now". Mixing the two collapses the seam.
+Read `references/overview.md`. Write nothing. Inspect no repo state — not the `tasks/` folder, not the branch, not recent commits, not the codebase. Pure static emit is the design rationale: this skill answers "what does the plugin contain", `/al-steer` answers "what should I do right now". Mixing the two collapses the seam.
 
 ## When NOT to fire
 

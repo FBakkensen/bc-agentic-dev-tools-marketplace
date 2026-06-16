@@ -202,7 +202,7 @@ Situation → action:
 
 ## Composition
 
-- `/al-implement` — calls this after every RED, GREEN, `/al-refactor`, before marking `[x]`. Use `-UnitTestOnly` for RED→GREEN inner loop when `unitTestApp` configured; use full gate before committing.
+- `/al-implement` — calls this after every RED, GREEN, `/al-refactor`, before flipping the task `status:` to `done`. Use `-UnitTestOnly` for RED→GREEN inner loop when `unitTestApp` configured; use full gate before committing.
 - `/al-debug-logging` — consumes `telemetry.jsonl` produced here (in per-app subfolders).
 - `pwsh "<skill-folder>/scripts/init.ps1"`, `pwsh "<skill-folder>/scripts/provision.ps1"` — one-time setup before this skill is usable.
 

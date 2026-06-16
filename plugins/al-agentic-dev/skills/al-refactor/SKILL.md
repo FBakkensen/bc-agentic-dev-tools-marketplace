@@ -13,7 +13,7 @@ Reshape AL so modules that earn their keep deepen and the ones that don't dissol
 
 - Build green. Refactor against red build is debug → belongs in `/al-implement`.
 - Called from `/al-implement` after green on current task, OR standalone on legacy code.
-- Standalone: branch matches `^\d{3}-` with `specs/<branch>/tasks.md`, OR pure legacy reshape with no calling task. Calling task `blocked` → run `/al-steer`.
+- Standalone: branch matches `^\d{3}-` with `specs/<branch>/tasks/`, OR pure legacy reshape with no calling task. Calling task `blocked` → run `/al-steer`.
 - Legacy-code mode (no covering tests): write baseline tests first; reshape without regression signal is speculation. See [legacy-refactor-plan.md](references/legacy-refactor-plan.md).
 
 ## What you answer before reshape
@@ -69,7 +69,7 @@ One reshape at a time, `/al-build` after each. Red → revert that step; recover
 
 ## Lens 2, BC-specific via bc-code-intelligence
 
-`find_bc_knowledge` with a BC-specific query → drop noise (`parker-pragmatic/*`, `*/recommend-*`, off-domain) → `get_bc_topic` on the top-ranked on-domain survivors → match each `anti_pattern_indicator` against the diff yourself. Fetch fewer than `/al-code-review` does: refactor acts only on structural anti-patterns worth fixing this same pass, which keeps cost per TDD cycle low. Cache topics within one lens run, fresh fetch across invocations. Non-structural concerns the MCP surfaces (AppSource compliance, publisher/subscriber contracts beyond structural reshape) belong to `/al-code-review`; surface as out-of-scope notes in calling task block, do not act here. Vanilla cannot replace this: `SetLoadFields` after `SetRange` is a syntactically valid call that BC's query-execution order makes ineffective — connascence of execution order ([LANGUAGE.md](../../references/LANGUAGE.md)).
+`find_bc_knowledge` with a BC-specific query → drop noise (`parker-pragmatic/*`, `*/recommend-*`, off-domain) → `get_bc_topic` on the top-ranked on-domain survivors → match each `anti_pattern_indicator` against the diff yourself. Fetch fewer than `/al-code-review` does: refactor acts only on structural anti-patterns worth fixing this same pass, which keeps cost per TDD cycle low. Cache topics within one lens run, fresh fetch across invocations. Non-structural concerns the MCP surfaces (AppSource compliance, publisher/subscriber contracts beyond structural reshape) belong to `/al-code-review`; surface as out-of-scope notes in the calling task file, do not act here. Vanilla cannot replace this: `SetLoadFields` after `SetRange` is a syntactically valid call that BC's query-execution order makes ineffective — connascence of execution order ([LANGUAGE.md](../../references/LANGUAGE.md)).
 
 ## Lens 3, structural shape
 
@@ -108,7 +108,7 @@ Citation chain: when a rename pulls a BC name or verb from outside the codebase,
 
 **No new behaviour.** Diff leaves observable behaviour identical. New behaviour belongs to `/al-implement` (new task) or `/al-refine` (re-plan).
 
-Standalone mode emits Gate report once at module / pattern / seam altitude (not procedure level), naming application invariant preserved and user's call; inside `/al-implement`, findings fold into the task Gate report. `/al-refactor` does not edit `architecture.md` and writes no Notes by default; `tasks.md` touched only when an operational outcome demands it, surgical-edit contract is the comment-line `task=` + `status=` keys per [markdown-spec-discipline.md](../../references/markdown-spec-discipline.md). See [voice-contract.md](../../references/voice-contract.md).
+Standalone mode emits Gate report once at module / pattern / seam altitude (not procedure level), naming application invariant preserved and user's call; inside `/al-implement`, findings fold into the task Gate report. `/al-refactor` does not edit `architecture.md` and writes no Notes by default; a task file under `tasks/` is touched only when an operational outcome demands it, surgical-edit contract is locating the task by its `T-MMM` filename and editing the `status:` frontmatter line per [markdown-spec-discipline.md](../../references/markdown-spec-discipline.md). See [voice-contract.md](../../references/voice-contract.md).
 
 ## Composition
 

@@ -1,22 +1,22 @@
 ---
 name: al-implement
-description: Pick a `ready-for-implementation` technical task from `tasks.md` and drive it through TDD for AL/Business Central. Use after `/al-refine`, one task per session, Unit AAA cases first, then Integration AAA cases, then refactor and task-end mutation.
+description: Pick a `ready-for-implementation` technical task from the `tasks/` folder and drive it through TDD for AL/Business Central. Use after `/al-refine`, one task per session, Unit AAA cases first, then Integration AAA cases, then refactor and task-end mutation.
 ---
 
 **Style:** Concise — cut filler, keep grammar. Opinionated — pick a side. Arrows (→) for causality. Technical terms exact, code and errors quoted verbatim.
 
 # /al-implement, Pick a task, run TDD
 
-Pick next `ready-for-implementation` technical task from `tasks.md`. Consume its fresh `Test Specification`. Drive AAA cases red → green: `Unit` first, `Integration` second. Reconcile final procedure names and scopes in `tasks.md`. Refactor full task diff once. Mutate at task end. Flip status to `done` when downstream evidence exists. One task per session.
+Pick next `ready-for-implementation` technical task from the `tasks/` folder. Consume its fresh `Test Specification`. Drive AAA cases red → green: `Unit` first, `Integration` second. Reconcile final procedure names and scopes in the task file. Refactor full task diff once. Mutate at task end. Flip status to `done` when downstream evidence exists. One task per session.
 
 **Layer.** The red-first driver at the Unit + Integration layers (see [`test-strategy.md`](../../references/test-strategy.md)): the cheapest sensitive layer where bugs get pinned. A production bug a higher layer surfaces is pushed down to this layer so the proof lives where an oracle can see it.
 
 ## Preconditions
 
 - Branch matches `^\d{3}-`. If not: **Stop**. Run `/al-event-model` (or `/al-design` for backend-only).
-- `specs/<branch>/` holds `tasks.md` + `architecture.md`. Missing → `/al-design`.
-- Target task `kind=technical`. `kind=verify` → **Stop**; route via `/al-steer` or `/al-code-review` based on verification state. `kind=provision` → `/al-provision`; `kind=breaking-change` → `/al-validate-breaking-changes` (ops tasks, run-and-flip, never reach `ready-for-implementation`).
-- Target task `status=ready-for-implementation` with populated `Test Specification`. Plain `ready` → **Stop**, `/al-refine T-NNN`. `ready-for-implementation` with empty or missing `Test Specification` → **Stop**, `/al-steer`; status and proof disagree. `blocked` → `/al-steer`. `done` → downstream evidence exists; do not reopen here.
+- `specs/<branch>/` holds the `tasks/` folder + `architecture.md`. Missing → `/al-design`.
+- Target task `kind: technical`. `kind: verify` → **Stop**; route via `/al-steer` or `/al-code-review` based on verification state. `kind: provision` → `/al-provision`; `kind: breaking-change` → `/al-validate-breaking-changes` (ops tasks, run-and-flip, never reach `ready-for-implementation`).
+- Target task `status: ready-for-implementation` with populated `Test Specification`. Plain `ready` → **Stop**, `/al-refine T-NNN`. `ready-for-implementation` with empty or missing `Test Specification` → **Stop**, `/al-steer`; status and proof disagree. `blocked` → `/al-steer`. `done` → downstream evidence exists; do not reopen here.
 - Read [`test-specification.md`](../../references/test-specification.md), [`test-strategy.md`](../../references/test-strategy.md), [`tdd.md`](../../references/tdd.md), [`test-layout.md`](../../references/test-layout.md) (which test app a case lands in, plus the authoring contract: attributes, `Initialize()`, doubles location, library discipline), and [`testability.md`](../../references/testability.md).
 - Read [`voice-contract.md`](../../references/voice-contract.md) (BC vocabulary + evidence bar + Gate report shape) and [`bc-code-intelligence-dispatch.md`](../../references/bc-code-intelligence-dispatch.md) (write-time construct lookup). Production names and signatures arrive minted in the task's `New and Modified Objects`; construct lookups stay this skill's own. Both reads arrive before code, not at refactor.
 
@@ -27,7 +27,7 @@ Pick next `ready-for-implementation` technical task from `tasks.md`. Consume its
 - **Which AL surface lands?** Read the task's `New and Modified Objects`; build against its signatures. The section names production surface only — test codeunits and test procedures are this skill's to mint. In-object drift — procedure rename, parameter change, visibility flip, helper procedure, field addition on a named object — absorb, reconcile the section to actuals before `done`, note drift in `Contract notes`; no drift → no edit.
 - **Which AAA cases land?** Traverse `Unit` cases first, then `Integration`, in coverage-ID order. One case red → green before the next.
 - **Which BC names and constructs verified this session?** Every exact BC-specific name in the AAA case or implementation path, and every BC construct class it touches, meets the evidence bar in [voice-contract.md](../../references/voice-contract.md): names via workspace hit or quoted fetch, constructs via fetched topic or quoted Learn passage.
-- **What flips at end?** `status=` goes `ready-for-implementation` → `done` on the comment-anchor line; final full `/al-build` green. User/API-facing slice-done opens the slice verify task to `ready` for `/al-refine`. Backend-only slice-done announces `/al-code-review` per-slice. Feature-done announces `/al-code-review` per-feature.
+- **What flips at end?** `status:` goes `ready-for-implementation` → `done` on the task file's frontmatter line; final full `/al-build` green. User/API-facing slice-done opens the slice verify task to `ready` for `/al-refine`. Backend-only slice-done announces `/al-code-review` per-slice. Feature-done announces `/al-code-review` per-feature.
 
 Unanswerable question → task not ready. Resolve via `/al-research`, `/al-refine`, or `/al-steer`.
 
@@ -45,7 +45,7 @@ Default order:
 4. Full gate.
 5. Task-end mutation for non-trivial work.
 
-Exception: when a Unit seam should exist but current code is tangled, write an Integration characterization test first to anchor behaviour, then extract the Unit seam and add the Unit case. Reconcile scope changes in `tasks.md`.
+Exception: when a Unit seam should exist but current code is tangled, write an Integration characterization test first to anchor behaviour, then extract the Unit seam and add the Unit case. Reconcile scope changes in the task file.
 
 ### Evidence before RED, names and constructs
 
@@ -61,20 +61,20 @@ See [testability.md](../../references/testability.md) for three-phase decoupling
 
 `Scope: Unit` → `/al-build -UnitTestOnly` when supported. `Scope: Integration` → full `/al-build`. Final closeout always uses full `/al-build`.
 
-AL Runner ERROR / exit 2 routes cheapest-first: review test (adjust unsupported call) → refactor production behind seam so unsupported call moves behind stub → reclassify as `Integration` and update `tasks.md`. Reclassification last because it grows container surface. Run `al-runner --guide` when unsupported feature is unclear.
+AL Runner ERROR / exit 2 routes cheapest-first: review test (adjust unsupported call) → refactor production behind seam so unsupported call moves behind stub → reclassify as `Integration` and update the task file. Reclassification last because it grows container surface. Run `al-runner --guide` when unsupported feature is unclear.
 
 ### Reconcile task spec before done
 
-Before `done`, update the task block so it reflects actual proof:
+Before `done`, update the task file so it reflects actual proof:
 
 - AAA header matches actual `Procedure`.
 - `Procedure:` matches actual AL test procedure name.
 - `Covered By` names actual AL test procedures only.
 - `Covers:` references real `B#` / `R#`.
-- `Scope:` is final. Any scope change is edited back into `tasks.md`.
+- `Scope:` is final. Any scope change is edited back into the task file.
 - `New and Modified Objects` matches the actual diff: objects, fields, signatures, visibility, R → P → W letters.
 - Completed task keeps final `Test Specification`.
-- Implementation discoveries land in `Contract notes` as new bullets, one fact per landing line — never spliced onto an existing bullet, never a `;`-chained paragraph. How a decision was reached goes to the commit message, not the task block.
+- Implementation discoveries land in `Contract notes` as new bullets, one fact per landing line — never spliced onto an existing bullet, never a `;`-chained paragraph. How a decision was reached goes to the commit message, not the task file.
 - `Researched:` citations from this task land as `Contract notes` bullets (the evidence-bar trace, [voice-contract.md](../../references/voice-contract.md)) — skipped research stays visible to `/al-code-review` and the next session.
 - Closeout follows the [test-specification.md](../../references/test-specification.md) shape: pyramid bullets plus the mutation verdict table with labeled `Survivor:` / `Why kept:` lines.
 
@@ -96,7 +96,7 @@ New objects get IDs via available allocator. Shipped fields never rename in plac
 
 ### Replan halts planning, not code
 
-Eight triggers run as gate after mutation, before `done`. Trigger invalidates plan → flip `status=blocked` on the comment-anchor line, route to `/al-steer`. Trigger is new info plan absorbs → note inside task block and continue. Record trigger ID + one-line reason.
+Eight triggers run as gate after mutation, before `done`. Trigger invalidates plan → flip `status: blocked` on the task file's frontmatter line, route to `/al-steer`. Trigger is new info plan absorbs → note inside task body and continue. Record trigger ID + one-line reason.
 
 | # | Trigger | Detect |
 |---|---|---|
@@ -117,18 +117,18 @@ Before flipping task to `done`, call `advisor()`. Final correctness check on imp
 
 </claude-only>
 
-Flip surface: edit anchored on the comment line `<!-- task=T-NNN status=... slice=... kind=... -->`. Status flip swaps the `status=` value byte-exact:
+Flip surface: locate the task file by its `T-MMM` filename (e.g. `tasks/070-T-007-derive-audit-reason.md`) and edit anchored on its `status:` frontmatter line. Status flip swaps the `status:` value byte-exact:
 
 ```markdown
-old_string: <!-- task=T-007 status=ready-for-implementation slice=release-sales-order kind=technical -->
-new_string: <!-- task=T-007 status=done slice=release-sales-order kind=technical -->
+old_string: status: ready-for-implementation
+new_string: status: done
 ```
 
-Heading marker stays in sync (`[>]` → `[x]`) but is fallback rendering, not the anchor. Everything else inside task block follows the task shape. See [notes-discipline.md](../../references/notes-discipline.md), [markdown-spec-discipline.md](../../references/markdown-spec-discipline.md), [voice-contract.md](../../references/voice-contract.md).
+Everything else inside the task body follows the task shape. See [notes-discipline.md](../../references/notes-discipline.md), [markdown-spec-discipline.md](../../references/markdown-spec-discipline.md), [voice-contract.md](../../references/voice-contract.md).
 
 ### Gate report at done
 
-The `done` flip is a gate event: emit the four-line Gate report (Did / Was / Fits / Next) per [voice-contract.md](../../references/voice-contract.md). Mechanics — procedure names, RED/GREEN beats, mutant IDs, build counts, commit hashes — live in commits and the task block; the user pulls detail by asking. No "What landed" / "Things you should know" dumps; invented closeout shapes are how the highest-traffic gate drifts into ceremony.
+The `done` flip is a gate event: emit the four-line Gate report (Did / Was / Fits / Next) per [voice-contract.md](../../references/voice-contract.md). Mechanics — procedure names, RED/GREEN beats, mutant IDs, build counts, commit hashes — live in commits and the task file; the user pulls detail by asking. No "What landed" / "Things you should know" dumps; invented closeout shapes are how the highest-traffic gate drifts into ceremony.
 
 At user/API-facing slice-done, flip the slice verify task from `blocked` to `ready` only when every in-slice technical dependency is `done` and no replan flag remains. That opens `/al-refine` to write the fresh `Verification Plan`. Do not run `/al-code-review` until the verify task is `ready-for-verification`.
 
@@ -136,7 +136,7 @@ At user/API-facing slice-done, flip the slice verify task from `blocked` to `rea
 
 | | |
 |---|---|
-| **Runs after**     | `/al-refine` (filled `Test Specification` in `tasks.md` and flipped task to `ready-for-implementation`) |
+| **Runs after**     | `/al-refine` (filled `Test Specification` in the task file and flipped task to `ready-for-implementation`) |
 | **Hands off to**   | next `ready-for-implementation` technical task; `/al-refine` on the slice verify task at user/API-facing slice-done; `/al-code-review` per-slice for backend-only slice-done; `/al-code-review` per-feature at feature-done |
 | **Replan venue**   | `/al-steer` |
 | **Sidebands**      | `/al-research` (evidence-bar escalation: source conflict, design-artifact fact), `/al-debug-logging` (execution path unclear), `/grill-me` (judgement needs user), `/bc-standard-reference` (BaseApp questions) |

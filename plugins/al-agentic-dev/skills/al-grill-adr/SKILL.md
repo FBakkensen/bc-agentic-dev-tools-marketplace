@@ -13,7 +13,7 @@ Interview the user about domain intent, one question at a time, cross-referencin
 
 Writes only `CONTEXT.md` and accepted domain ADRs under `docs/adr/`.
 
-May read implementation, app, test, and code artifacts to expose domain conflicts. Never edit them. Never write `event-model.md`, `architecture.md`, or `tasks.md`.
+May read implementation, app, test, and code artifacts to expose domain conflicts. Never edit them. Never write `event-model.md`, `architecture.md`, or the `tasks/` folder.
 
 Journey pressure → hand off to `/al-event-model`. Architecture, object responsibility, task, proof, or implementation pressure → hand off to `/al-design` or the downstream owning skill.
 

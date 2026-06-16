@@ -17,7 +17,7 @@ Writes only `architecture.md`.
 
 May define production architecture, AL object responsibilities, module boundaries, seams, events, R → P → W flow, testability constraints, and seam expectations.
 
-Never write `tasks.md`. Never write task-level AAA cases, `Test Specification`, `Verification Plan`, Journey Examples, Contract Examples, Exploration Charters, verification journeys, or task proof. `/al-scope` owns `tasks.md`; `/al-refine` owns task-level proof shape.
+Never write the `tasks/` folder. Never write task-level AAA cases, `Test Specification`, `Verification Plan`, Journey Examples, Contract Examples, Exploration Charters, verification journeys, or task proof. `/al-scope` owns the `tasks/` folder; `/al-refine` owns task-level proof shape.
 
 ## Preconditions
 

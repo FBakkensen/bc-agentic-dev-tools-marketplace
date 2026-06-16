@@ -1,6 +1,6 @@
 ---
 name: al-user-verification
-description: Guide the user through one slice's `ready-for-verification` verify task in tasks.md for AL/Business Central. User drives the browser and reports observations; agent runs containers, publish, pre-flight, and Contract checks, asks one check at a time, records, and routes. Functional outcomes gate, usability observations become findings → tasks; ask-before-reveal + al-second-opinion coverage review guard against leading the witness.
+description: Guide the user through one slice's `ready-for-verification` verify task in the `tasks/` folder for AL/Business Central. User drives the browser and reports observations; agent runs containers, publish, pre-flight, and Contract checks, asks one check at a time, records, and routes. Functional outcomes gate, usability observations become findings → tasks; ask-before-reveal + al-second-opinion coverage review guard against leading the witness.
 ---
 
 **Style:** Concise — cut filler, keep grammar. Opinionated — pick a side. Arrows (→) for causality. Technical terms exact, code and errors quoted verbatim.
@@ -9,15 +9,15 @@ description: Guide the user through one slice's `ready-for-verification` verify 
 
 Pick a `ready-for-verification` verify task. Run its fresh `Verification Plan`: pre-flight E2E recordings, execute Contract examples with the named client/harness, then guide the user through E2E examples and Exploration charters in their own browser — one instruction at a time, agent records the answers and routes. All functional-pass + required pre-flight checks + second-opinion-reconciled → flip `done`, hand off to the next slice's technical tasks (or `/al-code-review` per-feature if this was the last slice). Any functional fail → flip `blocked`, record inline, route to `/al-steer` with trigger #8.
 
-**User is the runner; agent is the guide.** The agent operates everything mechanical — container spawns, publish, pre-flight regression batch, Contract examples, status flips, the transcript — and turns each Journey Example / Exploration Charter into single concrete instructions the user performs in the BC Web Client. The user's eyes are the oracle; the user never reads `tasks.md` or the plan grammar — they click, look, and answer. No AL writes, no `/al-build` run, no codebase walk (page-ID and option/enum value-range lookups — for deep links and structured questions — permitted). Two outcome dimensions split by *checking vs testing*: **functional/observable** outcomes (a Status value, a cue count, an HTTP status, an error) are *checked* — read off the screen by the user — and **gate** the verify task; **subjective usability** outcomes (clunky, unclear, flow isn't one motion) are *sapient testing* → **findings → tasks**, never a gate. Two guards against leading the witness: **ask-before-reveal** (the agent asks what the user sees before naming the expected value), and `/al-second-opinion` reviews the written verdict for coverage (every check asked and answered with an observed value).
+**User is the runner; agent is the guide.** The agent operates everything mechanical — container spawns, publish, pre-flight regression batch, Contract examples, status flips, the transcript — and turns each Journey Example / Exploration Charter into single concrete instructions the user performs in the BC Web Client. The user's eyes are the oracle; the user never reads the task file or the plan grammar — they click, look, and answer. No AL writes, no `/al-build` run, no codebase walk (page-ID and option/enum value-range lookups — for deep links and structured questions — permitted). Two outcome dimensions split by *checking vs testing*: **functional/observable** outcomes (a Status value, a cue count, an HTTP status, an error) are *checked* — read off the screen by the user — and **gate** the verify task; **subjective usability** outcomes (clunky, unclear, flow isn't one motion) are *sapient testing* → **findings → tasks**, never a gate. Two guards against leading the witness: **ask-before-reveal** (the agent asks what the user sees before naming the expected value), and `/al-second-opinion` reviews the written verdict for coverage (every check asked and answered with an observed value).
 
 **Layer.** Owns E2E pre-flight, Contract checks, and the exploratory layer (see [`test-strategy.md`](../../references/test-strategy.md)). Per checking-vs-testing: functional outcomes gate; subjective usability is findings → tasks. The user is the direct sapient oracle; `/al-second-opinion` guards coverage and routing, not their eyes.
 
 ## Preconditions
 
 - Branch matches `^\d{3}-`. If not: **Stop**. Verify task only exists inside in-flight feature.
-- `specs/<branch>/tasks.md` holds `kind=verify` task with `status=ready-for-verification` and populated `Verification Plan`. Plain `ready` → **Stop**, `/al-refine T-NNN`. `ready-for-verification` with an empty plan → **Stop**, `/al-steer`; status and proof disagree. `blocked` → `/al-steer`. `done` → downstream evidence exists; do not reopen here.
-- `review=clean` present on the verify task's comment-anchor line. `status=ready-for-verification` alone means only that `/al-refine` wrote fresh proof — the byte reads identically before and after review; the marker is the durable clean per-slice `/al-code-review` evidence. Missing → **Stop**, re-enter via `/al-code-review T-NNN` (or `/al-implement` if technical tasks are still open), not here.
+- `specs/<branch>/tasks/` holds a `kind: verify` task with `status: ready-for-verification` and populated `Verification Plan`. Plain `ready` → **Stop**, `/al-refine T-NNN`. `ready-for-verification` with an empty plan → **Stop**, `/al-steer`; status and proof disagree. `blocked` → `/al-steer`. `done` → downstream evidence exists; do not reopen here.
+- `review: clean` present in the verify task's frontmatter. `status: ready-for-verification` alone means only that `/al-refine` wrote fresh proof — the byte reads identically before and after review; the field is the durable clean per-slice `/al-code-review` evidence. Missing → **Stop**, re-enter via `/al-code-review T-NNN` (or `/al-implement` if technical tasks are still open), not here.
 - `event-model.md` present alongside; verify tasks only exist for user/API-facing features. Verify task without `event-model.md` → contract violation, **Stop**, route to `/al-steer`.
 - Read [`test-specification.md`](../../references/test-specification.md) and [`test-strategy.md`](../../references/test-strategy.md) before guiding; this skill consumes the `Verification Plan` grammar and layer rules.
 - Inline partial-run record present → resume at example granularity (see *Partial walks* below): completed examples stay closed, the in-flight example restarts from its first action. No partial-run record → start from the first example. Status is `ready-for-verification` in both cases; the inline record is the differentiator.
@@ -34,7 +34,7 @@ Three `new-agent-container.ps1` spawns per cycle. Fresh-each-time discipline iso
 **Spawn #1 (pre-flight).** `new-agent-container.ps1` → `publish-apps.ps1` → `pagescript-replay.ps1` (batch mode, every `pagescripts/recordings/*.yml`) when E2E recordings exist. Catches both current-slice regressions and cross-slice collisions before the user spends a minute walking.
 
 - Green → continue to spawn #2.
-- Red → flip verify task `status=blocked`, record `**Replan flag**: trigger #4` for any prior-slice `.yml` red, `**Replan flag**: trigger #8` for current-slice red. Route `/al-steer T-NNN`. Run spawn #3 for cleanup and exit.
+- Red → flip verify task `status: blocked`, record `**Replan flag**: trigger #4` for any prior-slice `.yml` red, `**Replan flag**: trigger #8` for current-slice red. Route `/al-steer T-NNN`. Run spawn #3 for cleanup and exit.
 - No `.yml` recordings at all → skip spawn #1 entirely; spawn #2 publishes to its own fresh container.
 
 **Spawn #2 (contract check + guided walk).** Only on pre-flight green. `new-agent-container.ps1` → `publish-apps.ps1` → Contract examples (agent-run, no user involvement; re-run on every spawn #2) → guided walk when walkable scope exists.
@@ -55,11 +55,11 @@ Spawn invocations:
 
 ## What this session answers
 
-- **Which slice in flight?** One `T-NNN` of `kind=verify`, named in opener with its `slice=` value and matching `event-model.md` timeline step.
+- **Which slice in flight?** One `T-NNN` of `kind: verify`, named in opener with its `slice:` value and matching `event-model.md` timeline step.
 - **What is the user exercising?** Read `Verification Plan`: `Journey Examples`, `Contract Examples`, and `Exploration Charters`. Agent translates each into single instructions; the user performs and reports. Contract examples run agent-side.
 - **Did every checkable example functionally pass?** Per `E2E` example, the user reports the observed value; the agent records observed-vs-expected verbatim from the user's words. Per `Contract` example, the agent executes and matches `Observable Checks` against captured output.
 - **What usability findings surfaced?** Any friction the user mentions in their own words (clunky flow, unclear label, slow refresh) — agent classifies, records as findings, routes to tasks, **not** gating.
-- **What flips at end?** `status=` goes `ready-for-verification` → `done` on full functional-pass (+ batch-green + second-opinion reconciled) or `blocked` on first functional fail. No partial-pass state and no `in-progress` status.
+- **What flips at end?** `status:` goes `ready-for-verification` → `done` on full functional-pass (+ batch-green + second-opinion reconciled) or `blocked` on first functional fail. No partial-pass state and no `in-progress` status.
 
 Unanswerable → halt. *"User can't reach the container URL"* → **Stop**, fix environment, re-enter. *"The sandbox is down"* → **Stop**, fix environment, re-enter. *"The example references a page/API/client that doesn't exist"* → trigger #8, route to `/al-steer`.
 
@@ -85,13 +85,13 @@ User reports an unexpected surface mid-walk (flicker, sudden navigation, wrong p
 
 Pre-flight batch surfaces failures BEFORE the user is invited in. Two failure shapes; both route to `/al-steer` but the trigger names what `/al-steer` is being asked to triage.
 
-- **Current slice's `.yml` red.** The recording `/al-page-script` just generated and committed fails on a fresh container. `/al-page-script`'s example-by-example inner loop ran replay-validation per example, so a current-slice pre-flight red means the failure didn't surface inside that loop — likely a non-deterministic recording (timing-dependent assertion, flaky locator), or a real regression introduced between `/al-page-script`'s green and `/al-user-verification`'s entry (a hotfix commit, a CI republish of a different version). Flag `**Replan flag**: trigger #8 (verification failed)`. `/al-steer` triages: re-author the Journey Example (rewrite via `/al-refine`) if the recording is fragile, or insert a `Fixes:` task in the current slice if a real defect surfaced.
+- **Current slice's `.yml` red.** The recording `/al-page-script` just generated and committed fails on a fresh container. `/al-page-script`'s example-by-example inner loop ran replay-validation per example, so a current-slice pre-flight red means the failure didn't surface inside that loop — likely a non-deterministic recording (timing-dependent assertion, flaky locator), or a real regression introduced between `/al-page-script`'s green and `/al-user-verification`'s entry (a hotfix commit, a CI republish of a different version). Flag `**Replan flag**: trigger #8 (verification failed)`. `/al-steer` triages: re-author the Journey Example (rewrite via `/al-refine`) if the recording is fragile, or insert a `fixes:` task in the current slice if a real defect surfaced.
 
-- **Prior slice's `.yml` red.** A recording from an earlier slice's verify task fails on the current slice's published code. Current slice introduced a change that broke the prior slice's user-facing surface — a renamed action, removed field, altered factbox refresh shape, changed Status-flip behaviour. Flag `**Replan flag**: trigger #4 (sibling now wrong)`. `/al-steer` triages: regenerate the prior slice's `.yml` via `/al-page-script` if the surface change was intentional (the prior recording is stale, not wrong), rewrite the prior slice's Verification Plan via `/al-refine` if the change invalidates the user-facing contract, or insert a `Fixes:` task in the current slice if the surface change was unintentional regression. Re-opening a prior slice's verify task is a `/al-steer` decision, not this skill's.
+- **Prior slice's `.yml` red.** A recording from an earlier slice's verify task fails on the current slice's published code. Current slice introduced a change that broke the prior slice's user-facing surface — a renamed action, removed field, altered factbox refresh shape, changed Status-flip behaviour. Flag `**Replan flag**: trigger #4 (sibling now wrong)`. `/al-steer` triages: regenerate the prior slice's `.yml` via `/al-page-script` if the surface change was intentional (the prior recording is stale, not wrong), rewrite the prior slice's Verification Plan via `/al-refine` if the change invalidates the user-facing contract, or insert a `fixes:` task in the current slice if the surface change was unintentional regression. Re-opening a prior slice's verify task is a `/al-steer` decision, not this skill's.
 
 Mixed-red (both current AND prior slices red) is one root cause more often than two; transcript names every failed `.yml`, both flags stamped, `/al-steer` picks one.
 
-Flip `status=blocked` on the comment-anchor line, stripping `review=clean` in the same Edit, sync heading marker to `[!]`. Run spawn #3 for cleanup before exiting.
+Flip `status: blocked` on the verify task file's frontmatter line, stripping `review: clean` in the same Edit. Run spawn #3 for cleanup before exiting.
 
 ### Functional fail: stop the example, flip blocked, route
 
@@ -100,20 +100,24 @@ First functional fail in any E2E/Contract example, or functional failure during 
 - E2E/Exploration fail → ask the user to save a screenshot under `.output/verification/T-NNN/` (gitignored; agent cannot persist a chat-pasted image) and reference that path in the inline record so `/al-steer` finds it in a later session.
 - Contract fail → captured request/response is the evidence; no screenshot needed.
 
-Record inside the task block:
+Record inside the task file:
 
 - Which example (`V#`, `C#`, or `X#`) and which step/check/prompt.
 - Observed vs expected, verbatim from the user's report (or captured client output), with any saved screenshot referenced by its `.output/verification/T-NNN/` path.
 - `**Replan flag**: trigger #8 (verification failed)`.
 
-Flip `status=blocked` on the task's comment-anchor line, sync heading marker to `[!]`. The flip strips `review=clean` in the same Edit — the live line carries the marker (this skill's precondition required it); anchoring on a marker-less form fails the byte match. Edit shape:
+Flip `status: blocked` on the verify task file's frontmatter, stripping `review: clean` in the same write — the precondition required the `review: clean` line, so the flip must delete it (a stale `review: clean` would vouch for a diff it never saw). Either two Edits in the same write or regenerate the frontmatter block whole. Edit shape:
 
 ```
-old_string: <!-- task=T-NNN status=ready-for-verification slice=<slug> kind=verify review=clean -->
-new_string: <!-- task=T-NNN status=blocked slice=<slug> kind=verify -->
+old_string: status: ready-for-verification
+new_string: status: blocked
+```
+```
+old_string: review: clean
+new_string: (line deleted)
 ```
 
-Announce route to `/al-steer T-NNN`. `/al-steer` decides between defect (insert `Fixes:` task in same `slice=`), wrong Verification Plan (rewrite via `/al-refine`), wrong slice boundary (split via `/al-scope`). This skill does not propose the fix; surface failure and stop. A usability finding is **never** a functional fail — it does not stop the walk or block the gate.
+Announce route to `/al-steer T-NNN`. `/al-steer` decides between defect (insert `fixes:` task in same `slice:`), wrong Verification Plan (rewrite via `/al-refine`), wrong slice boundary (split via `/al-scope`). This skill does not propose the fix; surface failure and stop. A usability finding is **never** a functional fail — it does not stop the walk or block the gate.
 
 ### Second opinion before the gate
 
@@ -123,9 +127,9 @@ All checkable examples pass → before flipping `done`, run `/al-second-opinion`
 
 - **Check passes** → move to next check.
 - **Last check of example** → append the example's line to the inline partial-run record (example ID, verdict, observed values, exact questions as posed — the second-opinion artifact needs them verbatim, and a session boundary erases the chat transcript). Then move to next example/charter. Incremental append is what makes interruption survivable.
-- **All checkable examples pass + pre-flight green + second-opinion reconciled** → flip `status=done` on the comment-anchor line, stripping `review=clean` in the same Edit. Sync heading marker to `[x]`. Collapse the inline partial-run record into the Closeout shape from [`test-specification.md`](../../references/test-specification.md).
-- **Usability findings** → materialise as candidate tasks in the slice (`ready`, `kind=technical`). Non-gating; `/grill-me` adjudicates ambiguous ones. They queue *after* the next slice's opened tasks unless the user promotes one.
-- **Next slice** → flip every technical task in the next slice (whose first task carries `Depends on:` this verify task) from `blocked` to `ready`. Cross-slice gate is the only mechanism that opens the next slice; without this flip the pipeline stalls.
+- **All checkable examples pass + pre-flight green + second-opinion reconciled** → flip `status: done` on the verify task file's frontmatter line, stripping `review: clean` in the same write. Collapse the inline partial-run record into the Closeout shape from [`test-specification.md`](../../references/test-specification.md).
+- **Usability findings** → materialise as candidate task files in the slice, named `NNN-T-MMM-<slug>.md` with a fresh `T-MMM` id and a run-order prefix picked per the gap rule in [`markdown-spec-discipline.md`](../../references/markdown-spec-discipline.md), frontmatter `status: ready`, `kind: technical`, same `slice:`. Non-gating; `/grill-me` adjudicates ambiguous ones. They queue *after* the next slice's opened tasks unless the user promotes one.
+- **Next slice** → flip every technical task in the next slice (whose first task carries `depends_on:` this verify task) from `blocked` to `ready`. Cross-slice gate is the only mechanism that opens the next slice; without this flip the pipeline stalls.
 
 Run the Gate report. The gate flips on the user's own reported observations (Contract-only: captured client output); the user can halt or veto at any step.
 
@@ -135,7 +139,7 @@ Session interrupted mid-walk leaves the verify task at `ready-for-verification` 
 
 ## Gate event
 
-Once when the verify task flips to `done`. Gate report names slice (slug + `event-model.md` step), what the user confirmed (Contract-only: what the client output confirmed) in BC vocabulary (Role action, Business Event, View state, Status value, API/client result), the usability findings surfaced (→ candidate tasks), the evidence (transcript + any saved screenshots), the second-opinion outcome (reconciled / skipped), next handoff: `/al-refine` on first technical task of next slice; or, if this was the last slice, **open the `kind=breaking-change` task `blocked` → `ready`** (its `Depends on:` this verify task is now satisfied — this skill is its named flip-owner) and hand off to `/al-validate-breaking-changes`, then `/al-code-review` per-feature.
+Once when the verify task flips to `done`. Gate report names slice (slug + `event-model.md` step), what the user confirmed (Contract-only: what the client output confirmed) in BC vocabulary (Role action, Business Event, View state, Status value, API/client result), the usability findings surfaced (→ candidate tasks), the evidence (transcript + any saved screenshots), the second-opinion outcome (reconciled / skipped), next handoff: `/al-refine` on first technical task of next slice; or, if this was the last slice, **open the `kind: breaking-change` task `blocked` → `ready`** (its `depends_on:` this verify task is now satisfied — this skill is its named flip-owner) and hand off to `/al-validate-breaking-changes`, then `/al-code-review` per-feature.
 
 Gate report on failure (flipping to `blocked`) is the Stop shape from [voice-contract.md](../../references/voice-contract.md): one stop line naming example / check / observed-vs-expected, state table (verify task ID, examples completed, example blocked on), next action (route to `/al-steer`).
 
@@ -143,8 +147,8 @@ Gate report on failure (flipping to `blocked`) is the Stop shape from [voice-con
 
 | | |
 |---|---|
-| **Runs after**     | `/al-page-script` committed the slice's `.yml` when `Journey Examples` exist, and `/al-code-review` per-slice stamped `review=clean` on the verify task at `ready-for-verification` |
-| **Hands off to**   | next slice's technical tasks opened to `ready` for `/al-refine`; or — if this was the last slice — the `kind=breaking-change` task opened `blocked` → `ready`, then `/al-validate-breaking-changes` (then `/al-code-review` per-feature). `/al-steer` on failure (after `status=blocked`, whether pre-flight red or functional-walk fail). Usability findings → candidate tasks in the slice. |
+| **Runs after**     | `/al-page-script` committed the slice's `.yml` when `Journey Examples` exist, and `/al-code-review` per-slice stamped `review: clean` on the verify task at `ready-for-verification` |
+| **Hands off to**   | next slice's technical tasks opened to `ready` for `/al-refine`; or — if this was the last slice — the `kind: breaking-change` task opened `blocked` → `ready`, then `/al-validate-breaking-changes` (then `/al-code-review` per-feature). `/al-steer` on failure (after `status: blocked`, whether pre-flight red or functional-walk fail). Usability findings → candidate tasks in the slice. |
 | **Uses**           | `new-agent-container.ps1` (three spawns per cycle), `pagescript-replay.ps1` (batch mode for spawn #1's pre-flight), `publish-apps.ps1` (spawn #1, #2 publish before the walk), Web Client deep links + `al-build.json` credentials (the user's entry into the walk), `/al-second-opinion` (coverage review before the gate), [`../../references/test-specification.md`](../../references/test-specification.md) (`Verification Plan` grammar), [`../../references/test-strategy.md`](../../references/test-strategy.md) (layer + checking-vs-testing frame) |
 | **Replan venue**   | `/al-steer` — trigger #4 (pre-flight prior-slice red), trigger #8 (pre-flight current-slice red or functional-walk fail) |
 | **Sidebands**      | `/grill-me` (adjudicate an ambiguous usability finding, or whether an observation matches the expected outcome), `/al-research` (BC surface behaviour to verify against documentation) |
