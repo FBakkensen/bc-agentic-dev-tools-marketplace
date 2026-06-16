@@ -28,7 +28,7 @@ Read the `tasks/` folder, scan `architecture.md`, `event-model.md` when present,
 
 Name entries that need a decision: severity, ID, symptom in codebase's terms (object names, table fields, codeunit calls), one line per entry. Distinguish kinds explicitly:
 
-- **Technical task** (`kind: technical`): `ready` → `/al-refine T-NNN` only. `ready-for-implementation` → `/al-implement T-NNN`. `blocked` → name the missing edge or replan flag. `done` → downstream Unit/Integration/build/mutation evidence exists.
+- **Technical task** (`kind: technical`): `ready` → `/al-refine T-NNN` only. `ready-for-implementation` → `/al-implement T-NNN`. `blocked` reads two ways: with all `depends_on:` `done` and no replan flag, it is a stale open the closing skill should have flipped — open it `ready` and move on, no ceremony, not a steering problem; on an unsatisfied edge or a replan flag, name the missing edge or flag. `done` → downstream Unit/Integration/build/mutation evidence exists.
 
 - **Ops task** (`kind: provision` / `kind: breaking-change`, reserved `slice: provision` / `slice: breaking-change`): `ready` → run its owning skill (`/al-provision` / `/al-validate-breaking-changes`) — never `/al-refine`, no proof artifact. `blocked` reads two ways:
   - **Waiting** (dependency not yet `done`): normal scope-time state. Naming it as a problem is the error; say "waiting on `T-NNN`".
@@ -70,6 +70,8 @@ Patterns the agent learns to recognise, not a checklist to walk. Other skills fl
 ## Trigger response is intent, not mechanics
 
 When trigger means plan is invalid for the task → halt by flipping `status:` to `blocked` in the task file's frontmatter and recording trigger ID + reason inside the task body. When trigger means new information surfaced that does not invalidate plan → leave status alone and note trigger inside the task body. Choice is judgement; fixed enforcement mechanics turn replan into form-filling.
+
+A trigger resting on a tool diagnosis (compile-error class, AL Runner gap, heuristic "structural blocker") is re-confirmed once before the `blocked` flip — a first-pass diagnosis is frequently a cascade artifact (an AL0305 missing-dependency reads as an AL0327 runner gap), and a block recorded on a phantom is the false state the next session inherits and has to unwind. A trigger resting on a recorded fact (`depends_on:`, Goal text, an observed verification mismatch) is acted on as-is.
 
 Opening or inserting a technical task in a slice strips `review: clean` from that slice's verify task in the same edit pass. New slice code invalidates the per-slice review, and the push-down path (page-script red → fix task here) moves no status byte on the verify task — the strip is the only signal that routes the slice back through `/al-code-review` after the fix lands. Lifecycle in [`markdown-spec-discipline.md`](../../references/markdown-spec-discipline.md).
 

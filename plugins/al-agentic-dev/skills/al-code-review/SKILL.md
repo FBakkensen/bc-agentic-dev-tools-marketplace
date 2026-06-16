@@ -72,7 +72,7 @@ Finding bodies live inside each `/grill-me` invocation. Chat surface is chrome o
 |---|---|
 | **Opener** (always)        | One line with count above threshold, plus 3-row scope chip (`**Scope**` / `**Baseline**` / `**Findings**`). One line per failed lens (`4/5 lenses returned, Lens 3 (BC-specific) errored: <reason>`) so user knows review is incomplete before triage. |
 | **Inter-grill chrome** (N>1) | One line per landed decision, `[2/5] noted on T-009 → next`. Skipped when N=1. |
-| **Closer**                 | 3-row mini-summary (`**New tasks**` / `**Notes**` / `**Dropped**`). On abort: partial summary, no resume, untriaged findings die. |
+| **Closer**                 | 4-row mini-summary (`**Fixed inline**` / `**New tasks**` / `**Notes**` / `**Dropped**`). On abort: partial summary, no resume, untriaged findings die. |
 
 ## Auto-grill loop
 
@@ -81,12 +81,13 @@ After confidence pass, skill spawns `/grill-me` per surviving finding automatica
 Per finding:
 
 - **Spawn**: `/grill-me` with finding body (Finding / Where / Source / Severity / Confidence / Slice when per-slice), lens proposal (its `Recommended next`), scope context. Spawn prompt requires grill's first message to open with the finding body verbatim, then a short representative excerpt quoted from each cited `Where` (enough to ground the rule violation, not the full diff), then exploration, then first question — so user sees subject under interrogation before being asked to judge it. Scope chip lives in al-code-review's opener; grill does not re-emit it.
-- **Contract**: three outcomes: new task file in `tasks/`, note on future task, drop.
+- **Contract**: four outcomes: fix inline now, new task file in `tasks/`, note on future task, drop.
 - **References**: pass `${CLAUDE_SKILL_DIR}/../../references/notes-discipline.md` and `${CLAUDE_SKILL_DIR}/../../references/markdown-spec-discipline.md` for writeback shape (new per-task file under `tasks/`, frontmatter shape).
 - **Exit**: when decision lands.
 
-Passing proposal (not raw finding) lets `/grill-me` stress-test whether proposal is right rather than invent one cold. Three outcomes:
+Passing proposal (not raw finding) lets `/grill-me` stress-test whether proposal is right rather than invent one cold. Four outcomes:
 
+- **Fix inline now**: finding is non-semantic — a comment scrub, a *local/private* rename, formatting, or process-noise cleanup that moves no decision logic. Apply, rerun `/al-build` to confirm it stays green, commit as a standalone hygiene fix; if the build reds (a rename collided, a pragma comment mattered), revert and re-triage as new-task / note / drop — never leave the tree red. No task, no `/al-refine`; `review: clean` holds — no technical work opened. Routing a two-line fix through the ledger costs more ceremony than the fix, and "just fix it" is what the user reaches for on a mechanical finding. Anything touching behaviour, a decision, design judgement, or a *public/shipped* surface (a public procedure, table field, or page-action rename is AS0007 territory, not hygiene) is new-task / note / drop. Closer counts it under **Fixed inline** so the fix stays visible.
 - **New task**: create a new per-task file `NNN-T-MMM-<slug>.md` under `tasks/` (next monotonic `T-MMM` id, run-order prefix picked per the `markdown-spec-discipline.md` gap rule) with frontmatter `task: T-MMM`, `status: ready`, `slice: <slug>`, `kind: technical`, an H1 title, and a body carrying `Where` and `Source` as seed for `/al-refine`. Creating a new task writes `ready` because context exists and proof is empty; this is not opening an existing `blocked` task. Slice slug is just-reviewed slice (per-slice mode) or slice the fix most naturally belongs to (per-feature mode). Per-slice mode: new task in current slice re-opens slice — flip the slice verify task's `status:` from `ready-for-verification` to `blocked` (stripping `review: clean` in the same Edit if a prior round left it), next slice's first task stays `blocked`, handoff routes to `/al-refine` on the new task so the slice closes properly and `/al-code-review` re-runs on the updated diff. Per-feature mode: new task in any earlier closed slice is a defect — flip that slice's verify task back to `blocked` (same `review: clean` strip if present) and route via `/al-steer`; exception: usability candidate tasks materialised by `/al-user-verification` are non-gating by contract and live in their verified slice without re-opening its verify task. Otherwise the new task waits for next `/al-refine` cycle.
 - **Note on future task**: identify not-yet-`done` task whose work touches area; regenerate its NOTE callout block whole in that task's file (surgical-edit contract is locating the file by its `T-MMM` filename and editing its `status:` frontmatter line only).
 - **Drop**: user accepts as known, not worth a task. Closer counts it.
@@ -110,7 +111,7 @@ Per-feature mode: no gate flip; closer announces merge.
 
 Findings carry slot set `Finding / Where / Source (lens name + topic id) / Severity / Confidence / Recommended next` per Lists-of-findings rule in `${CLAUDE_SKILL_DIR}/../../references/voice-contract.md`. Body rides into its `/grill-me` invocation in this shape; grill displays then stress-tests it.
 
-`/al-code-review` does not write durable artifacts before triage. Per-grilling materialization and the clean-review `review: clean` field write to files under `tasks/` only. No `architecture.md`, `event-model.md`, ADR, `CONTEXT.md`, or `.out-of-scope/` writes. Findings address files by path + line or path + procedure; future readers grep on the symbol.
+`/al-code-review` does not write durable artifacts before triage. Per-grilling materialization and the clean-review `review: clean` field write to files under `tasks/`; the **Fix inline now** outcome additionally commits a standalone hygiene edit to the reviewed production file. No `architecture.md`, `event-model.md`, ADR, `CONTEXT.md`, or `.out-of-scope/` writes. Findings address files by path + line or path + procedure; future readers grep on the symbol.
 
 ## Composition
 

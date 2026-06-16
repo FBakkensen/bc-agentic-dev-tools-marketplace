@@ -56,7 +56,7 @@ What script returns is what caller returns. Bullets stay bullets. `Second opinio
 
 ## Fail closed, do not retry
 
-When script returns skip line, caller absorbs it and moves on. No automatic re-invocation, no flag widening, no switching to same-runtime CLI as fallback. Second opinion is checkpoint, not hard gate; missing checkpoint is recoverable, faking it is not.
+When script returns skip line, caller absorbs it, surfaces the line verbatim, and continues its own work. It does not halt, hold, wait for the user, or sit in "waiting for instruction" — a down or unreachable classifier is no reason to stop the pipeline. No automatic re-invocation, no flag widening, no switching to same-runtime CLI as fallback. Second opinion is checkpoint, not hard gate; a missing checkpoint is recoverable and the caller proceeds, faking it is the only unrecoverable move.
 
 ## Invocation
 

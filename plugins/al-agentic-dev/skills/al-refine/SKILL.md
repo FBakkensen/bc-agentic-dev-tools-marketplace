@@ -17,7 +17,7 @@ Fill one named `status: ready` task in the `tasks/` folder. Branch by `kind:` in
 - Spec folder holds `architecture.md`. Missing → **Stop**, run `/al-design`.
 - User/API-facing features: `event-model.md` also present.
 - Target task is named and has `status: ready`. `ready` means context exists for `/al-refine` only.
-- Any other status is not a refine target: `blocked` → `/al-steer`; `ready-for-implementation` → `/al-implement`; `ready-for-verification` → `/al-page-script` or `/al-user-verification` after `/al-code-review`; `done` → downstream evidence exists, reopen only through `/al-steer`.
+- Any other status is not a refine target: `blocked` with all `depends_on:` `done` and no replan flag in the body → the upstream close just didn't flip it; open it `ready` here and proceed, no `/al-steer` bounce. `blocked` on an unsatisfied edge or a replan flag → `/al-steer`. `ready-for-implementation` → `/al-implement`; `ready-for-verification` → `/al-page-script` or `/al-user-verification` after `/al-code-review`; `done` → downstream evidence exists, reopen only through `/al-steer`.
 - Verify task (`kind: verify`) but no `event-model.md` → contract violation, **Stop**, route to `/al-steer`. Verify tasks only exist for user/API-facing features.
 - Read [`test-specification.md`](../../references/test-specification.md), [`test-strategy.md`](../../references/test-strategy.md), [`test-layout.md`](../../references/test-layout.md) (the Unit-vs-Integration scope call is the placement rule there — a case whose codepath needs real BaseApp behaviour cannot be scoped `Unit`), [`voice-contract.md`](../../references/voice-contract.md), and [`markdown-spec-discipline.md`](../../references/markdown-spec-discipline.md) before writing.
 
