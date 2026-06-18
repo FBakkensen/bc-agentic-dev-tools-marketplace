@@ -110,12 +110,19 @@ $gitignoreUpdated = $false
 
 if (Test-Path -LiteralPath $gitignorePath) {
     $gitignoreContent = Get-Content -LiteralPath $gitignorePath -Raw
-    if ($gitignoreContent -notmatch '(?m)^\.output/?$') {
+    if ($gitignoreContent -notmatch '(?m)^\.output/?\s*$') {
         Add-Content -LiteralPath $gitignorePath -Value "`n# AL Build output`n$outputEntry"
         $gitignoreUpdated = $true
     }
 } else {
     Set-Content -LiteralPath $gitignorePath -Value "# AL Build output`n$outputEntry"
+    $gitignoreUpdated = $true
+}
+
+# Ensure the branch-feed projection is ignored: feed.jsonl is the committed
+# source of truth, feed.html is a regenerated view (see /al-feed).
+if ((Get-Content -LiteralPath $gitignorePath -Raw) -notmatch '(?m)^specs/\*/feed\.html\s*$') {
+    Add-Content -LiteralPath $gitignorePath -Value "`n# Branch-feed projection (regenerated from feed.jsonl)`nspecs/*/feed.html"
     $gitignoreUpdated = $true
 }
 

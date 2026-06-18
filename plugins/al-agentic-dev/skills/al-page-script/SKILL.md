@@ -178,6 +178,15 @@ Once when the slice's `.yml` lands at the committed path. Gate report names slic
 
 </claude-only>
 
+## Feed
+
+Four moments narrate to the branch feed; the inner replay grind stays silent. At each, hand `/al-feed` a brief — what just happened, why a wary dev should care, the kind — and `/al-feed` composes the punchline + layers and appends the card. Compose by name; never inline its append.
+
+- **verdict** · a `Scope: E2E` Journey Example replays green against the fresh container (per sealed example) → the recording proves that user click-through behaves as the verify task planned; note the example/surface and that the oracle is equality/visibility-limited.
+- **surprise** · a red read as a real system bug — push down or escalate, recording *not* patched to fake the green → the app didn't do what it should, so it flags the bug rather than hide it; name the failing step, why this layer can't pin it, the route.
+- **verdict** · the cross-file pre-flight batch replays green with the new `.yml` joined → every prior slice's recording still plays together, nothing collided; if batch-red instead, the colliding recording and the No. Series + `copy-value` resolve.
+- **landing** · the `.yml` lands committed and hands to `/al-user-verification` → the slice now has a saved replayable walkthrough; status stays `ready-for-verification`, the guided human check is next.
+
 ## Composition
 
 | | |

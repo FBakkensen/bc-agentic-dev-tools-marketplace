@@ -143,6 +143,16 @@ Once when the verify task flips to `done`. Gate report names slice (slug + `even
 
 Gate report on failure (flipping to `blocked`) is the Stop shape from [voice-contract.md](../../references/voice-contract.md): one stop line naming example / check / observed-vs-expected, state table (verify task ID, examples completed, example blocked on), next action (route to `/al-steer`).
 
+## Feed
+
+The wary developer is the oracle here, so the feed narrates the commitments and outcomes they care about — never the one-instruction walk. At each moment below, hand `/al-feed` a brief (what happened, why it matters to someone who didn't watch the walk, the kind); `/al-feed` composes the card and appends it.
+
+- **verdict** · pre-flight regression batch returns (spawn #1), before the user is invited in → every recorded click-through re-ran on a fresh app; all pass, or one broke and the slice paused. Brief carries own-recording vs cross-slice collision and the stamped trigger/route.
+- **surprise** · first functional fail stops the walk and flips the slice `blocked` → the user saw something wrong, so it stopped right there instead of pushing on. Brief carries which check, observed-vs-expected in the user's own words, the saved screenshot, the stripped `review: clean`.
+- **verdict** · `/al-second-opinion` coverage review before the `done` flip → a second reviewer confirmed every check was actually asked and answered, no pass rested on leading the user. Brief carries the verbatim re-read and any gap re-asked.
+- **landing** · final gate flip `ready-for-verification → done` → the user personally confirmed the slice works on a live screen; it's signed off and the next chunk just opened. Brief carries the slice in BC terms, the evidence, the next tasks (or breaking-change task) opened.
+- **decision** · usability findings materialise as queued tasks → the user flagged rough spots that aren't broken, written up as follow-ups rather than left to gate or get lost. Brief carries non-gating, queued after the next slice, ambiguous ones → `/grill-me`.
+
 ## Composition
 
 | | |

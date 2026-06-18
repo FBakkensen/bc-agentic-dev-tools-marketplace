@@ -125,6 +125,14 @@ No `in-progress` state. The task is now executable-ready, but still not `done`.
 
 </claude-only>
 
+## Feed
+
+Three moments narrate to the branch feed. At each, hand `/al-feed` a brief — what happened, why it matters to someone who hasn't read the proof, the kind — and `/al-feed` composes the punchline and layers and appends the card. Fire only on these; the per-question grounding and inline grilling stay silent.
+
+- **decision** — proof structure committed: `Expected Behaviors` vs `Decision Matrix`, and `New:` vs `Modified:` objects settled. Captures *how* this task will be proved and which objects it creates vs changes — coverage shape, Unit/Integration split, new-vs-modified seeded from `architecture.md` then reconciled to workspace.
+- **surprise** — unanswerable exit: a needed answer won't ground (or `/al-doc-verify` fails), so the task stays/flips `blocked` and routes out rather than ship fuzzy proof. Captures the question that couldn't be pinned and the route taken (`/al-research`, `/al-grill-adr`, `/grill-me`, `/al-steer`).
+- **landing** — the status flip `ready → ready-for-implementation` / `ready-for-verification`. Captures that the task now carries a complete grounded plan, regenerated fresh not stale, and which skill picks it up next.
+
 ## Composition
 
 | | |

@@ -78,6 +78,17 @@ After writing `event-model.md`, run `/al-doc-verify` before the Gate report:
 
 Once when `event-model.md` lands. Gate report describes user-facing journey in BC vocabulary (Role, Action, Business Event, View, Status), names application problem the journey addresses, names user's call to greenlight `/al-design`.
 
+## Feed
+
+Two moments narrate the journey to the branch feed; interior craft (name-verification, telegraphic writing, the citation chain) stays in markdown and never cards.
+
+- **decision** — the hybrid-settlement fork resolves: two timelines diverged on one structural choice and the user picked. Card captures the one big fork in the journey and the path now locked before any code shape — the confessed leaf guesses and why this was *the* structural fork are the depth.
+- **landing** — `event-model.md` lands clean, folding in the branch + spec-folder birth. Card captures the whole journey pinned in plain business terms on its fresh branch, design clear to start — the minted branch/slug and the journey timeline are the depth.
+
+A doc-verify failure is *not* an al-event-model card; `/al-doc-verify` narrates its own integrity verdict.
+
+At each moment hand `/al-feed` a brief — what just happened, why it matters to someone who hasn't read the artifact, and the kind — and `/al-feed` composes the punchline and layers and appends the card.
+
 ## Composition
 
 | | |

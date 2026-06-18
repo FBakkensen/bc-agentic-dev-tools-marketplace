@@ -35,7 +35,7 @@ Verify pass → verify task `done`, next slice tasks `ready`, loop continues. Fe
 
 ## Skills
 
-User-facing catalogue (20 skills, role + when-to-invoke) lives in [`references/overview.md`](references/overview.md). Edit it in lockstep when adding, removing, renaming, or repurposing a skill.
+User-facing catalogue (21 skills, role + when-to-invoke) lives in [`references/overview.md`](references/overview.md). Edit it in lockstep when adding, removing, renaming, or repurposing a skill.
 
 Skills compose by name. When you change a skill, scan the others for cross-references and update in lockstep. Cross-skill orchestration depth (gate flip mechanics, replan triggers, slice-cycle suppression rules) lives in the owning skill's `SKILL.md` and in the dev-time slice-cycle paragraph above; the user-facing overview stays tour-shape.
 
@@ -68,7 +68,7 @@ Two tiers, on purpose.
 
 | File | Tier | Notes |
 |---|---|---|
-| `overview.md` | plugin-level | user-facing tour: pipeline diagram, 20-skill catalogue (role + when-to-invoke), persistence layers paragraph, cold-start guidance, pointer to `/al-steer` for state-aware nav; emitted verbatim by `/al-agentic-dev-overview`; edit in lockstep with any skill addition / removal / rename |
+| `overview.md` | plugin-level | user-facing tour: pipeline diagram, 21-skill catalogue (role + when-to-invoke), persistence layers paragraph, cold-start guidance, pointer to `/al-steer` for state-aware nav; emitted verbatim by `/al-agentic-dev-overview`; edit in lockstep with any skill addition / removal / rename |
 | `voice-contract.md` | plugin-level | non-voice rules: BC vocab, names-as-citation, evidence bar (citation chain: names → workspace, constructs → fetched topic, `/al-research` escalation, `Contract notes` trace), lists-of-findings, tables-of-facts, chat carve-out, no-workflow-chatter, 4 chat shape skeletons (Opener / Gate report / Answer / Stop); style itself lives at top of each SKILL.md as a one-line Style declaration; read by every skill that writes prose or AL names |
 | `testability.md` | plugin-level | three-phase decoupling, three default seams (IEnvironment / IApiRequest / IFinance), five-kind test-double taxonomy with AL code shapes; read by `/al-design`, `/al-implement`, `/al-refactor` |
 | `test-specification.md` | plugin-level | `Test Specification` / `Verification Plan` grammar: New and Modified Objects, Expected Behaviors, Decision Matrix, AAA cases, Contract notes, Out of automated reach, scopes, traceability, closeout summaries with mutation verdict table; read by `/al-refine`, `/al-implement`, `/al-code-review`, `/al-page-script`, `/al-user-verification` |
@@ -99,12 +99,13 @@ The two former agent-shaped workflows now live as skills:
 
 - **`skills/al-mutate/SKILL.md`**, mutate-build-revert cycle, mutation kinds, survivor classification, BC safety.
 - **`skills/al-second-opinion/SKILL.md`** is the contract; **`skills/al-second-opinion/scripts/Invoke-AlSecondOpinion.ps1`** is the execution. Dispatched by runtime. `$env:CLAUDECODE -eq '1'` → `codex exec --sandbox read-only --skip-git-repo-check --color never --json --enable fast_mode -m gpt-5.4 -c model_reasoning_effort=low`. Else → `claude -p --output-format json --no-session-persistence --disable-slash-commands --strict-mcp-config '{}' --model sonnet --effort low --tools ""`. 600s timeout via `Start-Job` / `Wait-Job`. Skip lines name the target CLI. SKILL.md documents the sandbox flags so the security envelope stays visible without reading the script. **Windows-only**; `Start-Job` / `Wait-Job` targets pwsh on Windows; portability is a future concern.
+- **`skills/al-feed/`** (the branch-feed writer) is pure pwsh 7 + cross-platform .NET (`[System.IO.File]`, `[System.Text.UTF8Encoding]`; no `Start-Job`/`Wait-Job`, no Windows-only API), so the engine runs wherever pwsh 7 is on PATH. The CI Pester job is `windows-latest` only, so that cross-platform property is currently unverified by CI.
 
 ## Layout
 
 ```
 references/                      # Plugin-level shared, read by ≥2 skills, or cited by shared templates
-├── overview.md                  # User-facing tour: pipeline + 20-skill catalogue + persistence + cold-start; emitted by /al-agentic-dev-overview
+├── overview.md                  # User-facing tour: pipeline + 21-skill catalogue + persistence + cold-start; emitted by /al-agentic-dev-overview
 ├── voice-contract.md            # Non-voice rules + evidence bar + 4 chat shape skeletons; voice declared inline at top of each SKILL.md
 ├── testability.md               # Three-phase decoupling, three default seams, five-kind test-double taxonomy
 ├── test-specification.md        # Test Specification + Verification Plan grammar (incl. New and Modified Objects, Contract notes, Out of automated reach, mutation verdict table)
@@ -144,6 +145,11 @@ skills/
 │       └── bc-event-subscriber-pattern.md
 ├── al-design/SKILL.md
 ├── al-event-model/SKILL.md
+├── al-feed/                     # Branch-feed writer (Model B): composes a card → appends feed.jsonl → regenerates feed.html
+│   ├── SKILL.md
+│   ├── scripts/                 # feed.psm1 (pure render/escape, unit-tested), feed-append.ps1 (CLI wrapper)
+│   └── references/
+│       └── feed.template.html   # Operator Dark template, server-rendered cards
 ├── al-grill-adr/SKILL.md
 ├── al-implement/SKILL.md
 ├── al-mutate/SKILL.md

@@ -109,6 +109,14 @@ After writing `architecture.md`, run `/al-doc-verify` before the Gate report:
 
 Once when `architecture.md` lands. Gate report names chosen BC pattern + R → P → W boundary as 'how this fits', states application problem the architecture solves, names user's call to greenlight `/al-scope`.
 
+## Feed
+
+Three moments narrate to the branch feed; the architecture reshaping itself (deletion test, two-adapter rule, R → P → W split) is interior craft, not a feed beat. At each, hand `/al-feed` a brief — what just happened, why it matters to someone who hasn't read `architecture.md`, the kind — and `/al-feed` composes the card and appends it. The doc-verify outcome is not carded here; `/al-doc-verify` narrates its own integrity verdict.
+
+- **decision** · design-twice bake-off reconciled, one blueprint picked (non-trivial calls only) → captures that three rival blueprints were weighed and one committed, with the one-line why-it-won.
+- **decision** · an architecture trade-off recorded (all four criteria hold) → captures a hard-to-undo choice locked in: the mechanism picked, the alternative rejected, the reason.
+- **landing** · `architecture.md` lands with the Gate report → captures the architecture settled and written down: the chosen BC pattern, the R → P → W boundary, the problem it solves, the greenlight to `/al-scope`.
+
 ## Composition
 
 | | |

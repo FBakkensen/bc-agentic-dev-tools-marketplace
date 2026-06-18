@@ -113,6 +113,13 @@ After writing the `tasks/` folder, run `/al-doc-verify` before the Gate report:
 
 Once when task decomposition lands in the `tasks/` folder. Gate report names slice families decomposed (one per `event-model.md` step for user-facing, one per `architecture.md` slice for backend-only), verify-task count (or *none, backend-only*), dependency shape (linear or branching), states feature Goal in user terms, names user's call to greenlight `/al-refine` on first task of first slice.
 
+## Feed
+
+Two moments narrate to the branch feed; everything else — folder-shape mechanics, per-task frontmatter, edge wiring — stays silent. At each, hand `/al-feed` a brief of what happened and why it matters to a wary dev who has not read `architecture.md`; `/al-feed` composes the punchline and layers and appends the card.
+
+- **landing** — decomposition lands in the `tasks/` folder and clean `/al-doc-verify` clears the `/al-refine` handoff. Brief: the design is now a concrete to-do list — NN chunks, each user-facing one ending in a check the user signs off, ready to start. Layers carry the slice families, the user-verification-gate count, linear vs branching shape, and the Goal restated in user terms.
+- **surprise** — the replan/stop guard fires: a gap `architecture.md` cannot answer (missing module, pattern conflict, unnamed brownfield touchpoint, slice absent from `event-model.md`) halts the write and routes to `/al-steer` rather than invent. Brief: hit a hole it could not fill honestly, so it stopped and handed it back instead of guessing. Layers name exactly what was missing and why inventing here would corrupt every downstream skill invisibly.
+
 ## Composition
 
 | | |

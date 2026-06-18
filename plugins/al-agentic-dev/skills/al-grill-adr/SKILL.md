@@ -48,6 +48,15 @@ After writing `CONTEXT.md` or a domain ADR, run `/al-doc-verify` before handing 
 
 `verdict=fail` blocks handoff; fix the structural/boundary issue or route to `/al-steer`. `verdict=warn` does not block; carry the warning in the handoff note. This gate checks document integrity only, not whether the domain rule is right.
 
+## Feed
+
+Two moments in a grilling session are worth narrating to a wary developer; the rest is interview play-by-play and stays silent.
+
+- **decision** — a constraint clears the four-of-four ADR bar and the user accepts it. The card names the business rule just locked in and flags it hard to undo → why it earned recording, which alternative was rejected.
+- **surprise** — grilling reads the code and finds the user's stated behaviour disagrees with the actual code. The card names the caught mismatch and that the user picks the resolution → the term or scenario that exposed it, the two readings.
+
+At each, hand `/al-feed` a brief — what just happened in domain terms, why it matters to someone who hasn't read `CONTEXT.md` or the code, and the kind — and `/al-feed` composes the punchline and layers and appends the card.
+
 ## Composition
 
 | | |

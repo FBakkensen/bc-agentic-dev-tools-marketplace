@@ -14,7 +14,7 @@ Composable skills for AL/Business Central agentic development. One feature flows
 
 | Lane | Skills |
 |---|---|
-| **Side-band** (invoked from any main-pipeline skill) | `/al-research`, `/al-doc-verify`, `/al-steer`, `/al-second-opinion` |
+| **Side-band** (invoked from any main-pipeline skill) | `/al-research`, `/al-doc-verify`, `/al-steer`, `/al-second-opinion`, `/al-feed` |
 | **Infrastructure** | `/al-build` (compile, publish, run tests), `/al-debug-logging` (transient `FeatureTelemetry.LogUsage` probes) |
 | **Ops** (bracket the feature; run an `/al-build` script + flip task status) | `/al-provision` (`T-001`, refresh the build environment), `/al-validate-breaking-changes` (last, validate against the released baseline) |
 | **Shaping** (inside `/al-implement` or standalone on legacy) | `/al-refactor`, `/al-mutate`, `/al-page-script` |
@@ -42,6 +42,7 @@ Slice mechanics: `/al-refine` opens one `ready` task at a time. Technical tasks 
 | `/al-doc-verify` | Read-only markdown integrity verifier. Checks canonical artifact structure and sibling consistency; blocks structural or boundary failures, warns wording or ambiguity. | After `/al-grill-adr`, `/al-event-model`, `/al-design`, `/al-scope`, or `/al-refine` writes a canonical markdown artifact, or after `/al-steer` restructures the `tasks/` folder, before gate report or downstream handoff. |
 | `/al-research` | Verify BC specifics from authoritative sources; the evidence bar's escalation seat. | When sources disagree, a fuzzy question needs framing + cross-family verification, or a fact lands in a durable design artifact. Single-fact lookups go direct per the evidence bar. |
 | `/al-second-opinion` | Cross-runtime read-only advisory review. | Before reconciling non-trivial `Test Specification`, `Verification Plan`, mutation lists, refactor checklists, or verification verdicts. |
+| `/al-feed` | Branch-feed writer. Composes one plain-language card (punchline + optional layers) and appends it to the branch's `feed.jsonl`, regenerating `feed.html`. | Handed a brief by a narrating skill at a hand-wired card-firing moment (never the three silent skills). |
 | `/al-steer` | Coach and navigator. Reads state, names next step, never edits code. Owns `.out-of-scope/`. Canonical replan venue. | "Where are we?", "what's next?", trigger fired in another skill. |
 | `/al-build` | Compile, publish, run tests; writes results to `.output/TestResults/<dirName>/`. | After modifying AL code or tests. Required gate before commit. |
 | `/al-debug-logging` | Temporary `DEBUG-*` `FeatureTelemetry.LogUsage` probes; read `telemetry.jsonl`; remove probes. Final state: zero `DEBUG-*` in tree. | Runtime behaviour diverges from source and tests can't reveal which path ran. |

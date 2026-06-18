@@ -44,6 +44,15 @@ A confirmed break is an **intent decision**, not a defect to auto-patch: *intend
 
 A `4` (`Contract`) or other non-zero prerequisite failure → `blocked`, fix the prereq (re-run `/al-provision` for an empty cache), re-run.
 
+## Feed
+
+Two moments narrate to the branch feed — the gate's two outcomes, nothing in between. At each, hand `/al-feed` a brief (what just happened, why it matters to someone who hasn't read the diff, the kind); `/al-feed` composes the punchline + layers and appends the card.
+
+- **landing** · exit `0`, no break, task flips `done` → the released app was checked and nothing customers rely on broke — clear to ship. This is the feature's last gate; the brief can note the full AppSource-style per-country install/upgrade sim that earned the verdict.
+- **surprise** · exit `3`, break detected, task flips `blocked`, route to `/al-steer` → a change would break a promise a shipped version made, so the gate stops for a person to decide if it's intended. The brief carries why this skill won't self-resolve: auto-fixing could undo a deliberate break, auto-accepting could ship an accidental one — the intent call is the human's at merge.
+
+A `4` (`Contract`) or other prerequisite/environment non-zero yields no verdict on breaking changes, so it fires no card — fix the prereq and re-run.
+
 ## Composition
 
 | | |

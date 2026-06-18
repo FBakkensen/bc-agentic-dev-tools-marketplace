@@ -134,6 +134,15 @@ At the `done` flip, open any **same-slice** task whose `depends_on:` is now full
 
 The slice verify task is one such same-slice dependent: at user/API-facing slice-done it opens `blocked` → `ready` once every in-slice technical dependency is `done`, which opens `/al-refine` to write the fresh `Verification Plan`. Do not run `/al-code-review` until the verify task is `ready-for-verification`.
 
+## Feed
+
+Highest-traffic skill, so the red/green grind stays out of the feed — only durable-state and settled-question moments earn a card. At each, hand `/al-feed` a brief (what just happened, why it matters to someone who has not read the diff, the kind) and `/al-feed` composes the punchline + layers and appends the card. Compose by name; never inline the append.
+
+- **verdict** — first AAA case completes red→green this session. The agent wrote a test that failed on purpose, then made code pass it: the test really checks behaviour, not decoration. Captures the behaviour/coverage-ID, Unit-before-Integration, failed-first as regression proof.
+- **surprise** — an AL Runner ERROR / exit-2 off the planned path, or a replan trigger fires post-mutation. Hit a wall the planned approach didn't hold; worked around it or stopped for replan. Captures which wall, absorbed vs handed to `/al-steer`. Only on a real trigger — a clean walk fires nothing.
+- **verdict** — `/al-mutate` task-end verdict. The agent broke its own code in small ways to check the tests catch each break, and reports whether they did. Captures survivors and why kept (equivalent vs real gap).
+- **landing** — the `ready-for-implementation → done` flip after final green and Gate report. Task done, suite green, work proven, downstream unlocked. Captures the Gate report (Did/Was/Fits/Next), next task(s) opened, slice-done handoff.
+
 ## Composition
 
 | | |

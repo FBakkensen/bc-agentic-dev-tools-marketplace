@@ -113,6 +113,15 @@ Findings carry slot set `Finding / Where / Source (lens name + topic id) / Sever
 
 `/al-code-review` does not write durable artifacts before triage. Per-grilling materialization and the clean-review `review: clean` field write to files under `tasks/`; the **Fix inline now** outcome additionally commits a standalone hygiene edit to the reviewed production file. No `architecture.md`, `event-model.md`, ADR, `CONTEXT.md`, or `.out-of-scope/` writes. Findings address files by path + line or path + procedure; future readers grep on the symbol.
 
+## Feed
+
+Four moments narrate to the branch feed. At each, hand `/al-feed` a brief — what just happened in BC terms, why it matters to a developer who has not read the diff, and the kind — and `/al-feed` composes the punchline and layers and appends the card. Routine lens churn, the confidence pass, and per-lens spawns never card.
+
+- **surprise** · a precondition fails and the gate Stops before any lens runs (red `/al-build` baseline, slice not `ready-for-verification`, polluted tree). Captures: the gate refused to start because the code is not in a fit state to judge yet — which precondition tripped, what has to happen before review is worth running.
+- **verdict** · the opener fires after the confidence pass with the surviving-finding count. Captures: review is done — clean, or N issues survived scrutiny and want the developer's eyes; the scope chip, and any lens that errored so the developer knows the review was partial.
+- **decision** · a per-finding `/grill-me` triage lands one of the four outcomes (fix inline / new task / note / drop). Captures: for this one finding, what got decided and why that outcome — surface a too-casual drop as the developer's veto point.
+- **landing** · the clean-review gate outcome resolves — a clean slice stamps `review: clean` and the next chunk opens, or a new task re-opens the slice. Captures: the slice passed and the next work unlocked, or review found something real and sent it back; which tasks or slices opened and the next handoff.
+
 ## Composition
 
 | | |

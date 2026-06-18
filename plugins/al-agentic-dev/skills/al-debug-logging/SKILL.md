@@ -61,6 +61,14 @@ _Avoid_:
 
 **Anti-pattern: leave `DEBUG-*` in tree at handoff.** Final state is zero matches on `rg "DEBUG-" --type al`. Probe intentionally retained → comment with issue/scope so next pass sees it is deliberate.
 
+## Feed
+
+One moment narrates — the loop leaves no durable artifact, so the feed carries the one fact it surfaced.
+
+- **surprise** · Inspect — telemetry settles which path actually ran, or probes come back silent. Captures: source couldn't prove it, the runtime did — e.g. the fallback branch fired, not the standard path. Layers: the hypothesis, the one logged fact, assumption confirmed or overturned.
+
+At that moment hand `/al-feed` a brief — what the probe asked, what the runtime answered, kind `surprise` — and `/al-feed` composes the punchline + layers and appends the card. No other step cards; the probe placement, runs, and cleanup stay mechanical.
+
 ## Composition
 
 - `/al-build` — runs test harness, produces `.output/TestResults/*/telemetry.jsonl`.

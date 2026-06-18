@@ -68,3 +68,11 @@ Rules:
 - `fail` when any structural or boundary blocker exists
 - `warn` when wording is ambiguous or a handoff is underspecified, but structure holds
 - `pass` when no blockers and no warnings remain
+
+## Feed
+
+This gate narrates its own card — the verdict is self-describing, so the producer skills point at it rather than duplicate it.
+
+- **verdict** · at verdict emission (`pass`/`fail`/`warn`), before any handoff -> whether the just-written planning docs cleared the integrity check, or the plain-language defect that stopped them (e.g. two tasks share a name, run order is ambiguous). Captures which artifact and producer, the exact structural blocker class on `fail`, the wording flag on `warn`.
+
+At that moment hand `/al-feed` a brief — what the verdict was, why a wary developer cares, kind `verdict` — and `/al-feed` composes the punchline and layers and appends the card.

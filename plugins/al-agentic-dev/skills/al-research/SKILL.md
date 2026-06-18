@@ -66,6 +66,13 @@ What each source family is for, reach for whichever answers the specific questio
 
 Findings note to the caller. Verbatim quotes, one-line citations, no editorialising. Citations live in return note, never inline into durable artifacts (caller decides what survives into `architecture.md`, `CONTEXT.md`, ADRs, or task scaffolding); task-scoped citations the caller lands as `Contract notes` bullets at reconcile per the evidence bar. When two sources agree, name both: `Microsoft Learn <page> + al-symbols-mcp <object>.<procedure> agree on <signature>`. When two disagree, return both quotes with citations and name the conflict; caller resolves.
 
+## Feed
+
+Two moments earn a card — both are escalation outcomes, never a routine single-fact lookup. At each, hand `/al-feed` a brief (what happened, why a non-reader should care, the kind); `/al-feed` composes the punchline and layers and appends the card.
+
+- **verdict** · cross-family verification agrees *and* the fact lands in a durable artifact (`event-model.md`, `architecture.md`, `CONTEXT.md`, ADRs) → a BC fact checked against two independent sources, they agree, safe to build the design on. Brief carries which families, the verbatim quote, the citation.
+- **surprise** · two authoritative sources disagree and the skill surfaces both rather than pick → two trusted sources conflict, so it stopped and handed the developer the choice. Brief carries both quotes and citations, and why the caller resolves it.
+
 ## Composition
 
 | | |

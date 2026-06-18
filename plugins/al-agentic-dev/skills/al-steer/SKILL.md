@@ -97,6 +97,15 @@ Grilling vetoes the trigger → restore prior `status:` value in the task file's
 
 Grilling vetoes a recurring scope item with substantive reason (project scope, technical constraint, strategic decision, referenced ADR; not a deferral) → record at `.out-of-scope/<concept>.md`. Scan `.out-of-scope/*.md` during replan and grilling; on match, surface prior rejection in user's words. File's job is to stop next session from re-litigating same rejection. Template `${CLAUDE_SKILL_DIR}/references/out-of-scope.template.md` materialises on first need; matches append *Prior requests* entry rather than spawning second file.
 
+## Feed
+
+`/al-steer` is mostly advisory and silent there — most navigation moves no durable byte. But it holds real plan-reshaping authority, and the wary developer wants to see when the plan itself bends. At each moment below, hand `/al-feed` a brief — what just happened, why it matters, the kind — and `/al-feed` composes the punchline + layers and appends the card. Card only the plan-changing moments; routine board reads and handoff naming get nothing.
+
+- **surprise** — a replan trigger acted on as a halt: a task flipped `blocked`, trigger ID + reason recorded. Captures that the plan no longer holds and a task got parked. Brief names which of the eight triggers, the codebase symptom in object terms, and that a tool-diagnosis trigger was re-confirmed before the flip.
+- **decision** — the `tasks/` folder structurally rewritten after explicit user ack (split / insert / delete / reorder). Captures that the plan was reshaped — e.g. the ballooning task split into three that each fit a session. Brief names the trigger, the exact mutation, the `review: clean` strip, the `/al-doc-verify` gate.
+- **verdict** — grilling vetoes a trigger: prior `status:` restored, the false halt closed. Captures that a task thought stuck was proved fine and un-stuck. Brief names what the halt suspected, why it was overturned, that the reasoning was recorded not silently dropped.
+- **decision** — a recurring scope request vetoed and recorded at `.out-of-scope/`. Captures that a line was drawn — this idea is deliberately out of scope and won't be revisited. Brief names the substantive reason, written so the next session can't re-litigate it.
+
 ## Composition
 
 | | |

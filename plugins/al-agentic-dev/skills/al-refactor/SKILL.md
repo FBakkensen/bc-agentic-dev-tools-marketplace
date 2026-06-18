@@ -110,6 +110,17 @@ Citation chain: when a rename pulls a BC name or verb from outside the codebase,
 
 Standalone mode emits Gate report once at module / pattern / seam altitude (not procedure level), naming application invariant preserved and user's call; inside `/al-implement`, findings fold into the task Gate report. `/al-refactor` does not edit `architecture.md` and writes no Notes by default; a task file under `tasks/` is touched only when an operational outcome demands it, surgical-edit contract is locating the task by its `T-MMM` filename and editing the `status:` frontmatter line per [markdown-spec-discipline.md](../../references/markdown-spec-discipline.md). See [voice-contract.md](../../references/voice-contract.md).
 
+## Feed
+
+Reshape promises shape improves and behaviour does not — a wary dev wants proof the second half held. At each moment below, hand `/al-feed` a brief (what just happened, why it matters to someone who hasn't read the diff, the kind); `/al-feed` composes the punchline and layers and appends the card. Per-build apply steps stay out of the feed — only these land.
+
+- **landing** — legacy mode, baseline tests written and passing before any reshape. Captures: old code had no guard, so behaviour-today tests went in first; any change from here trips an alarm.
+- **decision** — the 4 lenses merge into the ordered apply queue. Captures: what gets reshaped and in what order (renames and seams first), with the lens behind each item.
+- **verdict** — a load-bearing structural reshape lands green at behaviour parity — seam with two adapters, module deleted or inlined, R → P → W split, or a lying name corrected across call sites and handler strings. Captures: a real structural change went in, build still green, behaviour unchanged; old→new and the evidence as layers.
+- **surprise** — an apply step turns the build red and the agent reverts that step. Captures: one reshape broke the build, backed out cleanly, the rest kept; never sat broken.
+- **surprise** — reshape surfaces an architectural gap or new behaviour; the agent **Stops**, stays green, routes to `/al-steer`. Captures: hit something bigger than tidy-up, stopped rather than quietly change behaviour.
+- **verdict** — closing Gate report, reshape complete with the full diff green at parity. Captures: reshaping done, code behaves exactly as before in a cleaner shape; invariant preserved, handoff to `/al-mutate`.
+
 ## Composition
 
 | | |
