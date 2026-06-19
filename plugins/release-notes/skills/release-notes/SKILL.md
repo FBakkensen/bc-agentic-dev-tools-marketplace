@@ -3,7 +3,7 @@ name: release-notes
 description: Generate release notes from per-PR analysis of merged work since the last release. Use after producing .output/releases/release-analysis.jsonl when drafting release notes, summarising changes between releases, or preparing version documentation for an AL/Business Central app.
 ---
 
-**Style:** Be extremely concise. Sacrifice grammar for concision. Opinionated — pick a side. Arrows (→) for causality. Technical terms exact, code and errors quoted verbatim.
+**Style:** Concise — cut filler, keep grammar. Opinionated — pick a side. Arrows (→) for causality. Technical terms exact, code and errors quoted verbatim.
 
 # /release-notes — PR JSONL to release notes
 

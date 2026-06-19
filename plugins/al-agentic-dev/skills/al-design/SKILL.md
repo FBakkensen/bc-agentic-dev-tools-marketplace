@@ -30,13 +30,13 @@ Never write the `tasks/` folder. Never write task-level AAA cases, `Test Specifi
 
 - **Slices**: when `event-model.md` present, its user-facing slots (Role, Action, Business Event, View, Status) are settled; read, do not re-decide, qualify each slice by AL pattern (Command / Automation / Translation / View) based on trigger source. Backend-only slices name trigger-source slot only (Job Queue, install / upgrade, scheduled task); see [LANGUAGE.md](../../references/LANGUAGE.md) *Slice*.
 - **Module map**: modules under `src/<module>/`. Use CONTEXT.md vocabulary ("the Settlement intake module", never "the FooBarHandler").
-- **BC pattern per module**: pick from [bc-patterns.md](../../references/bc-patterns.md). Verify against current BaseApp via `/al-research` before committing.
+- **BC pattern per module**: pick from [bc-patterns.md](../../references/bc-patterns.md). Verify against current BaseApp via `al-research` agent before committing.
 - **R → P → W boundary**: R = reads / inputs / events subscribed; P = pure procedure (no DB, no side effects, unit-test surface); W = effects (Insert / Modify / Delete, telemetry, errors, events published).
-- **Brownfield touchpoints**: objects, procedures, events, table fields the feature touches. Verify every name + signature against workspace evidence (`al-symbols-mcp` / `grep`); behaviour and contracts the workspace cannot answer route through `/al-research`. Stale memory ships fiction.
+- **Brownfield touchpoints**: objects, procedures, events, table fields the feature touches. Verify every name + signature against workspace evidence (`al-symbols-mcp` / `grep`); behaviour and contracts the workspace cannot answer route through `al-research` agent. Stale memory ships fiction.
 - **Testability constraints**: name where architecture should expose isolated decision logic behind the P layer and where behaviour necessarily crosses BC runtime, database, page/TestPage, event wiring, table triggers, telemetry shape, install / upgrade, permissions, or public surface. Do not write task-level proof, AAA cases, or assertions.
-- **Which BC names verified this session?** Every BC-specific name landing in `architecture.md` (pattern, event, codeunit, table, field, procedure) meets the evidence bar in [voice-contract.md](../../references/voice-contract.md); durable design facts route through `/al-research`. See *Citation chain in chat, before write* below.
+- **Which BC names verified this session?** Every BC-specific name landing in `architecture.md` (pattern, event, codeunit, table, field, procedure) meets the evidence bar in [voice-contract.md](../../references/voice-contract.md); durable design facts route through `al-research` agent. See *Citation chain in chat, before write* below.
 
-Unanswerable → not ready for `/al-scope`. Resolve via `/al-research` (BC behaviour), `/al-grill-adr` (domain rule), or `/al-steer` (replan).
+Unanswerable → not ready for `/al-scope`. Resolve via `al-research` agent (BC behaviour), `/al-grill-adr` (domain rule), or `/al-steer` (replan).
 
 ## Deletion test, every candidate module
 
@@ -62,7 +62,7 @@ Two design-time risks bite at AppSource boundaries: **BaseApp modification** (in
 
 ## Citation chain in chat, before write
 
-Evidence bar per [voice-contract.md](../../references/voice-contract.md). `architecture.md` is a durable design artifact: workspace evidence covers names already in the dependency graph; everything else — pattern fitness, BaseApp behaviour, event contracts — routes through `/al-research`, mandatory, not a single-source fetch. Names research-backed by `/al-event-model` upstream count when `grep` against `event-model.md` returns them this session, not when you recall they're there.
+Evidence bar per [voice-contract.md](../../references/voice-contract.md). `architecture.md` is a durable design artifact: workspace evidence covers names already in the dependency graph; everything else — pattern fitness, BaseApp behaviour, event contracts — routes through `al-research` agent, mandatory, not a single-source fetch. Names research-backed by `/al-event-model` upstream count when `grep` against `event-model.md` returns them this session, not when you recall they're there.
 
 ## Architecture trade-off criteria
 
@@ -87,7 +87,7 @@ Non-trivial = multi-module, brownfield refactor, or novel pattern selection. Whe
 
 After the delegated pass outputs are collected and reconciled, close the completed subagent threads. Do not leave design-pass agents open as passive state.
 
-Each pass runs its own `/al-research` and receives BC vocabulary from `CONTEXT.md` plus architectural vocabulary from [LANGUAGE.md](../../references/LANGUAGE.md) → all three name things consistently. Output per pass: module map + per-module interface, named adapters at every seam, the one trade-off line that distinguishes this design. Present all three sequentially, compare along **depth** / **locality** / **seam placement**, pick one (or hybrid) opinionatedly, run `/grill-me` when choice is user's call; `/al-second-opinion` reconciles non-trivial picks. Never silently skip the reconcile.
+Each pass runs its own `al-research` agent and receives BC vocabulary from `CONTEXT.md` plus architectural vocabulary from [LANGUAGE.md](../../references/LANGUAGE.md) → all three name things consistently. Output per pass: module map + per-module interface, named adapters at every seam, the one trade-off line that distinguishes this design. Present all three sequentially, compare along **depth** / **locality** / **seam placement**, pick one (or hybrid) opinionatedly, run `/grill-me` when choice is user's call; `/al-second-opinion` reconciles non-trivial picks. Never silently skip the reconcile.
 
 ## Branch + folder + write
 
@@ -97,10 +97,12 @@ Then write `architecture.md`. Markdown only; constraints in [markdown-spec-disci
 
 ## Document verification
 
-After writing `architecture.md`, run `/al-doc-verify` before the Gate report:
+After writing `architecture.md`, spawn the `al-agentic-dev:al-doc-verify` agent before the Gate report, with a brief naming:
 
 ```text
-/al-doc-verify --producer al-design --artifacts specs/<NNN>-<slug>/architecture.md --handoff al-scope
+producer: al-design
+artifact_paths: specs/<NNN>-<slug>/architecture.md
+intended_handoff: al-scope
 ```
 
 `verdict=fail` blocks the Gate report and `/al-scope` handoff; fix the structural/boundary issue or route to `/al-steer`. `verdict=warn` does not block; include the warning in the Gate report. This gate checks document integrity only, not whether the architecture is the best design.
@@ -111,7 +113,7 @@ Once when `architecture.md` lands. Gate report names chosen BC pattern + R → P
 
 ## Feed
 
-Three moments narrate to the branch feed; the architecture reshaping itself (deletion test, two-adapter rule, R → P → W split) is interior craft, not a feed beat. At each, hand `/al-feed` a brief — what just happened, why it matters to someone who hasn't read `architecture.md`, the kind — and `/al-feed` composes the card and appends it. The doc-verify outcome is not carded here; `/al-doc-verify` narrates its own integrity verdict.
+Three moments narrate to the branch feed; the architecture reshaping itself (deletion test, two-adapter rule, R → P → W split) is interior craft, not a feed beat. At each, hand `/al-feed` a brief — what just happened, why it matters to someone who hasn't read `architecture.md`, the kind — and `/al-feed` composes the card and appends it. The `al-doc-verify` agent is read-only and returns a `verdict=` line rather than carding itself: on `verdict=fail`, fire a card naming the plain-language defect that blocked the docs; a clean pass folds into the `landing` card.
 
 - **decision** · design-twice bake-off reconciled, one blueprint picked (non-trivial calls only) → captures that three rival blueprints were weighed and one committed, with the one-line why-it-won.
 - **decision** · an architecture trade-off recorded (all four criteria hold) → captures a hard-to-undo choice locked in: the mechanism picked, the alternative rejected, the reason.
@@ -124,6 +126,6 @@ Three moments narrate to the branch feed; the architecture reshaping itself (del
 | **Runs after**     | `/al-event-model` (user/API-facing features) or `/al-grill-adr` (backend-only) |
 | **Hands off to**   | `/al-scope` |
 | **Replan venue**   | `/al-steer` |
-| **Sidebands**      | `/al-research` (BC facts), `/bc-standard-reference` (pure BaseApp questions), `/grill-me` (design-twice reconciliation), `/al-second-opinion` (parallel design-twice picks) |
+| **Sidebands**      | `al-research` agent (BC facts), `bc-standard-reference` agent (pure BaseApp questions), `/grill-me` (design-twice reconciliation), `/al-second-opinion` (parallel design-twice picks) |
 
 **Advisor checkpoint.** Call `advisor()` before writing `architecture.md` for first time. Artifact is load-bearing for every downstream skill; drift caught here costs minutes, drift caught at `/al-implement` costs a feature.

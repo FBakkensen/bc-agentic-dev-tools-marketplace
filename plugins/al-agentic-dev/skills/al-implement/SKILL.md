@@ -29,7 +29,7 @@ Pick next `ready-for-implementation` technical task from the `tasks/` folder. Co
 - **Which BC names and constructs verified this session?** Every exact BC-specific name in the AAA case or implementation path, and every BC construct class it touches, meets the evidence bar in [voice-contract.md](../../references/voice-contract.md): names via workspace hit or quoted fetch, constructs via fetched topic or quoted Learn passage.
 - **What flips at end?** `status:` goes `ready-for-implementation` → `done` on the task file's frontmatter line; final full `/al-build` green. User/API-facing slice-done opens the slice verify task to `ready` for `/al-refine`. Backend-only slice-done announces `/al-code-review` per-slice. Feature-done announces `/al-code-review` per-feature.
 
-Unanswerable question → task not ready. Resolve via `/al-research`, `/al-refine`, or `/al-steer`.
+Unanswerable question → task not ready. Resolve via `al-research` agent, `/al-refine`, or `/al-steer`.
 
 ## Workflow
 
@@ -49,7 +49,7 @@ Exception: when a Unit seam should exist but current code is tangled, write an I
 
 ### Evidence before RED, names and constructs
 
-Before first RED of any AAA case, the evidence bar in [voice-contract.md](../../references/voice-contract.md) is met for every exact BC-specific name in its Arrange / Act / Assert **and** for every BC construct class on the implementation path (the classes the bar's Constructs bullet names). Names → workspace evidence this session or quoted fetch. Constructs → fetched topic per [bc-code-intelligence-dispatch.md](../../references/bc-code-intelligence-dispatch.md) or quoted Learn passage, declared as `Researched:`; legacy code is precedent, not authority — a construct copied from the workspace still earns its fetch, because that is exactly how a repo's `SetLoadFields`-after-filters debt replicates. Sources disagree, or the fact belongs in a design artifact → `/al-research`.
+Before first RED of any AAA case, the evidence bar in [voice-contract.md](../../references/voice-contract.md) is met for every exact BC-specific name in its Arrange / Act / Assert **and** for every BC construct class on the implementation path (the classes the bar's Constructs bullet names). Names → workspace evidence this session or quoted fetch. Constructs → fetched topic per [bc-code-intelligence-dispatch.md](../../references/bc-code-intelligence-dispatch.md) or quoted Learn passage, declared as `Researched:`; legacy code is precedent, not authority — a construct copied from the workspace still earns its fetch, because that is exactly how a repo's `SetLoadFields`-after-filters debt replicates. Sources disagree, or the fact belongs in a design artifact → `al-research` agent.
 
 ### Test the Process seam, not incidental implementation
 
@@ -146,4 +146,4 @@ Highest-traffic skill, so the red/green grind stays out of the feed — only dur
 | **Runs after**     | `/al-refine` (filled `Test Specification` in the task file and flipped task to `ready-for-implementation`) |
 | **Hands off to**   | next `ready-for-implementation` technical task; `/al-refine` on the slice verify task at user/API-facing slice-done; `/al-code-review` per-slice for backend-only slice-done; `/al-code-review` per-feature at feature-done |
 | **Replan venue**   | `/al-steer` |
-| **Sidebands**      | `/al-research` (evidence-bar escalation: source conflict, design-artifact fact), `/al-debug-logging` (execution path unclear), `/grill-me` (judgement needs user), `/bc-standard-reference` (BaseApp questions) |
+| **Sidebands**      | `al-research` agent (evidence-bar escalation: source conflict, design-artifact fact), `/al-debug-logging` (execution path unclear), `/grill-me` (judgement needs user), `bc-standard-reference` agent (BaseApp questions) |

@@ -44,7 +44,7 @@ Spec how one technical task's behaviour is proved so `/al-implement` can drive r
 - **Which objects and signatures does the task land?** Write `New and Modified Objects` per the grammar in [`test-specification.md`](../../references/test-specification.md); `/al-implement` consumes these signatures instead of minting names mid-TDD. Seed `New:` vs `Modified:` from `architecture.md`'s `new` / `extends` markers, then override by workspace state at refine time — an object an earlier task already landed is `Modified:` regardless of its design-time marker. Architecture silent on a needed object → mint it when it serves a listed slice slot; a missing slot is trigger #6, route `/al-steer`.
 - **What vocabulary names the coverage?** Project terms from `CONTEXT.md` first, then BC display labels, then exact AL names only when traceability or ambiguity requires them.
 
-Unanswerable → cannot write the spec yet. Flip or keep `status: blocked` and resolve via `/al-research` (BC behaviour), `/al-grill-adr` (domain rule), `/grill-me` (intent the user must adjudicate), or `/al-steer` (replan).
+Unanswerable → cannot write the spec yet. Flip or keep `status: blocked` and resolve via `al-research` agent (BC behaviour), `/al-grill-adr` (domain rule), `/grill-me` (intent the user must adjudicate), or `/al-steer` (replan).
 
 ## Verify task: Verification Plan
 
@@ -62,11 +62,11 @@ Answer before writing:
 - **Which exploration is useful?** Add charters for new workflows, major workflow changes, and error/user-guidance changes. Exploration findings become tasks unless a functional failure is observed.
 - **Which `event-model.md` slots are cited?** Every Role / Action / Business Event / View / Status name in a verify example is backed by `grep` against `event-model.md` or workspace lookup on the underlying BC surface.
 
-Unanswerable → cannot write `Verification Plan` yet. Flip or keep `status: blocked` and resolve via `/al-research` (BC surface), `/grill-me` (intent), or `/al-steer` (wrong slice boundary or missing prerequisite).
+Unanswerable → cannot write `Verification Plan` yet. Flip or keep `status: blocked` and resolve via `al-research` agent (BC surface), `/grill-me` (intent), or `/al-steer` (wrong slice boundary or missing prerequisite).
 
 ## Ground exact names
 
-Every exact BC-specific symbol in a `Test Specification` or `Verification Plan` meets the evidence bar in [voice-contract.md](../../references/voice-contract.md): workspace hit this session or quoted fetch; conflicts and design-artifact facts escalate to `/al-research`. Names already cited by `/al-design` or `/al-event-model` count only when `grep` against those upstream files returns the name this session.
+Every exact BC-specific symbol in a `Test Specification` or `Verification Plan` meets the evidence bar in [voice-contract.md](../../references/voice-contract.md): workspace hit this session or quoted fetch; conflicts and design-artifact facts escalate to `al-research` agent. Names already cited by `/al-design` or `/al-event-model` count only when `grep` against those upstream files returns the name this session.
 
 Minted names in `New and Modified Objects` meet the bar's minted-name clause in [voice-contract.md](../../references/voice-contract.md).
 
@@ -100,10 +100,14 @@ Write telegraphic per line; drop articles, padding, hedges; fragments fine. Conc
 
 ## Document verification
 
-After writing the fresh `Test Specification` or `Verification Plan`, run `/al-doc-verify` before flipping `status:`:
+After writing the fresh `Test Specification` or `Verification Plan`, spawn the `al-agentic-dev:al-doc-verify` agent before flipping `status:`, with a brief naming:
 
 ```text
-/al-doc-verify --producer al-refine --artifacts specs/<NNN>-<slug>/tasks/ --task T-NNN --slice <slice> --handoff al-implement|al-code-review
+producer: al-refine
+artifact_paths: specs/<NNN>-<slug>/tasks/
+task_id: T-NNN
+slice: <slice>
+intended_handoff: al-implement | al-code-review
 ```
 
 `verdict=fail` blocks the `ready-for-implementation` / `ready-for-verification` flip; fix the structural/boundary issue or route to `/al-steer`. `verdict=warn` does not block; include the warning in the handoff. This gate checks document integrity only, not whether the planned proof is sufficient.
@@ -126,7 +130,7 @@ No `in-progress` state. The task is now executable-ready, but still not `done`.
 Three moments narrate to the branch feed. At each, hand `/al-feed` a brief — what happened, why it matters to someone who hasn't read the proof, the kind — and `/al-feed` composes the punchline and layers and appends the card. Fire only on these; the per-question grounding and inline grilling stay silent.
 
 - **decision** — proof structure committed: `Expected Behaviors` vs `Decision Matrix`, and `New:` vs `Modified:` objects settled. Captures *how* this task will be proved and which objects it creates vs changes — coverage shape, Unit/Integration split, new-vs-modified seeded from `architecture.md` then reconciled to workspace.
-- **surprise** — unanswerable exit: a needed answer won't ground (or `/al-doc-verify` fails), so the task stays/flips `blocked` and routes out rather than ship fuzzy proof. Captures the question that couldn't be pinned and the route taken (`/al-research`, `/al-grill-adr`, `/grill-me`, `/al-steer`).
+- **surprise** — unanswerable exit: a needed answer won't ground (or the `al-doc-verify` agent returns `verdict=fail`), so the task stays/flips `blocked` and routes out rather than ship fuzzy proof. Captures the question that couldn't be pinned and the route taken (the `al-research` agent, `/al-grill-adr`, `/grill-me`, `/al-steer`).
 - **landing** — the status flip `ready → ready-for-implementation` / `ready-for-verification`. Captures that the task now carries a complete grounded plan, regenerated fresh not stale, and which skill picks it up next.
 
 ## Composition
@@ -136,4 +140,4 @@ Three moments narrate to the branch feed. At each, hand `/al-feed` a brief — w
 | **Runs after**     | `/al-scope` or dependency restoration opened one named task to `status: ready` |
 | **Hands off to**   | `/al-implement` for `ready-for-implementation` technical tasks; `/al-code-review` then `/al-page-script` or `/al-user-verification` for `ready-for-verification` verify tasks |
 | **Replan venue**   | `/al-steer` |
-| **Sidebands**      | `/al-research` (BC facts), `/al-second-opinion` (non-trivial `Test Specification` / `Verification Plan`), `/al-grill-adr` (fuzzy domain term), `/grill-me` (fuzzy intent) |
+| **Sidebands**      | `al-research` agent (BC facts), `/al-second-opinion` (non-trivial `Test Specification` / `Verification Plan`), `/al-grill-adr` (fuzzy domain term), `/grill-me` (fuzzy intent) |

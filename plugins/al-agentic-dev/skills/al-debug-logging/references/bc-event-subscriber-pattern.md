@@ -15,7 +15,7 @@ When you do control the source, use an in-place probe. Closer to the decision, e
 
 ## Find the event
 
-Use `/bc-standard-reference` to locate published events near the suspected behaviour. Look for events on either side of the suspected branch (`OnBefore*` and `OnAfter*` of the same operation) so the order in `telemetry.jsonl` reveals which path ran.
+Use `bc-standard-reference` agent to locate published events near the suspected behaviour. Look for events on either side of the suspected branch (`OnBefore*` and `OnAfter*` of the same operation) so the order in `telemetry.jsonl` reveals which path ran.
 
 ## Pattern
 

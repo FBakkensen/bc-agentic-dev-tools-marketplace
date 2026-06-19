@@ -62,7 +62,7 @@ The script at `scripts/feed-append.ps1` (over `scripts/feed.psm1`) is the source
 
 | | |
 |---|---|
-| **Invoked from** | the 17 narrating skills, each at its own hand-wired card-firing moment (see the per-skill triggers in those skills) — never the 3 silent skills (`/al-build`, `/al-second-opinion`, `/al-agentic-dev-overview`) |
+| **Invoked from** | the 15 narrating skills, each at its own hand-wired card-firing moment (see the per-skill triggers in those skills) — never the 3 silent skills (`/al-build`, `/al-second-opinion`, `/al-agentic-dev-overview`) |
 | **Returns to caller** | nothing for chat — a side-write of one card; the caller continues its own work |
 
-A gate narrates its own card only when its verdict is self-describing (`/al-doc-verify`); a gate whose verdict is context-free stays silent and the caller that holds the phase context narrates (`/al-build`).
+The skill that holds the phase context fires the card. A self-describing verdict (the read-only `al-doc-verify` agent's `verdict=` line) the caller cards verbatim from what the agent returned; a context-free verdict (`/al-build`) the caller narrates with the phase context it holds. A read-only agent never writes the feed itself — `/al-feed` is a write, outside its envelope.

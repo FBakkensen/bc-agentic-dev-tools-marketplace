@@ -108,4 +108,4 @@ Three moments narrate to the branch feed; per-mutant churn stays in the `.output
 | **Runs after**     | `/al-refactor` (inside `/al-implement` loop), OR standalone on legacy code before `/al-refactor` |
 | **Hands off to**   | `/al-implement` for reached real-gap survivors inside the task loop; `/al-refine` only for unreached-line or missing-coverage cases; back to caller standalone |
 | **Replan venue**   | `/al-steer` |
-| **Sidebands**      | `/al-research` (BaseApp behaviour for survivor classification), `/grill-me` (classification call needs the user) |
+| **Sidebands**      | `al-research` agent (BaseApp behaviour for survivor classification), `/grill-me` (classification call needs the user) |

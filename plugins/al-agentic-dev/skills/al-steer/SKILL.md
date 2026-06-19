@@ -20,7 +20,7 @@ User invokes `/al-steer` in natural language ("where are we?", "what's next?", "
 
 ## Power model
 
-Read anything in workspace. Write the `tasks/` folder structurally — add, split, delete, reorder, re-prefix task files — only after explicit user ack; silent restructuring is the anti-pattern that loses the audit trail. `/al-steer` owns later `NNN-` re-prefixing: insert into a gap (`025` between `020` and `030`); when a gap fills, rename the minimum local run of files (the `T-MMM` id inside each renamed file is untouched, so no skill's anchor breaks). Complete the whole rename run before any `/al-doc-verify` call or downstream handoff — a half-finished run can leave two files sharing a prefix, which `/al-doc-verify` flags as a duplicate-prefix failure. Write `.out-of-scope/<concept>.md` when substantive rejection earns durable memory. Nothing else.
+Read anything in workspace. Write the `tasks/` folder structurally — add, split, delete, reorder, re-prefix task files — only after explicit user ack; silent restructuring is the anti-pattern that loses the audit trail. `/al-steer` owns later `NNN-` re-prefixing: insert into a gap (`025` between `020` and `030`); when a gap fills, rename the minimum local run of files (the `T-MMM` id inside each renamed file is untouched, so no skill's anchor breaks). Complete the whole rename run before any `al-doc-verify` agent call or downstream handoff — a half-finished run can leave two files sharing a prefix, which `al-doc-verify` agent flags as a duplicate-prefix failure. Write `.out-of-scope/<concept>.md` when substantive rejection earns durable memory. Nothing else.
 
 ## Read first, then name
 
@@ -81,10 +81,14 @@ Name candidate mutations that match what the trigger surfaced. Splitting, insert
 
 ## Document verification
 
-When restructuring the `tasks/` folder by explicit user ack (adding, splitting, deleting, or re-prefixing task files), run `/al-doc-verify` after the write and before naming downstream handoff:
+When restructuring the `tasks/` folder by explicit user ack (adding, splitting, deleting, or re-prefixing task files), spawn the `al-agentic-dev:al-doc-verify` agent after the write and before naming downstream handoff, with a brief naming:
 
 ```text
-/al-doc-verify --producer al-steer --artifacts specs/<NNN>-<slug>/tasks/ --task <T-NNN> --slice <slice> --handoff <next-skill>
+producer: al-steer
+artifact_paths: specs/<NNN>-<slug>/tasks/
+task_id: <T-NNN>
+slice: <slice>
+intended_handoff: <next-skill>
 ```
 
 Do not run this gate for simple `status:` flips, closeout notes, or inline replan flags. `verdict=fail` blocks the handoff; fix the structural/boundary issue or leave the relevant task `blocked`. `verdict=warn` does not block; surface the warning in the steering note.
@@ -102,7 +106,7 @@ Grilling vetoes a recurring scope item with substantive reason (project scope, t
 `/al-steer` is mostly advisory and silent there — most navigation moves no durable byte. But it holds real plan-reshaping authority, and the wary developer wants to see when the plan itself bends. At each moment below, hand `/al-feed` a brief — what just happened, why it matters, the kind — and `/al-feed` composes the punchline + layers and appends the card. Card only the plan-changing moments; routine board reads and handoff naming get nothing.
 
 - **surprise** — a replan trigger acted on as a halt: a task flipped `blocked`, trigger ID + reason recorded. Captures that the plan no longer holds and a task got parked. Brief names which of the eight triggers, the codebase symptom in object terms, and that a tool-diagnosis trigger was re-confirmed before the flip.
-- **decision** — the `tasks/` folder structurally rewritten after explicit user ack (split / insert / delete / reorder). Captures that the plan was reshaped — e.g. the ballooning task split into three that each fit a session. Brief names the trigger, the exact mutation, the `review: clean` strip, the `/al-doc-verify` gate.
+- **decision** — the `tasks/` folder structurally rewritten after explicit user ack (split / insert / delete / reorder). Captures that the plan was reshaped — e.g. the ballooning task split into three that each fit a session. Brief names the trigger, the exact mutation, the `review: clean` strip, the `al-doc-verify` agent gate.
 - **verdict** — grilling vetoes a trigger: prior `status:` restored, the false halt closed. Captures that a task thought stuck was proved fine and un-stuck. Brief names what the halt suspected, why it was overturned, that the reasoning was recorded not silently dropped.
 - **decision** — a recurring scope request vetoed and recorded at `.out-of-scope/`. Captures that a line was drawn — this idea is deliberately out of scope and won't be revisited. Brief names the substantive reason, written so the next session can't re-litigate it.
 

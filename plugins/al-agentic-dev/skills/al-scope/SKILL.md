@@ -101,10 +101,12 @@ Shape follows [markdown-spec-discipline.md](../../references/markdown-spec-disci
 
 ## Document verification
 
-After writing the `tasks/` folder, run `/al-doc-verify` before the Gate report:
+After writing the `tasks/` folder, spawn the `al-agentic-dev:al-doc-verify` agent before the Gate report, with a brief naming:
 
 ```text
-/al-doc-verify --producer al-scope --artifacts specs/<NNN>-<slug>/tasks/ --handoff al-refine
+producer: al-scope
+artifact_paths: specs/<NNN>-<slug>/tasks/
+intended_handoff: al-refine
 ```
 
 `verdict=fail` blocks the Gate report and `/al-refine` handoff; fix the structural/boundary issue or route to `/al-steer`. `verdict=warn` does not block; include the warning in the Gate report. This gate checks document integrity only, not whether the task decomposition is optimal.
@@ -117,7 +119,7 @@ Once when task decomposition lands in the `tasks/` folder. Gate report names sli
 
 Two moments narrate to the branch feed; everything else — folder-shape mechanics, per-task frontmatter, edge wiring — stays silent. At each, hand `/al-feed` a brief of what happened and why it matters to a wary dev who has not read `architecture.md`; `/al-feed` composes the punchline and layers and appends the card.
 
-- **landing** — decomposition lands in the `tasks/` folder and clean `/al-doc-verify` clears the `/al-refine` handoff. Brief: the design is now a concrete to-do list — NN chunks, each user-facing one ending in a check the user signs off, ready to start. Layers carry the slice families, the user-verification-gate count, linear vs branching shape, and the Goal restated in user terms.
+- **landing** — decomposition lands in the `tasks/` folder and a clean `al-doc-verify` verdict clears the `/al-refine` handoff. Brief: the design is now a concrete to-do list — NN chunks, each user-facing one ending in a check the user signs off, ready to start. Layers carry the slice families, the user-verification-gate count, linear vs branching shape, and the Goal restated in user terms.
 - **surprise** — the replan/stop guard fires: a gap `architecture.md` cannot answer (missing module, pattern conflict, unnamed brownfield touchpoint, slice absent from `event-model.md`) halts the write and routes to `/al-steer` rather than invent. Brief: hit a hole it could not fill honestly, so it stopped and handed it back instead of guessing. Layers name exactly what was missing and why inventing here would corrupt every downstream skill invisibly.
 
 ## Composition
@@ -127,4 +129,4 @@ Two moments narrate to the branch feed; everything else — folder-shape mechani
 | **Runs after**     | `/al-design` (architecture.md), `/al-event-model` for user/API-facing (event-model.md source for slice slugs and Goal) |
 | **Hands off to**   | `/al-refine` (one task at a time, technical or verify) |
 | **Replan venue**   | `/al-steer` (gap surfaced during decomposition) |
-| **Sidebands**      | `/al-research` (non-trivial BC areas), `/bc-standard-reference` (BaseApp grounding) |
+| **Sidebands**      | `al-research` agent (non-trivial BC areas), `bc-standard-reference` agent (BaseApp grounding) |

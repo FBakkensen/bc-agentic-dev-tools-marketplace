@@ -35,9 +35,7 @@ Pipeline commits carry `T-NNN <verb>: <message>` prefixes that associate commits
 
 ## Lenses
 
-Spawn all lenses in one message so they run concurrently. Each lens has narrow focused goal; synthesis pass dedupes across them.
-
-Sub-agents inherit neither hooks nor `CLAUDE.md`. Every lens spawn prompt carries the **BC vocabulary** line from `${CLAUDE_SKILL_DIR}/../../references/voice-contract.md` verbatim — a reviewer judging names without the vocabulary in its own context approves the generic verbs lens 1 exists to catch. Lens 1's spawn prompt additionally carries the bar's **Constructs** bullet verbatim, so its evidence check names the same construct classes the bar gates.
+Spawn all lenses in one message so they run concurrently — each as the `al-agentic-dev:al-review-lens` agent, except lens 3 (BC-specific) which spawns `al-agentic-dev:al-review-lens-bc` for its bc-code-intelligence reach. Each lens has a narrow focused goal; the synthesis pass dedupes across them. The spawn prompt carries only the per-lens goal below plus the diff/scope; the read-only envelope, model pin, BC vocabulary, and findings shape live in the agent body and ship to consumer repos. Lens 1's spawn prompt additionally carries the evidence bar's **Constructs** bullet verbatim, so its evidence check names the same construct classes the bar gates.
 
 | # | Lens | Focused goal | Mode |
 |---|---|---|---|
@@ -129,12 +127,10 @@ Four moments narrate to the branch feed. At each, hand `/al-feed` a brief — wh
 | **Runs after**     | user/API-facing per-slice: `/al-refine` filled the slice verify task and flipped it to `ready-for-verification`; backend-only per-slice: `/al-implement` flipped the last technical task in slice to `done`; per-feature: last task in feature flipped `done` |
 | **Hands off to**   | per-slice: `/al-refine` if grill loop added new tasks in current slice; else state-conditional after validation — user/API-facing slice routes to `/al-page-script` (`Journey Examples` present, `.yml` missing) or `/al-user-verification` (`.yml` exists or no E2E recording is needed); backend-only slice routes to next slice's technical tasks opened to `ready`, or — if this was the last backend slice — opens the `kind: breaking-change` task `blocked` → `ready` and routes to `/al-validate-breaking-changes`, then `/al-code-review` per-feature. per-feature: merge. |
 | **Replan venue**   | n/a; findings auto-loop into `/grill-me` per finding, never via `/al-steer` (review findings are not replan signals) |
-| **Sidebands**      | `/al-second-opinion` (cross-family advisory on large findings lists), `/grill-me` (per-finding triage), `/al-research` (BaseApp behaviour or BC convention), `/bc-standard-reference` (BaseApp pattern correctness) |
+| **Sidebands**      | `/al-second-opinion` (cross-family advisory on large findings lists), `/grill-me` (per-finding triage), `al-research` agent (BaseApp behaviour or BC convention), `bc-standard-reference` agent (BaseApp pattern correctness) |
 
 ## Delegation
 
-Spawn each lens as parallel sub-agent in one message. Lenses independent and context-expensive; running serially in main session burns tokens on per-file content synthesis doesn't need to retain. Per-feature mode benefits especially: five lenses across 20+ files is exactly the shape that wants parallelism. Delegation unavailable → run serially.
+Spawn each lens as a parallel agent in one message. Lenses are independent and context-expensive; running them serially in the main session burns tokens on per-file content the synthesis does not need to retain. Per-feature mode benefits especially: five lenses across 20+ files is exactly the shape that wants parallelism.
 
-After lens outputs are collected and synthesized, close completed lens sub-agent threads before the confidence pass. Do not leave completed lens agents open as passive state.
-
-Do not shadow a running lens. Lens fails or returns nothing → note gap in synthesis rather than re-running silently.
+Do not shadow a running lens. A lens that fails or returns nothing → note the gap in synthesis rather than re-running silently.

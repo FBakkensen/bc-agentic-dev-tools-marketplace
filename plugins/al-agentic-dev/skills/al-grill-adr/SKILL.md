@@ -32,18 +32,20 @@ Answer before walking away:
 - **Does any domain constraint surfaced here cross the four-of-four ADR bar?** Offer ADR inline when **all four** hold: hard to reverse (shipped data, partner integrations, behavioural contracts); surprising without context; real trade-off with genuine alternatives; domain (rule about *what the business does*, not *how the code is shaped*). "Partial posting allowed for service items only" is domain; "intercept via `OnBeforePostSalesDoc`" is architectural and belongs to `/al-design`. Three of four does not earn an ADR; inflation rots index. When a substantive question feels architectural, find the domain constraint behind it and grill that. Template: `${CLAUDE_SKILL_DIR}/../../references/adr.template.md`. Resolve `NNNN` per `${CLAUDE_SKILL_DIR}/../../references/cross-branch-numbering.md`.
 - **Which BC names verified this session?** Every BC-specific term landing in `CONTEXT.md` or domain ADR meets the evidence bar in [voice-contract.md](../../references/voice-contract.md). See *Citation chain in chat* below.
 
-Question stays unanswerable → grilling not done. Keep going, or `/al-research` if gap is BC behavioural fact rather than user intent.
+Question stays unanswerable → grilling not done. Keep going, or `al-research` agent if gap is BC behavioural fact rather than user intent.
 
 ## Citation chain in chat
 
-Evidence bar per [voice-contract.md](../../references/voice-contract.md). `CONTEXT.md` and domain ADRs are durable design artifacts: terms the workspace cannot settle route through `/al-research`, mandatory — vocabulary drift between agents and codebase is what `CONTEXT.md` exists to fix. Research fails → keep grilling; do not write the term or ADR this session.
+Evidence bar per [voice-contract.md](../../references/voice-contract.md). `CONTEXT.md` and domain ADRs are durable design artifacts: terms the workspace cannot settle route through `al-research` agent, mandatory — vocabulary drift between agents and codebase is what `CONTEXT.md` exists to fix. Research fails → keep grilling; do not write the term or ADR this session.
 
 ## Document verification
 
-After writing `CONTEXT.md` or a domain ADR, run `/al-doc-verify` before handing off:
+After writing `CONTEXT.md` or a domain ADR, spawn the `al-agentic-dev:al-doc-verify` agent before handing off, with a brief naming:
 
 ```text
-/al-doc-verify --producer al-grill-adr --artifacts CONTEXT.md[,docs/adr/NNNN-slug.md] --handoff al-event-model|al-design
+producer: al-grill-adr
+artifact_paths: CONTEXT.md[, docs/adr/NNNN-slug.md]
+intended_handoff: al-event-model | al-design
 ```
 
 `verdict=fail` blocks handoff; fix the structural/boundary issue or route to `/al-steer`. `verdict=warn` does not block; carry the warning in the handoff note. This gate checks document integrity only, not whether the domain rule is right.
@@ -64,4 +66,4 @@ At each, hand `/al-feed` a brief — what just happened in domain terms, why it 
 | **Runs after**     | `main` (kicks off new feature) or standalone for fuzzy term |
 | **Hands off to**   | `/al-event-model` (user/API-facing features) or `/al-design` (backend-only) |
 | **Replan venue**   | `/al-steer` |
-| **Sidebands**      | `/al-research` (BC facts), `/grill-me` (interview the user), `/al-second-opinion` (ADR reconciliation) |
+| **Sidebands**      | `al-research` agent (BC facts), `/grill-me` (interview the user), `/al-second-opinion` (ADR reconciliation) |

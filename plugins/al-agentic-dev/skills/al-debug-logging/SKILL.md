@@ -72,7 +72,7 @@ At that moment hand `/al-feed` a brief — what the probe asked, what the runtim
 ## Composition
 
 - `/al-build` — runs test harness, produces `.output/TestResults/*/telemetry.jsonl`.
-- `/bc-standard-reference` — finds BaseApp events for subscriber-based probes.
+- `bc-standard-reference` agent — finds BaseApp events for subscriber-based probes.
 
 ## Out of scope
 

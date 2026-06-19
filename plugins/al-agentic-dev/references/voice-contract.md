@@ -48,9 +48,9 @@ BC training data is stale fiction; your confidence about a name, signature, or p
 - **Constructs.** Workspace evidence stops at names. BC construct classes — record loop + modify, `SetLoadFields`, temp record lifecycle, page/report surface, `Commit` — carry execution-order and platform-cost semantics legacy code cannot vouch for. First write of a construct class in a task → fetch the matching topic per [bc-code-intelligence-dispatch.md](bc-code-intelligence-dispatch.md) or a Microsoft Learn passage, and declare it: `Researched: <construct> → <topic id / Learn URL>`.
 
 - **Satisfiers.** Any verbatim-quoted fetch with one-line citation counts.
-  - Names: `bc-code-intelligence` topic, Microsoft Learn, or `/bc-standard-reference`.
+  - Names: `bc-code-intelligence` topic, Microsoft Learn, or `bc-standard-reference` agent.
   - Constructs: topic or Learn passage only — BaseApp source shows an instance, not the rule.
-  - `/al-research` is mandatory when sources disagree or a fetched fact lands in a durable design artifact (`event-model.md`, `architecture.md`, `CONTEXT.md`, ADRs).
+  - `al-research` agent is mandatory when sources disagree or a fetched fact lands in a durable design artifact (`event-model.md`, `architecture.md`, `CONTEXT.md`, ADRs).
 
 - **Trace.** Declare in chat as `Researched: <fact> → <source path / URL / topic id>`. Task-scoped citations also land as `Contract notes` bullets at task reconcile — the one inline-citation carve-out, making skipped research visible to `/al-code-review` and the next session. Everything else in artifacts stays names-only.
 

@@ -25,17 +25,15 @@ Reshape AL so modules that earn their keep deepen and the ones that don't dissol
 - **Does reshape surface new behaviour or hidden requirement?** Yes → route the discovery; do not absorb.
 - **Which BC names verified this session?** Every BC-specific name a rename pulls from outside codebase (verb picked because "Insert is right for Customer", BaseApp subscriber signature, System Application call) meets the evidence bar in [voice-contract.md](../../references/voice-contract.md). See *Lens 4, naming* below.
 
-Unanswerable from the diff → area not ready. Resolve via `/al-research`, `/al-grill-adr`, or `/al-steer`.
+Unanswerable from the diff → area not ready. Resolve via `al-research` agent, `/al-grill-adr`, or `/al-steer`.
 
 Architectural vocabulary (Module, Interface, Implementation, Seam, Adapter, Depth, Leverage, Locality) in [LANGUAGE.md](../../references/LANGUAGE.md). Use exactly.
 
 ## Lenses
 
-Spawn 4 lens sub-agents in parallel on the task diff. Each returns reshape opportunities; main session merges into one ordered apply queue.
+Spawn 4 lens sub-agents in parallel on the task diff — each as the `al-agentic-dev:al-review-lens` agent, except lens 2 (BC best-practice) which spawns `al-agentic-dev:al-review-lens-bc` for its bc-code-intelligence reach. Each returns reshape opportunities; the main session merges into one ordered apply queue. The spawn prompt carries only the per-lens goal below plus the task diff; the read-only envelope, model pin, BC vocabulary, and findings shape live in the agent body and ship to consumer repos.
 
-Sub-agents inherit neither hooks nor `CLAUDE.md`. Every lens spawn prompt carries the **BC vocabulary** line from [voice-contract.md](../../references/voice-contract.md) verbatim — a lens that quotes or proposes names without the vocabulary in its own context repairs naming with the generic verbs the repair exists to remove. When the diff touches test code, the spawn prompt also names [test-layout.md](../../references/test-layout.md): its authoring contract is exactly what tidy passes break silently — consolidating "duplicate" integration-test library procedures violates duplicate-before-share, hoisting handlers off a test codeunit breaks the `[HandlerFunctions]` string binding, relocating a double breaks the per-app independence rule. Moving a test across the unit/integration boundary is never a lens call — that is replan, route `/al-steer`.
-
-After lens outputs are collected and merged, close the completed lens sub-agent threads. Do not leave completed lens agents open as passive state.
+When the diff touches test code, the spawn prompt also names [test-layout.md](../../references/test-layout.md): its authoring contract is exactly what tidy passes break silently — consolidating "duplicate" integration-test library procedures violates duplicate-before-share, hoisting handlers off a test codeunit breaks the `[HandlerFunctions]` string binding, relocating a double breaks the per-app independence rule. Moving a test across the unit/integration boundary is never a lens call — that is replan, route `/al-steer`.
 
 | # | Lens | Focused goal |
 |---|---|---|
@@ -91,7 +89,7 @@ Scope: objects, procedures, parameters, variables, record vars, table fields, pa
 
 Rename safety: editing a test procedure name requires task-spec reconciliation: update AAA header, `Procedure:`, and `Covered By` in the same change when the task is active. Intent shift → update via `/al-refine`. `[HandlerFunctions('...')]` strings are invisible to symbol tools; grep before any test-procedure rename per [tdd.md](../../references/tdd.md).
 
-Citation chain: when a rename pulls a BC name or verb from outside the codebase, the evidence bar in [voice-contract.md](../../references/voice-contract.md) applies before the rename lands — workspace hit or quoted fetch; conflicts escalate to `/al-research`. This is exactly where a confidently-wrong verb corrupts every downstream artifact.
+Citation chain: when a rename pulls a BC name or verb from outside the codebase, the evidence bar in [voice-contract.md](../../references/voice-contract.md) applies before the rename lands — workspace hit or quoted fetch; conflicts escalate to `al-research` agent. This is exactly where a confidently-wrong verb corrupts every downstream artifact.
 
 ## Cross-cutting
 
@@ -128,4 +126,4 @@ Reshape promises shape improves and behaviour does not — a wary dev wants proo
 | **Runs after**     | `/al-implement` green on current task, OR standalone on legacy code |
 | **Hands off to**   | `/al-mutate` (inside `/al-implement` loop), or back to caller standalone |
 | **Replan venue**   | `/al-steer` |
-| **Sidebands**      | `/al-research` (BC facts), `/bc-standard-reference` (BaseApp patterns), `/al-code-review` (non-structural concerns surface as out-of-scope notes), `/al-design` (standalone-on-legacy surfacing real architecture), `/grill-me` (non-obvious trade-off needs the user) |
+| **Sidebands**      | `al-research` agent (BC facts), `bc-standard-reference` agent (BaseApp patterns), `/al-code-review` (non-structural concerns surface as out-of-scope notes), `/al-design` (standalone-on-legacy surfacing real architecture), `/grill-me` (non-obvious trade-off needs the user) |
