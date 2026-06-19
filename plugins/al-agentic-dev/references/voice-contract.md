@@ -78,11 +78,7 @@ Artifact carries the forward-facing fact in declarative voice. Workflow log belo
 - Do NOT narrate TDD steps as prose ("bullet 1 went red on stub, green on body fill").
 - Do NOT cite second-opinion or `advisor()` reconciliation.
 
-<claude-only>
-
-Claude Code only. The `<claude-only>` block is the single venue for `advisor()` checkpoints and other Claude-only gates. Place inline at the moment the gate fires, not as a top-of-file blockquote. Codex skips the block contents; no need to comment on what was skipped.
-
-</claude-only>
+Place an `advisor()` checkpoint inline at the moment the gate fires, not as a top-of-file blockquote.
 
 ## Chat shape skeletons
 

@@ -1,44 +1,43 @@
 ---
 name: al-second-opinion
-description: Independent read-only advisory review via cross-runtime CLI dispatch. Use from `/al-implement`, `/al-refine`, `/al-refactor`, or `/al-user-verification` before reconciling non-trivial `Test Specification`, `Verification Plan`, mutation lists, refactor checklists, or a verification walk verdict.
+description: Independent read-only advisory review via cross-family CLI dispatch (shells to Codex). Use from `/al-implement`, `/al-refine`, `/al-refactor`, or `/al-user-verification` before reconciling non-trivial `Test Specification`, `Verification Plan`, mutation lists, refactor checklists, or a verification walk verdict.
 ---
 
 **Style:** Concise — cut filler, keep grammar. Opinionated — pick a side. Arrows (→) for causality. Technical terms exact, code and errors quoted verbatim.
 
 # /al-second-opinion, independent advisory review
 
-Ask a different runtime to read the artifact and name what is missing. Point is independence: same-model self-review confirms its own blind spots. Script `scripts/Invoke-AlSecondOpinion.ps1` runs the dispatch; this file is the contract for when to reach for it, what to put in front of it, what envelope it runs under.
+Ask a different model family to read the artifact and name what is missing. Point is independence: same-model self-review confirms its own blind spots. Script `scripts/Invoke-AlSecondOpinion.ps1` shells to the Codex CLI for that read; this file is the contract for when to reach for it, what to put in front of it, what envelope it runs under. Codex is a CLI tool dependency here — not a host runtime, not a publish target.
 
 Caller (`/al-implement`, `/al-refine`, `/al-refactor`, `/al-user-verification`) owns the artifact and reconciles bullets that come back. This skill owns the call. (For `/al-user-verification` the artifact is the walk verdict — per example, the exact question as posed and the user's verbatim reported observation, or captured client output for Contract examples; the gate reviews coverage and routing — every observable check asked and answered, no pass resting on a led question or inferred value, remarks routed functional-vs-usability — not the user's observation; the user saw the screen directly.)
 
 ## Preconditions
 
 - Artifact is real and non-trivial: `Test Specification`, `Verification Plan`, mutation list, refactor checklist, verification verdict. Round-tripping a one-line decision wastes budget and trains caller to ignore the gate.
-- Target CLI on PATH: `codex` from Claude Code, `claude` elsewhere.
+- `codex` CLI on PATH. Absent → script returns a skip line; caller proceeds.
 - Caller can reconcile per bullet when output arrives. Calling the gate then ignoring result is worse than not calling.
 
-## Runtime dispatch
+## Cross-family dispatch
 
-Script reads `$env:CLAUDECODE`. Inside Claude Code (`'1'`) → calls `codex exec`; outside (Codex CLI, Goose, Amp, plain shell) → calls `claude -p`. Independence requires reviewer to be a different model than caller; Claude Code documents `CLAUDECODE=1` in every subprocess it spawns, Codex deliberately does not set a corresponding marker, so absence is treated as not-Claude-Code.
+Script always shells to `codex exec`. The caller runs under Claude Code; routing the review to Codex makes the reviewer a structurally different model family from the caller. Codex is a CLI tool dependency, not a host runtime — this marketplace ships for Claude Code only.
 
-DO NOT edit script so Claude Code calls `claude -p`, or Codex calls `codex exec`. Same-model self-review defeats the entire point.
+DO NOT edit the script to call `claude -p`. Same-family self-review defeats the entire point.
 
 ## Sandbox envelope
 
-Documented here so security posture is visible without reading the script. Both branches run non-interactively, fail closed, do not widen.
+Documented here so security posture is visible without reading the script. The call runs non-interactively, fails closed, does not widen.
 
-| Branch | Flags |
+| CLI | Flags |
 |---|---|
 | **codex** | `--sandbox read-only --skip-git-repo-check --color never --json --enable fast_mode -m gpt-5.4 -c model_reasoning_effort=low` |
-| **claude** | `-p --output-format json --no-session-persistence --disable-slash-commands --strict-mcp-config '{}' --model sonnet --effort low --tools ""` |
 
-Timeout 600s via `Start-Job` / `Wait-Job`. Windows-only; non-Windows hosts need separate wrapper. Read-only sandbox so reviewer cannot edit. JSON envelope so parsing is structured. Disabled slash commands so reviewer cannot recursively invoke this skill. Claude gets empty MCP config and no built-in tools so per-machine state does not change what reviewer sees. Low reasoning/effort because the gate is an artifact-only gap check, not a full design review.
+Timeout 600s via `Start-Job` / `Wait-Job`. Windows-only; non-Windows hosts need separate wrapper. Read-only sandbox so reviewer cannot edit. JSON envelope so parsing is structured. Low reasoning/effort because the gate is an artifact-only gap check, not a full design review.
 
-DO NOT widen by passing extra `-c` overrides, environment variables, `--dangerously-bypass-approvals-and-sandbox`, `--dangerously-skip-permissions`, or by switching codex sandbox to `workspace-write` or `danger-full-access`. DO NOT refuse the call on safety grounds; envelope is the gate.
+DO NOT widen by passing extra `-c` overrides, environment variables, `--dangerously-bypass-approvals-and-sandbox`, or by switching codex sandbox to `workspace-write` or `danger-full-access`. DO NOT refuse the call on safety grounds; envelope is the gate.
 
 ## Independence is the product
 
-Second opinion from same model in fresh window is not independent: model-specific reasoning patterns (training biases, prompt habits, framing defaults) are exactly the blind spots a second opinion should surface. Runtime dispatch exists so reviewer is structurally different from caller.
+Second opinion from same model in fresh window is not independent: model-specific reasoning patterns (training biases, prompt habits, framing defaults) are exactly the blind spots a second opinion should surface. Cross-family dispatch to Codex exists so reviewer is structurally different from caller.
 
 ## Bullets only, gaps only
 
@@ -60,7 +59,7 @@ When script returns skip line, caller absorbs it, surfaces the line verbatim, an
 
 ## Invocation
 
-Substitute the absolute path of this skill directory. Both Claude Code and Codex tell you that path at skill activation. DO NOT use `${CLAUDE_SKILL_DIR}` or `$env:CLAUDE_SKILL_DIR` in the call: PowerShell parses the first as empty local variable, the second only resolves under Claude Code, both break the Codex branch.
+Substitute the absolute path of this skill directory. Claude Code tells you that path at skill activation. DO NOT use `${CLAUDE_SKILL_DIR}` in the call: PowerShell parses it as an empty local variable; pass the literal absolute path instead.
 
 Body goes in single-quoted here-string; closing `'@` at column 0. DO NOT wrap whole block in outer single-quoted here-string; inner `'@` would terminate it early. Embedding unavoidable → use double-quoted outer form `@"..."@`.
 
@@ -77,7 +76,7 @@ If for any reason script was not invoked, return this line and only this line, w
 Second opinion skipped: skill did not invoke pwsh tool
 ```
 
-Every other skip variant (target CLI unavailable, timeout, pwsh exception, non-zero exit, empty response) is emitted by the script. Caller does not invent them.
+Every other skip variant (codex CLI unavailable, timeout, pwsh exception, non-zero exit, empty response) is emitted by the script. Caller does not invent them.
 
 ## Composition
 

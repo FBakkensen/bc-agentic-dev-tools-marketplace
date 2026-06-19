@@ -119,11 +119,7 @@ verify:    status: ready → status: ready-for-verification
 
 No `in-progress` state. The task is now executable-ready, but still not `done`.
 
-<claude-only>
-
 **Advisor checkpoint.** Call `advisor()` before writing the first `Test Specification` or `Verification Plan` into the task file. Shape is hard to retract once downstream skills consume it.
-
-</claude-only>
 
 ## Feed
 

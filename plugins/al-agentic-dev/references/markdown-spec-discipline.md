@@ -2,10 +2,6 @@
 
 `event-model.md`, `architecture.md`, and the `tasks/` folder under `specs/<NNN>-<slug>/` are the reading surface. This file is what `/al-design`, `/al-event-model`, `/al-scope` consult before generating, and what every maintaining skill (`/al-refine`, `/al-implement`, `/al-mutate`, `/al-steer`) consults before editing its owned markdown surface.
 
-<claude-only>
-Runtime gate. Content inside `<claude-only>...</claude-only>` blocks applies only to Claude Code (which has an `advisor()` tool). Codex and other runtimes without it skip the block contents and move on.
-</claude-only>
-
 ## Source of truth: examples
 
 Three populated examples in [`examples/`](./examples/) carry the canonical shape:

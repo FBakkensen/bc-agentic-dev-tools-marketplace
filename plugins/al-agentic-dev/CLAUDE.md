@@ -91,14 +91,16 @@ Templates are materialised lazily on first need by the owning flow. `markdown-sp
 
 Cross-skill paths within this plugin (when reaching into another skill's local references): `${CLAUDE_SKILL_DIR}/../<skill>/references/<file>`. Reach for plugin-level first; cross-skill paths are a smell to be migrated.
 
-## Skill-only runtime
+## Runtime surface
 
-**Rule**: Ship runtime behavior as skills only. DO NOT add Claude-only plugin agents or Codex-invisible runtime prompts. Put reusable runtime rules in `SKILL.md` or in a `references/*.md` file a skill explicitly reads.
+This marketplace targets **Claude Code only**. Skills may use the full Claude Code runtime surface — `Agent()` fan-out, inline `mcp__` calls, namespaced `/al-*` cross-invocation, plugin agents — when a skill genuinely earns it. Prefer skills for runtime behavior by default (they remain the simplest, most inspectable unit), but the old prohibition on Claude-specific tool syntax is gone.
 
-The two former agent-shaped workflows now live as skills:
+**Keep skills project-agnostic across consumer repos.** A skill must run in any AL/BC project without hardcoding this marketplace's paths or a specific repo's layout. This is *consumer-repo* portability (orthogonal to any runtime concern) — soft guidance, not a CI gate.
+
+Notable script-backed skills:
 
 - **`skills/al-mutate/SKILL.md`**, mutate-build-revert cycle, mutation kinds, survivor classification, BC safety.
-- **`skills/al-second-opinion/SKILL.md`** is the contract; **`skills/al-second-opinion/scripts/Invoke-AlSecondOpinion.ps1`** is the execution. Dispatched by runtime. `$env:CLAUDECODE -eq '1'` → `codex exec --sandbox read-only --skip-git-repo-check --color never --json --enable fast_mode -m gpt-5.4 -c model_reasoning_effort=low`. Else → `claude -p --output-format json --no-session-persistence --disable-slash-commands --strict-mcp-config '{}' --model sonnet --effort low --tools ""`. 600s timeout via `Start-Job` / `Wait-Job`. Skip lines name the target CLI. SKILL.md documents the sandbox flags so the security envelope stays visible without reading the script. **Windows-only**; `Start-Job` / `Wait-Job` targets pwsh on Windows; portability is a future concern.
+- **`skills/al-second-opinion/SKILL.md`** is the contract; **`skills/al-second-opinion/scripts/Invoke-AlSecondOpinion.ps1`** is the execution. It always shells to `codex exec --sandbox read-only --skip-git-repo-check --color never --json --enable fast_mode -m gpt-5.4 -c model_reasoning_effort=low` for an independent, different-model-family read. **Codex is a CLI tool dependency here — not a host runtime, not a publish target.** It is the sole surviving Codex reference in the marketplace; do not "fix" it by removing it. 600s timeout via `Start-Job` / `Wait-Job`. Skip line names the codex CLI. SKILL.md documents the sandbox flags so the security envelope stays visible without reading the script. **Windows-only**; `Start-Job` / `Wait-Job` targets pwsh on Windows; portability is a future concern.
 - **`skills/al-feed/`** (the branch-feed writer) is pure pwsh 7 + cross-platform .NET (`[System.IO.File]`, `[System.Text.UTF8Encoding]`; no `Start-Job`/`Wait-Job`, no Windows-only API), so the engine runs wherever pwsh 7 is on PATH. The CI Pester job is `windows-latest` only, so that cross-platform property is currently unverified by CI.
 
 ## Layout
@@ -129,7 +131,6 @@ skills/
 ├── al-agentic-dev-overview/SKILL.md  # Reads ../../references/overview.md, emits verbatim
 ├── al-build/
 │   ├── CLAUDE.md                # Skill-local dev-time rules (smoke tests, container recovery, config priority)
-│   ├── AGENTS.md                # Codex bridge to CLAUDE.md
 │   ├── SKILL.md
 │   ├── README.md                # Human-facing prerequisites + quick start
 │   ├── config/                  # al-build.json template (the live copy lives in the consumer repo root)
@@ -138,7 +139,6 @@ skills/
 ├── al-doc-verify/SKILL.md
 ├── al-debug-logging/
 │   ├── CLAUDE.md                # Skill-local dev-time rules (same-publisher constraint, DEBUG- prefix, transient-only)
-│   ├── AGENTS.md                # Codex bridge to CLAUDE.md
 │   ├── SKILL.md
 │   └── references/
 │       ├── telemetry-workflow.md

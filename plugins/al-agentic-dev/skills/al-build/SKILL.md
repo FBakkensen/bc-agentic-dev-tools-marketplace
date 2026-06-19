@@ -65,9 +65,7 @@ Always delegate `/al-build` to one general subagent. Build output is verbose; ke
 
 After the worker returns the gate report, close the completed subagent thread before interpreting or reporting the result.
 
-Model:
-- Codex `spawn_agent`: `model=gpt-5.4-mini`, `reasoning_effort=low`
-- Claude Code `Agent`: `model=haiku`
+Model: `Agent` with `model=haiku`.
 
 ### Worker rules
 

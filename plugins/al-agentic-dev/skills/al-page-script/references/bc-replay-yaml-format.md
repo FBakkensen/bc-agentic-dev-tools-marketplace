@@ -527,7 +527,7 @@ Two paths:
   capture. Agent signs in itself: `container.username` / `container.password` from repo-root
   `al-build.json` (defaults `admin` / `P@ssw0rd`), local container hosts only. Caveat: HTTP
   containers strand the download as `Unconfirmed *.crdownload` — bytes complete, copy it out.
-- **Plugin harness** (below) — when Chrome MCP is absent (Codex, headless). Lifecycle, auth,
+- **Plugin harness** (below) — when Chrome MCP is absent (headless). Lifecycle, auth,
   download capture [proven]. Coordinate click `{"cmd":"click","x":<n>,"y":<n>}` →
   `page.mouse.click` [not yet session-proven — verify on first use]; locator commands reach
   recorder chrome and dialog buttons only.

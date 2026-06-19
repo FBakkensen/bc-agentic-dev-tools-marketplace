@@ -61,9 +61,7 @@ Use one delegated worker when host supports subagents. Mutation execution is iso
 
 After the worker returns its mutation report, close the completed worker thread before the host resumes judgement, killer-test work, or closeout.
 
-Model:
-- Codex `spawn_agent`: `gpt-5.4-mini`, `reasoning_effort=low`
-- Claude Code `Agent`: `sonnet`
+Model: `Agent` with `sonnet`.
 
 ### Worker rules
 

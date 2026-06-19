@@ -1,10 +1,9 @@
-Marketplace of AI-assisted AL/Business Central development plugins for Claude Code and Codex.
+Marketplace of AI-assisted AL/Business Central development plugins for Claude Code.
 
 Plugins live under `plugins/`:
 
-- `al-agentic-dev/` — feature-level agentic flow (event-model, design, scope, refine, implement, user-verification, refactor, mutate, code-review)
-- `al-build/` — AL build/test gate
-- `al-debug-logging/` — temporary runtime probes via FeatureTelemetry
+- `al-agentic-dev/` — feature-level agentic flow (event-model, design, scope, refine, implement, user-verification, refactor, mutate, code-review) plus the build/test gate, telemetry probes, and second-opinion skills
+- `al-language-server/` — AL language server for the Claude Code LSP tool (ships `.lsp.json`)
 - `bc-standard-reference/` — BaseApp / System Application lookup
 - `grill-me/` — interview and stress-test plans
 - `release-notes/` — PR-driven release note generation
@@ -13,7 +12,6 @@ Top-level layout:
 
 ```
 .claude-plugin/marketplace.json   # Claude marketplace manifest — every plugin listed here
-.agents/plugins/marketplace.json  # Codex marketplace manifest — same plugin set minus Claude-only plugins (capability-gated, listed in Validate-PluginStructure.ps1)
 plugins/<name>/                   # One folder per plugin
 scripts/                          # PowerShell 7.2+ validation scripts (CI gates)
 .github/workflows/                # ci.yml, claude.yml, claude-code-review.yml
@@ -24,9 +22,7 @@ Every plugin has the same shape:
 ```
 plugins/<plugin-name>/
 ├── .claude-plugin/plugin.json    # Claude manifest (name, version, description)
-├── .codex-plugin/plugin.json     # Codex manifest (name, version, description, skills)
 ├── CLAUDE.md                     # Plugin-specific context — voice and conventions live here
-├── AGENTS.md                     # Codex-facing bridge to CLAUDE.md
 ├── skills/                       # One or more skills
 │   └── <skill-name>/
 │       ├── SKILL.md              # User-facing skill body

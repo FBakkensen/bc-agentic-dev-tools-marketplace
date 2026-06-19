@@ -98,8 +98,4 @@ At each moment hand `/al-feed` a brief — what just happened, why it matters to
 | **Replan venue**   | `/al-steer` (downstream fact invalidates timeline) |
 | **Sidebands**      | `/al-research` (BaseApp Role / Action / Event / View / Status names), `/bc-standard-reference` (pure BaseApp behaviour), `/grill-me` (confess-your-guesses pass), `/al-second-opinion` (non-trivial timelines: multi-Role, branching, brownfield, integration) |
 
-<claude-only>
-
 **Advisor checkpoint.** Call `advisor()` before writing `event-model.md` for first time. Artifact is load-bearing for `/al-design`'s AL-shape decisions; drift caught here costs minutes, drift caught at `/al-design` costs a feature.
-
-</claude-only>

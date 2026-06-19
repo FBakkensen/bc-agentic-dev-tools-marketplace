@@ -129,7 +129,7 @@ Four moments narrate to the branch feed. At each, hand `/al-feed` a brief — wh
 | **Runs after**     | user/API-facing per-slice: `/al-refine` filled the slice verify task and flipped it to `ready-for-verification`; backend-only per-slice: `/al-implement` flipped the last technical task in slice to `done`; per-feature: last task in feature flipped `done` |
 | **Hands off to**   | per-slice: `/al-refine` if grill loop added new tasks in current slice; else state-conditional after validation — user/API-facing slice routes to `/al-page-script` (`Journey Examples` present, `.yml` missing) or `/al-user-verification` (`.yml` exists or no E2E recording is needed); backend-only slice routes to next slice's technical tasks opened to `ready`, or — if this was the last backend slice — opens the `kind: breaking-change` task `blocked` → `ready` and routes to `/al-validate-breaking-changes`, then `/al-code-review` per-feature. per-feature: merge. |
 | **Replan venue**   | n/a; findings auto-loop into `/grill-me` per finding, never via `/al-steer` (review findings are not replan signals) |
-| **Sidebands**      | `/al-second-opinion` (cross-runtime advisory on large findings lists), `/grill-me` (per-finding triage), `/al-research` (BaseApp behaviour or BC convention), `/bc-standard-reference` (BaseApp pattern correctness) |
+| **Sidebands**      | `/al-second-opinion` (cross-family advisory on large findings lists), `/grill-me` (per-finding triage), `/al-research` (BaseApp behaviour or BC convention), `/bc-standard-reference` (BaseApp pattern correctness) |
 
 ## Delegation
 

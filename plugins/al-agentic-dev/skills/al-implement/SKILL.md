@@ -111,11 +111,7 @@ Eight triggers run as gate after mutation, before `done`. Trigger invalidates pl
 
 Trivia absorbs inline: missing scaffolding, permission set entry, object ID, caption, or BC-vocab rename — build-gate forcings the spec's assertions never observe. Reusing a seam pattern a sibling task already established (the same interface, the same test-double shape) is applying a decision already made, not trigger #6 — absorb it inline, do not route a settled architecture through `/al-steer` a second time. A non-semantic edit the user asks for in-flow — a comment, a local rename, formatting that moves no decision logic and keeps the gate green — absorbs the same way; minting a task for a two-line comment scrub is the ceremony the pushback targets. A public-surface rename is not trivia: it is an AppSource decision, route it. Apply, note, rerun `/al-build`, continue. A production object the assertions require stays trigger #2; schema changes, new event publishers, new codeunits, a genuinely new seam, or test-outcome changes route through `/al-steer`.
 
-<claude-only>
-
 Before flipping task to `done`, call `advisor()`. Final correctness check on implementation, reconciled task spec, refactor outcome, and mutation result before durable status change.
-
-</claude-only>
 
 Flip surface: locate the task file by its `T-MMM` filename (e.g. `tasks/070-T-007-derive-audit-reason.md`) and edit anchored on its `status:` frontmatter line. Status flip swaps the `status:` value byte-exact:
 

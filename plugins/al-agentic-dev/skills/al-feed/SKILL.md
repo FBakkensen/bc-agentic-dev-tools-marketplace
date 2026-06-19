@@ -43,7 +43,7 @@ Per branch, alongside the other Tier-2 artifacts:
 
 Compose the punchline and layers, then call the append script. `-LayersJson` is a JSON array of `{label, body}` (empty `[]` for a punchline-only card). The script stamps `ts`, appends one json line, and regenerates the html.
 
-Substitute the absolute path of this al-feed skill directory; both Claude Code and Codex tell you that path at skill activation. DO NOT use `${CLAUDE_SKILL_DIR}` or `$env:CLAUDE_SKILL_DIR` in the call — PowerShell parses the first as an empty local variable, the second only resolves under Claude Code, and either breaks the Codex branch.
+Substitute the absolute path of this al-feed skill directory; Claude Code tells you that path at skill activation. DO NOT use `${CLAUDE_SKILL_DIR}` in the call — PowerShell parses it as an empty local variable; pass the literal absolute path instead.
 
 ```powershell
 & '<absolute path of this al-feed skill directory>/scripts/feed-append.ps1' `

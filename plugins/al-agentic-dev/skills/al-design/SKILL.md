@@ -126,8 +126,4 @@ Three moments narrate to the branch feed; the architecture reshaping itself (del
 | **Replan venue**   | `/al-steer` |
 | **Sidebands**      | `/al-research` (BC facts), `/bc-standard-reference` (pure BaseApp questions), `/grill-me` (design-twice reconciliation), `/al-second-opinion` (parallel design-twice picks) |
 
-<claude-only>
-
 **Advisor checkpoint.** Call `advisor()` before writing `architecture.md` for first time. Artifact is load-bearing for every downstream skill; drift caught here costs minutes, drift caught at `/al-implement` costs a feature.
-
-</claude-only>
