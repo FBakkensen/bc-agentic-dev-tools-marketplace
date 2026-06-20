@@ -1,6 +1,6 @@
 # Repository Structure
 
-The `fbakkensen/bc-w1` repo mirrors the official Microsoft Business Central Standard (Worldwide) source. Navigate by domain path, not by guessing filenames.
+The `fbakkensen/bc-w1` repo mirrors the official Microsoft Business Central Standard (Worldwide) source. Navigate by domain path, not by guessing filenames — when unsure of a folder's contents, `gh repo read-dir "<path>" --repo fbakkensen/bc-w1` lists it without cloning (tab-separated `type name octalMode size`).
 
 ```
 bc-w1/

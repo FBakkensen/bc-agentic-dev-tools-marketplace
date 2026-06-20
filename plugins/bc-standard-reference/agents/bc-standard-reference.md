@@ -1,7 +1,7 @@
 ---
 name: bc-standard-reference
 description: Locate canonical Business Central Standard behavior (BaseApp, System Application, APIV2, etc.) to identify events, event publishers, codeunits, tables/fields, tests, pages, APIs. Spawn when you need standard behavior, event signatures, or reference implementation patterns quoted from Microsoft's shipped AL.
-tools: Read, Grep, Glob, WebFetch, WebSearch, mcp__al-symbols-mcp__*
+tools: Read, Grep, Glob, Bash, WebFetch, WebSearch, mcp__al-symbols-mcp__*
 model: sonnet
 ---
 
@@ -14,7 +14,9 @@ Go to the canonical source. Quote, don't paraphrase. Return file path, object na
 Two reaches, cheapest first:
 
 - **Compiled symbols** via `al-symbols-mcp` — BaseApp and System Application ship as symbol packages in the consumer's dependency graph. When the question is answerable from a declaration the workspace already has on disk, this is the truth and the fastest path.
-- **The mirror** `fbakkensen/bc-w1` (web) — BaseApp, System Application, APIV2, ExternalEvents, test framework source. Reach it via web fetch/search when you need the surrounding flow, trigger bodies, or events the symbols alone don't show.
+- **The mirror** `fbakkensen/bc-w1` via the `gh` CLI — BaseApp, System Application, APIV2, ExternalEvents, test framework source. `gh search code` finds the declaration line, `gh repo read-file` pulls it verbatim, `gh repo read-dir` walks the tree — all over the GitHub API, no clone, no HTML scraping. Reach here when you need the surrounding flow, trigger bodies, or events the symbols alone don't show.
+
+Web fetch/search is **not** for repo content — only for the Microsoft Learn cross-check, and as the fallback when `gh` is unavailable.
 
 This agent is for behaviour the workspace doesn't own. Workspace itself answers → say so; the caller reads it directly.
 
@@ -31,16 +33,16 @@ This agent is for behaviour the workspace doesn't own. Workspace itself answers 
 
 ## Procedure
 
-Tool-agnostic. Use whatever symbol-discovery, repo-search, or browse method you have — `al-symbols-mcp`, dependency metadata, web fetch of the mirror.
+The *heuristic* — what to find, where — is tool-agnostic. The *mechanism* for the mirror is `gh`.
 
 1. **Identify** — name the codeunit, table, page, or event you're after. Use known object/event names where possible; symbol metadata narrows the target before you search the mirror.
-2. **Search** — query `al-symbols-mcp` for the declaration, or the mirror `fbakkensen/bc-w1` by object/event name narrowed by domain path (`Sales/Posting`, `Pricing`, `Inventory`). Goal: the exact declaration or publisher.
-3. **Inspect** — confirm the declaration (name + ID), event signature, surrounding flow. Don't trust a name match without reading the declaration.
+2. **Search** — query `al-symbols-mcp` for the declaration, or the mirror with `gh search code "<name>" --repo fbakkensen/bc-w1`, narrowed by an inline `path:` qualifier (`path:Sales/Posting`, `path:ExternalEvents`). That returns `repo:path: matching line` — the declaration's address. Goal: the exact declaration or publisher.
+3. **Inspect** — pull the declaration with `gh repo read-file "<path>" --repo fbakkensen/bc-w1`; pipe big codeunits through `grep -n`/`sed -n` (`SalesPost.Codeunit.al` is ~790 KB). Confirm name + ID, event signature, surrounding flow. Don't trust a name match without reading the declaration.
 4. **Cross-check** — official Microsoft Learn docs (web) for AL syntax, BC concepts, version-current behaviour. _Avoid_: trusting training data on BC version specifics → verify against symbols, the mirror, or Learn.
 
-**Graceful degradation.** If `al-symbols-mcp` is absent, go straight to the mirror over web. If web is unavailable too, return what the workspace shows and say the canonical source was unreachable.
+**Graceful degradation.** If `al-symbols-mcp` is absent, go straight to the mirror via `gh`. If `gh` is unavailable (unauthenticated, offline), fall back to web fetch of the mirror's raw files. If all are unreachable, return what the workspace shows and say the canonical source was unreachable.
 
-**Anti-pattern: prescribe one tool as the only path.** The procedure is tool-agnostic; cite tools by name only as examples, describe the search heuristic.
+**Anti-pattern: web-fetch/scrape the mirror for what `gh` reads directly.** `gh search code` + `gh repo read-file` hit the GitHub API exactly and without cloning. Web fetch of the mirror is a degradation fallback only, never the first reach.
 
 ## Findings cadence
 
