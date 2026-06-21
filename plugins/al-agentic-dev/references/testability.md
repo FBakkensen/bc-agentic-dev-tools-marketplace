@@ -2,7 +2,9 @@
 
 How to make AL/Business Central code unit-testable: three-phase decoupling, three default seams, five kinds of test double. Cited by `/al-design`, `/al-implement`, `/al-refactor`.
 
-Apply when production code resists unit testing because reads, decisions, and writes share one procedure. The signal is `if ... Get() then Validate()` patterns: untestable without a real database.
+## A seam is for MS logic, not for your own record code
+
+AL Runner runs your own tables, fields, triggers, and AL logic for real in-memory, so record logic is unit-testable as written — **decoupling is not a tax to test code that only touches your own tables.** A seam is earned only by a dependency on MS BaseApp / SA *behaviour* AL Runner cannot run (posting, number series, HTTP, SA service); [test-layout.md](test-layout.md) owns detecting which (the auto-stub report). Two over-applications to avoid: a **prop seam** — a 1:1 interface over a BaseApp routine extracted only to stub it (a real seam names a domain dependency you could vary — provider, API, environment; intentional BC coupling belongs in an earned integration test, not a prop); and a **temp-record for testing** — `temporary` is a design choice (purity, transaction shape), never a testability requirement. The three-phase decoupling below is the technique for a *genuine* seam, not the default shape of every codeunit.
 
 ## Three-phase decoupling
 
@@ -77,7 +79,7 @@ PurchInvHeader."Payment Reference" := 'REF-001';
 // no Insert(), no Library call required
 ```
 
-Database operations belong at the top of the call stack. Codeunits below receive `var TempRecord: Record X temporary`; they never call the database themselves.
+Keeping database side-effects high in the call stack (lower codeunits taking `var TempRecord: Record X temporary`) is a sound *design* default — but not a testability requirement: AL Runner runs real-table CRUD in-memory, so a codeunit reading/writing a real `Record X` is still unit-testable. Choose `temporary` when the design wants it, not to make a test pass.
 
 ## Three default seams
 
@@ -138,16 +140,16 @@ Two-step pattern: call `SetupResponse(200, jsonBody)` before the SUT; `Send()` r
 
 Hides BaseApp G/L calls: `Gen. Journal Line` `Validate()` and `Insert(true)`, number-series allocation, posting-setup reads. All parameters are `var`; the stub returns data by overwriting the caller's variables (same store/restore pattern as `IApiRequest`). Enables unit tests that assert finance logic without G/L accounts, bank accounts, or posting setup in the database.
 
-### Temporary tables, the cheaper alternative
+### Logic over a record's own fields needs no seam at all
 
-For logic that only depends on a record's own fields (no external calls), pass `var TempRecord: Record X temporary` instead of declaring an interface. Cheaper than a full interface extraction when the coupling is to a table, not an external system.
+Logic depending only on a record's own fields needs neither interface nor `temporary` on testability grounds — AL Runner runs the real `Record X`. The seams below are for *external-system* and *MS-logic* boundaries, not your own table data.
 
 ```
-Does the seam involve...
+Does the dependency the test can't run involve...
   ├─ BC runtime / OS environment?    → IEnvironment
   ├─ an external HTTP API?           → IApiRequest
   ├─ standard BC G/L / finance ops?  → IFinance (or IPosting, ISales per seam)
-  └─ a record's own data fields?     → var TempRecord (no interface needed)
+  └─ only a record's own data fields? → no seam — AL Runner runs the real record
 ```
 
 ## Five kinds of test double

@@ -18,7 +18,7 @@ integration-tests/    container-only tests — the authoritative gate
 
 ## Placement rule
 
-A test belongs in `unit-tests/` **iff every codepath it traverses is runnable by AL Runner**. The split is mechanical, not aspirational — AL Runner can run the test, or it can't. Decide before writing the first line. A test that drifts into needing real BaseApp codeunit behaviour is an integration test: **reclassify it — never relax the unit contract** to keep it.
+A test belongs in `unit-tests/` **iff every codepath it traverses is runnable by AL Runner**. The split is mechanical, not aspirational — AL Runner can run the test, or it can't — but you *confirm* the call by running, not by predicting it (see "Let the auto-stub report decide placement" below). A test that drifts into needing real BaseApp codeunit behaviour is an integration test: **reclassify it — never relax the unit contract** to keep it.
 
 The boundary in practice:
 
@@ -27,6 +27,14 @@ The boundary in practice:
 - **Reading BaseApp tables your test populated** is fine. **Reading BaseApp tables that real BaseApp codeunits populate during execution** (ledger entries from posting, lines from validation) is not — those codeunits never ran.
 - **`Commit()` mid-test** is a no-op under AL Runner. If the commit must be observable (`asserterror` after a real `Commit`, post-commit state), the test is integration.
 - FlowFields are fine — `CalcFields` evaluates against tables in scope, so asserting on a FlowField over rows the test inserted inline is a unit-test pattern.
+
+### Let the auto-stub report decide placement
+
+Confirm the boundary by running, not by predicting. Write the case against real tables, inject nothing, and run: AL Runner prints what it auto-stubbed (`Auto-stubbed N dependency object(s) — methods return defaults`). That report is the seam worklist — per object, one question: *does the assertion's truth depend on what it really returns?* No → inert, leave it stubbed. Yes → that behaviour is missing, so it is a unit test behind a real seam, or (when no real seam fits) an integration test.
+
+"Ran" is not "ran faithfully": a `.app` call auto-stubs to `0`/`''`/`false` and keeps going, so a green path may have exercised a default, not real BaseApp behaviour. A unit test whose oracle rides a semantically-relevant auto-stub (its return feeds branching, persistence, validation, posting setup, rounding, dimensions) is a false net. The report, not the absence of a throw, is the proof a path was covered.
+
+When a path needs real BaseApp behaviour, seam it *only if the seam names a domain dependency you could vary* (provider, API, environment — [testability.md](testability.md)). Intentional BC coupling — `Validate`, posting setup, number series, dimensions — wrapped in a 1:1 interface only to stub it builds a fake BC that passes where the platform would not. Reclassify to `integration-tests/` — an earned integration test, not a prop.
 
 ## AL Runner capability map
 

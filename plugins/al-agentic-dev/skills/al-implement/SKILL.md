@@ -53,7 +53,7 @@ Before first RED of any AAA case, the evidence bar in [voice-contract.md](../../
 
 ### Test the Process seam, not incidental implementation
 
-Tests target the behaviour boundary named by the task. `Unit` cases target the P layer directly with stubbed R/W collaborators. `Integration` cases cross BC runtime/database/page/event seams. Assertions read business outcomes: status, errors, posting outcomes, ledger entries, document flow, emitted event, visible page state. Avoid asserting table shape or call order unless a Unit spy is the behaviour boundary.
+Tests target the behaviour boundary named by the task. `Unit` cases target the P layer directly; your own table R/W runs for real under AL Runner — only a genuine MS-logic collaborator gets a seam, so write against real tables first and let the auto-stub report drive seams (don't pre-extract interfaces or temp-records for your own record logic; reclassify intentional BC coupling to `Integration`, never a prop). `Integration` cases cross BC runtime/database/page/event seams. Assertions read business outcomes: status, errors, posting outcomes, ledger entries, document flow, emitted event, visible page state. Avoid asserting table shape or call order unless a Unit spy is the behaviour boundary.
 
 See [testability.md](../../references/testability.md) for three-phase decoupling + seam catalogue and [tdd.md](../../references/tdd.md) for five phases + no-touch invariants.
 
