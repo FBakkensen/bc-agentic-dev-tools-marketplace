@@ -1,6 +1,6 @@
 ---
 name: al-second-opinion
-description: Independent read-only advisory review via cross-family CLI dispatch (shells to GitHub Copilot CLI, pinned to a GPT model). Use from `/al-implement`, `/al-refine`, `/al-refactor`, or `/al-user-verification` before reconciling non-trivial `Test Specification`, `Verification Plan`, mutation lists, refactor checklists, or a verification walk verdict.
+description: Independent read-only advisory review via cross-family CLI dispatch (shells to GitHub Copilot CLI, pinned to a GPT model). Use from `/al-implement`, `/al-refine`, `/al-refactor`, `/al-user-verification`, or `/al-code-review` before reconciling non-trivial `Test Specification`, `Verification Plan`, mutation lists, refactor checklists, a verification walk verdict, or a review fix-queue.
 ---
 
 **Style:** Concise — cut filler, keep grammar. Opinionated — pick a side. Arrows (→) for causality. Technical terms exact, code and errors quoted verbatim.
@@ -9,7 +9,7 @@ description: Independent read-only advisory review via cross-family CLI dispatch
 
 Ask a different model family to read the artifact and name what is missing. Same-model self-review confirms its own blind spots; cross-family is the point. Script `scripts/Invoke-AlSecondOpinion.ps1` shells to the GitHub Copilot CLI (`@github/copilot`), pinned to a GPT model, for that read. Copilot is a CLI tool dependency here — not a host runtime, not a publish target.
 
-Caller (`/al-implement`, `/al-refine`, `/al-refactor`, `/al-user-verification`) owns the artifact and reconciles bullets that come back; this skill owns the call. For `/al-user-verification` the artifact is the walk verdict — per example, the exact question as posed and the user's verbatim observation (or captured client output for Contract examples); the review checks coverage and routing, not the observation itself.
+Caller (`/al-implement`, `/al-refine`, `/al-refactor`, `/al-user-verification`, `/al-code-review`) owns the artifact and reconciles bullets that come back; this skill owns the call. For `/al-user-verification` the artifact is the walk verdict — per example, the exact question as posed and the user's verbatim observation (or captured client output for Contract examples); the review checks coverage and routing, not the observation itself. For `/al-code-review` the artifact is the round's must-fix survivor list, and the caller treats a refutation as a **veto on autonomous action** — the refuted finding drops out of the fix queue and escalates rather than being auto-fixed on cross-family doubt.
 
 ## Preconditions
 
@@ -84,7 +84,7 @@ Every other skip variant (node unavailable, copilot CLI unavailable, timeout, pw
 
 | | |
 |---|---|
-| **Invoked from**     | `/al-implement`, `/al-refine`, `/al-refactor`, `/al-user-verification` before reconciling non-trivial work |
+| **Invoked from**     | `/al-implement`, `/al-refine`, `/al-refactor`, `/al-user-verification` before reconciling non-trivial work; `/al-code-review` every round on the must-fix survivor list (return treated as a veto on autonomous fixing) |
 | **Returns to caller** | reviewer's bulleted gap list verbatim, or `Second opinion skipped: <reason>` line |
 
 Script at `scripts/Invoke-AlSecondOpinion.ps1` is source of truth for CLI flags, dispatch, timeout, skip-line emission. Validated by `Validate-PowerShell.ps1`; inline copies bypass that gate.

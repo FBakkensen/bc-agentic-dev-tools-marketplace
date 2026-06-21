@@ -24,4 +24,4 @@ Return each finding as a labeled block, lede first:
 - **Why:** the rule or risk it breaks, at the goal's altitude.
 - **Source:** this lens's goal (the orchestrator labels it; name any topic id you used).
 
-The orchestrator dedupes, scores, and routes — return raw findings, not a verdict. If the goal yields nothing, say so plainly; a clean lens is a result.
+The orchestrator dedupes, adversarially judges, and routes — return raw findings, not a verdict. If the goal yields nothing, say so plainly; a clean lens is a result.

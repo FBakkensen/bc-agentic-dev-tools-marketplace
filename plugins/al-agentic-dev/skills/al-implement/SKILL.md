@@ -9,6 +9,8 @@ description: Pick a `ready-for-implementation` technical task from the `tasks/` 
 
 Pick next `ready-for-implementation` technical task from the `tasks/` folder. Consume its fresh `Test Specification`. Drive AAA cases red → green: `Unit` first, `Integration` second. Reconcile final procedure names and scopes in the task file. Refactor full task diff once. Mutate at task end. Flip status to `done` when downstream evidence exists. One task per session.
 
+Two entry modes: the normal **task-pick** above, and **fix-mode**, driven by `/al-code-review`'s autonomous loop with a single finding rather than a task pick (see Fix-mode). The body below describes task-pick; fix-mode reuses the same discipline with the deltas that section names.
+
 **Layer.** Red-first at the Unit + Integration layers (see [`test-strategy.md`](../../references/test-strategy.md)). A production bug a higher layer surfaces is pushed down to this layer so the proof lives where an oracle sees it.
 
 ## Preconditions
@@ -16,7 +18,7 @@ Pick next `ready-for-implementation` technical task from the `tasks/` folder. Co
 - Branch matches `^\d{3}-`. If not: **Stop**. Run `/al-event-model` (or `/al-design` for backend-only).
 - `specs/<branch>/` holds the `tasks/` folder + `architecture.md`. Missing → `/al-design`.
 - Target task `kind: technical`. `kind: verify` → **Stop**; route via `/al-steer` or `/al-code-review` based on verification state. `kind: provision` → `/al-provision`; `kind: breaking-change` → `/al-validate-breaking-changes` (ops tasks, run-and-flip, never reach `ready-for-implementation`).
-- Target task `status: ready-for-implementation` with populated `Test Specification`. Plain `ready` → **Stop**, `/al-refine T-NNN`. `ready-for-implementation` with empty or missing `Test Specification` → **Stop**, `/al-steer`; status and proof disagree. `blocked` → `/al-steer`. `done` → downstream evidence exists; do not reopen here.
+- Target task `status: ready-for-implementation` with populated `Test Specification`. Plain `ready` → **Stop**, `/al-refine T-NNN`. `ready-for-implementation` with empty or missing `Test Specification` → **Stop**, `/al-steer`; status and proof disagree. `blocked` → `/al-steer`. `done` → downstream evidence exists; do not reopen here — **except in fix-mode**, where `/al-code-review` reopens the finding's originating `done` task on purpose.
 - Before code (not at refactor), read [`test-specification.md`](../../references/test-specification.md), [`test-strategy.md`](../../references/test-strategy.md), [`tdd.md`](../../references/tdd.md), [`test-layout.md`](../../references/test-layout.md), [`testability.md`](../../references/testability.md), [`voice-contract.md`](../../references/voice-contract.md), and [`bc-code-intelligence-dispatch.md`](../../references/bc-code-intelligence-dispatch.md). Production names and signatures arrive minted in the task's `New and Modified Objects`; construct lookups stay this skill's own.
 
 ## What this session answers
@@ -124,6 +126,18 @@ At the `done` flip, open any **same-slice** task whose `depends_on:` is now full
 
 The slice verify task is one such same-slice dependent: at user/API-facing slice-done it opens `blocked` → `ready` once every in-slice technical dependency is `done`, which opens `/al-refine` to write the fresh `Verification Plan`. Do not run `/al-code-review` until the verify task is `ready-for-verification`.
 
+## Fix-mode (driven by /al-code-review)
+
+`/al-code-review`'s loop hands a single judged, must-fix finding (Finding / Where / Source / Recommended next) plus its **originating task** — the task whose code the finding flags, traced by the `T-NNN` commit prefix. Fix-mode is the same discipline aimed at one finding instead of a task's `Test Specification`:
+
+- **Reopen the originating task** (`done` → `ready-for-implementation` in working memory; the durable flip is the reconcile + re-close at the end). The task's existing `Test Specification`, `New and Modified Objects`, and `Contract notes` are the context.
+- **Land the fix red-first.** A coverage-gap finding (the bug got through because no case covered it) adds the missing AAA case to the existing spec and drives it RED → GREEN — the test is the durable proof that stops the next review re-flagging it. A finding on existing covered behaviour adjusts the case that should have caught it. Same Unit-first order, same gates, same evidence bar.
+- **Refactor inline only — no full-diff pass.** Inline renames and obvious dedupe land inside GREEN as usual, but a single-finding fix does not earn the mandatory full-task-diff `/al-refactor` (the four-lens pass exists to catch cross-case naming drift and duplication that surface only after a *task's worth* of cases land — a one-finding fix has neither). Skipping it keeps fix-mode cheap inside a loop that may run it many times.
+- **Mutate** the changed sites at fix end, same trigger and cycle. `/al-mutate` sources its task context, changed files, and business decision points from the reopened originating task and the fix diff — the finding is the decision point under test. Mutation stays mandatory; it is the proof the fix's test actually catches the bug.
+- **Reconcile** the originating task before re-closing: `New and Modified Objects` and `Researched:` bullets must match the post-fix diff, so `/al-code-review`'s lens 1 reads truth on the next round. Commit under the originating `T-NNN` prefix.
+
+Fix-mode is **mute**: it returns to the calling loop and does **not** announce a slice-gate handoff, trigger `/al-code-review`, or open same-slice / next-slice dependents — the loop owns re-review, and re-opening the gate here would recurse. A replan trigger that fires mid-fix (the finding turns out to need a new decision, or the fix won't go green) is **not** routed to `/al-steer` from here; fix-mode reports "cannot fix — escalate" back to the loop, which owns the escalation. Hygiene (non-semantic) findings never reach fix-mode — `/al-code-review` applies those directly without a test.
+
 ## Feed
 
 Highest-traffic skill, so the red/green grind stays out of the feed — only durable-state and settled-question moments earn a card. Hand `/al-feed` a brief by name (never inline the append); it composes punchline + layers and appends.
@@ -137,7 +151,7 @@ Highest-traffic skill, so the red/green grind stays out of the feed — only dur
 
 | | |
 |---|---|
-| **Runs after**     | `/al-refine` (filled `Test Specification` in the task file and flipped task to `ready-for-implementation`) |
-| **Hands off to**   | next `ready-for-implementation` technical task; `/al-refine` on the slice verify task at user/API-facing slice-done; `/al-code-review` per-slice for backend-only slice-done; `/al-code-review` per-feature at feature-done |
+| **Runs after**     | task-pick: `/al-refine` (filled `Test Specification` in the task file and flipped task to `ready-for-implementation`). fix-mode: `/al-code-review`'s loop, with one must-fix finding + its originating task |
+| **Hands off to**   | task-pick: next `ready-for-implementation` technical task; `/al-refine` on the slice verify task at user/API-facing slice-done; `/al-code-review` per-slice for backend-only slice-done; `/al-code-review` per-feature at feature-done. fix-mode: returns to the calling loop, mute (no gate announcement, no dependents opened) |
 | **Replan venue**   | `/al-steer` |
 | **Sidebands**      | `al-research` agent (evidence-bar escalation: source conflict, design-artifact fact), `/al-debug-logging` (execution path unclear), `/grill-me` (judgement needs user), `bc-standard-reference` agent (BaseApp questions) |

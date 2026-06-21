@@ -43,4 +43,4 @@ Return each finding as a labeled block, lede first:
 - **Why:** the topic's rule or risk it breaks.
 - **Source:** this lens's goal + the topic id you matched.
 
-Prefer a few high-conviction findings over a long list; the orchestrator dedupes, scores, and routes, so return raw findings, not a verdict. A clean lens is a result — say so when the goal yields nothing.
+Prefer a few high-conviction findings over a long list; the orchestrator dedupes, adversarially judges, and routes, so return raw findings, not a verdict. A clean lens is a result — say so when the goal yields nothing.
