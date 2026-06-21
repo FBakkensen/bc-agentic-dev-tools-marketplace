@@ -17,54 +17,38 @@ Turn `architecture.md` into context-only per-task files in the `tasks/` folder s
 
 ## What goes into the tasks/ folder
 
-- **Folder shape**: write `specs/<NNN>-<slug>/tasks/` — a `000-feature.md` header plus one `NNN-T-MMM-<slug>.md` file per task. `NNN` is a gapped-by-10 execution-order prefix (`010`, `020`, `030`); `T-MMM` is the monotonic locator id. The prefix is the sole owner of run order; leave gaps so later inserts need no renumber. See [markdown-spec-discipline.md](../../references/markdown-spec-discipline.md) and [examples/tasks/](../../references/examples/tasks/).
+- **Folder shape**: write `specs/<NNN>-<slug>/tasks/` — a `000-feature.md` header plus one `NNN-T-MMM-<slug>.md` file per task. `NNN` is a gapped-by-10 execution-order prefix (`010`, `020`, `030`) and the sole owner of run order; leave gaps so later inserts need no renumber. `T-MMM` is the monotonic locator id. See [markdown-spec-discipline.md](../../references/markdown-spec-discipline.md) and [examples/tasks/](../../references/examples/tasks/).
 
-- **Goal**: lift the one-line outcome from `event-model.md` journey (user/API-facing) or from `architecture.md` trigger-source (backend-only) into `000-feature.md`, alongside per-slice intent prose. Do not re-derive. `000-feature.md` carries no task rows and no status.
+- **Goal**: lift the one-line outcome from `event-model.md` journey (user/API-facing) or `architecture.md` trigger-source (backend-only) into `000-feature.md`, alongside per-slice intent prose. `000-feature.md` carries no task rows and no status.
 
-- **Context only**: task files carry stable non-implementation context: goal, user/API surface, slice intent, dependencies, constraints, risks, source context, acceptance intent. Acceptance intent is context prose, not a `Test Specification` subsection.
+- **Context only, no proof, no prescription**: task files carry stable non-implementation context — goal, surface, slice intent, dependencies, constraints, risks, source context, acceptance intent as prose. `/al-refine` owns and writes fresh every proof artifact (`Test Specification`, `Verification Plan`, `New and Modified Objects`, AAA cases, `Decision Matrix`, `Journey`/`Contract Examples`, `Exploration Charters`); do not pre-write them, do not prescribe new objects/procedures/assertions/payloads. Existing objects, pages, events, APIs, fields may be named as source context.
 
-- **No proof artifacts**: do not write `Test Specification`, `Verification Plan`, `New and Modified Objects`, AAA cases, `Expected Behaviors`, `Decision Matrix`, `Journey Examples`, `Contract Examples`, or `Exploration Charters`. `/al-refine` owns every proof artifact and writes it fresh.
+- **Tasks**: one imperative title + short description per file, each a coherent behaviour slice or refactor step.
 
-- **No implementation prescriptions**: do not prescribe new object, procedure, test codeunit, assertion, page-script, or API payload examples. Existing objects, pages, events, APIs, and fields may be named as source context only.
+- **Slice grouping**: every task carries `slice: <slug>` — `event-model.md` timeline step (`release-sales-order`) for user/API-facing, `architecture.md` slice (`job-queue-cleanup`) for backend-only.
 
-- **Tasks**: one imperative title + short description per file, each task a coherent behaviour slice or refactor step. Compress with existing BC field, codeunit, table names when they are source context.
+- **Verify tasks**: when `event-model.md` present, every slice closes with one verify task: `kind: verify`, same `slice:`, `depends_on:` every technical `T-NNN` in the slice. Backend-only has no user/API surface, so skips verify tasks.
 
-- **Slice grouping**: every task carries `slice: <slug>` in frontmatter. User/API-facing features: slug = `event-model.md` timeline step (`release-sales-order`, `approve-override`). Backend-only: slug names `architecture.md` slice (`job-queue-cleanup`, `install-upgrade-v2`). The gapped prefix keeps a slice's tasks contiguous in the folder listing.
+- **Bracketing ops tasks**: always emit both. `T-001` `kind: provision` `slice: provision` first, opens `ready`; `kind: breaking-change` `slice: breaking-change` last, opens `blocked`. Neither carries a proof artifact — run-and-flip. First-slice technical tasks open `blocked` `depends_on: [T-001]`. `/al-validate-breaking-changes` self-skips when detection is off.
 
-- **Verify tasks**: when `event-model.md` present, every slice closes with one verify task: `kind: verify` in frontmatter, same `slice:` as gated slice, `depends_on:` every technical `T-NNN` in slice. Backend-only skips verify tasks; no user/API surface to verify.
+- **Edges**: frontmatter lists — `depends_on:` (cannot land without those), `refactors:` (reshapes shipped code under invariant), `fixes:` (corrects defect or wrong contract). Omit or leave `[]` when not applicable. Cross-slice gate: slice N+1's first technical task carries `depends_on:` slice N's verify task — backend-only has no verify task, so depend on slice N's last technical task instead. These lists are the dependency graph; no mermaid fence. Source them from architecture's slice / module map / brownfield touchpoints now — titles alone cannot reconstruct them later.
 
-- **Bracketing ops tasks**: always emit, both modes. `T-001` `kind: provision` `slice: provision` first; `kind: breaking-change` `slice: breaking-change` last. Neither carries a proof artifact — they run a script and flip status. Provision opens `ready`; first-slice technical tasks open `blocked` with `depends_on: [T-001]`, opened by `/al-provision` on `done`. Breaking-change opens `blocked`, `depends_on:` the final terminal task — the skill landing that task `done` opens it. Every `blocked` → `ready` flip has a named owner. Emit breaking-change unconditionally; `/al-validate-breaking-changes` self-skips when detection is off.
+- **Scaffolding context**: permission, caption, translation, packaging constraints bundle into the task that needs them. Name the constraint, not a code shape.
 
-- **Order**: slices follow `event-model.md` timeline order (or `architecture.md` slice declaration order for backend-only); the `NNN` prefix encodes it. Inside a slice: decision/policy primitives first, BC wiring second, verify task last. `/al-refine` decides proof shape per task.
-
-- **Edges**: frontmatter lists — `depends_on:` (cannot land without those), `refactors:` (reshapes shipped code under invariant), `fixes:` (corrects defect or wrong contract). Leave a kind `[]` or omit when it does not apply. Cross-slice gate: every slice N+1's first technical task carries `depends_on:` slice N's verify task. The frontmatter edge lists are the dependency graph; no mermaid fence.
-
-- **Scaffolding context**: permission, caption, translation, and packaging constraints bundle into the task that needs them. Name the constraint, not a code shape.
-
-Unanswerable from `architecture.md` → architecture incomplete. **Stop**, run `/al-steer`.
-
-## TDD-vertical inside slice, user-vertical across slices
+## Order: TDD-vertical inside slice, user-vertical across slices
 
 Two altitudes, on purpose.
 
-- **TDD-vertical**: every `T-NNN` ships tests + production code together; layer-only tasks (data without callers, logic without tests) leave system half-built and tests-as-afterthought becomes tests-never-written. Kind varies (primitive, extract, wire, fix, pure refactor); verticality at this altitude does not.
-- **User-vertical**: a slice is what the user can touch; one slice fans into a *wire* task crossing the slice's trigger plus *primitive / extract / fix* tasks composing into it. Single primitive task is TDD-vertical but invisible to user; closing wire task is what the user verifies. Forcing one slice to one task either bloats past a session or hides the seam under wrapper.
+- **TDD-vertical**: every `T-NNN` ships tests + production code together. Layer-only tasks (data without callers, logic without tests) leave the system half-built and tests-as-afterthought become tests-never-written. Kind varies (primitive, extract, wire, fix, pure refactor); verticality does not.
+- **User-vertical**: a slice is what the user can touch — one *wire* task crossing the slice's trigger plus *primitive / extract / fix* tasks composing into it. The closing wire task is what the verify task signs off.
 
-Verify task at end of each slice is where user-vertical becomes a status flip. Carries no AL writes; `/al-refine` fills its `Verification Plan` from current app/tests and `event-model.md` slots; `/al-page-script` generates the slice's bc-replay recording from E2E Journey Examples; `/al-user-verification` pre-flights the recording batch, runs Contract Examples, and guides the user through Journey Examples / Exploration Charters.
+Inside a slice: decision/policy primitives first, BC wiring second, page/API surface last, verify task at the end. Shape primitives so their proof lives at the unit tier instead of presuming a container — see [test-layout.md](../../references/test-layout.md). A primitive used by two slices belongs to the first that needs it; later slices reference it without re-listing. Across slices, follow `event-model.md` timeline order (or `architecture.md` slice declaration order, backend-only) so the user verifies slice A end-to-end before slice B interleaves — interleaving leaves the per-slice gate nothing coherent to verify.
 
-## Task order inside slice
-
-Task order inside one slice optimizes for fast proof and stable seams: decision/policy primitives first, BC wiring second, page/API surface last, verify task at the end. The unit/integration boundary is mechanical, not aspirational — see [test-layout.md](../../references/test-layout.md); shape primitives so their proof can live at the unit tier instead of presuming a container. Across slices, order follows `event-model.md` timeline order so the user can verify slice A end-to-end before slice B's primitives interleave with it. Cross-slice interleaving defeats the per-slice verification gate; slice A is half-done when slice B work lands and the gate has nothing coherent to verify.
-
-A primitive used by two slices belongs to first slice that needs it. Later slices reference produced behaviour without re-listing.
-
-## Edges declared at scope
-
-Source `depends_on:` / `refactors:` / `fixes:` edges from architecture's slice, module map, brownfield touchpoints now; `/al-refine` or `/al-implement` cannot guess them from titles alone weeks later. Verify tasks always carry `depends_on:` naming every technical `T-NNN` in slice. Dependency closure plus matching `slice:` tells the pipeline when context exists to flip the verify task from `blocked` to `ready` for `/al-refine`. `/al-code-review` validates `ready-for-verification`; it does not open verify tasks. Backend-only slices have no verify task; the cross-slice gate identifies the next slice by its first technical task carrying `depends_on:` this slice's last technical task, then opens that next slice's technical task set.
+`/al-refine` decides proof shape per task.
 
 ## Replan check before writing
 
-If decomposition surfaces a gap `architecture.md` does not cover (missing module, pattern conflict, unnamed brownfield touchpoint, slice not in `event-model.md`) → **Stop**, run `/al-steer`; inventing here corrupts every downstream skill and invention is invisible.
+Unanswerable from `architecture.md`, or decomposition surfaces a gap it does not cover (missing module, pattern conflict, unnamed brownfield touchpoint, slice absent from `event-model.md`) → **Stop**, run `/al-steer`. Inventing here corrupts every downstream skill invisibly.
 
 ## Surgical-edit contract
 
@@ -84,20 +68,17 @@ depends_on: [T-004]
 ```
 
 - `task: T-NNN`: monotonic, never reused across kinds, starts at `T-001`. Locator; matches the file's `T-MMM`.
-- `status: ready | ready-for-implementation | ready-for-verification | blocked | done`: single source of truth for state. `ready` means context exists for `/al-refine` only. `ready-for-implementation` means a technical task has a fresh `Test Specification` and can run `/al-implement`. `ready-for-verification` means a verify task has a fresh `Verification Plan` and can run `/al-page-script` or `/al-user-verification`. `blocked` means dependency/context missing. `done` means downstream evidence exists.
-- Scope writes `blocked` for first-slice technical tasks (gated on `T-001`), later-slice technical tasks, and verify tasks whose dependencies/context are missing. The `kind: provision` task (`T-001`) opens `ready` — no dependency, runs first; the first slice's technical tasks carry `depends_on: [T-001]`, and `/al-provision` flips them `blocked` → `ready` on its `done` (mirrors the cross-slice gate — every `blocked` → `ready` flip has a named owner). The `kind: breaking-change` task opens `blocked`; the skill landing the feature's final terminal task `done` opens it `blocked` → `ready` (`/al-user-verification` on the last verify task, or `/al-code-review` on the last backend slice's clean review). Both ops tasks then flip straight to `done` (or `blocked` on failure) when their owning skill runs the script; they never pass through `ready-for-implementation`/`ready-for-verification`. `/al-refine` flips technical tasks `ready` → `ready-for-implementation` and verify tasks `ready` → `ready-for-verification`. `/al-implement` requires `ready-for-implementation`, never writes `in-progress`, flips technical tasks to `done` on proof, and opens the dependent verify task to `ready` for `/al-refine` at user/API-facing slice technical completion when every in-slice technical dependency is `done`. `/al-code-review` preserves `ready-for-verification` and stamps `review: clean` in the verify task's frontmatter on clean review (sole writer of that transient field), or flips the verify task to `blocked` on findings; any later flip off `ready-for-verification` or new technical task opened in the slice strips the field in the same edit. `/al-page-script` requires `ready-for-verification` and leaves status unchanged. `/al-user-verification` requires `ready-for-verification`, flips verify task to `done` on evidence or `blocked` on functional failure, and on `done` flips next slice's technical tasks `blocked` → `ready`. `/al-steer` flips to `blocked` on replan trigger and may open tasks back to `ready` only after explicit user ack when dependency/context is restored. Skills that materialize a new task write it `ready` because context exists and proof is empty. Multiple technical tasks within a slice can be `ready` or `ready-for-implementation` simultaneously; the `NNN` prefix order plus in-slice `depends_on:` edges tell the next skill which to pick first.
-- `slice: <slug>`: every task carries it. Slug kebab-case, derived from `event-model.md` timeline step or `architecture.md` slice.
-- `kind: technical | verify | provision | breaking-change`: every task carries it. Routes downstream (technical → `/al-refine` → `/al-implement`; verify → `/al-refine` → `/al-page-script` to generate the slice's `.yml`, then `/al-user-verification` to host the guided walk; provision → `/al-provision`; breaking-change → `/al-validate-breaking-changes`). The two ops kinds bypass `/al-refine` — no proof artifact, run-and-flip. `slice: provision` / `slice: breaking-change` are reserved slugs, not feature slices.
+- `status: ready | ready-for-implementation | ready-for-verification | blocked | done`: single source of truth for state. `ready` = context exists, ready for `/al-refine`. `ready-for-implementation` / `ready-for-verification` = fresh proof artifact written. `blocked` = dependency/context missing. `done` = downstream evidence exists. **al-scope writes only `ready` and `blocked`**: `ready` for `T-001` provision (no dependency, runs first); `blocked` for everything gated (first-slice technical on `T-001`, later-slice technical, verify tasks, breaking-change). Downstream skills own every other flip.
+- `slice: <slug>`: kebab-case, from `event-model.md` timeline step or `architecture.md` slice. `provision` / `breaking-change` are reserved non-feature slugs.
+- `kind: technical | verify | provision | breaking-change`: routes downstream (technical → `/al-refine` → `/al-implement`; verify → `/al-refine` → `/al-page-script` → `/al-user-verification`; the two ops kinds bypass `/al-refine`, run-and-flip).
 
-No `[ ]`/`[x]` heading marker: `status:` in frontmatter is the only state and the byte the Edit anchors on. The H1 is just the title. Per-slice intent in `000-feature.md`, section order, alert blocks, graph styling: your call per feature.
+No `[ ]`/`[x]` heading marker: `status:` in frontmatter is the only state and the byte the Edit anchors on. Per-slice intent in `000-feature.md`, section order, alert blocks: your call per feature.
 
 ## Description
 
 Lede first: BC site (object, procedure, field) + invariant the task preserves or contract it ships. Cite ADRs inline as `<a href="../../docs/adr/NNNN-slug.md">ADR-NNNN</a>`. Shape per [voice-contract.md](../../references/voice-contract.md): tight `<p>` for one or two facts; one fact per landing line for more. `/al-refine` may rewrite description after walking codebase.
 
-Verify-task descriptions name slice's user-facing outcome in `event-model.md` vocabulary (Role, Action, Business Event, View, Status), not AL mechanics. *"Order Processor releases a Sales Order with a valid item charge allocation; the Sales Order Status flips to Released and the Pending Overrides cue does not increment."* AL names live in the technical tasks the verify task depends on.
-
-Shape follows [markdown-spec-discipline.md](../../references/markdown-spec-discipline.md). Write telegraphic; drop articles, padding, hedges; fragments fine.
+Verify-task descriptions name the slice's user-facing outcome in `event-model.md` vocabulary (Role, Action, Business Event, View, Status), not AL mechanics. *"Order Processor releases a Sales Order with a valid item charge allocation; the Sales Order Status flips to Released and the Pending Overrides cue does not increment."* AL names live in the technical tasks the verify task depends on.
 
 ## Document verification
 
@@ -120,7 +101,7 @@ Once when task decomposition lands in the `tasks/` folder. Gate report names sli
 Two moments narrate to the branch feed; everything else — folder-shape mechanics, per-task frontmatter, edge wiring — stays silent. At each, hand `/al-feed` a brief of what happened and why it matters to a wary dev who has not read `architecture.md`; `/al-feed` composes the punchline and layers and appends the card.
 
 - **landing** — decomposition lands in the `tasks/` folder and a clean `al-doc-verify` verdict clears the `/al-refine` handoff. Brief: the design is now a concrete to-do list — NN chunks, each user-facing one ending in a check the user signs off, ready to start. Layers carry the slice families, the user-verification-gate count, linear vs branching shape, and the Goal restated in user terms.
-- **surprise** — the replan/stop guard fires: a gap `architecture.md` cannot answer (missing module, pattern conflict, unnamed brownfield touchpoint, slice absent from `event-model.md`) halts the write and routes to `/al-steer` rather than invent. Brief: hit a hole it could not fill honestly, so it stopped and handed it back instead of guessing. Layers name exactly what was missing and why inventing here would corrupt every downstream skill invisibly.
+- **surprise** — the replan/stop guard fires: a gap `architecture.md` cannot answer halts the write and routes to `/al-steer`. Brief: hit a hole it could not fill honestly, so it stopped and handed it back instead of guessing. Layers name what was missing.
 
 ## Composition
 

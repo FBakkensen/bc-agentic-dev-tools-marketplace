@@ -9,9 +9,9 @@ description: Coach and navigator for AL/Business Central agentic dev. Reads the 
 
 Read the `tasks/` folder, `architecture.md`, `event-model.md` when present, the goal, codebase, recent commits, `.out-of-scope/`. Name what's next, blocked, drifting. Name next handoff; never force one. Canonical replan venue. Owner of `.out-of-scope/`.
 
-The live status board is computed, not stored: `grep -r '^status:' specs/<branch>/tasks/` (or read the short per-task frontmatter) gives every task's state; the `NNN-` filename prefix is run order, `depends_on:` lists are the graph. There is no index file to read or maintain.
+The status board is computed, not stored: `grep -r '^status:' specs/<branch>/tasks/` gives every task's state; the `NNN-` filename prefix is run order, `depends_on:` lists are the graph. No index file.
 
-User invokes `/al-steer` in natural language ("where are we?", "what's next?", "clear the replan queue", "T-007 is blocked, walk me through it", "split T-009 into three tasks"). Interpret and act.
+User invokes in natural language ("where are we?", "split T-009 into three tasks"). Interpret and act.
 
 ## Preconditions
 
@@ -20,41 +20,41 @@ User invokes `/al-steer` in natural language ("where are we?", "what's next?", "
 
 ## Power model
 
-Read anything in workspace. Write the `tasks/` folder structurally — add, split, delete, reorder, re-prefix task files — only after explicit user ack; silent restructuring is the anti-pattern that loses the audit trail. `/al-steer` owns later `NNN-` re-prefixing: insert into a gap (`025` between `020` and `030`); when a gap fills, rename the minimum local run of files (the `T-MMM` id inside each renamed file is untouched, so no skill's anchor breaks). Complete the whole rename run before any `al-doc-verify` agent call or downstream handoff — a half-finished run can leave two files sharing a prefix, which `al-doc-verify` agent flags as a duplicate-prefix failure. Write `.out-of-scope/<concept>.md` when substantive rejection earns durable memory. Nothing else.
+Read anything in workspace. Write the `tasks/` folder structurally — add, split, delete, reorder, re-prefix task files — only after explicit user ack; silent restructuring loses the audit trail. Re-prefix by inserting into a gap (`025` between `020` and `030`); when a gap fills, rename the minimum local run (the `T-MMM` id inside each file is untouched, so no anchor breaks). Complete the whole rename run before any `al-doc-verify` agent call or downstream handoff — a half-finished run leaves two files sharing a prefix, which `al-doc-verify` flags as duplicate-prefix. Write `.out-of-scope/<concept>.md` when substantive rejection earns durable memory. Nothing else.
 
 ## Read first, then name
 
-Read the `tasks/` folder, scan `architecture.md`, `event-model.md` when present, recent commits, `.out-of-scope/` before opening your mouth. Surface what the state already says; coaching from stale memory is the failure mode that drove the user here.
+Read the `tasks/` folder, scan `architecture.md`, `event-model.md` when present, recent commits, `.out-of-scope/` before naming anything. Surface what the state says; coaching from stale memory is the failure mode that drove the user here.
 
-Name entries that need a decision: severity, ID, symptom in codebase's terms (object names, table fields, codeunit calls), one line per entry. Distinguish kinds explicitly:
+Name entries that need a decision: severity, ID, symptom in codebase's terms (object names, table fields, codeunit calls), one line per entry. Distinguish kinds:
 
-- **Technical task** (`kind: technical`): `ready` → `/al-refine T-NNN` only. `ready-for-implementation` → `/al-implement T-NNN`. `blocked` reads two ways: with all `depends_on:` `done` and no replan flag, it is a stale open the closing skill should have flipped — open it `ready` and move on, no ceremony, not a steering problem; on an unsatisfied edge or a replan flag, name the missing edge or flag. `done` → downstream Unit/Integration/build/mutation evidence exists.
+- **Technical task** (`kind: technical`): `ready` → `/al-refine T-NNN`. `ready-for-implementation` → `/al-implement T-NNN`. `blocked` reads two ways: all `depends_on:` `done` and no replan flag → stale open, flip it `ready`, not a steering problem; unsatisfied edge or replan flag → name the missing edge or flag. `done` → downstream Unit/Integration/build/mutation evidence exists.
 
-- **Ops task** (`kind: provision` / `kind: breaking-change`, reserved `slice: provision` / `slice: breaking-change`): `ready` → run its owning skill (`/al-provision` / `/al-validate-breaking-changes`) — never `/al-refine`, no proof artifact. `blocked` reads two ways:
-  - **Waiting** (dependency not yet `done`): normal scope-time state. Naming it as a problem is the error; say "waiting on `T-NNN`".
-  - **Failed** (dependency `done`, task ran and could not pass): provision → environment not ready (compiler/symbols, container, `gh` auth, unreachable baseline release); breaking-change → a break detected or prerequisite failed. Clear the blocker, re-run the owning skill. A breaking-change `blocked` with deps `done` but never opened is a stale-gate-open bug — name it and open it `ready`.
+- **Ops task** (`kind: provision` / `kind: breaking-change`, reserved `slice: provision` / `slice: breaking-change`): `ready` → run its owning skill (`/al-provision` / `/al-validate-breaking-changes`), never `/al-refine`, no proof artifact. `blocked` reads two ways:
+  - **Waiting** (dependency not yet `done`): normal scope-time state — say "waiting on `T-NNN`", don't name it a problem.
+  - **Failed** (dependency `done`, task ran and could not pass): provision → environment not ready (compiler/symbols, container, `gh` auth, unreachable baseline release); breaking-change → a break detected or prerequisite failed. Clear the blocker, re-run the owning skill. A breaking-change `blocked` with deps `done` but never opened → stale gate-open, flip it `ready`.
   - Never open ops tasks to `ready-for-*`.
 
-- **Verify task** (`kind: verify`): `ready` → `/al-refine T-NNN` only. `done` → downstream E2E/Contract/Exploration evidence exists. `blocked` → name the failure inline and route per its trigger. `ready-for-verification` routing:
+- **Verify task** (`kind: verify`): `ready` → `/al-refine T-NNN`. `done` → downstream E2E/Contract/Exploration evidence exists. `blocked` → name the failure inline and route per its trigger. `ready-for-verification` routing:
   - No `review: clean` → `/al-code-review T-NNN`.
   - `review: clean` + `Journey Examples` but no `.yml` → `/al-page-script T-NNN`.
   - `review: clean` + `.yml` exists or no E2E → `/al-user-verification T-NNN`.
 
-- **Slice-done, no fresh verify proof** (every technical task `done`, verify task `blocked` only because deps were pending): stale gate-open state. Route back to `/al-implement` closeout ownership, or open to `ready` for `/al-refine` only after explicit user ack.
+- **Slice-done, no fresh verify proof** (every technical task `done`, verify task `blocked` only because deps were pending): stale gate-open. Route back to `/al-implement` closeout, or open to `ready` for `/al-refine` only after explicit user ack.
 
 - **Slice-done, no clean code-review** (technical tasks `done`, verify task `ready-for-verification` without `review: clean`, or backend-only last task `done` with next slice still `blocked`): `/al-code-review` per-slice gate.
 
 - **Feature-done** (every `T-NNN` `done`, no merge yet): `/al-code-review` per-feature gate.
 
-Naming the gate by name lets the user pick the right next skill. Prose paragraphs and generic CRUD words bury the seam. See [voice-contract.md](../../references/voice-contract.md) for prose voice.
+Name the gate by name so the user picks the right skill. See [voice-contract.md](../../references/voice-contract.md) for prose voice.
 
 ## Route to next skill, do not perform it
 
-`/al-steer` names handoff and stops. Downstream skill owns the work; doing next skill's work inside this one collapses boundary the pipeline depends on. User uncertain which way to jump → run `/grill-me` on the branch; if they have clarity, no handoff is needed.
+`/al-steer` names handoff and stops; doing the next skill's work inside this one collapses a boundary the pipeline depends on. User uncertain which way to jump → run `/grill-me` on the branch.
 
 ## Eight replan triggers
 
-Patterns the agent learns to recognise, not a checklist to walk. Other skills flag triggers as `**Replan flag**: trigger #N`; numbering is ID, not state.
+Patterns to recognise, not a checklist. Other skills flag triggers as `**Replan flag**: trigger #N`; numbering is ID, not state.
 
 | # | Name | Pattern |
 |---|---|---|
@@ -69,19 +69,19 @@ Patterns the agent learns to recognise, not a checklist to walk. Other skills fl
 
 ## Trigger response is intent, not mechanics
 
-When trigger means plan is invalid for the task → halt by flipping `status:` to `blocked` in the task file's frontmatter and recording trigger ID + reason inside the task body. When trigger means new information surfaced that does not invalidate plan → leave status alone and note trigger inside the task body. Choice is judgement; fixed enforcement mechanics turn replan into form-filling.
+Trigger invalidates the plan for the task → flip `status:` to `blocked` in frontmatter, record trigger ID + reason in the task body. Trigger surfaces new info that does not invalidate → leave status, note it in the task body. Judgement, not fixed mechanics.
 
-A trigger resting on a tool diagnosis (compile-error class, AL Runner gap, heuristic "structural blocker") is re-confirmed once before the `blocked` flip — a first-pass diagnosis is frequently a cascade artifact (an AL0305 missing-dependency reads as an AL0327 runner gap), and a block recorded on a phantom is the false state the next session inherits and has to unwind. A trigger resting on a recorded fact (`depends_on:`, Goal text, an observed verification mismatch) is acted on as-is.
+A trigger resting on a tool diagnosis (compile-error class, AL Runner gap, heuristic "structural blocker") is re-confirmed once before the `blocked` flip — a first-pass diagnosis is frequently a cascade artifact (an AL0305 missing-dependency reads as an AL0327 runner gap), and a block on a phantom is false state the next session has to unwind. A trigger resting on a recorded fact (`depends_on:`, Goal text, an observed verification mismatch) is acted on as-is.
 
-Opening or inserting a technical task in a slice strips `review: clean` from that slice's verify task in the same edit pass. New slice code invalidates the per-slice review, and the push-down path (page-script red → fix task here) moves no status byte on the verify task — the strip is the only signal that routes the slice back through `/al-code-review` after the fix lands. Lifecycle in [`markdown-spec-discipline.md`](../../references/markdown-spec-discipline.md).
+Opening or inserting a technical task in a slice strips `review: clean` from that slice's verify task in the same edit pass — new slice code invalidates the per-slice review, and the push-down path (page-script red → fix task here) moves no status byte on the verify task, so the strip is the only signal routing the slice back through `/al-code-review` after the fix lands. Lifecycle in [`markdown-spec-discipline.md`](../../references/markdown-spec-discipline.md).
 
 ## Mutations come from the trigger, not a menu
 
-Name candidate mutations that match what the trigger surfaced. Splitting, inserting, reordering, deleting, rewriting a description, stripping a stale `Test Specification` or `Verification Plan` all in scope; pick what situation needs. Run `/grill-me` on non-trivial choices. Apply only after explicit ack. Prescribed mutation menu is same anti-pattern as prescribed checklist; trigger says what shape is wrong, response shape varies with codebase.
+Name candidate mutations matching what the trigger surfaced — splitting, inserting, reordering, deleting, rewriting a description, stripping a stale `Test Specification` or `Verification Plan` are all in scope. Run `/grill-me` on non-trivial choices. Apply only after explicit ack.
 
 ## Document verification
 
-When restructuring the `tasks/` folder by explicit user ack (adding, splitting, deleting, or re-prefixing task files), spawn the `al-agentic-dev:al-doc-verify` agent after the write and before naming downstream handoff, with a brief naming:
+When restructuring the `tasks/` folder by explicit user ack (add, split, delete, re-prefix), spawn the `al-agentic-dev:al-doc-verify` agent after the write, before naming downstream handoff, with a brief:
 
 ```text
 producer: al-steer
@@ -91,28 +91,28 @@ slice: <slice>
 intended_handoff: <next-skill>
 ```
 
-Do not run this gate for simple `status:` flips, closeout notes, or inline replan flags. `verdict=fail` blocks the handoff; fix the structural/boundary issue or leave the relevant task `blocked`. `verdict=warn` does not block; surface the warning in the steering note.
+Skip this gate for simple `status:` flips, closeout notes, or inline replan flags. `verdict=fail` blocks the handoff; fix the structural/boundary issue or leave the task `blocked`. `verdict=warn` does not block; surface it in the steering note.
 
 ## False halt closes the loop
 
-Grilling vetoes the trigger → restore prior `status:` value in the task file's frontmatter and rewrite alert body to record resolution. Silent un-flag loses reasoning, and gate scanner can't see what changed.
+Grilling vetoes the trigger → restore the prior `status:` value in frontmatter and rewrite the alert body to record resolution. Silent un-flag loses the reasoning the gate scanner needs.
 
 ## Owns `.out-of-scope/`
 
-Grilling vetoes a recurring scope item with substantive reason (project scope, technical constraint, strategic decision, referenced ADR; not a deferral) → record at `.out-of-scope/<concept>.md`. Scan `.out-of-scope/*.md` during replan and grilling; on match, surface prior rejection in user's words. File's job is to stop next session from re-litigating same rejection. Template `${CLAUDE_SKILL_DIR}/references/out-of-scope.template.md` materialises on first need; matches append *Prior requests* entry rather than spawning second file.
+Grilling vetoes a recurring scope item with a substantive reason (project scope, technical constraint, strategic decision, referenced ADR — not a deferral) → record at `.out-of-scope/<concept>.md`, so the next session can't re-litigate the rejection. Scan `.out-of-scope/*.md` during replan and grilling; on match, surface the prior rejection in the user's words. Template `${CLAUDE_SKILL_DIR}/references/out-of-scope.template.md` materialises on first need; a match appends a *Prior requests* entry rather than spawning a second file.
 
 ## Feed
 
-`/al-steer` is mostly advisory and silent there — most navigation moves no durable byte. But it holds real plan-reshaping authority, and the wary developer wants to see when the plan itself bends. At each moment below, hand `/al-feed` a brief — what just happened, why it matters, the kind — and `/al-feed` composes the punchline + layers and appends the card. Card only the plan-changing moments; routine board reads and handoff naming get nothing.
+Card only the plan-changing moments below; routine board reads and handoff naming get nothing. At each, hand `/al-feed` a brief (what happened, why it matters, the kind); it composes and appends the card.
 
-- **surprise** — a replan trigger acted on as a halt: a task flipped `blocked`, trigger ID + reason recorded. Captures that the plan no longer holds and a task got parked. Brief names which of the eight triggers, the codebase symptom in object terms, and that a tool-diagnosis trigger was re-confirmed before the flip.
-- **decision** — the `tasks/` folder structurally rewritten after explicit user ack (split / insert / delete / reorder). Captures that the plan was reshaped — e.g. the ballooning task split into three that each fit a session. Brief names the trigger, the exact mutation, the `review: clean` strip, the `al-doc-verify` agent gate.
-- **verdict** — grilling vetoes a trigger: prior `status:` restored, the false halt closed. Captures that a task thought stuck was proved fine and un-stuck. Brief names what the halt suspected, why it was overturned, that the reasoning was recorded not silently dropped.
-- **decision** — a recurring scope request vetoed and recorded at `.out-of-scope/`. Captures that a line was drawn — this idea is deliberately out of scope and won't be revisited. Brief names the substantive reason, written so the next session can't re-litigate it.
+- **surprise** — a replan trigger acted on as a halt: task flipped `blocked`, trigger ID + reason recorded. Brief names which of the eight triggers, the codebase symptom in object terms, and that a tool-diagnosis trigger was re-confirmed before the flip.
+- **decision** — the `tasks/` folder structurally rewritten after explicit user ack (split / insert / delete / reorder). Brief names the trigger, the exact mutation, the `review: clean` strip, the `al-doc-verify` agent gate.
+- **verdict** — grilling vetoes a trigger: prior `status:` restored, false halt closed. Brief names what the halt suspected, why it was overturned, that the reasoning was recorded.
+- **decision** — a recurring scope request vetoed and recorded at `.out-of-scope/`. Brief names the substantive reason, written so the next session can't re-litigate it.
 
 ## Composition
 
 | | |
 |---|---|
 | **Invoked from**     | any SKILL on replan trigger, or by user for "where are we" |
-| **Routes to**        | `/al-design` (architecture-decomposition trigger), `/al-refine` (`status: ready` task needs fresh `Test Specification` / `Verification Plan`), `/al-implement` (`ready-for-implementation` technical task), `/al-code-review` (slice-done with verify task `ready-for-verification` without `review: clean`, backend-only slice-done, or feature-done), `/al-page-script` (`review: clean` verify task with `Journey Examples` but no `.yml` yet), `/al-user-verification` (`review: clean` verify task with `.yml` present or no E2E recording needed), `.out-of-scope/` (durable rejection) |
+| **Routes to**        | `/al-design`, `/al-refine`, `/al-implement`, `/al-code-review`, `/al-page-script`, `/al-user-verification`, `.out-of-scope/` — conditions per the kind-routing bullets above |

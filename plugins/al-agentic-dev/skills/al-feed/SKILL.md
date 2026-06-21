@@ -7,30 +7,24 @@ description: Shared branch-feed writer. A pipeline skill hands it a brief of a n
 
 # /al-feed, the branch feed writer
 
-A per-branch HTML feed narrates the agent's work in plain language so a developer — especially one who does not fully trust agents — can re-orient and feel in control fast, without reading code or markdown. This skill is the shared writer for that feed. A caller hands it a brief of what just happened; it composes one card and appends it. The caller owns *when* to fire (bespoke, hand-wired per skill); this skill owns the *voice* (so every card reads the same calm way). That split is the trust surface: consistent cards firing at curated moments.
+Shared writer for a per-branch HTML feed that narrates the agent's work in plain language. A caller hands a brief of what just happened; this skill composes one card and appends it. The caller owns *when* to fire (hand-wired per skill); this skill owns the *voice*, so every card reads the same calm way.
 
-The gap it fills: no existing skill produces a durable, narrated, at-a-glance artifact of a branch's reasoning. `/al-steer` computes a live board in chat; `/al-agentic-dev-overview` emits a static tour. Neither persists the story of *why*.
+Read-only toward the agent. A card naming a next action is text telling the developer what to type — it never drives anything.
 
-Read-only toward the agent. The feed reports; it never drives anything. Where a card names a next action, that is text telling the developer what to type — the wheel stays in the terminal.
+## The brief the caller hands over
 
-## What the caller hands over
+Meta-level, not a template, so the card shapes to the moment:
 
-A brief, not a template — meta-level, so this skill can shape the card to the moment:
-
-- *what just happened*, in the caller's own terms (the AL specifics: object names, what the test proved, which rule got locked)
+- *what just happened*, in the caller's own AL terms (object names, what the test proved, which rule got locked)
 - *why it matters* to someone who has not read the diff
 - the **kind**: `decision` (a commitment that constrains the future) · `verdict` (a gate / proof outcome) · `surprise` (a wall hit and how it was handled) · `landing` (a meaningful milestone)
 
-Do not predefine scenarios or pass leading questions. Hand the moment; let the card take its own shape.
-
 ## The card it composes
 
-One card, in the feed voice:
+- A **mandatory, stand-alone punchline** — one plain-language sentence a non-coder understands. A developer reading *only* the closed punchlines must still get the whole story. This is the floor; layers are optional depth.
+- **0..N layers**, one short labeled beat each, shallow → deep. Free-length, free-label, sized to the moment — not fixed slots.
 
-- A **mandatory, stand-alone punchline** — one plain-language sentence a non-coder understands. A developer reading *only* the closed punchlines, expanding nothing, must still get the whole story. This is the floor; everything else is optional depth.
-- **0..N layers**, revealed one at a time, shallow → deep — each a short labeled beat. Free-length and free-label: a surprise narrates differently from a decision. A grammar, not fixed slots — do not pad a quiet landing to three layers, do not cram a rich decision into one.
-
-Plain and calm throughout. The reader is wary; the voice earns trust by being legible, not impressive. The voice rules in `${CLAUDE_SKILL_DIR}/../../references/voice-contract.md` apply — plain BC vocabulary, names as the address, no workflow chatter.
+The voice rules in `${CLAUDE_SKILL_DIR}/../../references/voice-contract.md` apply — plain BC vocabulary, names as the address, no workflow chatter.
 
 ## Where it writes
 
@@ -43,7 +37,7 @@ Per branch, alongside the other Tier-2 artifacts:
 
 Compose the punchline and layers, then call the append script. `-LayersJson` is a JSON array of `{label, body}` (empty `[]` for a punchline-only card). The script stamps `ts`, appends one json line, and regenerates the html.
 
-Substitute the absolute path of this al-feed skill directory; Claude Code tells you that path at skill activation. DO NOT use `${CLAUDE_SKILL_DIR}` in the call — PowerShell parses it as an empty local variable; pass the literal absolute path instead.
+DO NOT use `${CLAUDE_SKILL_DIR}` in the call — PowerShell parses it as an empty local variable. Pass the literal absolute path Claude Code gives you at skill activation.
 
 ```powershell
 & '<absolute path of this al-feed skill directory>/scripts/feed-append.ps1' `
@@ -56,13 +50,8 @@ Substitute the absolute path of this al-feed skill directory; Claude Code tells 
     -Title     '<feature title>'
 ```
 
-The script at `scripts/feed-append.ps1` (over `scripts/feed.psm1`) is the source of truth for append, escaping, and render mechanics; it is validated by `Validate-PowerShell.ps1` and covered by `tests/al-feed/*.Tests.ps1`. Do not inline its logic into a caller — that bypasses both gates and scatters the voice this skill centralizes.
+`scripts/feed-append.ps1` (over `scripts/feed.psm1`) owns append, escaping, and render mechanics. Do not inline its logic into a caller — that scatters the voice this skill centralizes.
 
 ## Composition
 
-| | |
-|---|---|
-| **Invoked from** | the 15 narrating skills, each at its own hand-wired card-firing moment (see the per-skill triggers in those skills) — never the 3 silent skills (`/al-build`, `/al-second-opinion`, `/al-agentic-dev-overview`) |
-| **Returns to caller** | nothing for chat — a side-write of one card; the caller continues its own work |
-
-The skill that holds the phase context fires the card. A self-describing verdict (the read-only `al-doc-verify` agent's `verdict=` line) the caller cards verbatim from what the agent returned; a context-free verdict (`/al-build`) the caller narrates with the phase context it holds. A read-only agent never writes the feed itself — `/al-feed` is a write, outside its envelope.
+Returns nothing for chat — a side-write of one card; the caller continues. The skill holding the phase context fires the card: a self-describing verdict (a read-only agent's `verdict=` line) is carded verbatim; a context-free verdict (`/al-build`) the caller narrates with the context it holds. A read-only agent never writes the feed itself — `/al-feed` is a write, outside its envelope.

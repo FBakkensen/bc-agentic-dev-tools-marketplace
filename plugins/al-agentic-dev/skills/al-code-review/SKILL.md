@@ -7,13 +7,11 @@ description: AL/Business Central code review at gate points. Use when a slice's 
 
 # /al-code-review, In-depth gate review
 
-Deliberate gate at slice-done and feature-done boundaries, where code is finished enough to judge whole. Parallel lens sub-agents run each with a narrow goal, confidence pass suppresses noise, findings auto-feed per-finding `/grill-me` triage loop. Lens shape mirrors native `/code-review` but AL-shaped: lenses align with what trips AL reviewers, not generic ones.
+Deliberate gate at slice-done and feature-done boundaries, where code is finished enough to judge whole. Parallel lens sub-agents each run a narrow goal, confidence pass suppresses noise, findings auto-feed a per-finding `/grill-me` triage loop. Lenses align with what trips AL reviewers, not generic ones.
 
-Slice-done is natural goldilocks. Per-task review (pre-0.27 cadence) reviewed every TDD cycle's diff before slice was end-to-end coherent → cross-task drift surfaced only after slice closed anyway. Feature-done alone lets slice A's defects compound through slices B / C / D. Slice-done catches both: enough end-to-end shape to judge whole, small enough that defects don't ripple.
+Runs before `/al-user-verification`: chain is implement → refine verify task → code-review → page-script/user-verification → next slice (user/API-facing), or implement → code-review → next slice (backend-only). Surfaces structural defects, BC anti-patterns, naming-that-lies, and AppSource lock-in before the user walks checks the same defects would invalidate.
 
-Programmatic gate runs before `/al-user-verification`. For user/API-facing slices the chain is implement → refine verify task → code-review → page-script/user-verification → next slice; for backend-only slices it is implement → code-review → next slice. Code-review surfaces structural defects, BC anti-patterns, naming-that-lies, AppSource lock-in before the user spends time walking checks that the same defects would invalidate.
-
-`/al-refactor` (auto inside `/al-implement`) handles structural reshape at high relevance bar every cycle. `/al-code-review` lowers the bar and adds judgment-level lenses the refactor pass cannot afford.
+`/al-refactor` (auto inside `/al-implement`) reshapes structure at a high relevance bar every cycle; `/al-code-review` lowers the bar and adds judgment-level lenses the refactor pass cannot afford.
 
 ## Preconditions
 
@@ -48,11 +46,13 @@ Spawn all lenses in one message so they run concurrently — each as the `al-age
 
 Lenses state goals, not enumerated checklists. Specifics each lens catches depend on code and what `bc-code-intelligence` surfaces. Structural and coupling vocabulary the lenses name (Connascence, CQS, Depth, Seam) lives in `${CLAUDE_SKILL_DIR}/../../references/LANGUAGE.md`; use it exactly.
 
+Do not shadow a running lens. A lens that fails or returns nothing → note the gap in synthesis rather than re-running silently.
+
 ## Confidence pass
 
-After lenses return, a lighter-weight pass scores each finding 0-100 before showing the user. Five lenses on a 10-file diff produce 30+ findings if every lens reports everything; the filter makes the list short enough for `/grill-me` to triage cleanly.
+After lenses return, a lighter-weight pass scores each finding 0-100 before showing the user, keeping the list short enough for `/grill-me` to triage cleanly.
 
-Findings `< 80` suppressed; only `>= 80` reach triage. Prefer a few high-conviction findings over a long list of cosmetic notes; when a structural issue is in play, do not flood the list with nits beneath it.
+Findings `< 80` suppressed; only `>= 80` reach triage. Prefer a few high-conviction findings over cosmetic notes; when a structural issue is in play, do not flood the list with nits beneath it.
 
 | Score | Meaning |
 |---|---|
@@ -64,7 +64,7 @@ Findings `< 80` suppressed; only `>= 80` reach triage. Prefer a few high-convict
 
 ## What lands on screen
 
-Finding bodies live inside each `/grill-me` invocation. Chat surface is chrome only because captured pattern is "user reads findings list, immediately fires `/grill-me`"; pre-dumping bodies duplicates what grill shows. Shapes per Tables-of-facts and Lists-of-findings in `${CLAUDE_SKILL_DIR}/../../references/voice-contract.md`:
+Finding bodies live inside each `/grill-me` invocation; chat surface stays chrome-only to avoid duplicating what grill shows. Shapes per Tables-of-facts and Lists-of-findings in `${CLAUDE_SKILL_DIR}/../../references/voice-contract.md`:
 
 | | |
 |---|---|
@@ -74,23 +74,23 @@ Finding bodies live inside each `/grill-me` invocation. Chat surface is chrome o
 
 ## Auto-grill loop
 
-After confidence pass, skill spawns `/grill-me` per surviving finding automatically. No "Run `/grill-me`" handoff sentence; manual step adds keypress, not judgment, and per-finding judgment happens inside each grill. Order is severity-then-confidence (correctness > performance > hygiene; confidence breaks ties) because loop's failure mode is partial completion (context shift, session compaction); triaging most consequential first means dropped tail is least costly.
+After the confidence pass, spawn `/grill-me` per surviving finding automatically — no handoff sentence. Order is severity-then-confidence (correctness > performance > hygiene; confidence breaks ties): the loop's failure mode is partial completion (context shift, compaction), so triaging the most consequential first makes the dropped tail least costly.
 
 Per finding:
 
-- **Spawn**: `/grill-me` with finding body (Finding / Where / Source / Severity / Confidence / Slice when per-slice), lens proposal (its `Recommended next`), scope context. Spawn prompt requires grill's first message to open with the finding body verbatim, then a short representative excerpt quoted from each cited `Where` (enough to ground the rule violation, not the full diff), then exploration, then first question — so user sees subject under interrogation before being asked to judge it. Scope chip lives in al-code-review's opener; grill does not re-emit it.
+- **Spawn**: `/grill-me` with finding body (Finding / Where / Source / Severity / Confidence / Slice when per-slice), lens proposal (its `Recommended next`), scope context. Spawn prompt requires grill's first message to open with the finding body verbatim, then a short representative excerpt from each cited `Where` (enough to ground the violation, not the full diff), then exploration, then first question — user sees the subject before being asked to judge it. Scope chip lives in al-code-review's opener; grill does not re-emit it.
 - **Contract**: four outcomes: fix inline now, new task file in `tasks/`, note on future task, drop.
 - **References**: pass `${CLAUDE_SKILL_DIR}/../../references/notes-discipline.md` and `${CLAUDE_SKILL_DIR}/../../references/markdown-spec-discipline.md` for writeback shape (new per-task file under `tasks/`, frontmatter shape).
 - **Exit**: when decision lands.
 
-Passing proposal (not raw finding) lets `/grill-me` stress-test whether proposal is right rather than invent one cold. Four outcomes:
+Pass the proposal, not just the raw finding, so `/grill-me` stress-tests it rather than inventing one cold. Four outcomes:
 
-- **Fix inline now**: finding is non-semantic — a comment scrub, a *local/private* rename, formatting, or process-noise cleanup that moves no decision logic. Apply, rerun `/al-build` to confirm it stays green, commit as a standalone hygiene fix; if the build reds (a rename collided, a pragma comment mattered), revert and re-triage as new-task / note / drop — never leave the tree red. No task, no `/al-refine`; `review: clean` holds — no technical work opened. Routing a two-line fix through the ledger costs more ceremony than the fix, and "just fix it" is what the user reaches for on a mechanical finding. Anything touching behaviour, a decision, design judgement, or a *public/shipped* surface (a public procedure, table field, or page-action rename is AS0007 territory, not hygiene) is new-task / note / drop. Closer counts it under **Fixed inline** so the fix stays visible.
+- **Fix inline now**: finding is non-semantic — a comment scrub, a *local/private* rename, formatting, or process-noise cleanup that moves no decision logic. Apply, rerun `/al-build` to confirm it stays green, commit as a standalone hygiene fix; if the build reds (a rename collided, a pragma comment mattered), revert and re-triage as new-task / note / drop — never leave the tree red. No task, no `/al-refine`; `review: clean` holds — no technical work opened. Anything touching behaviour, a decision, design judgement, or a *public/shipped* surface (a public procedure, table field, or page-action rename is AS0007 territory, not hygiene) is new-task / note / drop. Closer counts it under **Fixed inline** so the fix stays visible.
 - **New task**: create a new per-task file `NNN-T-MMM-<slug>.md` under `tasks/` (next monotonic `T-MMM` id, run-order prefix picked per the `markdown-spec-discipline.md` gap rule) with frontmatter `task: T-MMM`, `status: ready`, `slice: <slug>`, `kind: technical`, an H1 title, and a body carrying `Where` and `Source` as seed for `/al-refine`. Creating a new task writes `ready` because context exists and proof is empty; this is not opening an existing `blocked` task. Slice slug is just-reviewed slice (per-slice mode) or slice the fix most naturally belongs to (per-feature mode). Per-slice mode: new task in current slice re-opens slice — flip the slice verify task's `status:` from `ready-for-verification` to `blocked` (stripping `review: clean` in the same Edit if a prior round left it), next slice's first task stays `blocked`, handoff routes to `/al-refine` on the new task so the slice closes properly and `/al-code-review` re-runs on the updated diff. Per-feature mode: new task in any earlier closed slice is a defect — flip that slice's verify task back to `blocked` (same `review: clean` strip if present) and route via `/al-steer`; exception: usability candidate tasks materialised by `/al-user-verification` are non-gating by contract and live in their verified slice without re-opening its verify task. Otherwise the new task waits for next `/al-refine` cycle.
 - **Note on future task**: identify not-yet-`done` task whose work touches area; regenerate its NOTE callout block whole in that task's file (surgical-edit contract is locating the file by its `T-MMM` filename and editing its `status:` frontmatter line only).
 - **Drop**: user accepts as known, not worth a task. Closer counts it.
 
-Abort on explicit `stop` / `end loop` / `cancel`, off-topic shift, or compaction: emit partial-summary closer and exit, no resume (queue is transient). Single-finding case: spawn one grill, skip progress chip, straight to closer. `/grill-me` stays generic; triage contract rides in via spawn prompt, no section added to `grill-me`'s `SKILL.md`.
+Abort on explicit `stop` / `end loop` / `cancel`, off-topic shift, or compaction: emit partial-summary closer and exit, no resume (queue is transient). Single-finding case: spawn one grill, skip progress chip, straight to closer. Triage contract rides in via the spawn prompt; `/grill-me` stays generic.
 
 
 ## Gate outcome on clean review
@@ -129,8 +129,3 @@ Four moments narrate to the branch feed. At each, hand `/al-feed` a brief — wh
 | **Replan venue**   | n/a; findings auto-loop into `/grill-me` per finding, never via `/al-steer` (review findings are not replan signals) |
 | **Sidebands**      | `/al-second-opinion` (cross-family advisory on large findings lists), `/grill-me` (per-finding triage), `al-research` agent (BaseApp behaviour or BC convention), `bc-standard-reference` agent (BaseApp pattern correctness) |
 
-## Delegation
-
-Spawn each lens as a parallel agent in one message. Lenses are independent and context-expensive; running them serially in the main session burns tokens on per-file content the synthesis does not need to retain. Per-feature mode benefits especially: five lenses across 20+ files is exactly the shape that wants parallelism.
-
-Do not shadow a running lens. A lens that fails or returns nothing → note the gap in synthesis rather than re-running silently.

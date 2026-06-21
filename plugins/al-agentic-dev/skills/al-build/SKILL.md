@@ -7,11 +7,9 @@ description: Build and test AL/Business Central projects. Use after modifying AL
 
 # /al-build — Build and test gate
 
-Run after every AL change. Zero warnings, zero errors. Anything else is red.
+Run after every AL change, and as the required gate before committing. Zero warnings, zero errors. Anything else is red.
 
-Required gate before committing AL changes. `/al-implement` calls this after every RED, GREEN, `/al-refactor`.
-
-**Layer.** Executes the **Unit** (AL-Runner, fast pre-gate) and **Integration** (container + TestPage) layers of the test pyramid — the assertion-oracle, red-first foundation that E2E and Contract reds push *down* to. See [`test-strategy.md`](../../references/test-strategy.md).
+**Layer.** Executes the **Unit** (AL-Runner) and **Integration** (container + TestPage) layers. See [`test-strategy.md`](../../references/test-strategy.md).
 
 ## First time
 
@@ -29,13 +27,13 @@ Set location to consumer repo root, then:
 pwsh "<skill-folder>/scripts/test.ps1"
 ```
 
-Always run full gate. Do not filter tests by codeunit.
+Always run full gate. Do not filter tests by codeunit. Not bare `alc.exe` → symbol resolution, container publish, telemetry capture live in `test.ps1`.
 
 Force republish: `pwsh "<skill-folder>/scripts/test.ps1" -Force`
 
 ### Gate metrics (automatic)
 
-Every `test.ps1` run self-records one entry — `gate`, `outcome`, `branch`, `headSha`, dirty-workspace fingerprint (`dirty.app`/`dirty.tests`/`dirty.other`), per-runner test totals, step timings — to `.output/logs/build-timing.jsonl` plus a user-level mirror at `~/.al-build/gate-metrics.jsonl` (override: `ALBT_GATE_METRICS_GLOBAL_PATH`). No caller flags; phase attribution derives from the recorded evidence at report time (prod-only dirty ≈ mutation gates, test-only ≈ RED proofs, mixed ≈ TDD inner loop, clean ≈ closeout). Summarize where gate time goes: `pwsh "<skill-folder>/scripts/report-gate-metrics.ps1"` (repo-local) or `-GlobalLog` (cross-repo).
+Every `test.ps1` run self-records one entry to `.output/logs/build-timing.jsonl` plus a user-level mirror at `~/.al-build/gate-metrics.jsonl` (override: `ALBT_GATE_METRICS_GLOBAL_PATH`). No caller flags — phase attribution derives from the recorded evidence at report time. Summarize where gate time goes: `pwsh "<skill-folder>/scripts/report-gate-metrics.ps1"` (repo-local) or `-GlobalLog` (cross-repo).
 
 ### Fast unit test (inner loop)
 
@@ -45,7 +43,7 @@ When `unitTestApp` configured in `al-build.json`, run only AL Runner unit tests:
 pwsh "<skill-folder>/scripts/test.ps1" -UnitTestOnly
 ```
 
-Compiles all apps, runs AL Runner against unit test app, exits. No container needed. Use during RED→GREEN inner loop in `/al-implement` for fast feedback.
+Compiles all apps (integration compile errors still surface), runs AL Runner, exits — no container needed. Use during the RED→GREEN inner loop in `/al-implement` for fast feedback.
 
 **Outputs (per test run):**
 
@@ -81,7 +79,7 @@ Return observed outcome only. Do not make routing decisions. Do not invoke follo
 
 Return YAML-like plain text in a fenced `text` block.
 
-Take `gate`, `totals`, and all counts from `.output/TestResults/summary.json` — it is the source of truth. **Never derive counts from console lines: `Codeunit … Success` lines are test codeunits (containers of tests), not tests.** Echo `appName`, `dir`, `resultFile`, `telemetryFile`, and every `counts` number exactly as emitted; do not normalize or reinterpret. Report totals per runner; never sum across runners — the unit test app runs through both al-runner and the container, so a cross-runner sum counts the same tests twice. If `counts` is `null` for a run, report `counts: unavailable` — do not substitute zeros. Omit `totals` and `runs` if no summary exists.
+Take `gate`, `totals`, and all counts from `.output/TestResults/summary.json` — the source of truth; echo `appName`, `dir`, `resultFile`, `telemetryFile`, and every `counts` number verbatim. **Never derive counts from console lines: `Codeunit … Success` lines are test codeunits (containers of tests), not tests.** Report totals per runner; never sum across runners — the unit test app runs through both al-runner and the container, so a cross-runner sum counts the same tests twice. If `counts` is `null` for a run, report `counts: unavailable` — do not substitute zeros. Omit `totals` and `runs` if no summary exists.
 
 On failure, parse the failing run's `resultFile` (JUnit XML, both runners) for failing test names and the `<failure message=…>` text. If XML is unavailable but console output has explicit failure lines, use those. If neither exists, omit `failing_tests`. Omit `first_error` and `log_excerpt` unless corresponding evidence exists. `log_excerpt` is capped at 20 relevant lines. `root_signal` is mandatory for `FAIL` and must compress observed output only; no cause speculation.
 
@@ -190,19 +188,11 @@ Situation → action:
 
 **Anti-pattern: edit container manually.** No `docker exec`, no `Invoke-ScriptInBcContainer` to patch state, no hand-installing apps. Container is disposable; reproducibility lives in scripts.
 
-## Yes / No
-
-**No:** `alc.exe app.json` directly. Use `/al-build` for tests, not bare `alc.exe` → symbol resolution, container publish, telemetry capture live in `test.ps1`.
-**Yes:** `pwsh scripts/test.ps1` after every AL edit.
-
-**No:** `docker exec <container> bash` to fix it in place.
-**Yes:** `docker rm -f <container>` and re-run.
-
 ## Composition
 
-- `/al-implement` — calls this after every RED, GREEN, `/al-refactor`, before flipping the task `status:` to `done`. Use `-UnitTestOnly` for RED→GREEN inner loop when `unitTestApp` configured; use full gate before committing.
+- `/al-implement` — calls this after every RED, GREEN, `/al-refactor`, before flipping the task `status:` to `done`.
 - `/al-debug-logging` — consumes `telemetry.jsonl` produced here (in per-app subfolders).
-- `pwsh "<skill-folder>/scripts/init.ps1"`, `pwsh "<skill-folder>/scripts/provision.ps1"` — one-time setup before this skill is usable.
+- `init.ps1`, `provision.ps1` — one-time setup before this skill is usable.
 
 ## Out of scope
 

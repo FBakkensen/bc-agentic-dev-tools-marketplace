@@ -7,25 +7,24 @@ description: One `status: ready` task to a fresh Test Specification or Verificat
 
 # /al-refine, Task to Test Specification / Verification Plan
 
-Fill one named `status: ready` task in the `tasks/` folder. Branch by `kind:` in the task file's frontmatter: `technical` → fresh `Test Specification`; `verify` → fresh `Verification Plan`. Existing proof content is untrusted; regenerate from current app/tests, ground symbols, sharpen intent, write the task body. One task per run.
+Fill one named `status: ready` task in the `tasks/` folder. Existing proof content is untrusted; regenerate from current app/tests, ground symbols, sharpen intent, write the task body. One task per run.
 
-**Layer.** Authors the `Test Specification` / `Verification Plan` each pyramid layer verifies (see [`test-strategy.md`](../../references/test-strategy.md)) using the grammar in [`test-specification.md`](../../references/test-specification.md). Technical tasks feed `/al-implement`; verify tasks feed `/al-page-script` and `/al-user-verification`.
+Branch by `kind:` in the task file's frontmatter:
+
+- `technical` → fresh `Test Specification`, flip `ready` → `ready-for-implementation`.
+- `verify` → fresh `Verification Plan`, flip `ready` → `ready-for-verification`.
+- `provision` / `breaking-change` → **not a refine target**: no proof artifact, leave `status: ready`, notify *"ops task → run `/al-provision`"* or *"ops task → run `/al-validate-breaking-changes`"*.
+
+**Layer.** Authors the `Test Specification` / `Verification Plan` each pyramid layer verifies (see [`test-strategy.md`](../../references/test-strategy.md)) using the grammar in [`test-specification.md`](../../references/test-specification.md).
 
 ## Preconditions
 
 - Branch matches `^\d{3}-`. If not: **Stop**. Run `/al-event-model` (or `/al-design` for backend-only).
 - Spec folder holds `architecture.md`. Missing → **Stop**, run `/al-design`.
 - User/API-facing features: `event-model.md` also present.
-- Target task is named and has `status: ready`. `ready` means context exists for `/al-refine` only.
-- Any other status is not a refine target: `blocked` with all `depends_on:` `done` and no replan flag in the body → the upstream close just didn't flip it; open it `ready` here and proceed, no `/al-steer` bounce. `blocked` on an unsatisfied edge or a replan flag → `/al-steer`. `ready-for-implementation` → `/al-implement`; `ready-for-verification` → `/al-page-script` or `/al-user-verification` after `/al-code-review`; `done` → downstream evidence exists, reopen only through `/al-steer`.
+- Target task is named and has `status: ready` (context exists for `/al-refine` only). One nuance: `blocked` with all `depends_on:` `done` and no replan flag in the body → the upstream close just didn't flip it; open it `ready` here and proceed, no `/al-steer` bounce. `blocked` on an unsatisfied edge or a replan flag → `/al-steer`. A `done` task carries downstream evidence; reopen only through `/al-steer`.
 - Verify task (`kind: verify`) but no `event-model.md` → contract violation, **Stop**, route to `/al-steer`. Verify tasks only exist for user/API-facing features.
 - Read [`test-specification.md`](../../references/test-specification.md), [`test-strategy.md`](../../references/test-strategy.md), [`test-layout.md`](../../references/test-layout.md) (the Unit-vs-Integration scope call is the placement rule there — a case whose codepath needs real BaseApp behaviour cannot be scoped `Unit`), [`voice-contract.md`](../../references/voice-contract.md), and [`markdown-spec-discipline.md`](../../references/markdown-spec-discipline.md) before writing.
-
-## Branch by task kind
-
-Read task's `kind:` value. `technical` writes a `Test Specification` and flips `ready` → `ready-for-implementation`. `verify` writes a `Verification Plan` and flips `ready` → `ready-for-verification`.
-
-`kind: provision` or `kind: breaking-change` → **not a refine target**. These ops tasks carry no proof artifact; they run a script and flip status. Write nothing, leave `status: ready`, notify: *"ops task → run `/al-provision`"* (`kind: provision`) or *"ops task → run `/al-validate-breaking-changes`"* (`kind: breaking-change`).
 
 ## Regenerate proof
 
@@ -74,12 +73,7 @@ Artifacts stay clean; chat carries the citation. `Researched:` bullets land in `
 
 ## Sharpen vague language inline
 
-When a domain rule is implicit, when edge discovery surfaces a case the user must adjudicate, when an upper bound is missing, when a boundary contradicts another rule, or when intent splits (`validate` as schema check vs. business rule check) → run `/grill-me`. Fuzzy language shipped to `/al-implement` becomes fuzzy code; fuzzy verification becomes weak sign-off.
-
-Inline replacement examples:
-
-- Technical vague: "order is processed" → "Sales Order is posted via Codeunit 80"
-- Verify vague: "user checks result" → "Order Processor opens Sales Order Card and Sales Order Status is `Released`"
+When a domain rule is implicit, when edge discovery surfaces a case the user must adjudicate, when an upper bound is missing, when a boundary contradicts another rule, or when intent splits (`validate` as schema check vs. business rule check) → run `/grill-me`. Fuzzy language shipped to `/al-implement` becomes fuzzy code; fuzzy verification becomes weak sign-off. Replace vague phrasing with exact object + procedure + status names inline.
 
 ## Second opinion on non-trivial plans
 
@@ -95,8 +89,6 @@ Stable handles:
 
 - Technical: AL test procedure name in `Covered By` / `Procedure`.
 - Verify: example ID + title, e.g. `V1 BlocksReleaseFromSalesOrderPage`.
-
-Write telegraphic per line; drop articles, padding, hedges; fragments fine. Concision compresses each line, never the line count: multi-fact content splits one fact per landing line — a `;`-spliced multi-fact paragraph is density, not concision. Follow surgical-edit contract from [`markdown-spec-discipline.md`](../../references/markdown-spec-discipline.md).
 
 ## Document verification
 
@@ -121,7 +113,7 @@ technical: status: ready → status: ready-for-implementation
 verify:    status: ready → status: ready-for-verification
 ```
 
-No `in-progress` state. The task is now executable-ready, but still not `done`.
+No `in-progress` state.
 
 **Advisor checkpoint.** Call `advisor()` before writing the first `Test Specification` or `Verification Plan` into the task file. Shape is hard to retract once downstream skills consume it.
 
@@ -129,9 +121,9 @@ No `in-progress` state. The task is now executable-ready, but still not `done`.
 
 Three moments narrate to the branch feed. At each, hand `/al-feed` a brief — what happened, why it matters to someone who hasn't read the proof, the kind — and `/al-feed` composes the punchline and layers and appends the card. Fire only on these; the per-question grounding and inline grilling stay silent.
 
-- **decision** — proof structure committed: `Expected Behaviors` vs `Decision Matrix`, and `New:` vs `Modified:` objects settled. Captures *how* this task will be proved and which objects it creates vs changes — coverage shape, Unit/Integration split, new-vs-modified seeded from `architecture.md` then reconciled to workspace.
-- **surprise** — unanswerable exit: a needed answer won't ground (or the `al-doc-verify` agent returns `verdict=fail`), so the task stays/flips `blocked` and routes out rather than ship fuzzy proof. Captures the question that couldn't be pinned and the route taken (the `al-research` agent, `/al-grill-adr`, `/grill-me`, `/al-steer`).
-- **landing** — the status flip `ready → ready-for-implementation` / `ready-for-verification`. Captures that the task now carries a complete grounded plan, regenerated fresh not stale, and which skill picks it up next.
+- **decision** — proof structure committed: `Expected Behaviors` vs `Decision Matrix`, and `New:` vs `Modified:` objects settled.
+- **surprise** — unanswerable exit: a needed answer won't ground (or the `al-doc-verify` agent returns `verdict=fail`), so the task stays/flips `blocked` and routes out rather than ship fuzzy proof.
+- **landing** — the status flip `ready → ready-for-implementation` / `ready-for-verification`.
 
 ## Composition
 

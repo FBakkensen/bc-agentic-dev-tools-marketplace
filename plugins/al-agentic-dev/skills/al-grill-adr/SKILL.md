@@ -7,7 +7,7 @@ description: Domain-aware grilling for AL/Business Central. Sharpens BC vocabula
 
 # /al-grill-adr, Domain-aware grilling for AL/Business Central
 
-Interview the user about domain intent, one question at a time, cross-referencing the codebase when codebase can answer. Sharpen `CONTEXT.md` until BC vocabulary is unambiguous; offer domain ADRs when constraint is hard to reverse and worth preserving. User-facing journey settlement belongs to `/al-event-model`; architectural picks belong to `/al-design`.
+Interview the user about domain intent, one question at a time, reading the codebase when it can answer. Sharpen `CONTEXT.md` until BC vocabulary is unambiguous; offer domain ADRs when a constraint is hard to reverse and worth preserving.
 
 ## Artifact boundary
 
@@ -15,7 +15,7 @@ Writes only `CONTEXT.md` and accepted domain ADRs under `docs/adr/`.
 
 May read implementation, app, test, and code artifacts to expose domain conflicts. Never edit them. Never write `event-model.md`, `architecture.md`, or the `tasks/` folder.
 
-Journey pressure → hand off to `/al-event-model`. Architecture, object responsibility, task, proof, or implementation pressure → hand off to `/al-design` or the downstream owning skill.
+Journey pressure hands off to `/al-event-model`; architecture, object responsibility, task, proof, or implementation pressure to `/al-design` or the downstream owning skill.
 
 ## Preconditions
 
@@ -26,17 +26,17 @@ Journey pressure → hand off to `/al-event-model`. Architecture, object respons
 
 Answer before walking away:
 
-- **Which BC term in this conversation is ambiguous, overloaded, or conflicts with `CONTEXT.md` as written?** Resolve to canonical name. Standard Microsoft BC terms (`Sales Header`, `Customer`, `Posting Date`) are baseline; record only what this project narrows, extends, or names that Microsoft doesn't. Challenge every term the user uses against `CONTEXT.md` and against canonical BC vocabulary; fuzzy `Account` at grilling (Customer? G/L? Bank?) → wrong-table query at `/al-implement` → wrong-test at `/al-mutate`. Update `CONTEXT.md` inline as terms resolve; don't queue, don't couple to implementation details.
-- **What concrete scenario forces boundary between two concepts to be precise?** Partial posting, prepayment, reversal, dimension inheritance, multi-company, AppSource constraint. Stress every domain relationship with specific BC scenario; user discovers their own precision when scenario forces yes-or-no.
-- **Where does user's stated behaviour disagree with the code?** When codebase can answer, read the code; ask user only what code cannot tell you (intent, future direction, why constraint exists). Surface contradictions; right resolution is user's call, but conflict must be named.
-- **Does any domain constraint surfaced here cross the four-of-four ADR bar?** Offer ADR inline when **all four** hold: hard to reverse (shipped data, partner integrations, behavioural contracts); surprising without context; real trade-off with genuine alternatives; domain (rule about *what the business does*, not *how the code is shaped*). "Partial posting allowed for service items only" is domain; "intercept via `OnBeforePostSalesDoc`" is architectural and belongs to `/al-design`. Three of four does not earn an ADR; inflation rots index. When a substantive question feels architectural, find the domain constraint behind it and grill that. Template: `${CLAUDE_SKILL_DIR}/../../references/adr.template.md`. Resolve `NNNN` per `${CLAUDE_SKILL_DIR}/../../references/cross-branch-numbering.md`.
-- **Which BC names verified this session?** Every BC-specific term landing in `CONTEXT.md` or domain ADR meets the evidence bar in [voice-contract.md](../../references/voice-contract.md). See *Citation chain in chat* below.
+- **Which BC term here is ambiguous, overloaded, or conflicts with `CONTEXT.md`?** Resolve to a canonical name. Standard Microsoft terms are baseline; record only what this project narrows, extends, or names that Microsoft doesn't. Update `CONTEXT.md` inline as terms resolve; don't couple to implementation details.
+- **What concrete BC scenario forces a boundary between two concepts to be precise?** Partial posting, reversal, dimension inheritance, multi-company, AppSource constraint — the user finds their own precision when a scenario forces yes-or-no.
+- **Where does the user's stated behaviour disagree with the code?** Read the code when it can answer; ask the user only what code cannot tell (intent, future direction, why a constraint exists). Name the conflict; resolution is the user's call.
+- **Does any domain constraint cross the four-of-four ADR bar?** Offer an ADR inline only when **all four** hold: hard to reverse (shipped data, partner integrations, behavioural contracts); surprising without context; real trade-off with genuine alternatives; domain (a rule about *what the business does*, not *how the code is shaped*). Three of four does not earn one — inflation rots the index. When a question feels architectural, grill the domain constraint behind it. Template: `${CLAUDE_SKILL_DIR}/../../references/adr.template.md`; resolve `NNNN` per `${CLAUDE_SKILL_DIR}/../../references/cross-branch-numbering.md`.
+- **Which BC names are verified this session?** Every BC-specific term landing in `CONTEXT.md` or a domain ADR meets the evidence bar in [voice-contract.md](../../references/voice-contract.md). See *Citation chain in chat* below.
 
-Question stays unanswerable → grilling not done. Keep going, or `al-research` agent if gap is BC behavioural fact rather than user intent.
+A question stays unanswerable → grilling is not done. Keep going, or spawn the `al-research` agent if the gap is a BC behavioural fact rather than user intent.
 
 ## Citation chain in chat
 
-Evidence bar per [voice-contract.md](../../references/voice-contract.md). `CONTEXT.md` and domain ADRs are durable design artifacts: terms the workspace cannot settle route through `al-research` agent, mandatory — vocabulary drift between agents and codebase is what `CONTEXT.md` exists to fix. Research fails → keep grilling; do not write the term or ADR this session.
+Evidence bar per [voice-contract.md](../../references/voice-contract.md). `CONTEXT.md` and domain ADRs are durable design artifacts, so terms the workspace cannot settle route through the `al-research` agent, mandatory. Research fails → keep grilling; do not write the term or ADR this session.
 
 ## Document verification
 
@@ -52,12 +52,12 @@ intended_handoff: al-event-model | al-design
 
 ## Feed
 
-Two moments in a grilling session are worth narrating to a wary developer; the rest is interview play-by-play and stays silent.
+Two moments are worth narrating to a wary developer; the rest is interview play-by-play and stays silent.
 
-- **decision** — a constraint clears the four-of-four ADR bar and the user accepts it. The card names the business rule just locked in and flags it hard to undo → why it earned recording, which alternative was rejected.
-- **surprise** — grilling reads the code and finds the user's stated behaviour disagrees with the actual code. The card names the caught mismatch and that the user picks the resolution → the term or scenario that exposed it, the two readings.
+- **decision** — a constraint clears the four-of-four ADR bar and the user accepts it. Name the business rule locked in, why it earned recording, which alternative was rejected.
+- **surprise** — the code disagrees with the user's stated behaviour. Name the mismatch, the term or scenario that exposed it, the two readings, and that the user picks the resolution.
 
-At each, hand `/al-feed` a brief — what just happened in domain terms, why it matters to someone who hasn't read `CONTEXT.md` or the code, and the kind — and `/al-feed` composes the punchline and layers and appends the card.
+At each, hand `/al-feed` a brief and the kind; it composes and appends the card.
 
 ## Composition
 

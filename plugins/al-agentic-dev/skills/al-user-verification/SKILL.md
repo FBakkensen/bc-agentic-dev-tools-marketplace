@@ -11,7 +11,7 @@ Pick a `ready-for-verification` verify task. Run its fresh `Verification Plan`: 
 
 **User is the runner; agent is the guide.** The agent operates everything mechanical — container spawns, publish, pre-flight regression batch, Contract examples, status flips, the transcript — and turns each Journey Example / Exploration Charter into single concrete instructions the user performs in the BC Web Client. The user's eyes are the oracle; the user never reads the task file or the plan grammar — they click, look, and answer. No AL writes, no `/al-build` run, no codebase walk (page-ID and option/enum value-range lookups — for deep links and structured questions — permitted). Two outcome dimensions split by *checking vs testing*: **functional/observable** outcomes (a Status value, a cue count, an HTTP status, an error) are *checked* — read off the screen by the user — and **gate** the verify task; **subjective usability** outcomes (clunky, unclear, flow isn't one motion) are *sapient testing* → **findings → tasks**, never a gate. Two guards against leading the witness: **ask-before-reveal** (the agent asks what the user sees before naming the expected value), and `/al-second-opinion` reviews the written verdict for coverage (every check asked and answered with an observed value).
 
-**Layer.** Owns E2E pre-flight, Contract checks, and the exploratory layer (see [`test-strategy.md`](../../references/test-strategy.md)). Per checking-vs-testing: functional outcomes gate; subjective usability is findings → tasks. The user is the direct sapient oracle; `/al-second-opinion` guards coverage and routing, not their eyes.
+**Layer.** Owns E2E pre-flight, Contract checks, and the exploratory layer (see [`test-strategy.md`](../../references/test-strategy.md)). The user is the direct sapient oracle; `/al-second-opinion` guards coverage and routing, not their eyes.
 
 ## Preconditions
 
@@ -31,7 +31,7 @@ Pick a `ready-for-verification` verify task. Run its fresh `Verification Plan`: 
 
 Three `new-agent-container.ps1` spawns per cycle. Fresh-each-time discipline isolates verification from prior session state and leaves the next consumer with a clean container.
 
-**Spawn #1 (pre-flight).** `new-agent-container.ps1` → `publish-apps.ps1` → `pagescript-replay.ps1` (batch mode, every `pagescripts/recordings/*.yml`) when E2E recordings exist. Catches both current-slice regressions and cross-slice collisions before the user spends a minute walking.
+**Spawn #1 (pre-flight).** `new-agent-container.ps1` → `publish-apps.ps1` → `pagescript-replay.ps1` (batch mode, every `pagescripts/recordings/*.yml`) when E2E recordings exist. Catches both current-slice regressions and cross-slice collisions before the user walks.
 
 - Green → continue to spawn #2.
 - Red → flip verify task `status: blocked`, record `**Replan flag**: trigger #4` for any prior-slice `.yml` red, `**Replan flag**: trigger #8` for current-slice red. Route `/al-steer T-NNN`. Run spawn #3 for cleanup and exit.
@@ -46,6 +46,7 @@ Hand the user:
 
 Contract-only plan → no handover, no walk; gate judges captured client output. This handover lives here and only here: spawn #1/#2 each recreate the container, so a user invited in earlier gets their session killed mid-walk. Evidence is the transcript of the user's verbatim answers plus any saved screenshots.
 
+
 **Spawn #3 (exit).** Always runs at end of cycle, pass or fail. `new-agent-container.ps1` only — leaves a fresh container for the next consumer (next slice's `/al-implement`, or merge prep). Skill exits after spawn returns.
 
 Spawn invocations:
@@ -57,17 +58,16 @@ Spawn invocations:
 
 - **Which slice in flight?** One `T-NNN` of `kind: verify`, named in opener with its `slice:` value and matching `event-model.md` timeline step.
 - **What is the user exercising?** Read `Verification Plan`: `Journey Examples`, `Contract Examples`, and `Exploration Charters`. Agent translates each into single instructions; the user performs and reports. Contract examples run agent-side.
-- **Did every checkable example functionally pass?** Per `E2E` example, the user reports the observed value; the agent records observed-vs-expected verbatim from the user's words. Per `Contract` example, the agent executes and matches `Observable Checks` against captured output.
-- **What usability findings surfaced?** Any friction the user mentions in their own words (clunky flow, unclear label, slow refresh) — agent classifies, records as findings, routes to tasks, **not** gating.
+- **Did every checkable example functionally pass?** Per `E2E` example, the user reports the observed value; the agent records observed-vs-expected verbatim from the user's words. Per `Contract` example, the agent matches `Observable Checks` against captured output.
 - **What flips at end?** `status:` goes `ready-for-verification` → `done` on full functional-pass (+ batch-green + second-opinion reconciled) or `blocked` on first functional fail. No partial-pass state and no `in-progress` status.
 
-Unanswerable → halt. *"User can't reach the container URL"* → **Stop**, fix environment, re-enter. *"The sandbox is down"* → **Stop**, fix environment, re-enter. *"The example references a page/API/client that doesn't exist"* → trigger #8, route to `/al-steer`.
+Unanswerable → halt. Container URL unreachable or sandbox down → **Stop**, fix environment, re-enter. Example references a page/API/client that doesn't exist → trigger #8, route to `/al-steer`.
 
 ## Workflow
 
 ### Opener, sized for a human
 
-Announce verify task: `T-NNN` ID, slice slug, counts by scope (`E2E`, `Contract`, `Exploration`), estimated walk length (*"6 steps, ~5 minutes"*) **plus the infra wait before it** — container spawns and publish run minutes, not seconds; say so, so the user isn't poised over an URL that hasn't arrived — and the first example *the user will walk* (Contract examples run agent-side first; a Contract-only plan skips the walk sizing entirely). No URL or credentials yet — that handover happens inside spawn #2 (*Container lifecycle*), after pre-flight greens and Contract checks run. Leave status `ready-for-verification` while guiding checks. One example open at a time; running three in parallel loses failure context when one goes red.
+Announce verify task: `T-NNN` ID, slice slug, counts by scope (`E2E`, `Contract`, `Exploration`), estimated walk length (*"6 steps, ~5 minutes"*) **plus the infra wait before it** — container spawns and publish run minutes, not seconds; say so, so the user isn't poised over a URL that hasn't arrived — and the first example *the user will walk* (Contract examples run agent-side first; a Contract-only plan skips the walk sizing entirely). No URL or credentials yet — that handover happens inside spawn #2 (*Container lifecycle*). Leave status `ready-for-verification` while guiding checks. One example open at a time.
 
 ### Guide the walk, ask before revealing
 
@@ -85,9 +85,9 @@ User reports an unexpected surface mid-walk (flicker, sudden navigation, wrong p
 
 Pre-flight batch surfaces failures BEFORE the user is invited in. Two failure shapes; both route to `/al-steer` but the trigger names what `/al-steer` is being asked to triage.
 
-- **Current slice's `.yml` red.** The recording `/al-page-script` just generated and committed fails on a fresh container. `/al-page-script`'s example-by-example inner loop ran replay-validation per example, so a current-slice pre-flight red means the failure didn't surface inside that loop — likely a non-deterministic recording (timing-dependent assertion, flaky locator), or a real regression introduced between `/al-page-script`'s green and `/al-user-verification`'s entry (a hotfix commit, a CI republish of a different version). Flag `**Replan flag**: trigger #8 (verification failed)`. `/al-steer` triages: re-author the Journey Example (rewrite via `/al-refine`) if the recording is fragile, or insert a `fixes:` task in the current slice if a real defect surfaced.
+- **Current slice's `.yml` red.** The recording `/al-page-script` just committed fails on a fresh container — a fragile recording or a regression introduced since its green. Flag `**Replan flag**: trigger #8 (verification failed)`. `/al-steer` triages: re-author the Journey Example via `/al-refine` if fragile, or insert a `fixes:` task in the current slice if a real defect surfaced.
 
-- **Prior slice's `.yml` red.** A recording from an earlier slice's verify task fails on the current slice's published code. Current slice introduced a change that broke the prior slice's user-facing surface — a renamed action, removed field, altered factbox refresh shape, changed Status-flip behaviour. Flag `**Replan flag**: trigger #4 (sibling now wrong)`. `/al-steer` triages: regenerate the prior slice's `.yml` via `/al-page-script` if the surface change was intentional (the prior recording is stale, not wrong), rewrite the prior slice's Verification Plan via `/al-refine` if the change invalidates the user-facing contract, or insert a `fixes:` task in the current slice if the surface change was unintentional regression. Re-opening a prior slice's verify task is a `/al-steer` decision, not this skill's.
+- **Prior slice's `.yml` red.** A recording from an earlier slice fails on the current slice's published code — the current slice broke a prior slice's user-facing surface (renamed action, removed field, changed Status-flip behaviour). Flag `**Replan flag**: trigger #4 (sibling now wrong)`. `/al-steer` triages: regenerate the prior `.yml` via `/al-page-script` if the surface change was intentional, rewrite the prior Verification Plan via `/al-refine` if the user-facing contract is invalid, or insert a `fixes:` task if the change was unintentional regression. Re-opening a prior verify task is a `/al-steer` decision, not this skill's.
 
 Mixed-red (both current AND prior slices red) is one root cause more often than two; transcript names every failed `.yml`, both flags stamped, `/al-steer` picks one.
 
@@ -106,27 +106,18 @@ Record inside the task file:
 - Observed vs expected, verbatim from the user's report (or captured client output), with any saved screenshot referenced by its `.output/verification/T-NNN/` path.
 - `**Replan flag**: trigger #8 (verification failed)`.
 
-Flip `status: blocked` on the verify task file's frontmatter, stripping `review: clean` in the same write — the precondition required the `review: clean` line, so the flip must delete it (a stale `review: clean` would vouch for a diff it never saw). Either two Edits in the same write or regenerate the frontmatter block whole. Edit shape:
-
-```
-old_string: status: ready-for-verification
-new_string: status: blocked
-```
-```
-old_string: review: clean
-new_string: (line deleted)
-```
+Flip `status: blocked` on the verify task file's frontmatter, stripping `review: clean` in the same write — a stale `review: clean` would vouch for a diff it never saw.
 
 Announce route to `/al-steer T-NNN`. `/al-steer` decides between defect (insert `fixes:` task in same `slice:`), wrong Verification Plan (rewrite via `/al-refine`), wrong slice boundary (split via `/al-scope`). This skill does not propose the fix; surface failure and stop. A usability finding is **never** a functional fail — it does not stop the walk or block the gate.
 
 ### Second opinion before the gate
 
-All checkable examples pass → before flipping `done`, run `/al-second-opinion` on the written verdict. Tell the user they're free first — the cross-family dispatch can take minutes, and the Gate report follows; nobody should sit watching it. Compose the artifact: per example/charter, the instruction given, **the exact question as posed — verbatim, including any structured-question options offered and any follow-up questions asked while triaging a remark**, the user's verbatim reported observation (or captured client output), the expected value, evidence reference, and usability findings with their classification. The question goes in as asked, never paraphrased — a neutral paraphrase of a led question hides exactly the defect this gate exists to catch. The gate reviews **coverage and routing**: was every observable check and prompt asked and answered with an observed value; did any pass rest on a led question, a bare yes/no, or an inferred value; was every user remark routed correctly (functional vs usability). It does not re-see the screen — the user already did; that is the point of the mode. Reconcile returned bullets per line: real coverage gap → re-ask that check; real routing gap → re-classify and re-state verdict. `Second opinion skipped: …` → absorb and proceed (checkpoint, not hard gate). Dispatch and independence model: [`../al-second-opinion/SKILL.md`](../al-second-opinion/SKILL.md).
+All checkable examples pass → before flipping `done`, run `/al-second-opinion` on the written verdict. Tell the user they're free first — the cross-family dispatch can take minutes. Compose the artifact: per example/charter, the instruction given, **the exact question as posed — verbatim, including any structured-question options offered and any follow-up questions asked while triaging a remark**, the user's verbatim reported observation (or captured client output), the expected value, evidence reference, and usability findings with their classification. The question goes in as asked, never paraphrased — a neutral paraphrase of a led question hides exactly the defect this gate exists to catch. The gate reviews **coverage and routing**: was every observable check and prompt asked and answered with an observed value; did any pass rest on a led question, a bare yes/no, or an inferred value; was every user remark routed correctly (functional vs usability). It does not re-see the screen — the user already did. Reconcile returned bullets per line: real coverage gap → re-ask that check; real routing gap → re-classify and re-state verdict. `Second opinion skipped: …` → absorb and proceed (checkpoint, not hard gate). Dispatch and independence model: [`../al-second-opinion/SKILL.md`](../al-second-opinion/SKILL.md).
 
 ### Pass: continue, then flip on the functional gate
 
 - **Check passes** → move to next check.
-- **Last check of example** → append the example's line to the inline partial-run record (example ID, verdict, observed values, exact questions as posed — the second-opinion artifact needs them verbatim, and a session boundary erases the chat transcript). Then move to next example/charter. Incremental append is what makes interruption survivable.
+- **Last check of example** → append the example's line to the inline partial-run record (example ID, verdict, observed values, exact questions as posed — the second-opinion artifact needs them verbatim, and a session boundary erases the chat transcript). Then move to next example/charter.
 - **All checkable examples pass + pre-flight green + second-opinion reconciled** → flip `status: done` on the verify task file's frontmatter line, stripping `review: clean` in the same write. Collapse the inline partial-run record into the Closeout shape from [`test-specification.md`](../../references/test-specification.md).
 - **Usability findings** → materialise as candidate task files in the slice, named `NNN-T-MMM-<slug>.md` with a fresh `T-MMM` id and a run-order prefix picked per the gap rule in [`markdown-spec-discipline.md`](../../references/markdown-spec-discipline.md), frontmatter `status: ready`, `kind: technical`, same `slice:`. Non-gating; `/grill-me` adjudicates ambiguous ones. They queue *after* the next slice's opened tasks unless the user promotes one.
 - **Next slice** → flip every technical task in the next slice (whose first task carries `depends_on:` this verify task) from `blocked` to `ready`. Cross-slice gate is the only mechanism that opens the next slice; without this flip the pipeline stalls.
@@ -135,7 +126,7 @@ Run the Gate report. The gate flips on the user's own reported observations (Con
 
 ### Partial walks survive session boundaries
 
-Session interrupted mid-walk leaves the verify task at `ready-for-verification` with the incrementally appended partial record inline (written per completed example in the Pass step — an interruption gives no exit moment to write, so the last appended line *is* the resume point). Humans get interrupted far more than agents; this is the normal case, not the exception. Re-entry resumes at **example granularity**: completed examples stay closed — do not make the user re-walk greens — but the in-flight example restarts from its first action, because re-entry spawns fresh containers and the data its earlier actions created is gone; resuming mid-example would ask about records that no longer exist. Re-ask only that example's checks. Closed examples whose data the in-flight example depends on (Journey Examples are routinely authored to start where the previous one left off): re-drive their *actions* as setup on the fresh container without re-asking their checks — their verdicts stand on the record. Contract examples re-run on every spawn #2 (agent-side, free); only walk examples stay closed. A resumed walk composes closed pre-resume examples into the second-opinion artifact from the record's stored questions and observations.
+Session interrupted mid-walk leaves the verify task at `ready-for-verification` with the incrementally appended partial record inline (written per completed example in the Pass step — an interruption gives no exit moment to write, so the last appended line *is* the resume point). Re-entry resumes at **example granularity**: completed examples stay closed, but the in-flight example restarts from its first action, because re-entry spawns fresh containers and the data its earlier actions created is gone — resuming mid-example would ask about records that no longer exist. Re-ask only that example's checks. Closed examples whose data the in-flight example depends on (Journey Examples are routinely authored to start where the previous one left off): re-drive their *actions* as setup on the fresh container without re-asking their checks — their verdicts stand on the record. Contract examples re-run on every spawn #2 (agent-side, free); only walk examples stay closed. A resumed walk composes closed pre-resume examples into the second-opinion artifact from the record's stored questions and observations.
 
 ## Gate event
 
@@ -163,4 +154,4 @@ The wary developer is the oracle here, so the feed narrates the commitments and 
 | **Replan venue**   | `/al-steer` — trigger #4 (pre-flight prior-slice red), trigger #8 (pre-flight current-slice red or functional-walk fail) |
 | **Sidebands**      | `/grill-me` (adjudicate an ambiguous usability finding, or whether an observation matches the expected outcome), `al-research` agent (BC surface behaviour to verify against documentation) |
 
-**Advisor checkpoint.** Call `advisor()` before flipping the verify task to `done`. The flip greenlights the next slice; if the verdict doesn't cover every observable check the plan named with a user-reported value (Contract-only: a captured client value) — or any pass rests on a led question or an inferred value rather than what the user said they saw — the gate is theatre. (This is the same-session complement to the `/al-second-opinion` cross-family coverage gate above.)
+**Advisor checkpoint.** Call `advisor()` before flipping the verify task to `done` — the same-session complement to the `/al-second-opinion` cross-family coverage gate above. The flip greenlights the next slice; if the verdict doesn't cover every observable check with a user-reported value, or any pass rests on a led or inferred value rather than what the user said they saw, the gate is theatre.

@@ -7,15 +7,13 @@ description: Execute the `kind: breaking-change` task in the `tasks/` folder for
 
 # /al-validate-breaking-changes — run the breaking-change gate task
 
-Execute one `kind: breaking-change` task: run the heavyweight AppSource-style validation (per-country, install/upgrade via `Run-AlValidation`) against the cached baseline release, flip its status. The `tasks/` folder ↔ script bridge — `/al-build` stays workflow-blind, so a workflow-aware skill owns running its `validate-breaking-changes.ps1` and recording the verdict.
+Execute one `kind: breaking-change` task: run the AppSource-style validation (per-country install/upgrade via `Run-AlValidation`) against the cached baseline release, flip its status. It catches "did this feature break a previously-released public API" before merge — the broader sim the compile-time AppSourceCop pass cannot do. `/al-build` stays workflow-blind, so this workflow-aware skill owns running its `validate-breaking-changes.ps1` and recording the verdict.
 
-`kind: breaking-change` is the feature's last task, `depends_on:` the final terminal task (last `verify`, or last technical for backend-only) → it opens to `ready` only when all feature work is `done`. It catches "did this feature break a previously-released public API" before merge — the broader sim the compile-time AppSourceCop pass cannot do.
-
-**Naming.** BC vocabulary, verb-first procedures. The task's status lives on the `status:` line of its frontmatter (`slice: breaking-change`, `kind: breaking-change`) in the per-task file under `tasks/`.
+`kind: breaking-change` is the feature's last task, `depends_on:` the final terminal task (last `verify`, or last technical for backend-only) → it opens to `ready` only when all feature work is `done`.
 
 ## Precondition
 
-A `kind: breaking-change` task at `status: ready`. It opens `blocked` at scope time and is flipped `blocked` → `ready` by the skill that lands the feature's final terminal task `done` (`/al-user-verification` on the last verify task, or `/al-code-review` on the last backend slice) — not by this skill. If it is still `blocked`, the feature is not done; route to `/al-steer`. No `/al-refine` — runs a script, flips status. If invoked on any other kind, **Stop**.
+A `kind: breaking-change` task at `status: ready`. If still `blocked`, the feature is not done; route to `/al-steer`. No `/al-refine` — runs a script, flips status. If invoked on any other kind, **Stop**.
 
 ## Run
 
@@ -23,11 +21,11 @@ A `kind: breaking-change` task at `status: ready`. It opens `blocked` at scope t
 pwsh "${CLAUDE_SKILL_DIR}/../al-build/scripts/validate-breaking-changes.ps1"
 ```
 
-Delegate to one general subagent — verbose; keep it out of the main session. The script reads the baseline cache `/al-provision` populated (never downloads), and **self-skips** when `breakingChange.enabled=false` (exit `0`, "disabled"). The worker runs this one command and returns the exit code; it edits nothing.
+Delegate to one general subagent — verbose; keep it out of the main session. The script reads the baseline cache `/al-provision` populated (never downloads), and **self-skips** when `breakingChange.enabled=false` (exit `0`, "disabled"). The worker returns the exit code; it edits nothing.
 
 ## Flip
 
-Map the exit code, then surgical-Edit the `status:` frontmatter line of the breaking-change task's file per [`markdown-spec-discipline.md`](../../references/markdown-spec-discipline.md) — change `status:` only; leave `slice: breaking-change`, `kind: breaking-change`.
+Map the exit code, then surgical-Edit the `status:` frontmatter line of the breaking-change task's file per [`markdown-spec-discipline.md`](../../references/markdown-spec-discipline.md) — change `status:` only; leave `slice:`, `kind:`.
 
 | Exit | Meaning | Status |
 |---|---|---|
@@ -38,25 +36,15 @@ Map the exit code, then surgical-Edit the `status:` frontmatter line of the brea
 
 ## Breaking change detected → stop for a human
 
-A confirmed break is an **intent decision**, not a defect to auto-patch: *intended* (major bump → accept) vs *accidental* (fix the schema change). This skill cannot read that intent — the human decides at merge.
-
-- **`blocked`** → route to `/al-steer`. Never auto-fix — that may revert an intended break; never auto-accept — that may ship an accidental one.
+A confirmed break is an **intent decision** the human makes at merge — *intended* (major bump → accept) vs *accidental* (fix the schema change) — not a defect to auto-patch. So on exit `3`: `blocked`, route to `/al-steer`. Never auto-fix (may revert an intended break); never auto-accept (may ship an accidental one).
 
 A `4` (`Contract`) or other non-zero prerequisite failure → `blocked`, fix the prereq (re-run `/al-provision` for an empty cache), re-run.
 
 ## Feed
 
-Two moments narrate to the branch feed — the gate's two outcomes, nothing in between. At each, hand `/al-feed` a brief (what just happened, why it matters to someone who hasn't read the diff, the kind); `/al-feed` composes the punchline + layers and appends the card.
+The gate's two verdicts narrate to the branch feed, nothing in between. At each, hand `/al-feed` a brief; it composes the card.
 
-- **landing** · exit `0`, no break, task flips `done` → the released app was checked and nothing customers rely on broke — clear to ship. This is the feature's last gate; the brief can note the full AppSource-style per-country install/upgrade sim that earned the verdict.
-- **surprise** · exit `3`, break detected, task flips `blocked`, route to `/al-steer` → a change would break a promise a shipped version made, so the gate stops for a person to decide if it's intended. The brief carries why this skill won't self-resolve: auto-fixing could undo a deliberate break, auto-accepting could ship an accidental one — the intent call is the human's at merge.
+- **landing** · exit `0`, task flips `done` → the released app was checked and nothing customers rely on broke — clear to ship. The feature's last gate.
+- **surprise** · exit `3`, task flips `blocked`, route to `/al-steer` → a change would break a promise a shipped version made, so the gate stops for the human's intent call.
 
-A `4` (`Contract`) or other prerequisite/environment non-zero yields no verdict on breaking changes, so it fires no card — fix the prereq and re-run.
-
-## Composition
-
-| | |
-|---|---|
-| **Runs after** | every feature task `done` (its `depends_on:` dependency satisfied) — the last task |
-| **Calls** | `/al-build`'s `validate-breaking-changes.ps1` (standalone helper; reads the `/al-provision` baseline cache) |
-| **Break / failure venue** | `/al-steer` |
+A `4` (`Contract`) or other prerequisite/environment non-zero yields no verdict — no card; fix the prereq and re-run.

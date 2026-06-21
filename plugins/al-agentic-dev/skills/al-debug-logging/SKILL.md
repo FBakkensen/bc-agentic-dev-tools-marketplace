@@ -11,15 +11,15 @@ Drop `DEBUG-*` `FeatureTelemetry.LogUsage` probes, exercise AL path, read `telem
 
 ## Precondition
 
-`rg "DEBUG-" --type al` returns nothing in working tree. Existing `DEBUG-*` calls show up → leftover scaffolding. `Stop.` Finish prior investigation or remove them before adding new probes.
+`rg "DEBUG-" --type al` returns nothing in the working tree. Existing `DEBUG-*` calls → leftover scaffolding. `Stop.` Finish or remove the prior investigation first.
 
 ## Flow
 
-1. **Hypothesis.** Name specific question — which branch, which subscriber, which code path. Vague "let me see what's happening" produces noise that narrows nothing.
-2. **Probe.** One or two `FeatureTelemetry.LogUsage` calls. Prefix every event ID `DEBUG-`. Place at decision point, not around it. Binary branch → two peer probes, one per branch.
-3. **Run.** Exercise AL path: page action, posted document, web service call, install/upgrade codeunit, job queue task, event subscriber under standard flow, or test via `/al-build`. Harness is whatever fires the code.
-4. **Inspect.** `rg "DEBUG-" .output/TestResults/*/telemetry.jsonl`. Path applies when `/al-build` is the harness; other harnesses require different capture path → see `references/telemetry-workflow.md`. Probes silent → `Stop.` Same-publisher first → see `references/telemetry-workflow.md`.
-5. **Refine or remove.** Answer found → delete probes. Not found → move probe or add peer probe at next decision point. Never leave probes "just in case".
+1. **Hypothesis.** Name the specific question — which branch, which subscriber, which code path.
+2. **Probe.** One or two `FeatureTelemetry.LogUsage` calls. Prefix every event ID `DEBUG-`. Place inside the chosen branch, not around the decision. Binary branch → two peer probes, one per branch.
+3. **Run.** Exercise the AL path: page action, posted document, web service call, install/upgrade codeunit, job queue task, event subscriber, or test via `/al-build`. Harness is whatever fires the code.
+4. **Inspect.** `rg "DEBUG-" .output/TestResults/*/telemetry.jsonl` (the `/al-build` harness path; other harnesses capture elsewhere). Probes silent → `Stop.`; for capture path and the same-publisher cause, see `references/telemetry-workflow.md`.
+5. **Refine or remove.** Answered → delete probes. Not → move or add a peer probe at the next decision point.
 
 ## Canonical probe
 
@@ -31,35 +31,19 @@ begin
 end;
 ```
 
-**Yes / No on same call:**
+**Drop list.** Log counts, IDs, enum values, booleans — shape, not contents. Never full record bodies, PII, credentials, tokens, secrets; each probe maps to one prediction, not a trace dump. Stable descriptive suffixes (`DEBUG-PRICING-FALLBACK`), never numeric (`DEBUG-1`). `FeatureTelemetry.LogUsage`, never `Session.LogMessage`.
 
-- No: `LogUsage('LOG1', 'Debug', Format(SalesLine))` → no `DEBUG-` prefix, vague event ID, full record body.
-- Yes: `LogUsage('DEBUG-POSTING-LINES', 'Investigation', StrSubstNo('Count=%1', SalesLine.Count()))`
-
-**Probe message — drop list.** Log counts, IDs, enum values, booleans. Drop full record bodies, PII, credentials, tokens, secrets. Shape, not contents.
-
-**`DEBUG-ENTRY` for correlation.** When several probes fire across multiple runs (multi-test, repeated subscriber, BaseApp shared code), emit `DEBUG-ENTRY` at start of scope you control. Everything between two `DEBUG-ENTRY` entries belongs to first scope.
-
-_Avoid_:
-
-- Probe wrapped *around* a decision (logs both branches' entry, neither's outcome). Place *inside* the chosen branch.
-- More than two probes per question → narrow the hypothesis instead.
-- Numeric suffixes (`DEBUG-1`, `DEBUG-2`). Use stable descriptive ones (`DEBUG-PRICING-FALLBACK`).
-- `Session.LogMessage`. Use `FeatureTelemetry.LogUsage`.
+**`DEBUG-ENTRY` for correlation.** When several probes fire across multiple runs (multi-test, repeated subscriber, BaseApp shared code), emit `DEBUG-ENTRY` at the start of a scope you control. Everything between two `DEBUG-ENTRY` entries belongs to the first scope.
 
 ## Edge cases
 
 | Situation | Action |
 |---|---|
 | Probes never appear | Same-publisher constraint → see `references/telemetry-workflow.md`. Confirm harness ran. |
-| Too much noise | Remove confirmed-wrong branches. Narrow each message to one fact. Add `DEBUG-ENTRY` to scope. |
+| Too much noise | Remove confirmed-wrong branches. Add `DEBUG-ENTRY` to scope. |
 | Code lives in BaseApp / third-party / unmodifiable extension | Temporary event subscriber probe → see `references/bc-event-subscriber-pattern.md`. |
 
-**Anti-pattern: log everything and grep.** Probes are not tracing. Each probe maps to one prediction.
-
-**Anti-pattern: log full record bodies.** PII, credentials, tokens leak this way. Counts, IDs, enums, booleans only.
-
-**Anti-pattern: leave `DEBUG-*` in tree at handoff.** Final state is zero matches on `rg "DEBUG-" --type al`. Probe intentionally retained → comment with issue/scope so next pass sees it is deliberate.
+**Hand-off state is zero `DEBUG-*` in tree** — `rg "DEBUG-" --type al` returns nothing. A probe intentionally retained carries a comment with issue/scope so the next pass sees it is deliberate.
 
 ## Feed
 
@@ -77,5 +61,4 @@ At that moment hand `/al-feed` a brief — what the probe asked, what the runtim
 ## Out of scope
 
 - Long-lived production telemetry. Probes are scaffolding.
-- PII, credentials, tokens, full record bodies → see drop list above.
 - Diagnosing without a hypothesis.

@@ -1,47 +1,6 @@
 # Temporary debug logging workflow
 
-Reference for `/al-debug-logging`. The skill body has the contract; this expands the loop, the same-publisher constraint, and correlation discipline.
-
-## When to probe
-
-An AI agent reading AL source cannot watch a debugger step through code. `DEBUG-*` probes emit one fact per call to `telemetry.jsonl`. Correlate after the fact. Symmetric on both directions of confusion:
-
-| Question | Probe answers |
-|---|---|
-| Result is wrong — which branch produced it? | Probes on each branch reveal which one ran. |
-| Result is right — but did the code exercise the path I think? | Probes confirm or refute the assumed path. |
-
-A passing assertion does not prove which code ran. Probes do.
-
-## Loop
-
-Starting state: zero `DEBUG-*` calls in tree. End state: zero `DEBUG-*` calls in tree.
-
-1. Add probes for the current hypothesis.
-2. Run the harness that exercises the AL path.
-3. Read telemetry from the harness's capture path (see Capture path below).
-4. Refine — move, narrow, add a peer probe — until answered.
-5. Remove every `DEBUG-*` call before hand-off.
-
-## Hypothesis
-
-Phrase the question so a single probe can answer:
-
-- "Does `OnAfterPostSalesDoc` fire when posting an order with zero lines?"
-- "Is the `IsHandled` short-circuit on our pricing extension hit during a price calculation for customer X?"
-- "Does the upgrade codeunit reach the migration branch on a database that already has rows?"
-
-Smallest probe that answers it. One probe at the decision point. Binary answer → two peer probes, one per branch.
-
-```al
-if SalesLine.FindFirst() then begin
-    FeatureTelemetry.LogUsage('DEBUG-POSTING-LINES', 'Investigation', StrSubstNo('Count=%1', SalesLine.Count()));
-    // ... lines path
-end else begin
-    FeatureTelemetry.LogUsage('DEBUG-POSTING-NOLINES', 'Investigation', 'No lines path');
-    // ... no-lines path
-end;
-```
+Reference for `/al-debug-logging`. The skill body has the contract; this expands the same-publisher constraint, the capture path, and correlation discipline. A passing assertion does not prove which code ran — probes do.
 
 ## Correlate with `DEBUG-ENTRY`
 
@@ -61,21 +20,9 @@ DEBUG-ENTRY            -> PostScenario: credit memo
 DEBUG-POSTING-NOLINES  -> No lines path
 ```
 
-## Pick a harness
-
-Whatever fires the AL code. Common in BC:
-
-- A manual page action.
-- A posted document (sales, purchase, item journal).
-- A web service / API call.
-- An install or upgrade codeunit run.
-- A scheduled job queue task.
-- An event subscriber that fires under a standard BC flow.
-- A test via `/al-build` — convenient because the BC test runner reliably produces `telemetry.jsonl`. One option among the above, not the only one.
-
-Probes work identically under any harness in the same publisher.
-
 ## Capture path
+
+Probes work identically under any harness in the same publisher. A test via `/al-build` is convenient because the BC test runner reliably produces `telemetry.jsonl`.
 
 The capture path depends on the harness:
 
@@ -94,16 +41,6 @@ The capture path depends on the harness:
 
 Useful fields per entry: `eventId`, `message`, `customDimensions`, `callStack`. When a test was the harness, `testCodeunit` and `testProcedure` are populated.
 
-## Refine or remove
-
-Answered: delete the probe. Not answered: tighten the message, add a peer probe at the next decision point, or move earlier / later in the flow.
-
-_Avoid_:
-
-- Probes left "just in case" — they pollute future telemetry.
-- Probes wrapped around a decision instead of inside the chosen branch.
-- More than two probes per question. Narrow the hypothesis.
-
 ## Read the mismatch
 
 Most useful failure mode: probes contradict the result. Document posted "successfully" but probes show the no-lines branch ran. The mismatch is the bug. Without probes, the symptom alone (success) hides it.
@@ -120,11 +57,4 @@ Probes silent:
 
 Constraint is on publishers, not on test-vs-app. Production, test, upgrade, install, and subscriber code all emit, as long as the publisher matches.
 
-## Hygiene
-
-- `FeatureTelemetry.LogUsage`. Not `Session.LogMessage`.
-- Event IDs start with `DEBUG-`. Cleanup is one `rg`.
-- Stable, descriptive suffixes (`DEBUG-PRICING-FALLBACK`, not `DEBUG-1`).
-- `Format()` for non-text values in messages or custom dimensions.
-- Drop list: full record bodies, PII, credentials, tokens, secrets. Counts, IDs, enum values, booleans only — shape, not contents.
-- Hand-off precondition: `rg "DEBUG-" --type al` returns nothing in the working tree. If a probe is deliberately retained, comment with the issue so the next pass sees it.
+Use `Format()` for non-text values in messages or custom dimensions. The drop list and hand-off zero-state are in the skill body.

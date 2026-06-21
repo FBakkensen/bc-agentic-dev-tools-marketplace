@@ -7,9 +7,7 @@ description: Settle the AL/Business Central feature architecture from idea or `e
 
 # /al-design, Idea → feature architecture
 
-Turn sharpened idea into feature-level architecture, then write `architecture.md` so `/al-scope` picks it up cold. Shape per feature is yours; disciplines below are the substance.
-
-`/al-scope` reads this file next and decomposes it into tasks.
+Turn sharpened idea into feature-level architecture, then write `architecture.md`; `/al-scope` reads it next and decomposes it into tasks. Shape per feature is yours; disciplines below are the substance.
 
 ## Artifact boundary
 
@@ -17,7 +15,7 @@ Writes only `architecture.md`.
 
 May define production architecture, AL object responsibilities, module boundaries, seams, events, R → P → W flow, testability constraints, and seam expectations.
 
-Never write the `tasks/` folder. Never write task-level AAA cases, `Test Specification`, `Verification Plan`, Journey Examples, Contract Examples, Exploration Charters, verification journeys, or task proof. `/al-scope` owns the `tasks/` folder; `/al-refine` owns task-level proof shape.
+Never write task-level proof. `/al-scope` owns the `tasks/` folder; `/al-refine` owns task-level proof shape.
 
 ## Preconditions
 
@@ -31,10 +29,10 @@ Never write the `tasks/` folder. Never write task-level AAA cases, `Test Specifi
 - **Slices**: when `event-model.md` present, its user-facing slots (Role, Action, Business Event, View, Status) are settled; read, do not re-decide, qualify each slice by AL pattern (Command / Automation / Translation / View) based on trigger source. Backend-only slices name trigger-source slot only (Job Queue, install / upgrade, scheduled task); see [LANGUAGE.md](../../references/LANGUAGE.md) *Slice*.
 - **Module map**: modules under `src/<module>/`. Use CONTEXT.md vocabulary ("the Settlement intake module", never "the FooBarHandler").
 - **BC pattern per module**: pick from [bc-patterns.md](../../references/bc-patterns.md). Verify against current BaseApp via `al-research` agent before committing.
-- **R → P → W boundary**: R = reads / inputs / events subscribed; P = pure procedure (no DB, no side effects, unit-test surface); W = effects (Insert / Modify / Delete, telemetry, errors, events published).
-- **Brownfield touchpoints**: objects, procedures, events, table fields the feature touches. Verify every name + signature against workspace evidence (`al-symbols-mcp` / `grep`); behaviour and contracts the workspace cannot answer route through `al-research` agent. Stale memory ships fiction.
+- **R → P → W boundary**: R = reads / inputs / events subscribed; P = pure procedure (no DB, no side effects, unit-test surface); W = effects (Insert / Modify / Delete, telemetry, errors, events published). The split *is* the refactor — pulling pure decision logic out of read/write context is what makes unit testing possible without DB state. P is the most load-bearing line in the design.
+- **Brownfield touchpoints**: objects, procedures, events, table fields the feature touches. Verify every name + signature against workspace evidence (`al-symbols-mcp` / `grep`); behaviour and contracts the workspace cannot answer route through `al-research` agent.
 - **Testability constraints**: name where architecture should expose isolated decision logic behind the P layer and where behaviour necessarily crosses BC runtime, database, page/TestPage, event wiring, table triggers, telemetry shape, install / upgrade, permissions, or public surface. Do not write task-level proof, AAA cases, or assertions.
-- **Which BC names verified this session?** Every BC-specific name landing in `architecture.md` (pattern, event, codeunit, table, field, procedure) meets the evidence bar in [voice-contract.md](../../references/voice-contract.md); durable design facts route through `al-research` agent. See *Citation chain in chat, before write* below.
+- **Evidence before write**: every BC-specific name in `architecture.md` meets the evidence bar in [voice-contract.md](../../references/voice-contract.md). It is a durable design artifact, so beyond names already in the dependency graph — pattern fitness, BaseApp behaviour, event contracts — routes through the `al-research` agent, mandatory, not a single-source fetch. Names from `/al-event-model` upstream count only when `grep` against `event-model.md` returns them this session.
 
 Unanswerable → not ready for `/al-scope`. Resolve via `al-research` agent (BC behaviour), `/al-grill-adr` (domain rule), or `/al-steer` (replan).
 
@@ -46,10 +44,6 @@ Imagine deleting the module: complexity vanishes → pass-through, does not earn
 
 Seam without two adapters is hypothetical; one adapter is a tautology, the seam is one codeunit pretending to be flexible. Production + test counts; two real production variants counts; "interface for testability" with no fake actually written does not. Patterns implying a seam (Event Bridge, Template Method, Command Queue, AL `interface` Façade): name both adapters now or pick a different pattern.
 
-## R → P → W as architectural choice
-
-The split *is* the refactor, not annotation; pulling pure decision logic out of read/write context is what makes unit testing possible without standing up DB state. P is the most load-bearing line in the design.
-
 ## AL realisation per slice, no void slots
 
 Each slice names its AL realisation across its slots: trigger object (page action, subscriber, Job Queue, install hook, API endpoint), codeunit holding the command, publication or subscription that moves the chain, table or field carrying state, page / factbox / API endpoint that renders the view. Void here = slot with no implementation home → `/al-implement` either invents one or stalls. User-facing voids caught at `/al-event-model`; this discipline checks AL coverage.
@@ -60,10 +54,6 @@ Mark each named object `new` or `extends <existing object>` — `extends` marks 
 
 Two design-time risks bite at AppSource boundaries: **BaseApp modification** (intercept via published events, table extensions, or AL `interface` implementations; AppSource rejects modified-base-app extensions) and **shipped-field rename or removal** (`ObsoleteState: Pending → Removed` over deprecation window; in-place rename breaks shipped data and shipped callers silently). Both are reshape triggers at design time. Per-task compliance details (IDs, permission sets, `DataClassification`, captions, install / upgrade) bite at `/al-implement`.
 
-## Citation chain in chat, before write
-
-Evidence bar per [voice-contract.md](../../references/voice-contract.md). `architecture.md` is a durable design artifact: workspace evidence covers names already in the dependency graph; everything else — pattern fitness, BaseApp behaviour, event contracts — routes through `al-research` agent, mandatory, not a single-source fetch. Names research-backed by `/al-event-model` upstream count when `grep` against `event-model.md` returns them this session, not when you recall they're there.
-
 ## Architecture trade-off criteria
 
 Call out an architecture trade-off inside `architecture.md` when **all four** are true:
@@ -73,7 +63,7 @@ Call out an architecture trade-off inside `architecture.md` when **all four** ar
 3. **Real trade-off**: genuine alternatives, one picked for specific reasons.
 4. **Architectural**: mechanism, module shape, pattern, seam placement, test layer. Domain rules belong to `/al-grill-adr`, not here.
 
-Three of four does not earn the callout; inflation rots the artifact. This skill does not write ADR files.
+Three of four does not earn the callout. This skill does not write ADR files.
 
 ## Parallel design-twice, non-trivial calls
 
@@ -85,9 +75,7 @@ Non-trivial = multi-module, brownfield refactor, or novel pattern selection. Whe
 | 2 | Maximise flexibility, many use cases, easy extension. |
 | 3 | Optimise the most common caller, default case trivial. |
 
-After the delegated pass outputs are collected and reconciled, close the completed subagent threads. Do not leave design-pass agents open as passive state.
-
-Each pass runs its own `al-research` agent and receives BC vocabulary from `CONTEXT.md` plus architectural vocabulary from [LANGUAGE.md](../../references/LANGUAGE.md) → all three name things consistently. Output per pass: module map + per-module interface, named adapters at every seam, the one trade-off line that distinguishes this design. Present all three sequentially, compare along **depth** / **locality** / **seam placement**, pick one (or hybrid) opinionatedly, run `/grill-me` when choice is user's call; `/al-second-opinion` reconciles non-trivial picks. Never silently skip the reconcile.
+Each pass runs its own `al-research` agent and receives BC vocabulary from `CONTEXT.md` plus architectural vocabulary from [LANGUAGE.md](../../references/LANGUAGE.md) → all three name things consistently. Output per pass: module map + per-module interface, named adapters at every seam, the one trade-off line that distinguishes this design. Present all three sequentially, compare along **depth** / **locality** / **seam placement**, pick one (or hybrid) opinionatedly, run `/grill-me` when choice is user's call; `/al-second-opinion` reconciles non-trivial picks.
 
 ## Branch + folder + write
 
@@ -115,9 +103,9 @@ Once when `architecture.md` lands. Gate report names chosen BC pattern + R → P
 
 Three moments narrate to the branch feed; the architecture reshaping itself (deletion test, two-adapter rule, R → P → W split) is interior craft, not a feed beat. At each, hand `/al-feed` a brief — what just happened, why it matters to someone who hasn't read `architecture.md`, the kind — and `/al-feed` composes the card and appends it. The `al-doc-verify` agent is read-only and returns a `verdict=` line rather than carding itself: on `verdict=fail`, fire a card naming the plain-language defect that blocked the docs; a clean pass folds into the `landing` card.
 
-- **decision** · design-twice bake-off reconciled, one blueprint picked (non-trivial calls only) → captures that three rival blueprints were weighed and one committed, with the one-line why-it-won.
-- **decision** · an architecture trade-off recorded (all four criteria hold) → captures a hard-to-undo choice locked in: the mechanism picked, the alternative rejected, the reason.
-- **landing** · `architecture.md` lands with the Gate report → captures the architecture settled and written down: the chosen BC pattern, the R → P → W boundary, the problem it solves, the greenlight to `/al-scope`.
+- **decision** · design-twice bake-off reconciled, one blueprint picked (non-trivial calls only): the one-line why-it-won.
+- **decision** · an architecture trade-off recorded (all four criteria hold): mechanism picked, alternative rejected, reason.
+- **landing** · `architecture.md` lands with the Gate report: chosen BC pattern, R → P → W boundary, problem solved, greenlight to `/al-scope`.
 
 ## Composition
 
@@ -128,4 +116,4 @@ Three moments narrate to the branch feed; the architecture reshaping itself (del
 | **Replan venue**   | `/al-steer` |
 | **Sidebands**      | `al-research` agent (BC facts), `bc-standard-reference` agent (pure BaseApp questions), `/grill-me` (design-twice reconciliation), `/al-second-opinion` (parallel design-twice picks) |
 
-**Advisor checkpoint.** Call `advisor()` before writing `architecture.md` for first time. Artifact is load-bearing for every downstream skill; drift caught here costs minutes, drift caught at `/al-implement` costs a feature.
+**Advisor checkpoint.** Call `advisor()` before writing `architecture.md` for the first time — drift caught here costs minutes, drift caught at `/al-implement` costs a feature.

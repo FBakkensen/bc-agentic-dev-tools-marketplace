@@ -7,11 +7,9 @@ description: Execute the `kind: provision` task in the `tasks/` folder for AL/Bu
 
 # /al-provision — run the provision task
 
-Execute one `kind: provision` task: refresh the build environment, flip its status. This is the `tasks/` folder ↔ script bridge — `/al-build` stays workflow-blind (never reads the `tasks/` folder), so a workflow-aware skill owns running its `provision.ps1` and recording the outcome on the bus.
+Execute one `kind: provision` task: refresh the build environment, flip its status. The `tasks/` folder ↔ script bridge — `/al-build` stays workflow-blind, so a workflow-aware skill owns running its `provision.ps1` and recording the outcome.
 
 `kind: provision` is the feature's first task (`T-001`). Provision is a per-feature freshness refresh, not one-time machine setup: symbols and the breaking-change baseline advance per release, so each feature re-runs it before any `/al-refine` / `/al-implement` work compiles.
-
-**Naming.** BC vocabulary, verb-first procedures, objects `"Prefix Feature Suffix"`. The task's status lives on the `status:` line of its frontmatter (`slice: provision`, `kind: provision`) in the per-task file under `tasks/`.
 
 ## Precondition
 
@@ -23,7 +21,7 @@ A `kind: provision` task at `status: ready`. No `/al-refine` — this kind carri
 pwsh "${CLAUDE_SKILL_DIR}/../al-build/scripts/provision.ps1"
 ```
 
-Delegate to one general subagent — provision output is verbose; keep it out of the main session (same rule as `/al-build`). The worker runs exactly this one command and returns the exit code; it does not edit the `tasks/` folder or any source.
+Delegate to one general subagent — provision output is verbose; keep it out of the main session. The worker runs exactly this one command and returns the exit code; it edits nothing.
 
 ## Flip
 
@@ -34,11 +32,11 @@ Map the exit code, then surgical-Edit the `status:` frontmatter line of the prov
 | `0` | `done` |
 | non-zero | `blocked` |
 
-**On `done`, open the first slice.** `T-001` is the dependency the first slice's technical tasks wait on. After flipping `T-001` `done`, surgical-Edit the `status:` line of every first-slice technical task (those carrying `depends_on: [T-001]` or sharing the first slice) `blocked` → `ready` — the same flip-owner discipline the cross-slice gate uses (`/al-user-verification` opens the next slice). Provision is the named owner of this `blocked` → `ready`; without it the first slice strands.
+**On `done`, open the first slice.** `T-001` is the dependency the first slice's technical tasks wait on. After flipping `T-001` `done`, surgical-Edit the `status:` line of every first-slice technical task (those carrying `depends_on: [T-001]`) `blocked` → `ready`. Provision is the named owner of this `blocked` → `ready`; without it the first slice strands.
 
 ## Failure
 
-`blocked` → environment is not ready (missing compiler/symbols, container down, `gh` auth, unreachable release for the baseline). Route to `/al-steer`. Never flip `done` without a clean exit — a green flip with a stale environment poisons every downstream compile.
+`blocked` → environment is not ready. Route to `/al-steer`. Never flip `done` without a clean exit — a green flip with a stale environment poisons every downstream compile.
 
 ## Feed
 
@@ -53,5 +51,4 @@ Two hand-wired moments narrate to the branch feed. At each, hand `/al-feed` a br
 |---|---|
 | **Runs after** | `/al-scope` emits `T-001 kind: provision`; this is the feature's first executed task |
 | **Routes to** | first slice's technical tasks (`depends_on: [T-001]` opens on `done`) |
-| **Calls** | `/al-build`'s `provision.ps1` (standalone helper; al-build never reads the `tasks/` folder) |
 | **Failure venue** | `/al-steer` |
