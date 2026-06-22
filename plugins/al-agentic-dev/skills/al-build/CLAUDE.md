@@ -75,7 +75,7 @@ The oracle is seeded violations — one per diagnostic family, all ten prefixes 
 2. Minimal `app/` (idRange 50000-50149) and a unit-test app (idRange 50150-50199, depends on the main app, configured as `unitTestApp` in `al-build.json`). The main `app.json` needs `"application"` and `"features": ["TranslationFile"]` — without them AppSourceCop aborts the build with AS0100/AS0015 before any seed surfaces.
 3. `AppSourceCop.json` in the main app: `{"mandatoryAffixes": ["SMK"]}` only. No `name`/`publisher`/`version` keys — those activate baseline comparison and fire AS0003.
 4. Repo-root `.vscode/settings.json`, official AL notation only: `${CodeCop}`, `${UICop}`, `${AppSourceCop}`, `${PerTenantExtensionCop}`, six `${analyzerFolder}ALCops.*.dll` entries plus `${analyzerFolder}ALCops.Common.dll`.
-5. Repo-root `al.ruleset.json`: downgrade `AS0011` + `PTE0008` (Error→Warning, else the build aborts before warnings print) and escalate `AC0014`, `DC0001`, `TA0001` (Info→Warning, else invisible). `warnAsError: false` in `al-build.json`.
+5. Repo-root `al.ruleset.json`: downgrade `AS0011` + `PTE0008` (Error→Warning, else the build aborts before warnings print) and escalate `AC0014`, `DC0001`, `TA0001` (Info→Warning, else invisible). In `al-build.json`: `warnAsError: false` and `"testApps": []`. The empty `testApps` is load-bearing since v0.72.0 — `-UnitTestOnly` now compiles every `testApps` entry, so leaving it at the `['test']` default would throw on the missing `test/` dir (fail-loud, by design).
 6. Seed one violation per family. The proven set (v0.8.6; severities read from tagged `DiagnosticDescriptors.cs`, which overrules the alcops.dev rule tables when they disagree):
 
 | Family | Rule | Seed |
@@ -89,13 +89,13 @@ The oracle is seeded violations — one per diagnostic family, all ten prefixes 
 | FC | FC0001 | `procedure Foo();` — trailing semicolon with a `begin end` body |
 | LC | LC0003 | `Customer: Record 18;` — numeric object reference |
 | PC | PC0001 | FlowField without `Editable = false` |
-| TA | TA0001 | global non-`[Test]` procedure in a `Subtype = Test` codeunit — **in the main app**: `-UnitTestOnly` never runs `Invoke-ALBuild` on the unit-test app (AL Runner compiles it internally, without `/analyzer:` args), so a test-app seed can't surface |
+| TA | TA0001 | global non-`[Test]` procedure in a `Subtype = Test` codeunit — kept **in the main app** (Step 1 compiles main in every mode, so the seed is path-independent). Since v0.72.0 `test.ps1` also runs `Invoke-ALBuild` on the unit-test app in every mode (`-UnitTestOnly` included), so a unit-test-app TA seed surfaces too — add one as a dedicated assertion if you want to prove that path, rather than relocating this one |
 
 7. `pwsh "$marketplace/plugins/al-agentic-dev/skills/al-build/scripts/provision.ps1"` → expect exit 0, the seven `ALCops.*.dll` files in the compiler's `Analyzers` folder, and no `BusinessCentral.LinterCop.dll` (provision deletes the legacy DLL — shared diagnostic IDs, the two must never co-load).
 8. `pwsh "$marketplace/plugins/al-agentic-dev/skills/al-build/scripts/test.ps1" -UnitTestOnly`, full output captured → assert every one of the ten prefixes appears as a diagnostic.
 9. A seed that will not fire is a switch-the-rule signal, not a tune-harder signal — the smoke proves the *prefix family*, not any specific rule ID. ALCops is pre-1.0; rule IDs and default severities churn between releases.
 10. Failure-mode check (fail-loud contract): remove one ALCops DLL from the Analyzers folder, re-run the gate, expect the build to throw naming the unresolvable analyzer — never a green compile with reduced coverage. Re-run provision to restore.
-11. Per-app config check: drop a reduced `app/.vscode/settings.json` (e.g. only `${CodeCop}` + `${analyzerFolder}ALCops.LinterCop.dll`), re-run, expect exactly those families and nothing else; delete it after. App-local settings win over the repo-root fallback. Note the asymmetry: the main app and each test app resolve analyzers from their own `.vscode/settings.json`, but in `-UnitTestOnly` mode the unit-test app is never analyzed at all — test-app analyzer config only takes effect in the full container gate.
+11. Per-app config check: drop a reduced `app/.vscode/settings.json` (e.g. only `${CodeCop}` + `${analyzerFolder}ALCops.LinterCop.dll`), re-run, expect exactly those families and nothing else; delete it after. App-local settings win over the repo-root fallback. Each app — main, every test app, and the unit-test app — resolves analyzers from its own `.vscode/settings.json` and compiles through the analyzer gate in every mode (`-UnitTestOnly` included), so unit-test-app analyzer config takes effect there too.
 12. Cleanup: delete the temp dir. No container to remove.
 
 ## Editing rules

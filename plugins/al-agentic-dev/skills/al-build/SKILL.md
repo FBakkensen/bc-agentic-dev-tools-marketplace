@@ -43,7 +43,7 @@ When `unitTestApp` configured in `al-build.json`, run only AL Runner unit tests:
 pwsh "<skill-folder>/scripts/test.ps1" -UnitTestOnly
 ```
 
-Compiles all apps (integration compile errors still surface), runs AL Runner, exits — no container needed. Use during the RED→GREEN inner loop in `/al-implement` for fast feedback.
+Compiles all apps — main, every `testApps` entry, and the unit-test app — through the analyzer gate (integration compile errors still surface), runs AL Runner, exits — no container needed. Because `testApps` now compile in this mode too, they must resolve: a unit-only project sets `"testApps": []` (the default is `["test"]`, which fail-loud throws if no `test/` dir exists). Use during the RED→GREEN inner loop in `/al-implement` for fast feedback.
 
 **Outputs (per test run):**
 

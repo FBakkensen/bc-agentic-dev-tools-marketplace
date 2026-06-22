@@ -7,23 +7,25 @@
 .DESCRIPTION
     The canonical build-test gate. Performs the full workflow:
     1. Build main app
-    2. For each test app: provision symbols, build
-    3. If unitTestApp configured: run AL Runner unit tests (fast, no container)
+    2. For each test app: provision symbols, build (analyzer gate, host alc)
+    3. If unitTestApp configured: build it (analyzer gate), then run AL Runner
+       unit tests (fast, no container)
     4. Publish and run container tests for each test app
     5. Write per-run results to .output/TestResults/<dirName>/
        (al-runner.xml for AL Runner, last.xml + telemetry.jsonl for container)
     6. Write summary to .output/TestResults/summary.json
        (gate, per-runner totals, one record per run with test counts)
 
-    If -UnitTestOnly is specified and unitTestApp is configured, only compile and
-    run AL Runner unit tests. Skips container publish and container tests entirely.
+    If -UnitTestOnly is specified and unitTestApp is configured, compile every app
+    (the analyzer gate runs over the whole solution) and run AL Runner unit tests.
+    Skips container publish and container tests entirely.
 
 .PARAMETER Force
     Force republish even if apps are unchanged.
 
 .PARAMETER UnitTestOnly
-    Compile and run AL Runner unit tests only. Skips container tests.
-    Requires unitTestApp to be configured in al-build.json.
+    Compile every app through the analyzer gate, then run AL Runner unit tests.
+    Skips container publish and container tests. Requires unitTestApp configured.
 
 .EXAMPLE
     pwsh -File test.ps1
@@ -31,7 +33,7 @@
 
 .EXAMPLE
     pwsh -File test.ps1 -UnitTestOnly
-    # Fast inner loop: compile + AL Runner unit tests only
+    # Inner loop: compile all apps (analyzer gate) + AL Runner unit tests, no container
 
 .EXAMPLE
     pwsh -File test.ps1 -Force
@@ -210,19 +212,21 @@ if ($config.TestApps.Count -eq 0 -and -not $UnitTestOnly) {
     }
 }
 
-# Step 2: Provision main app as local symbol and build each test app
-# In -UnitTestOnly mode, skip standard compilation — AL Runner compiles from source internally
-if (-not $UnitTestOnly) {
-    foreach ($testAppDir in $config.TestApps) {
-        $dirName = Split-Path $testAppDir -Leaf
-        Start-Step "provision-symbols-$dirName"
-        Copy-ALSymbolToCache -SourceAppDir $config.AppDir -TargetAppDir $testAppDir
-        Stop-Step "provision-symbols-$dirName"
+# Step 2: Provision main app as local symbol and build each secondary target.
+# Get-CompileTargets resolves the post-main compile set (test apps, then the
+# unit-test app) — identical in every mode. Compilation runs the analyzer gate
+# (alc /analyzer:) on the host; -UnitTestOnly skips the container publish/run,
+# not the compile. The unit-test app is here so its code goes through the
+# analyzer gate (AL Runner's internal compile in Step 3 carries no /analyzer:).
+foreach ($target in (Get-CompileTargets -Config $config -UnitTestOnly:$UnitTestOnly)) {
+    $dirName = Split-Path $target.AppDir -Leaf
+    Start-Step "provision-symbols-$dirName"
+    Copy-ALSymbolToCache -SourceAppDir $config.AppDir -TargetAppDir $target.AppDir
+    Stop-Step "provision-symbols-$dirName"
 
-        Start-Step "build-test-$dirName"
-        Invoke-ALBuild -AppDir $testAppDir -WarnAsError:(ConvertTo-Boolean $config.WarnAsError)
-        Stop-Step "build-test-$dirName"
-    }
+    Start-Step "build-$($target.Role)-$dirName"
+    Invoke-ALBuild -AppDir $target.AppDir -WarnAsError:(ConvertTo-Boolean $config.WarnAsError)
+    Stop-Step "build-$($target.Role)-$dirName"
 }
 
 # Step 3: AL Runner unit tests (fast gate, before container)

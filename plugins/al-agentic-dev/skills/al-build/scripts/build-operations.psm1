@@ -179,6 +179,45 @@ function Get-BuildConfig {
     return $config
 }
 
+function Get-CompileTargets {
+    <#
+    .SYNOPSIS
+        Resolve which apps test.ps1 compiles after the main app, in order.
+    .DESCRIPTION
+        The main app is compiled separately (test.ps1 Step 1) in every mode, so
+        it is not in this list. This returns the secondary compile targets —
+        every test app, then the unit-test app — each carrying the Role used to
+        name its build step ('test' or 'unit'). Compilation runs the analyzer
+        gate (alc /analyzer:) on the host and happens in every mode:
+        -UnitTestOnly skips the container publish/run, not the compile. The
+        unit-test app is included so its code goes through the analyzer gate (AL
+        Runner compiles it internally too, but without /analyzer: args); it is
+        omitted here when it is also a test app, to avoid compiling it twice.
+    .PARAMETER Config
+        Build configuration object from Get-BuildConfig.
+    .PARAMETER UnitTestOnly
+        Accepted to pin the invariant that the target list is identical in both
+        modes — every app compiles through the analyzer gate regardless. The
+        return value does not depend on this switch; a test asserts the equality.
+    #>
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory)]
+        [PSCustomObject]$Config,
+
+        [switch]$UnitTestOnly
+    )
+
+    $targets = @()
+    foreach ($testAppDir in $Config.TestApps) {
+        $targets += [ordered]@{ AppDir = $testAppDir; Role = 'test' }
+    }
+    if ($Config.UnitTestApp -and ($Config.TestApps -notcontains $Config.UnitTestApp)) {
+        $targets += [ordered]@{ AppDir = $Config.UnitTestApp; Role = 'unit' }
+    }
+    return $targets
+}
+
 function Set-BuildEnvironment {
     <#
     .SYNOPSIS
@@ -1470,6 +1509,7 @@ function Get-AlValidationVerdict {
 Export-ModuleMember -Function @(
     # Configuration
     'Get-BuildConfig'
+    'Get-CompileTargets'
     'Set-BuildEnvironment'
     'ConvertTo-Boolean'
 
