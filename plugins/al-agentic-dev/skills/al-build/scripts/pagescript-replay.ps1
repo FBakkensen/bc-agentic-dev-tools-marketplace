@@ -148,15 +148,21 @@ Set-BuildEnvironment -Config $config
 
 Write-BuildHeader 'Page Script Replay'
 
-# Require Volta + Node 22-25.
-# Volta is the project's only supported Node version manager — its shims route node/npm/npx
-# through the `volta.node` pin in pagescripts/package.json. The script uses `volta pin` to
-# write that pin on first setup.
-# Node 22-25 is the empirically-tested working range for bc-replay's bundled Playwright
-# (@playwright/test 1.55.1 officially supports 20/22/24). Node 26+ hangs in Playwright's
-# browser-install per upstream microsoft/playwright#40724.
-if (-not (Get-Command volta -ErrorAction SilentlyContinue)) {
-    Write-BuildMessage -Type Error -Message "Volta not found. Install Volta from https://volta.sh, then 'volta install node@22'."
+# Resolve Node from PATH — no version manager required.
+# This script formerly hard-required Volta + Node 22-25. Hosts have since moved to
+# Company Portal / MSI-managed Node (e.g. C:\Program Files\nodejs, v26.3.1, resolved via
+# PATH with no version manager). Node 26 runs the replay harness fine once
+# @microsoft/bc-replay + @playwright/test browsers are cached; the known Node-26 hang
+# (upstream microsoft/playwright#40724) is in a *fresh* `playwright install`
+# browser-download, not the test run. So: hard-floor at 22 (bc-replay's bundled Playwright
+# is unsupported below — @playwright/test 1.55.1 officially supports 20/22/24), warn at 26+
+# (a fresh `playwright install` may hang), stay silent in the proven 22-25 band. Volta boxes
+# keep working unchanged — their shims put node/npm/npx on PATH like any other source.
+$MinNode = 22       # below this: hard error (bc-replay's bundled Playwright unsupported)
+$KnownGoodMax = 26  # replay run proven good through here (v26.3.1); fresh install may hang at/above
+$node = Get-Command node -ErrorAction SilentlyContinue
+if (-not $node) {
+    Write-BuildMessage -Type Error -Message "Node not found on PATH. Install Node >= $MinNode (any source: MSI, Volta, nvm) and re-run."
     exit 1
 }
 $nodeVersion = $null
@@ -164,12 +170,16 @@ try { $nodeVersion = & node --version 2>$null } catch {}
 $nodeMajor = if ($nodeVersion) {
     [int](($nodeVersion -replace '^v','') -split '\.')[0]
 } else { 0 }
-if ($nodeMajor -lt 22 -or $nodeMajor -gt 25) {
+if ($nodeMajor -lt $MinNode) {
     $observed = if ($nodeVersion) { $nodeVersion } else { 'not found' }
-    Write-BuildMessage -Type Error -Message "Node $observed is not supported (need 22-25). Run 'volta install node@22' to make Volta's default a compatible version."
+    Write-BuildMessage -Type Error -Message "Node $observed is below the minimum supported major $MinNode. Install Node >= $MinNode and re-run."
     exit 1
 }
-Write-BuildMessage -Type Detail -Message "Node: $nodeVersion (via Volta)"
+if ($nodeMajor -ge $KnownGoodMax) {
+    Write-BuildMessage -Type Warning -Message "Node $nodeVersion is at/above $KnownGoodMax; the replay run is known-good but a *fresh* 'playwright install' browser-download may hang (microsoft/playwright#40724). Ensure Playwright browsers are already cached."
+}
+$nodeDir = Split-Path -Parent $node.Source
+Write-BuildMessage -Type Detail -Message "Node: $nodeVersion ($nodeDir)"
 
 # Step 1: Build main app
 Start-Step 'build'
@@ -219,43 +229,41 @@ try {
     if (-not (Test-Path -LiteralPath $modulePath)) {
         Write-BuildMessage -Type Step -Message "Installing @microsoft/bc-replay..."
         $packageJsonPath = Join-Path $pagescriptDir 'package.json'
-        # Treat as first-time-setup if package.json is missing OR lacks a volta.node pin.
-        # A bare package.json with no volta pin can arise from a prior partial run
-        # (volta pin failed after the file was written) — re-running the setup self-heals.
-        $needsFirstTimeSetup = $true
+        # Discriminate on whether package.json already DECLARES @microsoft/bc-replay as a
+        # dependency, not on file presence. A committed-but-depless package.json (or one
+        # carrying only a vestigial `volta` key) would otherwise read as "already set up" and
+        # a plain `npm install` would install nothing, leaving bc-replay missing. node/npm
+        # resolve from PATH (no version manager required); any existing `volta` key is left
+        # untouched but never depended on.
+        $hasReplayDep = $false
         if (Test-Path -LiteralPath $packageJsonPath) {
             try {
                 $existingPkg = Get-Content -LiteralPath $packageJsonPath -Raw | ConvertFrom-Json
-                if ($existingPkg.PSObject.Properties.Name -contains 'volta' -and $existingPkg.volta.PSObject.Properties.Name -contains 'node' -and $existingPkg.volta.node) {
-                    $needsFirstTimeSetup = $false
+                if ($existingPkg.PSObject.Properties.Name -contains 'dependencies' -and
+                    $existingPkg.dependencies.PSObject.Properties.Name -contains '@microsoft/bc-replay') {
+                    $hasReplayDep = $true
                 }
             } catch {
-                # Malformed JSON — treat as first-time-setup to rewrite cleanly.
-                $needsFirstTimeSetup = $true
+                # Malformed JSON — treat as first-time setup to rewrite cleanly.
+                $hasReplayDep = $false
             }
         }
-        if ($needsFirstTimeSetup) {
-            # First-time setup: write minimal package.json, then let Volta pin the exact
-            # Node version into the `volta.node` field. Volta requires a parseable semver
-            # in package.json (Volta 2.0.2 rejects the bare major form "22"); `volta pin
-            # node@22` lets Volta resolve to the latest 22.x it knows about and write that
-            # exact version. Volta's shim routes any node/npm/npx call inside this
-            # directory tree through the pinned version on every clone.
-            $pkg = [ordered]@{
-                name    = 'pagescripts'
-                version = '1.0.0'
-                private = $true
-            } | ConvertTo-Json -Depth 5
-            Set-Content -LiteralPath $packageJsonPath -Value $pkg -Encoding utf8
-            & volta pin node@22 | Out-Null
-            if ($LASTEXITCODE -ne 0) {
-                Write-BuildMessage -Type Error -Message "volta pin node@22 failed"
-                exit $LASTEXITCODE
+        if ($hasReplayDep) {
+            # Dependency already declared: restore the pinned/ranged version, no modification.
+            & npm install | Out-Null
+        } else {
+            # First-time setup: ensure a minimal package.json exists (create only if absent,
+            # so any existing `volta` key survives), then install bc-replay. The install also
+            # records the dependency, so subsequent runs take the restore path above.
+            if (-not (Test-Path -LiteralPath $packageJsonPath)) {
+                $pkg = [ordered]@{
+                    name    = 'pagescripts'
+                    version = '1.0.0'
+                    private = $true
+                } | ConvertTo-Json -Depth 5
+                Set-Content -LiteralPath $packageJsonPath -Value $pkg -Encoding utf8
             }
             & npm install '@microsoft/bc-replay@latest' | Out-Null
-        } else {
-            # package.json + volta pin already in place: install from existing version (no modification)
-            & npm install | Out-Null
         }
         if ($LASTEXITCODE -ne 0) {
             Write-BuildMessage -Type Error -Message "npm install failed"

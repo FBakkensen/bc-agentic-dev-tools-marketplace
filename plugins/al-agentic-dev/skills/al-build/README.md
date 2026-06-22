@@ -7,7 +7,7 @@ Self-contained build/test gate for AL/Business Central. No external task runners
 - PowerShell 7.2+ (`pwsh`, not `powershell`).
 - Docker Desktop. Use container, not VM.
 - .NET SDK (compiler install).
-- Node.js (`npx`) — ALCops analyzers install via the official `@alcops/core` CLI. Recommended: `winget install Volta.Volta`, new shell, `volta install node@22`.
+- Node.js (`npx`) ≥22 on PATH — ALCops analyzers install via the official `@alcops/core` CLI. Any Node source works (MSI, Volta, nvm); no version manager required.
 - [BcContainerHelper](https://github.com/microsoft/navcontainerhelper) PowerShell module.
 
 ## Quick start

@@ -573,7 +573,7 @@ function Install-ALCops {
     $PSNativeCommandUseErrorActionPreference = $false
 
     if (-not (Get-Command npx -ErrorAction SilentlyContinue)) {
-        throw "npx not found. ALCops analyzers are installed via the official '@alcops/core' CLI, which requires Node.js. Install Node (e.g. 'winget install Volta.Volta', open a new shell, 'volta install node@22') and re-run provision."
+        throw "npx not found. ALCops analyzers are installed via the official '@alcops/core' CLI, which requires Node.js. Install Node >= 22 (any source: MSI, Volta, nvm) so 'npx' is on PATH, then re-run provision."
     }
 
     $analyzersDir = Join-Path $CompilerDir 'Analyzers'

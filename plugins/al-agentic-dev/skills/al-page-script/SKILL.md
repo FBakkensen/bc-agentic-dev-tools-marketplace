@@ -117,7 +117,7 @@ Four moments narrate to the branch feed; the per-scenario record-download-replay
 
 ## Running a recording
 
-Replay needs **Node 22–25** (`@microsoft/bc-replay` bundles `@playwright/test`; Node 26+ hangs in Playwright's browser-install per upstream `microsoft/playwright#40724`). Manage Node via **[Volta](https://volta.sh)**; on first run, `pagescript-replay.ps1` writes a minimal `pagescripts/package.json` and pins `node@22`. The script encapsulates spawn-then-replay (`-File <path>` single-file, no flag for batch); it handles app publish, npm install, and the `replay` invocation. The full option surface and failure-reading detail live in [`references/bc-replay-yaml-format.md`](references/bc-replay-yaml-format.md) §9.
+Replay needs **Node ≥22 on PATH** (`@microsoft/bc-replay` bundles `@playwright/test`). Any Node source works — MSI, Volta, nvm — the script uses whatever `node` resolves to; no version manager required. Node 26 is known-good for the replay run, but a *fresh* `playwright install` browser-download may hang on 26+ (upstream `microsoft/playwright#40724`), so keep Playwright browsers cached. On first run, `pagescript-replay.ps1` writes a minimal `pagescripts/package.json` (only if absent) and installs `@microsoft/bc-replay`. The script encapsulates spawn-then-replay (`-File <path>` single-file, no flag for batch); it handles app publish, npm install, and the `replay` invocation. The full option surface and failure-reading detail live in [`references/bc-replay-yaml-format.md`](references/bc-replay-yaml-format.md) §9.
 
 ## Out of scope
 
