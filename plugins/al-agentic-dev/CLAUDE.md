@@ -70,6 +70,7 @@ Two tiers, on purpose.
 |---|---|---|
 | `overview.md` | plugin-level | user-facing tour: pipeline diagram, 19-skill catalogue (role + when-to-invoke), persistence layers paragraph, cold-start guidance, pointer to `/al-steer` for state-aware nav; emitted verbatim by `/al-agentic-dev-overview`; edit in lockstep with any skill addition / removal / rename |
 | `voice-contract.md` | plugin-level | non-voice rules: BC vocab, names-as-citation, evidence bar (citation chain: names → workspace, constructs → fetched topic, `al-research` agent escalation, `Contract notes` trace), lists-of-findings, tables-of-facts, chat carve-out, no-workflow-chatter, 4 chat shape skeletons (Opener / Gate report / Answer / Stop); style itself lives at top of each SKILL.md as a one-line Style declaration; read by every skill that writes prose or AL names |
+| `thrift-rules.md` | plugin-level | token-thrift canon: chat lede-first default + payload-preserving cuts (one decisive error line, no log dumps, no tool-call narration, keep grammar) and production-AL "build the least that works" (platform-first, no abstraction for one caller, production-only carve-outs); the **single home** — voice-contract.md and al-implement point here, the review lenses carry their own self-contained over-build block; re-emitted verbatim by the `SessionStart` hook (`hooks/`); read by `/al-implement` at generation and by every prose-writing skill |
 | `testability.md` | plugin-level | three-phase decoupling, three default seams (IEnvironment / IApiRequest / IFinance), five-kind test-double taxonomy with AL code shapes; read by `/al-design`, `/al-implement`, `/al-refactor` |
 | `test-specification.md` | plugin-level | `Test Specification` / `Verification Plan` grammar: New and Modified Objects, Expected Behaviors, Decision Matrix, AAA cases, Contract notes, Out of automated reach, scopes, traceability, closeout summaries with mutation verdict table; read by `/al-refine`, `/al-implement`, `/al-code-review`, `/al-page-script`, `/al-user-verification` |
 | `tdd.md` | plugin-level | three layers of trust, three laws, five phases, Unit-first execution, mutation operators + revert cycle, no-touch invariants; read by `/al-implement`, `/al-mutate` |
@@ -97,6 +98,8 @@ This marketplace targets **Claude Code only**. Skills may use the full Claude Co
 
 **Keep skills project-agnostic across consumer repos.** A skill must run in any AL/BC project without hardcoding this marketplace's paths or a specific repo's layout. This is *consumer-repo* portability (orthogonal to any runtime concern) — soft guidance, not a CI gate.
 
+**One plugin hook.** `hooks/hooks.json` registers a single `SessionStart` hook (matcher `startup|resume|compact`) that runs `hooks/emit-thrift-rules.js` to re-emit `references/thrift-rules.md` verbatim — the only mechanism that re-asserts the thrift canon after a compaction wipes it mid-loop (skills otherwise re-read it on invocation). Auto-activates on enable; bundled-file path via `${CLAUDE_PLUGIN_ROOT}`. The hook **only injects, never verifies** — enforcement stays prompt-resident, matching the plugin's all-advisory model. Node-on-PATH (already required by `/al-second-opinion`); if `node` is absent the hook command fails, but a `SessionStart` hook failure is non-blocking by design — the session proceeds and the change degrades to prompt-resident-only (skills re-read the file on invocation). The emitter additionally exits 0 on an unreadable rules file, so a present-but-broken read never blocks either. The emitter never restates the rules — it re-reads the one file, so there is no second copy to drift. This is the plugin's sole hook; adding more is a deliberate decision, not a default.
+
 Notable script-backed skills:
 
 - **`skills/al-mutate/SKILL.md`**, mutate-build-revert cycle, mutation kinds, survivor classification, BC safety.
@@ -111,9 +114,13 @@ agents/                          # Declarative plugin agents (enforced tools/mod
 ├── al-research.md               # sonnet: BC fact verification, evidence-bar escalation seat (was a skill)
 ├── al-review-lens.md            # sonnet, read-only: one focused AL/BC review pass; spawned N× by /al-code-review + /al-refactor
 └── al-review-lens-bc.md         # sonnet + bc-code-intelligence MCP: the BC-specific review lens variant
+hooks/                           # Plugin's sole hook: SessionStart re-injection of the thrift canon
+├── hooks.json                   # SessionStart (startup|resume|compact) → emit-thrift-rules.js
+└── emit-thrift-rules.js         # node: re-reads references/thrift-rules.md, writes to stdout; missing node exits 0 (degrades, never blocks)
 references/                      # Plugin-level shared, read by ≥2 skills, or cited by shared templates
 ├── overview.md                  # User-facing tour: pipeline + 19-skill catalogue + persistence + cold-start; emitted by /al-agentic-dev-overview
 ├── voice-contract.md            # Non-voice rules + evidence bar + 4 chat shape skeletons; voice declared inline at top of each SKILL.md
+├── thrift-rules.md              # Token-thrift canon (chat lede-first + production-AL build-the-least); single home, re-emitted by the SessionStart hook
 ├── testability.md               # Three-phase decoupling, three default seams, five-kind test-double taxonomy
 ├── test-specification.md        # Test Specification + Verification Plan grammar (incl. New and Modified Objects, Contract notes, Out of automated reach, mutation verdict table)
 ├── tdd.md                       # Three layers, three laws, five phases, Unit-first execution, mutation operators, no-touch invariants

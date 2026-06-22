@@ -37,8 +37,8 @@ When the diff touches test code, the spawn prompt also names [test-layout.md](..
 
 | # | Lens | Focused goal |
 |---|---|---|
-| 1 | **Simplify / dedup** *(primary)* | Duplication, dead code, redundant procedures, inline candidates. Pass-throughs dissolve; primitives carrying meaning become small records or enums |
-| 2 | **BC best-practice** via bc-code-intelligence | Per [bc-code-intelligence-dispatch.md](../../references/bc-code-intelligence-dispatch.md): `find_bc_knowledge` → drop noise → `get_bc_topic`, cache within run, fetch fewer (only structural anti-patterns worth fixing this pass). Lens matches `anti_pattern_indicators` against the diff |
+| 1 | **Simplify / dedup** *(primary)* | Duplication, dead code, redundant procedures, inline candidates. Pass-throughs dissolve; primitives carrying meaning become small records or enums. **Over-build** — an abstraction with one caller (interface with one implementation, a helper used once, config for a value that never changes), scaffolding "for later" with no current caller — is a finding too: production code that does more than the task needs (the over-build block in the agent body carries the catch and its carve-outs) |
+| 2 | **BC best-practice** via bc-code-intelligence | Per [bc-code-intelligence-dispatch.md](../../references/bc-code-intelligence-dispatch.md): `find_bc_knowledge` → drop noise → `get_bc_topic`, cache within run, fetch fewer (only structural anti-patterns worth fixing this pass). Lens matches `anti_pattern_indicators` against the diff. **Platform reinvention** is in scope here — hand-rolled code where a shipped BC feature delivers (a setup table + management codeunit for what a field + flowfield does, validation code for a table relation or permission-set entry, a status pattern an enum covers); use the topic store to confirm the platform alternative exists before flagging |
 | 3 | **Structural shape** | R → P → W boundary, depth over indirection, seam introduction. Disciplines below carry substance |
 | 4 | **Naming** | Objects, procedures, variables, fields, parameters in BC vocabulary AND project terminology per `CONTEXT.md`, ADRs, `architecture.md`, `event-model.md` |
 

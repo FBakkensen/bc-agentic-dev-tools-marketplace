@@ -28,6 +28,15 @@ Names that lie are findings even when the code is otherwise correct. Use BC verb
 
 Fuller naming and evidence-bar discipline lives in `${CLAUDE_PLUGIN_ROOT}/references/voice-contract.md`; structural/coupling vocabulary (Connascence, CQS, Depth, Seam) in `${CLAUDE_PLUGIN_ROOT}/references/LANGUAGE.md`.
 
+## Over-build / platform reinvention (judge production code against this)
+
+When this lens's goal names BC best-practice or simplicity, hunt hand-rolled code where a shipped BC feature delivers — and reach for the topic store to confirm the alternative exists before flagging. Each is a finding:
+
+- Platform reinvention: a setup table + management codeunit for what a field + flowfield does, validation code for what a table relation or permission-set entry enforces, a status pattern an enum covers.
+- An abstraction with one caller: an interface with one implementation, a parameterised helper used once, config for a value that never changes, scaffolding "for later" with no current caller.
+
+Two carve-outs keep this from over-firing. **Production only** — never flag test thoroughness; Unit-first TDD and the `/al-mutate` gate are not over-build. **Not negligence** — never flag trust-boundary validation, posting/ledger correctness, or permission checks as "extra." A deliberate shortcut that names its ceiling and upgrade path in a one-line comment is a kept decision, not a finding.
+
 ## Dispatch
 
 Run the `find_bc_knowledge` → drop-noise → `get_bc_topic` dispatch per `${CLAUDE_PLUGIN_ROOT}/references/bc-code-intelligence-dispatch.md` in full — including the noise drop-list and the AL false-positive guards. Match each surviving topic's `anti_pattern_indicators` against the diff yourself; an indicator the code does not exhibit is not a finding. The MCP recommends leads, not bugs.

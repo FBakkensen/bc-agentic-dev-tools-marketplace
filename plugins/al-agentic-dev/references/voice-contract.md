@@ -6,6 +6,8 @@ Style rule lives at the top of each SKILL.md as a one-line inline declaration. T
 
 Applies everywhere — chat output and artifacts — unless a specific skeleton below dictates otherwise.
 
+Token thrift — lede-first as the default, payload-preserving cuts (quote the one decisive error line, no log dumps, no tool-call narration), keep grammar — lives in [thrift-rules.md](thrift-rules.md). It sharpens the Answer and Gate skeletons below; it is not restated here.
+
 **Bold header** on every section.
 
 Verdict, conclusion, or status on line 1. Context and detail after.

@@ -19,7 +19,7 @@ Two entry modes: the normal **task-pick** above, and **fix-mode**, driven by `/a
 - `specs/<branch>/` holds the `tasks/` folder + `architecture.md`. Missing → `/al-design`.
 - Target task `kind: technical`. `kind: verify` → **Stop**; route via `/al-steer` or `/al-code-review` based on verification state. `kind: provision` → `/al-provision`; `kind: breaking-change` → `/al-validate-breaking-changes` (ops tasks, run-and-flip, never reach `ready-for-implementation`).
 - Target task `status: ready-for-implementation` with populated `Test Specification`. Plain `ready` → **Stop**, `/al-refine T-NNN`. `ready-for-implementation` with empty or missing `Test Specification` → **Stop**, `/al-steer`; status and proof disagree. `blocked` → `/al-steer`. `done` → downstream evidence exists; do not reopen here — **except in fix-mode**, where `/al-code-review` reopens the finding's originating `done` task on purpose.
-- Before code (not at refactor), read [`test-specification.md`](../../references/test-specification.md), [`test-strategy.md`](../../references/test-strategy.md), [`tdd.md`](../../references/tdd.md), [`test-layout.md`](../../references/test-layout.md), [`testability.md`](../../references/testability.md), [`voice-contract.md`](../../references/voice-contract.md), and [`bc-code-intelligence-dispatch.md`](../../references/bc-code-intelligence-dispatch.md). Production names and signatures arrive minted in the task's `New and Modified Objects`; construct lookups stay this skill's own.
+- Before code (not at refactor), read [`test-specification.md`](../../references/test-specification.md), [`test-strategy.md`](../../references/test-strategy.md), [`tdd.md`](../../references/tdd.md), [`test-layout.md`](../../references/test-layout.md), [`testability.md`](../../references/testability.md), [`voice-contract.md`](../../references/voice-contract.md), [`thrift-rules.md`](../../references/thrift-rules.md), and [`bc-code-intelligence-dispatch.md`](../../references/bc-code-intelligence-dispatch.md). Production names and signatures arrive minted in the task's `New and Modified Objects`; construct lookups stay this skill's own.
 
 ## What this session answers
 
@@ -55,6 +55,10 @@ Before first RED of any AAA case, meet the evidence bar in [voice-contract.md](.
 Tests target the behaviour boundary named by the task. `Unit` cases target the P layer directly; your own table R/W runs for real under AL Runner — only a genuine MS-logic collaborator gets a seam, so write against real tables first and let the auto-stub report drive seams (don't pre-extract interfaces or temp-records for your own record logic; reclassify intentional BC coupling to `Integration`, never a prop). `Integration` cases cross BC runtime/database/page/event seams. Assertions read business outcomes (status, errors, posting outcomes, ledger entries, document flow, emitted event, visible page state), not table shape or call order unless a Unit spy is the behaviour boundary.
 
 See [testability.md](../../references/testability.md) for three-phase decoupling + seam catalogue and [tdd.md](../../references/tdd.md) for five phases + no-touch invariants.
+
+### Build the least that makes GREEN
+
+At GREEN, write the least production AL the case needs — reach for the platform (field + flowfield, table relation, enum, permission-set entry) before hand-rolling, and add no abstraction a second caller has not yet earned. The discipline and its carve-outs (production only, never test thoroughness; never thin trust-boundary validation or posting correctness) live in [thrift-rules.md](../../references/thrift-rules.md). Over-build that survives to the diff is the simplicity lens's catch at `/al-refactor` and `/al-code-review`.
 
 ### Gates every RED and every GREEN
 
