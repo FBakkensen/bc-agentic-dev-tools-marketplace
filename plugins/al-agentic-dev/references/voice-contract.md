@@ -84,7 +84,7 @@ Place an `advisor()` checkpoint inline at the moment the gate fires, not as a to
 
 ## Chat shape skeletons
 
-Style fills the shape; the skeleton stays. Four skeletons, named defaults.
+Style fills the shape; the skeleton stays. Five skeletons, named defaults.
 
 ### Opener (session start)
 
@@ -126,6 +126,10 @@ Answer on line 1. 3 sentences max at the question's altitude.
 **Pre-flight:** one line — `**Stop.** <reason in BC vocab>. <next action>.`
 
 **Mid-flow:** Stop reason + State 2-col table + Next action. Absorb-and-continue variant uses "Continuing" instead of "Next".
+
+### Push-up report (test scoped above its floor)
+
+A Lists-of-findings specialization for push-ups (`test-strategy.md`). Lede verdict line carrying counts — `N tests above their floor — M cost a seam, K are walls`. Then one labeled line per push-up: its scope, the case/example handle, why the layer below cannot hold it, and the seam-or-wall. Covers `Integration`, `Record: yes` E2E, and `Contract` only — never `Record: no` (already pushed down) or `Exploration` (no checkable floor). `/al-refine` emits it as its own chat section; `/al-implement` emits one push-up's line as a Stop; `/al-code-review` reports an unjustified push-up as an ordinary finding.
 
 SKILL-specific shapes live in the owning SKILL.md and follow the same rule: shape preserved, Style applies.
 

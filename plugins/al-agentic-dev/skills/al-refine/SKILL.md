@@ -36,7 +36,7 @@ Spec how one technical task's behaviour is proved so `/al-implement` can drive r
 
 - **What is the task delivering?** Resolve from task description, slice context in `architecture.md`, `event-model.md` when present, `CONTEXT.md`, and codebase.
 - **Is there meaningful branching?** No branching → `Expected Behaviors` with `B#` IDs. Branching rule, policy, calculation, status combination → `Decision Matrix` with `R#` IDs. Multiple unrelated groups → split or route to `/al-steer`.
-- **What is each AAA case's scope?** `Unit` for AL-Runner decision proof; `Integration` for container, database, event, TestPage, posting, install, permission, or wiring proof. `/al-refine` proposes scope. `/al-implement` may change it and must reconcile the task file.
+- **What is each AAA case's scope?** `Unit` for AL-Runner decision proof; `Integration` for container, database, event, TestPage, posting, install, permission, or wiring proof. `/al-refine` proposes scope. `/al-implement` may change it and must reconcile the task file. Every `Integration` case is a push-up from `Unit` — see *Surface push-ups*.
 - **What procedure names should exist?** Propose short PascalCase AL test procedure names. These populate `Covered By`, AAA headers, and `Procedure:`.
 - **What order?** AAA cases list `Unit` first, then `Integration`; within each scope, coverage ID order.
 - **What does codebase actually expose?** Real codeunits, tables, fields, pages, procedures, events, and APIs on the boundary. Every exact name rests on current evidence.
@@ -63,6 +63,10 @@ Answer before writing:
 - **Which `event-model.md` slots are cited?** Every Role / Action / Business Event / View / Status name in a verify example is backed by `grep` against `event-model.md` or workspace lookup on the underlying BC surface.
 
 Unanswerable → cannot write `Verification Plan` yet. Flip or keep `status: blocked` and resolve via `al-research` agent (BC surface), `/grill-me` (intent), or `/al-steer` (wrong slice boundary or missing prerequisite).
+
+## Surface push-ups, commit nothing
+
+A test scoped above the deepest layer that could check the behaviour is a **push-up** (see [`test-strategy.md`](../../references/test-strategy.md)): every `Integration` case, every `Record: yes` E2E, every `Contract` example. For each, record a `Contract notes` line — why the layer below cannot hold it + the named seam from [`testability.md`](../../references/testability.md) that would reach it, or the wall — and emit the **Push-up report** ([`voice-contract.md`](../../references/voice-contract.md)) as its own chat section. `/al-refine` only *proposes*: nothing is written but the task file, so this surfaces the tax without gating — the handoff stop is the user's review point, and `/al-implement` is where a push-up is actually committed. `Record: no` E2E (already pushed down) and `Exploration` (no checkable floor) are not push-ups and carry no justification.
 
 ## Ground exact names
 
@@ -122,7 +126,7 @@ No `in-progress` state.
 
 Three moments narrate to the branch feed. At each, hand `/al-feed` a brief — what happened, why it matters to someone who hasn't read the proof, the kind — and `/al-feed` composes the punchline and layers and appends the card. Fire only on these; the per-question grounding and inline grilling stay silent.
 
-- **decision** — proof structure committed: `Expected Behaviors` vs `Decision Matrix`, and `New:` vs `Modified:` objects settled.
+- **decision** — proof structure committed: `Expected Behaviors` vs `Decision Matrix`, `New:` vs `Modified:` objects settled, and the push-up set surfaced.
 - **surprise** — unanswerable exit: a needed answer won't ground (or the `al-doc-verify` agent returns `verdict=fail`), so the task stays/flips `blocked` and routes out rather than ship fuzzy proof.
 - **landing** — the status flip `ready → ready-for-implementation` / `ready-for-verification`.
 

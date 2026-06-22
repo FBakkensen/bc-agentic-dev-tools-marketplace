@@ -56,7 +56,7 @@ Grounding: minted names meet the evidence bar's minted-name clause in `voice-con
 
 ### Contract notes
 
-Include `Contract notes` only when the task carries proof-shaping freight the coverage tables cannot hold: oracle design, scope justification (why zero `Unit` cases), seam or test-double decisions, binding mechanics, transaction model, red-suite rework — or the task's `Researched:` evidence-bar citations (`voice-contract.md`). Most tasks otherwise need none.
+Include `Contract notes` only when the task carries proof-shaping freight the coverage tables cannot hold: oracle design, push-up justification (every `Integration` case, every `Record: yes` E2E, every `Contract` example: why the layer below cannot hold it + the named seam or the wall — see `test-strategy.md`; `Record: no` E2E and `Exploration` are not push-ups and carry none), seam or test-double decisions, binding mechanics, transaction model, red-suite rework — or the task's `Researched:` evidence-bar citations (`voice-contract.md`). Most tasks otherwise need none.
 
 Shape: bulleted, one fact per landing line, lede word first. A `;`-spliced multi-fact paragraph is density, not concision — the reader scans landing lines, then slow-reads one.
 
@@ -64,7 +64,8 @@ Shape: bulleted, one fact per landing line, lede word first. A `;`-spliced multi
 Contract notes:
 - Oracle: handler-absence — a dialog with no declared handler fails the run.
 - No Message handler on the Yes path — a surviving completion Message fails the run.
-- Zero Unit cases — structural: both W entries self-inject the production Confirm, leaving no unit seam.
+- Push-up `BlocksSalesOrderReleaseWhenRuleEnabled` Integration — the real `Release` crosses the posting seam a `Unit` auto-stub would falsify; costs-a-seam: an `IFinance` double around the release call, not built for one case.
+- Zero Unit cases — structural wall: both W entries self-inject the production Confirm, leaving no unit seam.
 - Decision surface proved: T-001.
 - Transaction: service commits before first dialog → `[TransactionModel(TransactionModel::AutoCommit)]`.
 - Red-suite rework: `PostsWithCompletionMessage` sheds its `MessageHandler` for a Yes ConfirmHandler — part of this task's green gate.
@@ -170,6 +171,7 @@ AAA case rules:
 - `Act` names one business action. Multiple execution steps are allowed when they execute that one action.
 - `Assert` uses observable outcomes by default. Internal call assertions belong only in `Unit` cases where a double or spy is the behaviour boundary.
 - Expected errors stay in `Assert`.
+- An `Integration` case is a push-up from `Unit`: record its justification in `Contract notes` (`test-strategy.md`) — why a `Unit` seam cannot hold it (the MS-logic collaborator it must run for real) + the seam that would isolate it if built, or the wall. `/al-implement` gates a *new* or *reclassified* `Integration` case on this before the test is written.
 
 ## Verify task: Verification Plan
 
@@ -185,7 +187,7 @@ Allowed verify scopes:
 
 Normal user-facing verify tasks require at least one `E2E` example. API/client-facing verify tasks require at least one `Contract` example. `Exploration` is optional, recommended for new workflows, changed workflows, and error-guidance changes.
 
-**The `Record:` flag (E2E only).** Every Journey Example carries `Record: yes` or `Record: no` — the generation-time push-down call (see [`test-strategy.md`](test-strategy.md)). `Record: yes` means **no AL test layer can automate this behaviour** (control add-in, canvas, web-client-only behaviour), so `/al-page-script` guides the user to record it as a `.yml` regression guard; `Record: no` means a Unit/Integration test already pins the regression, so the example is **walked by the user in `/al-user-verification` for acceptance but not recorded** — recording it would double a lower test. Most slices are `Record: no` throughout; a slice can legitimately have zero `Record: yes` examples (then `/al-page-script` is skipped). Either way the `Observable Checks` are mandatory — they are the grounded gating values the user-walk checks against, which `event-model.md` alone does not carry for edge/error cases.
+**The `Record:` flag (E2E only).** Every Journey Example carries `Record: yes` or `Record: no` — the generation-time push-down call (see [`test-strategy.md`](test-strategy.md)). `Record: yes` means **no AL test layer can automate this behaviour** (control add-in, canvas, web-client-only behaviour), so `/al-page-script` guides the user to record it as a `.yml` regression guard; `Record: no` means a Unit/Integration test already pins the regression, so the example is **walked by the user in `/al-user-verification` for acceptance but not recorded** — recording it would double a lower test. Most slices are `Record: no` throughout; a slice can legitimately have zero `Record: yes` examples (then `/al-page-script` is skipped). A `Record: yes` example is a **push-up** (`test-strategy.md`) and a `Contract` example is too — their justification (the wall for E2E, why-not-`Integration` for Contract) lands in the Push-up report and `Contract notes`; a `Record: no` example is the pushed-*down* state, not a push-up, and an `Exploration` charter has no checkable floor — neither carries a push-up justification. Either way the `Observable Checks` are mandatory — they are the grounded gating values the user-walk checks against, which `event-model.md` alone does not carry for edge/error cases.
 
 ### Journey Examples
 

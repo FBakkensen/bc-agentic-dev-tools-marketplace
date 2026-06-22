@@ -66,6 +66,12 @@ The closeout gate is the whole suite, not this task's cases — a red anywhere, 
 
 AL Runner ERROR / exit 2 routes cheapest-first: review test (adjust unsupported call) → refactor production behind seam so unsupported call moves behind stub → reclassify as `Integration` and update the task file. Reclassification last because it grows container surface. Before treating an ERROR as a runner-capability gap, re-confirm the compile-error class — an AL0305 missing-dependency cascade reads as an AL0327 runner gap, and reclassifying on the misread grows container surface for a phantom. Run `al-runner --guide` when unsupported feature is unclear.
 
+### Gate every push-up above the blessed scope
+
+Writing a test above the scope `/al-refine` blessed is a **push-up** that needs commitment, not a silent reclassify (see [`test-strategy.md`](../../references/test-strategy.md)). Two paths reach it: the reclassify rung above (a planned-`Unit` case that hits an AL-Runner wall) and a *new* `Integration` case emerging mid-TDD (trigger #5). Either way, before the non-`Unit` test is written, **stop** — emit the commitment as a Stop ([`voice-contract.md`](../../references/voice-contract.md)): the case, why `Unit` cannot hold it, and the seam from [`testability.md`](../../references/testability.md) that would versus accepting `Integration`. Commitment is build-the-seam (push down via `/al-refactor`) or accept-the-slower-test; on accept, record the justification in `Contract notes` and continue.
+
+This is the pipeline's one hard gate, elevated above the act-inline floor (`/al-steer`'s provable-mutation rule) because a silent slow test is a durable cost, not reversible. **Unattended**, where no human answers, the stop degrades by context so the push-up never lands silently — an unblessed push-up is replan-class when no one can commit. **Autopilot** (autonomous task-pick): flip `status: blocked` and route to `/al-steer`. **Fix-mode**: do *not* route to `/al-steer` — fix-mode is mute (see Fix-mode), so report the uncommittable push-up back to the calling loop as `cannot fix — escalate`; it lands in `/al-code-review`'s **needs-a-decision** set-aside class, and the loop routes it at run end. A push-up already blessed by `/al-refine`'s report flows without a stop; the gate fires only on deviation above plan.
+
 ### Reconcile task spec before done
 
 Before `done`, update the task file so it reflects actual proof:
@@ -147,7 +153,7 @@ Fix-mode is **mute**: it returns to the calling loop and does **not** announce a
 Highest-traffic skill, so the red/green grind stays out of the feed — only durable-state and settled-question moments earn a card. Hand `/al-feed` a brief by name (never inline the append); it composes punchline + layers and appends.
 
 - **verdict** — first AAA case completes red→green this session. Captures the behaviour/coverage-ID, Unit-before-Integration, failed-first as regression proof.
-- **surprise** — an AL Runner ERROR / exit-2 off the planned path, or a replan trigger fires post-mutation. Captures which wall, absorbed vs handed to `/al-steer`. Only on a real trigger — a clean walk fires nothing.
+- **surprise** — an AL Runner ERROR / exit-2 off the planned path, a push-up gate stopping for commitment (or degrading to `blocked` unattended), or a replan trigger fires post-mutation. Captures which wall, absorbed vs handed to `/al-steer`. Only on a real trigger — a clean walk fires nothing.
 - **verdict** — `/al-mutate` task-end verdict. Captures survivors and why kept (equivalent vs real gap).
 - **landing** — the `ready-for-implementation → done` flip after final green and Gate report. Captures the Gate report (Did/Was/Fits/Next), next task(s) opened, slice-done handoff.
 
