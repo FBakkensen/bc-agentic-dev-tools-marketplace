@@ -8,7 +8,8 @@
     Default (batch mode): invokes bc-replay against all YAML scripts in
     pagescripts/recordings/*.yml.
     Single-file mode (-File <path>): replays one specific .yml file. Used by
-    /al-page-script during scenario-by-scenario generation.
+    /al-page-script to replay one user-recorded scenario at a time, on a
+    freshly spawned container (re-runnability gate).
     Requires published main app in the BC container.
 
 .PARAMETER Force
@@ -27,8 +28,8 @@
     # Force republish, then batch replay
 
 .EXAMPLE
-    pwsh -File pagescript-replay.ps1 -File pagescripts/recordings/007-release-sales-order__post-batch.yml
-    # Single-file mode: replay one recording only
+    pwsh -File pagescript-replay.ps1 -File pagescripts/recordings/007-sales-charge-validation__post-validates-allocation__02.yml
+    # Single-file mode: replay one per-scenario recording only
 #>
 
 [CmdletBinding()]

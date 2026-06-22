@@ -1,168 +1,127 @@
 ---
 name: al-page-script
-description: Generate the slice's BC Page Scripting recording (`.yml` replayed by `@microsoft/bc-replay`) from a verify task's `Verification Plan` Journey Examples in the `tasks/` folder. Example-by-example inner loop against a fresh container; commits the file on green. Used as a prerequisite to `/al-user-verification`; also covers standalone authoring against the reverse-engineered grammar.
+description: Guide the user to record the slice's framework-limited E2E Journey Examples in BC's Page Scripting recorder — one scenario at a time in chat, punchline-first. The user records and downloads the `.yml`; the agent replays each on a fresh container and classifies reds. Recordings are reserved for behaviour no AL test layer can automate (generation-time push-down). Prerequisite to `/al-user-verification`.
 ---
 
 **Style:** Concise — cut filler, keep grammar. Opinionated — pick a side. Arrows (→) for causality. Technical terms exact, code and errors quoted verbatim.
 
-# /al-page-script — Generate slice bc-replay recording
+# /al-page-script — Guide the user to record a slice's bc-replay recordings
 
-User-invoked generator. Reads a verify task's `Verification Plan` `Journey Examples` with `Scope: E2E` from its file under `tasks/`, the page AL behind each example, and the grammar reference; emits the slice's `.yml` recording by appending one example's actions and observable checks at a time and replaying the accumulating file against a fresh container after each append. Final example green → also replay the full pre-flight batch (this `.yml` + every prior slice's `.yml`) to catch cross-file collisions, then commit.
+User-invoked. Reads the verify task's `Verification Plan` Journey Examples marked **`Record: yes`** from its file under `tasks/`, and guides the user — **one scenario at a time, in chat, punchline first** — to record each in BC's built-in **Page Scripting (Preview)** recorder. The user performs the gestures, validates the outcomes, downloads the `.yml`, and hands back the path; the agent replays each recording on a **fresh** container, classifies any red, and on green moves to the next scenario. Final scenario green → replay the full pre-flight batch (this slice's recordings + every prior slice's) to catch cross-file collisions, then commit.
 
-**Layer.** This is the **E2E layer** of the test pyramid (see [`test-strategy.md`](../../references/test-strategy.md)): a regression guard written *after* the slice, from verify-task Journey Examples — not a red-first driver. Its oracle is bc-replay's equality/visibility checks, which are **oracle-limited** (a recording can pass against broken code where the platform absorbs the fault). So a red here doesn't get fixed here by default: it **pushes down** to the layer that can pin it. See *Failure classification* below.
+**The recorder is the generator — the agent does not author `.yml`.** The bc-replay YAML format is reverse-engineered and undocumented; authoring it blind is a token-and-error sink, and the recorder is the *intended* way to produce these (Microsoft Learn, `devenv-page-scripting`). So the agent's job is to **coach the recording and read the replay** — never to write a recording from scratch. The one carve-out: a **surgical, approval-gated edit** to an existing recorder-produced file (bump a wait, fix one operator, add a missed Validate) when that is plainly the shortest path to green — ask, edit, replay. Everything else routes back to a guided re-record.
 
-Grammar (envelope, `target:` locator, 19 step types, operators, Power Fx, `include`, locator-by-page-kind) lives in [`references/bc-replay-yaml-format.md`](references/bc-replay-yaml-format.md). Six recorder-captured replay-green recordings (`01`–`06`) plus two hand-authored shape examples (`07` No. Series + `copy-value`, `08` `Error()` dialog — dialog steps recorder-verbatim, wrapper schematic) live in [`references/examples/`](references/examples/) — pattern-match a full file before authoring from prose.
+**Layer.** This is the **E2E layer** of the test pyramid (see [`test-strategy.md`](../../references/test-strategy.md)) — the slow, brittle apex, **reserved for behaviour no lower layer can automate**. A recording exists *only* where AL Runner / TestPage genuinely cannot assert the behaviour (control add-ins, canvas, web-client-only behaviour); `/al-refine` makes that call when it marks a Journey Example `Record: yes` (generation-time push-down — most slices get zero). Never a recording that doubles a unit or integration test. Its oracle is bc-replay's equality/visibility checks, which are **oracle-limited** (a recording can pass against broken code the platform absorbs), so a red here does not get faked green — see *Failure classification* below.
+
+The recorder's gestures (how the user expresses No. Series, copy-value, anchored rows, validations, conditionals, Power Fx) and the recording-coaching that keeps a recording re-runnable live in [`references/recorder-gestures.md`](references/recorder-gestures.md). The YAML format itself — read to classify a replay red or to scope a surgical edit, **not** to author — lives in [`references/bc-replay-yaml-format.md`](references/bc-replay-yaml-format.md).
 
 ## Preconditions
 
-- Branch matches `^\d{3}-`. If not: **Stop**. Verify task only exists inside in-flight feature.
-- Grammar reference was reverse-engineered on BC **v28** and verified stable across minor platform bumps. It is *not* pinned to an exact build — re-derive (the reference's intro says how) only when a replay red is a grammar-**shape** mismatch (wrong nesting/step type the player rejects), not when it is a missing control or a dialog. A platform version number alone is not a reason to **Stop**.
-- Target task is `kind: verify` with `status: ready-for-verification` and populated `Verification Plan` containing `Journey Examples`. Plain `ready` → **Stop**, `Next: /al-refine T-NNN`. `ready-for-verification` with an empty plan → **Stop**, `Next: /al-steer T-NNN`; status and proof disagree. No `Scope: E2E` examples → **Stop**, `Next: /al-user-verification T-NNN` if the plan contains only `Contract` / `Exploration`, otherwise `/al-steer T-NNN` for malformed plan routing. Status `blocked` → **Stop**, `Next: /al-steer T-NNN`. Status `done` → downstream evidence exists; do not regenerate here.
+- Branch matches `^\d{3}-`. If not: **Stop**. Verify task only exists inside an in-flight feature.
+- Target task is `kind: verify` with `status: ready-for-verification` and a populated `Verification Plan` containing at least one Journey Example marked `Record: yes`. Plain `ready` → **Stop**, `Next: /al-refine T-NNN`. `ready-for-verification` with an empty plan → **Stop**, `Next: /al-steer T-NNN`; status and proof disagree. **No `Record: yes` Journey Example** (all examples are `Record: no`, `Contract`, or `Exploration`) → **Stop**, `Next: /al-user-verification T-NNN`; this slice needs no recording. Status `blocked` → **Stop**, `Next: /al-steer T-NNN`. Status `done` → downstream evidence exists; do not regenerate here.
 - `review: clean` present in the verify task's frontmatter — the durable clean per-slice `/al-code-review` evidence. Missing → **Stop**, `Next: /al-code-review T-NNN`. Page-script is a verification pre-flight artifact, not the code-review gate.
-- `.yml` already at `pagescripts/recordings/<NNN>-<slug>__<slice>.yml` → **Stop**, `Next: /al-user-verification T-NNN`. Regeneration is a replan call (route via `/al-steer`); silently overwriting an existing recording loses the bc-replay state the pre-flight depends on.
-- **Login is permitted.** Agent types `container.username` / `container.password` from repo-root `al-build.json` (defaults `admin` / `P@ssw0rd`) into the Web Client's UserPassword form and signs in. User-authorized, non-secret throwaway dev credentials. Local container hosts only (`http://<container>/BC/`) — never `*.dynamics.com` or any non-local host. Login form ≠ blocker; never hand sign-in to the user.
-- Author blind first. Names come from page AL + grammar reference + worked examples + the repo's committed `pagescripts/recordings/*.yml` (replay-proven local ground truth). Locators bind the AL control/field **name**, not the display caption (grammar §10.1). A name not live-rendered at replay → `Field '<name>' was not found.` A recorder session is the escalation when AL can't answer an unknown — see [`references/recorder-harness.md`](references/recorder-harness.md); the inner replay loop already proves the file, so recording stays the exception, not the path.
+- The slice's recordings already exist at `pagescripts/recordings/<NNN>-<slug>__<slice>__NN.yml` for every `Record: yes` example → **Stop**, `Next: /al-user-verification T-NNN`. Regeneration is a replan call (route via `/al-steer`); silently overwriting loses the replay-proven state the pre-flight depends on. A *partial* set (some scenarios recorded, some not) → resume at the first un-recorded `Record: yes` example.
+- **The recording user needs the `PAGESCRIPTING - REC` permission set** (Microsoft Learn). The container's `admin` / SUPER user carries it; if a restricted user reds the recorder at start, surface the exact permission and re-enter. (`PAGESCRIPTING - PLAY` covers replay and already works — today's flow replays.)
+- **Login is the user's.** The agent hands the Web Client URL and the throwaway dev credentials ready to paste: `container.username` / `container.password` from repo-root `al-build.json` (defaults `admin` / `P@ssw0rd`). User-authorized, non-secret. Local container hosts only (`http://<container>/BC/`) — never `*.dynamics.com` or any non-local host. User cannot reach the container URL → **Stop**, fix environment, re-enter.
 
 ## Output path
 
-`pagescripts/recordings/<NNN>-<slug>__<slice>.yml`. Flat folder at repo root; `<NNN>` matches the spec folder number, `<slug>` is the feature slug, `<slice>` is the verify task's `slice:` value. Double-underscore between feature-slug and slice-slug. `pagescript-replay.ps1`'s batch glob is `pagescripts/recordings/*.yml`; this path joins it automatically.
+`pagescripts/recordings/<NNN>-<slug>__<slice>__NN.yml` — one file per recorded scenario. Flat folder at repo root; `<NNN>` matches the spec folder number, `<slug>` the feature slug, `<slice>` the verify task's `slice:` value, `NN` the Journey Example's order within the slice (`01`, `02`, …). Double-underscore between feature-slug and slice-slug, and before the scenario number. `pagescript-replay.ps1`'s batch glob is `pagescripts/recordings/*.yml`; every per-scenario file joins it automatically.
 
-## Generation runtime
+## The recording session
 
-### Container lifecycle
+### Opener, sized for a human
 
-One `new-agent-container.ps1` spawn per `/al-page-script` invocation — not per example. Fresh container at start; publish apps once; the same container hosts every inner-loop replay, re-using its backend state. Left running on exit; `/al-user-verification`'s spawn #1 replaces it regardless, so teardown here is churn.
+Announce the verify task: `T-NNN` id, slice slug + its `event-model.md` step, the **count of `Record: yes` scenarios** to record and a rough time, **plus the infra wait before it** — container spawn and publish run minutes, not seconds; say so, so the user isn't poised over a URL that hasn't arrived. Then spawn the recording container, publish, and hand the user the entry (URL + credentials + deep link). One scenario open at a time; the next opens only after the current scenario's `.yml` replays green.
 
-### Example-by-example inner loop
+### Container choreography
 
-Read `Scope: E2E` Journey Examples from the verify task's `Verification Plan` in order. Ignore `Contract Examples` and `Exploration Charters`; they belong to `/al-user-verification`. For each Journey Example K (K = 1..N):
+**One container exists at a time.** `new-agent-container.ps1` destroys and recreates the branch-named agent container from the snapshot, so every spawn is clean state. There is no second concurrent container — the re-runnability guarantee comes from **spawning fresh immediately before each replay**, which wipes the data the recording just created.
 
-1. **Locate page AL.** Every BC-specific symbol in Journey Example K's actions and observable checks (page, action, field, Role Center cue) meets the evidence bar in [voice-contract.md](../../references/voice-contract.md): workspace hit this session or quoted fetch; training-data BC names ship confidently-wrong.
-2. **Append steps.** Emit Journey Example K's bc-replay steps onto the accumulating `.yml`. First example opens with `navigate` from the role center; subsequent examples start where the previous one left off (close-page to return to a known surface, or navigate fresh if the example describes a different journey).
-3. **Replay.** `pwsh <plugin>/skills/al-build/scripts/pagescript-replay.ps1 -File pagescripts/recordings/<NNN>-<slug>__<slice>.yml` against the spawned container. `-File` mode replays the single accumulating file, not the batch glob.
-4. **Classify outcome.** Green → Journey Example K is sealed; advance to K+1. Red → **read the artifacts, don't trust the exit code alone**: the run writes `error-context.md` (an ARIA snapshot of the frozen surface — where an unexpected dialog is *visible*) and `replay-log.yml` (the full step list; the failing step carries an inline `error: { type, message, target }`) under `<cwd>/test-results/dist-player--…--chromium/`. A **hang** (timeout, no error string) is a red too — the snapshot shows what blocked it. Then route per *Failure classification* below.
-5. **Final example green → cross-file pre-flight.** After example N greens, run `pagescript-replay.ps1` in batch mode (no `-File`) against the same container. Catches collisions where this new `.yml` invalidates a prior slice's recording (e.g. seeding a Customer that a prior recording assumed absent). Batch-green → commit the file. Batch-red names which prior `.yml` collided; route per *Failure classification* below (typically Sequence collision, restructure example N to use No. Series + `copy-value` so it stops colliding). If a prior `.yml` reds because a control it targets no longer exists — the surface legitimately moved (a field was removed) — quarantine or delete it. If the control's removal is itself unexpected, that is a production bug → push down.
+- **Record.** Spawn (`new-agent-container.ps1` → `publish-apps.ps1`) and hand the user the URL; the user records the current scenario against whatever container is up (the one left by the prior step). Recording captures gestures, so its accumulated data does not matter.
+- **Replay on clean state.** Once the user pastes the downloaded `.yml`, **spawn fresh again** (`new-agent-container.ps1` → `publish-apps.ps1`) — recreating the container wipes the records the user just made — then replay (`pagescript-replay.ps1 -File`). That clean-state replay is the **re-runnability gate**: a recording that hardcoded a value or picked a row positionally reds here and gets re-recorded. (`pagescript-replay.ps1` only spawns when the container is unhealthy, so the fresh spawn must precede it; the user records the *next* scenario on the container this replay leaves up.)
+- **Batch pre-flight.** After the final scenario greens, spawn fresh once more and batch-replay the slice's recordings plus every prior slice's (`pagescript-replay.ps1`, no `-File`) on that clean container — catches cross-file collisions before commit.
 
-### Failure classification
+Per scenario that is one spawn to record on (carried over from the prior replay) and one fresh spawn to replay on; each spawn runs minutes, so the opener warns the user. A slice's `Record: yes` set is usually one or two scenarios.
 
-A red is a question: *can this layer pin the truth, and if not, which layer can?* Classify by the **outcome** read from `error-context.md` + `replay-log` (error / hang / false-green / wrong-behaviour), then route by push-down. Three resolutions stay in-loop; the rest move the test to another layer.
+Spawn invocations (every replay is preceded by a fresh spawn + publish):
+- spawn fresh container: `pwsh "${CLAUDE_SKILL_DIR}/../al-build/scripts/new-agent-container.ps1"`
+- publish all apps: `pwsh "${CLAUDE_SKILL_DIR}/../al-build/scripts/publish-apps.ps1"`
+- replay one file on the freshly-spawned container (re-runnability gate): `pwsh "${CLAUDE_SKILL_DIR}/../al-build/scripts/pagescript-replay.ps1" -File pagescripts/recordings/<…>__NN.yml`
+- batch replay (final pre-flight): `pwsh "${CLAUDE_SKILL_DIR}/../al-build/scripts/pagescript-replay.ps1"` (no `-File`)
 
-**Isolate before you debug.** A red buried deep in a long recording masks its own cause, and every full replay costs ~10 minutes. Build a throwaway minimal recording: reproduce the smallest shape that triggers the failure, drop `timeout:` low so a hang fails fast, bisect one variable per run. Delete the probe once the cause is named.
+### Per-scenario card
 
----
+Each `Record: yes` Journey Example becomes one card — **punchline first, then a bullet of actions and validations the user performs**, then a recording-coaching tip. One card at a time; the next card only after this scenario replays green (the "exponential reveal" gate sits between scenarios; the opener already gave the total count).
 
-**Stay in-loop — the recording is wrong, not the system:**
+> **Scenario 1 of 2 — A posted sales order locks its lines.**
+> *Recorder on (Settings ⚙ → Page Scripting). Do these, then Save → download the `.yml` and paste me the path.*
+>
+> **Do**
+> - Open **Sales Orders** → **New** → pick a customer → add one line
+> - **Post** → **Ship and Invoice**
+>
+> **Check** (right-click the control → *Page Scripting → Validate*)
+> - **Status** *is* `Released`
+> - The posted line is locked (read-only)
+>
+> *Recording tip: let the No. auto-assign — don't type one. (More in recorder-gestures.)*
+>
+> → Download, paste me the path. I'll replay it on a fresh container.
 
-- **YAML defect.** Error reads as a shape/locator problem (wrong `target:` nest, `invokeType` typo, missing `runtimeRef` after `page-shown`, `operation:` outside the enum) — or an *expected* dialog the recording forgot to answer. Self-fix against the grammar reference and retry. An `Error()` the Journey Example *expects* (a guard error, e.g. blank-filter) is this case, not push-down: script the grammar §4 composition (`page-shown` on the Error automationId → `invoke Ok` → `page-closed`). Error *text* not assertable → wording checks stay Exploration Charters.
+The **Do** bullets are the example's `Action`; the **Check** bullets are its `Observable Checks`, each phrased as the recorder gesture that asserts it (right-click → Validate; copy-value → Validate *is equal to clipboard entry* for a captured No.). The coaching tip carries the one re-runnability rule that scenario most needs (see [`recorder-gestures.md`](references/recorder-gestures.md)) — stated *before* the user records, so the recording is born re-runnable rather than patched after.
 
-- **Un-derivable ID / uncertain invoke type.** AL search misses and the failure references a runtime-generated control ID (`Action37`, `Control1`, `b71`-style), or the gesture serializes an unclear `invokeType`. Custom-action IDs, repeater names, and some modal close actions are not derivable from AL — harvest from the recorder per [`references/recorder-harness.md`](references/recorder-harness.md). No recorder session can open BC → report the exact limitation, fall back to user-provided or hand-authored YAML plus replay.
+### Replay and seal
 
-- **Sequence collision.** Error names a record that already exists, or a prior slice's `.yml` colliding in batch pre-flight. Restructure in-loop — No. Series for a fresh value per replay, `copy-value` to capture the auto-assigned No., `=Clipboard.'name'` downstream. Literal IDs only for records the example must hit by exact value.
+User pastes the downloaded path → agent spawns a fresh container (+ publish) and replays it (`-File` mode) on that clean state. Download mechanics: on an HTTP container the browser leaves it as `Unconfirmed *.crdownload` — the bytes are complete; the user copies it out and pastes the path. **Read the artifacts, don't trust the exit code alone**: a red writes `error-context.md` (an ARIA snapshot of the frozen surface — where an unexpected dialog is *visible*) and `replay-log.yml` (the failing step carries an inline `error: { type, message, target }`) under `<cwd>/test-results/dist-player--…--chromium/` (see [`bc-replay-yaml-format.md`](references/bc-replay-yaml-format.md) §9). Green → the scenario seals; move the recorded `.yml` to its committed path and advance to the next card. Red → route per *Failure classification*.
 
----
+After the final scenario greens, spawn fresh once more and run the batch pre-flight (no `-File`) on that clean container. Batch-green → commit every per-scenario file. Batch-red names which `.yml` collided → classify (typically a *bad recording* — the new scenario seeds a record a prior recording assumed absent; re-record it to use the No. Series so it stops colliding). If a prior `.yml` reds because a control it targets no longer exists — the surface legitimately moved — that is a `/al-steer` decision (regenerate the prior recording or quarantine it), not this skill's.
 
-**Push down — the system is wrong, and a lower layer should own the proof:**
+## Failure classification
 
-- **Production bug (pinnable lower).** Named element exists, locator is valid, but asserted surface behaviour is wrong (Status flips wrong, Business Event doesn't fire, factbox doesn't refresh) — and an integration/unit test *could* assert it. Leave verify task status unchanged and `Route: /al-steer T-NNN`. `/al-steer` opens the integration fix task; `/al-implement` drives it red-first. This recording stays the acceptance guard and re-greens once the fix lands. **Page-script diagnoses and routes — it does not edit production, create tasks, flip status, or hand-inject probes.**
+A replay red is a question: *is the recording wrong, or is the system?* The recorder emits valid YAML with real control IDs, so the old authoring-failure classes (YAML defect, un-derivable ID) are gone. Three outcomes remain.
 
-- **Unexpected platform dialog (a hang).** Run times out; `error-context.md` shows an open Confirm (`RecordChangeDialog`: "Your change might update related records…"). An unexpected `Error()` fails fast instead — `Invalid state: Unexpected error dialog.` on the next step. Either the dialog is *expected* → YAML defect, answer it; or it is *triggered by a production AL pattern* → production bug, route as above.
+**Isolate before you debug.** A red buried in a long recording masks its cause, and every full replay costs minutes. Reproduce the smallest shape that triggers it (drop `timeout:` low so a hang fails fast), name the cause, then act.
 
----
+- **Bad recording → re-record (in-loop, the default fix).** The recording is brittle or wrong: it hardcoded a No. that collided on fresh replay, picked a row positionally, forgot to answer a dialog it triggered, or asserted the displayed field instead of the stored one. **Diagnose in chat and coach a re-record** — *"sort newest-first before picking the row," "let the No. auto-assign," "Validate the posted entry, not the document line"* (the re-runnability rules, [`recorder-gestures.md`](references/recorder-gestures.md)). The agent never authors the `.yml`. **Carve-out:** when the fix is a single well-understood transform on the existing recorder-produced file (bump a `wait`, fix one `operation:`, add one missed Validate), the agent may **ask for approval, make that surgical edit, and replay** — re-recording a 30-step scenario to add one assertion is waste, not discipline.
 
-**Escalate — no assertion oracle exists at a layer below:**
+- **Real production bug → push down, route `/al-steer`.** The recording is valid, replays the real behaviour, and the asserted behaviour is wrong (Status flips wrong, Business Event doesn't fire, factbox doesn't refresh) — and a lower layer *could* pin it. Leave the verify task status unchanged and `Route: /al-steer T-NNN`. `/al-steer` opens the integration fix task and strips `review: clean`; `/al-implement` drives it red-first; this recording re-greens once the fix lands. **Page-script diagnoses and routes — it does not edit production, create tasks, or flip status.** (An *unexpected* platform dialog is this case when an AL pattern triggers it; an *expected* dialog the recording forgot to answer is a bad recording — re-record to answer it.)
 
-- **Runner-absorbed false-green.** Recording greens against code you know is broken — bc-replay re-reads the bound `Rec` exactly as a TestPage does, so its oracle is blind to that fault class. Delete or quarantine the recording; pin the behaviour where an oracle can see it. Never "fix and trust the green."
-
-- **Example unscriptable.** The step asks for a judgment no assertion can encode — look-and-feel, error-message tone, accessibility. Leave verify task status unchanged and `Route: /al-steer T-NNN`. `/al-steer` decides whether to reopen to `ready` for `/al-refine` or keep it as an `Exploration Charter` for `/al-user-verification`.
-
-## Authoring discipline
-
-**No. Series first.** When an example creates a record on a page whose underlying table uses No. Series, the task prose says "Create a Customer" (No. auto-assigned), not "Create Customer C00010". The page assigns a fresh No. per replay; recordings sidestep cross-example and cross-file collisions naturally. Literal IDs only when the example must reference a seeded record — demo data, system-defined accounts, anything the example's intent depends on by exact value. Same instinct for row selection: a positional `relative:N` pick drifts when demo data differs from your assumption (the CRONUS attribute set includes `Height`, so the "3rd row" may not be what you think) — anchor to a record you seed, not whatever demo data happens to sit there. A **just-created** row: never positional — `relative:N` drifts as the container accumulates rows, `set-current-row` can silently fail to move, and a new row inserts *above* the current row, not at the bottom → `SortColumn` toggle (newest No. on top) or a column-filter pin on the captured No. (grammar §4 *Anchoring a just-created row*).
-
-**One written row per grid visit.** A pending new grid row commits on row-leave (`close-page`, click another row); a second `Control_New` silently discards it — the row never inserts, no error, downstream reads fewer rows than authored. Author `Control_New` → `input` one cell → `close-page`; re-open for the next row. Never `validate` straight after a grid `input` — the cursor sits on the blank new-row placeholder and the read returns `'0'`/blank; re-open the page or re-anchor first (grammar §4 *Editable-grid new-row lifecycle*).
-
-**Round-trippable fixtures for derived values.** Two fields linked by a conversion re-derive and round on the stored side — a typed 80 reads back `79.99999` and fails `=`; `validate` has no tolerance operator (grammar §5 enum is complete). Assert the stored canonical field, or pick fixture values that round-trip exactly (markup 100 ↔ margin 50).
-
-**`copy-value` capture for auto-assigned values.** Auto-assigned No. is unknown at authoring time. The first step on the new record captures the No. via `copy-value` (`source` ends in `field: No.`, `name: <slug>-no`); every later step that needs the No. references it via `=Clipboard.'<slug>-no'`. Same shape applies to any auto-generated ledger entry No., document No., journal line No.
-
-**Prose matches discipline.** `/al-refine` writes `Journey Examples` in the same shape the page-script emits — *"Create a Sales Order, capture the No., assert No equals the captured value"* matches the `copy-value` + `=Clipboard.'name'` shape. No prose/YAML divergence.
-
-**No Power Fx for fake uniqueness.** Power Fx (`=Today()`, `=Session.'User ID'`) is used where the page legitimately needs an expression — date filters, today's posting date, current-user contexts. It is not used to fabricate uniqueness in IDs; that is what No. Series + `copy-value` does. Magic-string Power Fx in a No. field is an anti-pattern that masks the real shape.
-
-**Blind reliability envelope.** Hand-authoring is reliable for `navigate` + named `field`/known system-action (`Control_New`, `Cancel`, `CloseOk`, `Yes`/`No`) and already-proven invoke types. Custom-action generated IDs (`Action37`), repeater control names (`Control1`), and uncertain modal close invoke types are **not** derivable from AL — harvest, never guess (*Failure classification* › Un-derivable ID).
-
-## Canonical example
-
-```yaml
-name: Smoke - Item List opens and No. is set
-description: Navigate to Items, open first row's card, assert No. is non-empty.
-start:
-  profile: ORDER PROCESSOR
-steps:
-  - type: navigate
-    target: [ { page: Order Processor Role Center }, { action: Items } ]
-  - type: page-shown
-    source: { page: Item List }
-    runtimeId: pg1
-  - type: invoke
-    target: [ { page: Item List, runtimeRef: pg1 }, { repeater: Control1 } ]
-    invokeType: Edit
-    parameters: { AlwaysCommit: false }
-  - type: page-shown
-    source: { page: Item Card }
-    runtimeId: pg2
-  - type: validate
-    target: [ { page: Item Card, runtimeRef: pg2 }, { field: No. } ]
-    operation: "<>"
-    value: ""
-```
-
-For the No. Series + `copy-value` discipline end-to-end, see [`references/examples/07-noseries-copyvalue-validate.yml`](references/examples/07-noseries-copyvalue-validate.yml).
-
-## Running a recording
-
-Replay needs **Node 22–25** (`@microsoft/bc-replay` bundles `@playwright/test`; Node 26+ hangs in Playwright's browser-install per upstream `microsoft/playwright#40724`). Manage Node version via **[Volta](https://volta.sh)** — install once on the box, then `volta install node@22`. On first run, `pagescript-replay.ps1` writes a minimal `pagescripts/package.json` and invokes `volta pin node@22`, which resolves to the exact installed version (e.g. `"22.22.3"`) and writes it into the file's `volta.node` field; every `node` / `npm` / `npx` invocation inside `pagescripts/` then routes through Volta's shim regardless of the user's global Node. The inner loop's spawn-then-replay is encapsulated by `pwsh <plugin>/skills/al-build/scripts/pagescript-replay.ps1` (`-File <path>` single-file, no flag for batch); it handles app publish, npm install, and the `replay` invocation.
-
-Standalone replay (without going through the generator), from a folder with `@microsoft/bc-replay` installed:
-
-```powershell
-npx replay .\recordings\*.yml -StartAddress http://<host>/<instance>/ -ResultDir .\results
-```
-
-- **Auth** (supplied at invocation, never hard-coded): `-Authentication Windows` (default) | `AAD` | `UserPassword`, plus `-UserNameKey` / `-PasswordKey` naming the env vars that hold the values. Full option surface in [`references/bc-replay-yaml-format.md`](references/bc-replay-yaml-format.md).
-- `replay` exits **non-zero** if any recording fails — that is the green/red gate.
-- **Where the artifacts land** (verified, bc-replay 0.1.139): `-ResultDir` gets only `results.xml` + `playwright-report/`. The **diagnosis** artifacts — `error-context.md`, `replay-log.yml`, `attachments/Replay-log-*.yml`, `video.webm` — write to `<cwd>/test-results/dist-player--…--chromium/`, *not* `-ResultDir`. Read a red there, not in the report.
-- `-UseServerReplay` swaps the browser for a bundled .NET client-service engine (faster, headless) — but it **cannot render control add-ins / canvas**, so a feature whose deliverable paints inside a canvas is unverifiable this way (only the browser path, or the exploratory guided user walk, can see it). `npx playwright install` still runs unconditionally regardless of the flag.
+- **Oracle-blind / unscriptable → escalate, route `/al-steer`.** The recording greens against code you know is broken — bc-replay re-reads the bound `Rec` exactly as a TestPage does, so its oracle is blind to that fault class (delete/quarantine; pin it where an oracle can see it; never "fix and trust the green"). Or the check asks for a judgment no assertion can encode — look-and-feel, error-message tone, accessibility. Leave status unchanged and `Route: /al-steer T-NNN`; `/al-steer` decides whether it reopens for `/al-refine` or becomes an `Exploration Charter` for `/al-user-verification`.
 
 ## Gate event
 
-Once when the slice's `.yml` lands at the committed path. Verify task `status:` stays `ready-for-verification` and keeps `review: clean` — the commit adds a recording, no production AL, so the per-slice review still vouches for the slice diff. Gate report names slice (slug + `event-model.md` step), E2E example count, what user surface the recording exercises (Page action), next handoff `/al-user-verification T-NNN`. Stop shape on routing failures (production bug or unscriptable example → status unchanged, route `/al-steer`) follows [voice-contract.md](../../references/voice-contract.md): one stop line naming example / step / observed-vs-expected, state table (verify task ID, examples completed, example blocked on), next action.
+Once when the slice's recordings land committed. Verify task `status:` stays `ready-for-verification` and keeps `review: clean` — the commit adds recordings, no production AL, so the per-slice review still vouches for the slice diff. Gate report names the slice (slug + `event-model.md` step), the count of scenarios recorded, what user surface each exercises (Page action), and next handoff `/al-user-verification T-NNN`. Stop shape on a routing failure (production bug or unscriptable red → status unchanged, route `/al-steer`) follows [voice-contract.md](../../references/voice-contract.md): one stop line naming scenario / step / observed-vs-expected, state table (verify task id, scenarios recorded, scenario blocked on), next action.
 
-**Advisor checkpoint.** Call `advisor()` on the recording as it will be committed — the batch-pre-flight-green version, not a mid-fight draft a restructure superseded. The recording joins every future slice's pre-flight; a fragile or wrongly-asserting one multiplies false-red across the feature.
+**Advisor checkpoint.** Call `advisor()` on the recordings as they will be committed — the batch-pre-flight-green set, not a mid-fight draft a re-record superseded. Each recording joins every future slice's pre-flight; a fragile or wrongly-asserting one multiplies false-red across the feature.
 
 ## Feed
 
-Four moments narrate to the branch feed; the inner replay grind stays silent. At each, hand `/al-feed` a brief — what just happened, why a wary dev should care, the kind — and `/al-feed` composes the punchline + layers and appends the card. Compose by name; never inline its append.
+Four moments narrate to the branch feed; the per-scenario record-download-replay grind stays silent. At each, hand `/al-feed` a brief — what happened, why a wary dev should care, the kind — and `/al-feed` composes the punchline + layers and appends the card. Compose by name; never inline its append.
 
-- **verdict** · a `Scope: E2E` example seals green → user click-through behaves as the verify task planned; note example/surface and the equality/visibility-limited oracle.
-- **surprise** · a red read as a real system bug, recording *not* patched to fake the green → name the failing step, why this layer can't pin it, the route.
-- **verdict** · the cross-file pre-flight batch greens with the new `.yml` joined → every prior recording still plays together.
-- **landing** · the `.yml` lands committed and hands to `/al-user-verification` → the slice now has a saved replayable walkthrough.
+- **verdict** · a recorded scenario seals green on a fresh container → the user's click-through replays clean from nothing, so it is a real re-runnable regression guard; note scenario/surface and the equality/visibility-limited oracle.
+- **surprise** · a red read as a real system bug, the recording *not* patched to fake the green → name the failing step, why this layer can't pin it, the route.
+- **verdict** · the cross-file pre-flight batch greens with the new recordings joined → every prior recording still plays together.
+- **landing** · the recordings land committed and hand to `/al-user-verification` → the slice now has saved replayable walkthroughs for the behaviour no AL test could reach.
 
 ## Composition
 
 | | |
 |---|---|
-| **Invoked by**     | user. Suggested by `/al-code-review` per-slice (next-action when verify task `ready-for-verification` and `.yml` missing), `/al-steer` (state-read routing on a `review: clean` verify task with `Verification Plan` and no `.yml`) |
-| **Runs after**     | `/al-refine` filled the verify task's `Verification Plan`, `/al-code-review` per-slice stamped `review: clean` on the verify task at `ready-for-verification` |
-| **Hands off to**   | `/al-user-verification` on green. `/al-steer` on a production-bug or unscriptable red, status unchanged (routing per *Failure classification*). |
-| **Uses**           | `new-agent-container.ps1` (one spawn per invocation), `pagescript-replay.ps1` (`-File` inner loop, batch pre-commit), `al-symbols-mcp` / `grep` for page AL lookup, the repo's committed `pagescripts/recordings/*.yml` as replay-proven pattern source, recorder harvest ([`references/recorder-harness.md`](references/recorder-harness.md)), [`../../references/test-specification.md`](../../references/test-specification.md) (`Verification Plan` grammar), [`../../references/test-strategy.md`](../../references/test-strategy.md) (layer + push-down frame), [`references/bc-replay-yaml-format.md`](references/bc-replay-yaml-format.md) grammar, [`references/examples/`](references/examples/) |
+| **Invoked by**     | user. Suggested by `/al-code-review` per-slice (next-action when a verify task is `ready-for-verification` with `Record: yes` examples and no recordings yet), `/al-steer` (state-read routing on a `review: clean` verify task with un-recorded `Record: yes` examples) |
+| **Runs after**     | `/al-refine` filled the `Verification Plan` and marked the framework-limited examples `Record: yes`, `/al-code-review` per-slice stamped `review: clean` on the verify task at `ready-for-verification` |
+| **Hands off to**   | `/al-user-verification` on green (every `Record: yes` scenario recorded + batch pre-flight green). `/al-steer` on a production-bug or unscriptable red, status unchanged (routing per *Failure classification*). |
+| **Uses**           | `new-agent-container.ps1` (fresh spawn before each replay; one container at a time), `publish-apps.ps1`, `pagescript-replay.ps1` (`-File` per-scenario, batch pre-commit), BC's Page Scripting recorder driven by the user, Web Client deep links + `al-build.json` credentials (the user's entry), [`references/recorder-gestures.md`](references/recorder-gestures.md) (recording coaching), [`references/bc-replay-yaml-format.md`](references/bc-replay-yaml-format.md) (read a red / scope a surgical edit), [`../../references/test-specification.md`](../../references/test-specification.md) (`Verification Plan` grammar + `Record:` flag), [`../../references/test-strategy.md`](../../references/test-strategy.md) (layer + push-down frame) |
 | **Replan venue**   | `/al-steer` — production-bug and unscriptable reds route here with status unchanged (it opens the integration fix task or reopens the verify task to `ready` for `/al-refine`); push-down then lands the fix in `/al-implement` |
-| **Sidebands**      | `al-research` agent (BC surface behaviour the example asserts), `/grill-me` (intent on an example step the user must adjudicate) |
+| **Sidebands**      | `al-research` agent (BC surface behaviour an example asserts), `/grill-me` (intent on an example step the user must adjudicate) |
+
+## Running a recording
+
+Replay needs **Node 22–25** (`@microsoft/bc-replay` bundles `@playwright/test`; Node 26+ hangs in Playwright's browser-install per upstream `microsoft/playwright#40724`). Manage Node via **[Volta](https://volta.sh)**; on first run, `pagescript-replay.ps1` writes a minimal `pagescripts/package.json` and pins `node@22`. The script encapsulates spawn-then-replay (`-File <path>` single-file, no flag for batch); it handles app publish, npm install, and the `replay` invocation. The full option surface and failure-reading detail live in [`references/bc-replay-yaml-format.md`](references/bc-replay-yaml-format.md) §9.
 
 ## Out of scope
 
-- **Writing the examples themselves.** Journey Examples live in the verify task's `Verification Plan` in its file under `tasks/`, written by `/al-refine`. This skill consumes `Scope: E2E` only.
-- **Copilot `run-prompt`.** SaaS-tenant feature (gated by `Features.RunPrompt`); not runnable in a container. Grammar documented in the reference, not exercised here.
-- **Inventing custom-action / repeater control IDs.** AL search miss → harvest from the recorder ([`references/recorder-harness.md`](references/recorder-harness.md)), never guess. Recorder unopenable → report the limitation, fall back to user-provided or hand-authored YAML plus replay.
-- **Standalone YAML authoring outside the slice-cycle flow.** The grammar reference and examples support that use case directly; pattern-match a worked file and write by hand. This SKILL's generator is shaped for verify-task input.
+- **Authoring `.yml` from scratch.** The recorder is the generator; the agent coaches and replays. The only write the agent makes is a surgical, approval-gated edit to an existing recorder-produced file (above).
+- **Writing the examples themselves.** Journey Examples live in the verify task's `Verification Plan`, written by `/al-refine`, which also marks `Record: yes` / `Record: no`. This skill records the `Record: yes` set only.
+- **Walking the non-recorded scenarios.** `Record: no` Journey Examples, Contract Examples, and Exploration Charters belong to `/al-user-verification`.
+- **Copilot `run-prompt`.** SaaS-tenant feature (gated by `Features.RunPrompt`); not runnable in a container.

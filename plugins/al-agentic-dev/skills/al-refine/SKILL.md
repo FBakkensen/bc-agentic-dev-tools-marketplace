@@ -49,7 +49,7 @@ Unanswerable → cannot write the spec yet. Flip or keep `status: blocked` and r
 
 Spec how the slice is checked through its user/API-facing surface. Write only subsections that apply:
 
-- `Journey Examples` for `Scope: E2E`. `/al-page-script` records these only.
+- `Journey Examples` for `Scope: E2E`, each marked `Record: yes` or `Record: no` (see below). `/al-page-script` records the `Record: yes` set; `/al-user-verification` walks the `Record: no` set.
 - `Contract Examples` for `Scope: Contract`. Name the client or harness.
 - `Exploration Charters` for `Scope: Exploration`. Charter plus 2-4 prompts; no exact click script.
 
@@ -58,6 +58,7 @@ Answer before writing:
 - **Which slice does this verify?** Read `slice:` in the task file's frontmatter, resolve to `event-model.md` timeline step. Title + description quote that step's Role, Action, Business Event, View, Status vocabulary.
 - **Which surface is exercised?** BC Web Client, API endpoint, Postman collection, curl, integration harness, or another named client. Name the surface inline so downstream skills do not guess.
 - **Which examples cover checkable outcomes?** UI workflow → at least one `E2E` journey. API/client slice → at least one `Contract` example. Each has action bullets and observable-check bullets.
+- **Which E2E journeys need a recording?** Mark each `E2E` example `Record: yes` only when **no AL test layer can automate the behaviour** (control add-in, canvas, web-client-only behaviour) — the generation-time push-down call (see [`test-strategy.md`](../../references/test-strategy.md)). Behaviour a Unit or Integration test already pins (or that a technical task in this slice should pin — push it down via `/al-steer` rather than record it) is `Record: no`: walked for acceptance, never recorded, because a recording that doubles a lower test is pure cost. Most examples are `Record: no`; a slice with zero `Record: yes` skips `/al-page-script`.
 - **Which exploration is useful?** Add charters for new workflows, major workflow changes, and error/user-guidance changes. Exploration findings become tasks unless a functional failure is observed.
 - **Which `event-model.md` slots are cited?** Every Role / Action / Business Event / View / Status name in a verify example is backed by `grep` against `event-model.md` or workspace lookup on the underlying BC surface.
 

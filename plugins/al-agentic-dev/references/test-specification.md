@@ -179,21 +179,24 @@ Allowed verify scopes:
 
 | Scope | Mechanism | Use |
 |---|---|---|
-| `E2E` | Page script / bc-replay | BC Web Client workflow acceptance check. |
+| `E2E` | BC Web Client workflow: either **user-recorded** (Page Scripting recorder → bc-replay) or **user-walked** in `/al-user-verification` | BC Web Client workflow acceptance check. |
 | `Contract` | Postman, curl, integration harness, or named client | API or external-client acceptance check. |
 | `Exploration` | Guided user walk (user drives the browser, agent guides) | UX/usability judgement and observational testing. |
 
 Normal user-facing verify tasks require at least one `E2E` example. API/client-facing verify tasks require at least one `Contract` example. `Exploration` is optional, recommended for new workflows, changed workflows, and error-guidance changes.
 
+**The `Record:` flag (E2E only).** Every Journey Example carries `Record: yes` or `Record: no` — the generation-time push-down call (see [`test-strategy.md`](test-strategy.md)). `Record: yes` means **no AL test layer can automate this behaviour** (control add-in, canvas, web-client-only behaviour), so `/al-page-script` guides the user to record it as a `.yml` regression guard; `Record: no` means a Unit/Integration test already pins the regression, so the example is **walked by the user in `/al-user-verification` for acceptance but not recorded** — recording it would double a lower test. Most slices are `Record: no` throughout; a slice can legitimately have zero `Record: yes` examples (then `/al-page-script` is skipped). Either way the `Observable Checks` are mandatory — they are the grounded gating values the user-walk checks against, which `event-model.md` alone does not carry for edge/error cases.
+
 ### Journey Examples
 
-Use for `E2E`.
+Use for `E2E`. Each carries a `Record:` flag (above): `Record: yes` → `/al-page-script` records it; `Record: no` → `/al-user-verification` walks it.
 
 ```markdown
 ### Journey Examples
 
 #### V1 BlocksReleaseFromSalesOrderPage
 Scope: E2E
+Record: no                  # an Integration test pins the block; user walks it for acceptance
 Role: Sales Processor
 Action:
 - Open Sales Order for blocked Customer.
@@ -201,9 +204,18 @@ Action:
 Observable Checks:
 - Blocked-customer error is visible.
 - Sales Order Status remains `Open`.
+
+#### V2 ReleaseRefreshesCanvasFactbox
+Scope: E2E
+Record: yes                 # factbox repaint is canvas — no AL test layer can assert it
+Role: Sales Processor
+Action:
+- Open the released Sales Order.
+Observable Checks:
+- The status canvas factbox shows `Released`.
 ```
 
-IDs: `V1`, `V2`, `V3`.
+IDs: `V1`, `V2`, `V3`. `Record:` is mandatory on every E2E example; `Role` / `Action` / `Observable Checks` apply to both flag values (the recorder encodes the checks as Validate steps; the walk reads them off the screen).
 
 ### Contract Examples
 

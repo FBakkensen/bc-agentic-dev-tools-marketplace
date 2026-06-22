@@ -37,8 +37,8 @@ Name entries that need a decision: severity, ID, symptom in codebase's terms (ob
 
 - **Verify task** (`kind: verify`): `ready` → `/al-refine T-NNN`. `done` → downstream E2E/Contract/Exploration evidence exists. `blocked` → name the failure inline and route per its trigger. `ready-for-verification` routing:
   - No `review: clean` → `/al-code-review T-NNN`.
-  - `review: clean` + `Journey Examples` but no `.yml` → `/al-page-script T-NNN`.
-  - `review: clean` + `.yml` exists or no E2E → `/al-user-verification T-NNN`.
+  - `review: clean` + `Record: yes` Journey Examples whose recordings are missing → `/al-page-script T-NNN`.
+  - `review: clean` + all `Record: yes` recordings present (or no `Record: yes` example) → `/al-user-verification T-NNN`.
 
 - **Slice-done, no fresh verify proof** (every technical task `done`, verify task `blocked` only because deps were pending): stale gate-open. Route back to `/al-implement` closeout, or open to `ready` for `/al-refine` only after explicit user ack.
 

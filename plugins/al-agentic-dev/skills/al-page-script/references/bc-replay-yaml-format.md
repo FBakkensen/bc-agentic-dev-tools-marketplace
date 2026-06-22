@@ -1,7 +1,12 @@
-# bc-replay recording YAML — format reference
+# bc-replay recording YAML — format reference (read / surgical-edit)
 
-Complete reference for the `.yml` recordings consumed by `@microsoft/bc-replay` and produced by
-the BC web client **Settings ⚙ → Page scripting (Preview)** recorder.
+Reference for the `.yml` recordings consumed by `@microsoft/bc-replay` and produced by the BC web
+client **Settings ⚙ → Page scripting (Preview)** recorder. **The recorder is the generator and the
+user records — the agent does not author `.yml` from this file.** Read it for two jobs only: to
+**classify a replay red** (§9 *Reading a failure*, plus the step/locator/operator vocabulary to
+understand what a failing step targets) and to **scope a surgical, approval-gated edit** to an
+existing recorder-produced file (bump a `wait`, fix one `operation:`, add one missed Validate). For
+the recorder gestures the agent coaches, see [`recorder-gestures.md`](recorder-gestures.md).
 
 > **No official schema exists.** Microsoft's `devenv-page-scripting` Learn article is prerelease,
 > workflow-first, and shows only fragmentary YAML. The npm package ships the player as a closed
@@ -17,9 +22,6 @@ the BC web client **Settings ⚙ → Page scripting (Preview)** recorder.
 > player rejects), not a missing control or a dialog. To re-derive: mine the web-client bundle's
 > recorder serializer + `playRecording` dispatch, then confirm by recording the gesture and reading
 > the emitted `.yml`.
-
-Worked, replay-green recordings live in [`examples/`](examples/) — read those alongside this grammar;
-agents author far more reliably by pattern-matching a full file than from prose.
 
 How to read the validation tags used below:
 
@@ -84,8 +86,9 @@ Leaf kinds: **`field:`** (a control), **`action:`** (an action). Special page fo
 `runtimeId`/`runtimeRef` are **file-local correlation tokens, not server control IDs.** A
 `page-shown` step mints `runtimeId: <tok>`; every later step acting on that open page carries
 `runtimeRef: <tok>`. The tokens only need to be internally consistent — recorded values are base-36
-(`b71`), but invented tokens (`pg1`, `setup1`) replay green. **This is why an agent can author
-recordings from scratch.** [replayed: synthetic-token swap]
+(`b71`). When reading a red, a `runtimeRef` with no matching `page-shown` `runtimeId` is a
+correlation break; in a surgical edit, never renumber a token without updating every reference.
+[replayed: synthetic-token swap]
 
 ---
 
@@ -184,8 +187,7 @@ BC bump if it reds as a reference mismatch. Do **not** author a filter via `part
   Read row values after a fresh re-open of the page, or re-anchor first.
 - A new row inserts **above** the current row (AutoSplitKey midpoint), not at the bottom.
 
-Authoring rule: **one written row per page visit** — `Control_New` → `input` one cell →
-`close-page`; re-open the page for the next row.
+These are why a multi-row grid recording reds when a scenario writes several rows in one visit; the recording-side rule (one written row per page visit) lives in [`recorder-gestures.md`](recorder-gestures.md).
 
 ### `validate` — assert a control value  [replayed: `=`,`<>` · source: rest]
 
@@ -423,30 +425,30 @@ replay-log `error:` node is authoritative for *which step* failed.
 
 ---
 
-## 10. Authoring checklist for agents
+## 10. Reading a red / scoping a surgical edit
 
-1. **Targets bind to the AL control/field NAME on the live UI, not the display caption.**
-   [replayed: `field: Profit %` bound a column captioned 'Margin %'] The recorder writes captions
-   only into `description:`. A perfectly-shaped recording still fails with
-   `Field '<name>' was not found.` if the named control isn't rendered at replay time. Read the
-   page AL for the exact field/control **name** before authoring, then replay-and-fix. (A
-   removed/obsoleted field is the classic silent rot — confirm it's on the page.)
-2. **Mint a `runtimeId` on every `page-shown`; reuse it as `runtimeRef`** on every step acting on
-   that page. Tokens are arbitrary but must be consistent within the file.
-3. **`copy-*` use `source:`; everything else uses `target:`.** Don't mix them.
-4. **Containers nest via `steps:`.** `scope`/`for-each`/`include` hold child steps.
-5. **Default operator is `=`.** Use `isTrue` for boolean/expression assertions.
-6. **Validate the file by replay**, not by inspection — the interpreter is server-side and
-   version-bound.
-7. **Recordings must be self-contained.** Start from a known state (the role center) and
-   `navigate` in. A recording captured mid-session that assumes a page is already open fails on
-   replay with `Unexpected page. Was expecting '<X>' but got '<role center>'`. *(The canonical
-   recordings in [`examples/`](examples/) all replay green on BC 28.0.49873.0.)*
-8. **Don't inflate `timeout:` to force a slow scenario green.** The default per-test cap is 120s
-   (`playwright.config.js`); a scenario that needs more is usually too long — split it. A recording
-   that only passes at `timeout: 600` is a smell, not a tuning need: it often means an unanswered
-   platform dialog is eating the clock (see §9 *Reading a failure*), not that the work is genuinely
-   that slow.
+The agent does not author recordings (the recorder does), but it reads them to classify a red and
+occasionally makes a one-line approval-gated edit. The facts that matter for both:
+
+1. **Targets bind to the AL control/field NAME, not the display caption.** [replayed: `field: Profit %`
+   bound a column captioned 'Margin %'] The recorder writes captions only into `description:`. A
+   `Field '<name>' was not found.` red means the named control isn't rendered at replay — often a
+   removed/obsoleted field, i.e. the surface legitimately moved (a *bad recording* or a *production
+   bug*, per SKILL *Failure classification*), never a reason to rename the target by guessing.
+2. **A `runtimeRef` must match a minted `runtimeId`.** A `page-shown` mints the token; later steps
+   reuse it. An orphaned `runtimeRef` is a correlation break. Never renumber a token in a surgical
+   edit without updating every reference.
+3. **`copy-*` use `source:`; everything else uses `target:`.** Containers (`scope`/`for-each`/`include`)
+   nest via `steps:`. Default operator is `=`; `isTrue` for boolean/expression assertions.
+4. **Validate a change by replay**, not by inspection — the interpreter is server-side and
+   version-bound. A surgical edit is not done until it replays green on a fresh container.
+5. **`Unexpected page. Was expecting '<X>' but got '<role center>'`** means the recording isn't
+   self-contained (it assumed a page was already open). That is a re-record (start from the role
+   center / a deep link), not an edit.
+6. **A `timeout: 600`-only green is a smell, not a tuning need.** The default per-test cap is 120s
+   (`playwright.config.js`); a scenario needing more usually has an unanswered platform dialog eating
+   the clock (see §9 *Reading a failure*), or is too long and should be split — re-record, don't
+   inflate the timeout.
 
 ---
 
@@ -483,90 +485,3 @@ Behaviours beyond a locator variant:
 - **Column filter** — the §4 *Column filter* composition (`FilterByColumn` → Apply Filter dialog → `input` → `invoke action: null`). Never a `part: null`/`page: null`/`{scope: filter}` spacer chain — that reds `Part 'null' was not found.`
 - **Show more / Show less / FastTab expand-collapse are NOT recorded** — they're client-side rendering/density toggles; a session doing all three produces zero steps. And they don't need to be: a field hidden by Show-less (or a collapsed FastTab) is still **reachable on replay** — the player resolves controls via the logical page model, not the rendered DOM. Proven: a `copy-value` on a Show-less-hidden field replayed green. Target hidden fields by name directly; never try to author a Show-more step.
 
----
-
-## 12. Authoring without the recorder ("blind")
-
-You can hand-author a replayable recording from the AL source + this reference, with no recorder
-pass, for the cases below (a blind-authored navigate + `page-shown` recording replays green).
-
-**Works blind** (targets derivable from AL):
-- `navigate` to a named page + `page-shown`.
-- `input` / `validate` / `focus` on a named `field` — including Show-more-hidden fields (§11).
-  Use the AL control/field **name**, not the caption (§10.1).
-- **System actions** with stable names and already-proven invoke types: `Control_New`, `Control_Refresh`, `Cancel`, `OK`, `CloseOk`, `Yes`, `No`; `invokeType: New|Edit|DrillDown|Lookup|Refresh`.
-- **Column filter** via the §4 composition — `FilterByColumn` + the constant Apply-Filter `automationId`.
-- Mint your own `runtimeId`/`runtimeRef` (file-local, §3); start self-contained (§10.7).
-
-**Needs recorder evidence** (identifiers or invoke shapes not derivable from AL):
-- **Reports** — not pages: `navigate page: <Report>` fails (`metadata object … not found`); reached via search/an action.
-- **Custom actions** that serialize as generated IDs (`Action37`) instead of their name — varies per page.
-- **Repeater** control names (`Control1`), **cue** part-nests, **peek/lookup** repeaters, **NavigatePage wizard** paging.
-- **Uncertain modal close actions / invoke types**. Lookup modal close actions, for instance, record as `invokeType: LookupOk` / `invokeType: LookupCancel` — recorder-discovered, not in the AL.
-
-Practical rule: author blind first — this grammar + [`examples/`](examples/) + the repo's
-committed `pagescripts/recordings/*.yml` (replayed green against this very app → local ground
-truth for IDs and invoke shapes). Recording = escalation for an unknown (custom-action ID,
-repeater ID, modal close invoke type, unclear gesture), never journey pre-recording — a pass is
-slow, and the replay loop already proves the file. One pass per unknown → smallest gesture → back
-to authoring.
-
-### Recorder harvesting for un-derivable IDs
-
-Recorder capture is an evidence technique, not the replay oracle. Know what it can't show: row
-clicks are **never serialized** — selection/commit are implicit, so a harvested gesture that only
-selects a row yields no step (§4 *Anchoring a just-created row*). **Drive by pixel coordinates,
-whatever the path**: BC's iframe stack defeats Playwright locator selectors — every
-role/text/title click → `No visible element found across frames for click target`, recorder
-captured `steps: []` [refuted]. Trusted coordinate input is what the recorder captures
-[replayed→captured].
-
-Two paths:
-
-- **Chrome MCP** (`claude-in-chrome`) — proven end-to-end: screenshot → coordinate click →
-  capture. Agent signs in itself: `container.username` / `container.password` from repo-root
-  `al-build.json` (defaults `admin` / `P@ssw0rd`), local container hosts only. Caveat: HTTP
-  containers strand the download as `Unconfirmed *.crdownload` — bytes complete, copy it out.
-- **Plugin harness** (below) — when Chrome MCP is absent (headless). Lifecycle, auth,
-  download capture [proven]. Coordinate click `{"cmd":"click","x":<n>,"y":<n>}` →
-  `page.mouse.click` [not yet session-proven — verify on first use]; locator commands reach
-  recorder chrome and dialog buttons only.
-
-```powershell
-node <plugin>/scripts/bc-pagescript-recorder.mjs --repo-root <repo>
-```
-
-`<plugin>` is the installed `al-agentic-dev` plugin root. The harness resolves Playwright from the
-target repo's `pagescripts/package.json`, reads auth and `serverInstance` from
-`<repo>/al-build.json`, derives the default container host from the current branch, and allows
-`BC_CONTAINER`, `BC_COMPANY`, and `BC_PAGE` overrides. It saves the downloaded YAML under a
-repo-local `.tmp/bc-pagescript-recorder/...` run directory unless `--output` is passed.
-
-The harness owns only recorder lifecycle:
-
-1. Open the BC Web Client for the target container/company.
-2. Open Settings -> Page scripting (Preview).
-3. Start a recording.
-4. Emit `READY_FOR_AGENT_FLOW`.
-5. Let the coding agent perform the task-specific flow.
-6. Stop the recorder.
-7. Save/download `Recording.yml`.
-8. Read and return the YAML path and preview.
-
-The harness must not contain the business/user flow. After `READY_FOR_AGENT_FLOW`, the coding agent
-drives the smallest representative gesture that produces the uncertain YAML shape, then sends
-`stopSave` — capture answers the unknown; it does not pre-record the journey. The downloaded `.yml`
-carries the real `repeater`/`action` IDs and invoke types verbatim; use it as syntax ground truth,
-then replay the final authored recording with `pagescript-replay.ps1 -File` and the full batch gate.
-
-The harness emits JSON lines such as `start`, `recording`, `READY_FOR_AGENT_FLOW`, `download`, and
-`yml`. Its stdin commands are `screenshot`, `click`, `key`, `type`, `wait`, `stopSave`, `readYml`, and
-`close`.
-
-Known proof shape: recording started; the agent opened a list row; the harness downloaded
-`Recording.yml`; the YAML contained the row `invoke` on the list's repeater and `page-shown` for
-the card. (Drive path unrecorded, predates the locator refutation → proves lifecycle, not drive
-mode.)
-
-If the harness cannot open BC or the recorder, report the exact limitation and fall back to
-user-provided recorder YAML or hand-authored YAML plus replay.

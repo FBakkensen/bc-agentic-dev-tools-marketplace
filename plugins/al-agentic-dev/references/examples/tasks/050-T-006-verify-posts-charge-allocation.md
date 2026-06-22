@@ -15,6 +15,7 @@ Verification Plan:
 
 ### V1 PostsBalancedAllocationFromSalesOrderPage
 Scope: E2E
+Record: no
 Role: Order Processor
 Action:
 - Open Sales Order Card for a Sales Order with item charge quantity 10 and allocations 4 + 6.
@@ -26,6 +27,7 @@ Observable Checks:
 
 ### V2 BlocksMismatchedAllocationFromSalesOrderPage
 Scope: E2E
+Record: yes
 Role: Order Processor
 Action:
 - Open Sales Order Card for a Sales Order with item charge quantity 10 and allocations 6 + 6.
@@ -46,5 +48,6 @@ Prompts:
 - Does the flow return the user to a useful correction point?
 
 Closeout:
-- E2E: `pagescripts/recordings/007-sales-charge-validation__post-validates-allocation.yml`
-- Verification: Journey Examples passed; Exploration Charter recorded no blocking usability findings
+- E2E walked (`Record: no`): `V1` posted invoice + `Released` status confirmed live by the user
+- E2E recorded (`Record: yes`): `V2` → `pagescripts/recordings/007-sales-charge-validation__post-validates-allocation__02.yml` replay green (inline mismatch breakdown is web-client-only — no AL test layer reaches it)
+- Exploration: `X1` recorded no blocking usability findings

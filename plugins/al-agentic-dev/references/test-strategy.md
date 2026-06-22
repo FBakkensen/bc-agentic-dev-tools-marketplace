@@ -12,13 +12,15 @@ The terms are sourced — a sourced term has an external definition the project 
 |---|---|---|---|---|
 | **Unit** | AL-Runner (fast, in-process) | assertion, isolated | red-first driver | `/al-implement` (`-UnitTestOnly`), `/al-build` |
 | **Integration** | container + TestPage | assertion, transactional rollback | red-first driver | `/al-implement`, `/al-build` |
-| **E2E** | bc-replay page-script (fresh container, no rollback) | assertion, **oracle-limited** | UI acceptance regression guard | `/al-page-script`; batch run by `/al-user-verification` |
+| **E2E** | bc-replay page-script (fresh container, no rollback) — **user-recorded** in BC's Page Scripting recorder | assertion, **oracle-limited** | UI acceptance regression guard, **reserved for behaviour no lower layer can automate** | `/al-page-script` (guides the recording); batch run by `/al-user-verification` |
 | **Contract** | Postman, curl, integration harness, or named client | assertion, client-facing | API/client acceptance regression guard | `/al-user-verification`; harness named by `Verification Plan` |
 | **Exploratory** | guided user walk (user drives the real client; agent guides, records, routes) | **sapient judgement** (the user's) | usability oracle (findings → tasks) | `/al-user-verification` |
 
 The mapping is **primary mechanism, not a wall.** AL-Runner is the fast subset / pre-gate; the container is authoritative and runs both isolated decision and TestPage `[Test]` codeunits. Speed and oracle fidelity, not a rigid unit/integration boundary, decide where a test lives. Placement mechanics — the two-peer-test-app layout, the AL Runner capability boundary, isolation semantics, and the test-app authoring contract — live in [test-layout.md](test-layout.md).
 
 **Push tests down.** Cover behaviour at the lowest (fastest, most isolated, most sensitive) layer that *can* cover it; reserve the slow, brittle upper layers for what lower layers genuinely cannot reach. The inverted shape where E2E and contract checks carry the primary proof is the Ice-Cream-Cone anti-pattern. E2E, Contract, and Exploratory checks are **written after** the code from verify-task examples: they are regression guards and quality probes, **not** red-first design drivers. Expecting a page-script recording to "go red first" is a category error.
+
+Push-down fires at **generation time**, not only on a failure. The feedback loop is faster the lower the layer (a Unit case greens in seconds, an Integration case in minutes, a page-script replay in many more), so do not *create* a page-script recording for behaviour a Unit or Integration test could pin — a recording that doubles a lower test is pure cost. `/al-refine` makes that call when it marks a Journey Example `Record: yes` (record it) or `Record: no` (walked by the user, not recorded): `Record: yes` only where AL Runner / TestPage genuinely cannot reach the behaviour (control add-ins, canvas, web-client-only behaviour). Pushing down is a **trade-off, not an absolute** — it can cost a seam or an abstraction whose only justification is testability; that judgment has two homes, the right design up front (`/al-design`, `testability.md`) and refactor-to-push-down (`/al-refactor`). A recording is the signal that pressure failed or wasn't worth paying.
 
 ## The three feedback rules
 
