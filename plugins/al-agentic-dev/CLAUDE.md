@@ -111,6 +111,7 @@ Notable script-backed skills:
 ```
 agents/                          # Declarative plugin agents (enforced tools/model envelope), spawned by al-agentic-dev:<name>
 ├── al-doc-verify.md             # haiku, read-only: markdown artifact integrity verdict (was a skill)
+├── al-red-green.md              # sonnet, write: one AAA case RED→GREEN; spawned per case by /al-implement
 ├── al-research.md               # sonnet: BC fact verification, evidence-bar escalation seat (was a skill)
 ├── al-review-lens.md            # sonnet, read-only: one focused AL/BC review pass; spawned N× by /al-code-review + /al-refactor
 └── al-review-lens-bc.md         # sonnet + bc-code-intelligence MCP: the BC-specific review lens variant

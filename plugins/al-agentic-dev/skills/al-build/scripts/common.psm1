@@ -2449,6 +2449,79 @@ function Clear-PublishState {
 }
 
 # =============================================================================
+# App Sync Barrier
+# =============================================================================
+
+function Wait-BCAppsSynced {
+    <#
+    .SYNOPSIS
+        Block until the named apps have finished synchronizing in the container.
+    .DESCRIPTION
+        A dev-endpoint publish (Publish-BcContainerApp -useDevEndpoint -syncMode
+        ForceSync) returns before the server-side schema sync and install commit.
+        Opening a test client session during that settling window binds it to
+        in-flux metadata; when the sync lands mid-run the BC client raises
+        "Sorry, we just updated this page" and truncates the run, which can
+        surface as a partial pass. Polling SyncState to 'Synced' (and NeedsUpgrade
+        clear) before any test session opens closes that race WITHOUT restarting
+        the service tier — the container and its warm metadata cache stay up.
+    .PARAMETER ContainerName
+        BC container name.
+    .PARAMETER AppNames
+        App names to wait for; any other installed app is ignored.
+    .PARAMETER Tenant
+        Tenant to query (default 'default').
+    .PARAMETER TimeoutSeconds
+        Upper bound on the wait. On timeout the gate proceeds (warn, not throw):
+        the barrier is a race guard, not a correctness gate.
+    #>
+    param(
+        [Parameter(Mandatory)][string]$ContainerName,
+        [string[]]$AppNames = @(),
+        [string]$Tenant = 'default',
+        [int]$TimeoutSeconds = 120
+    )
+    $targets = @($AppNames | Where-Object { $_ })
+    if ($targets.Count -eq 0) { return }
+    Import-BCContainerHelper
+
+    $sw = [Diagnostics.Stopwatch]::StartNew()
+    $deadline = (Get-Date).AddSeconds($TimeoutSeconds)
+    while ($true) {
+        # $queried distinguishes "queried, nothing pending" (done) from "query
+        # failed" (retry) — a failed query must never read as Synced.
+        $queried = $false
+        $pending = @()
+        try {
+            $info = Get-BcContainerAppInfo -containerName $ContainerName -tenant $Tenant -tenantSpecificProperties
+            # SyncState arrives as a deserialized enum: GetType() is Int32 (e.g. 4)
+            # and -eq 'Synced' is FALSE, but .ToString() is 'Synced'. Compare via
+            # ToString so the literal-string match holds for both shapes; a null
+            # state is treated as still-pending (unknown), never as Synced.
+            $pending = @($info | Where-Object {
+                $targets -contains $_.Name -and (
+                    ($null -eq $_.SyncState) -or ($_.SyncState.ToString() -ne 'Synced') -or ($_.NeedsUpgrade -eq $true)
+                )
+            })
+            $queried = $true
+        } catch {
+            Write-BuildMessage -Type Detail -Message "App sync check failed (will retry): $($_.Exception.Message)"
+        }
+        if ($queried -and $pending.Count -eq 0) {
+            Write-BuildMessage -Type Detail -Message "Published apps synced ($([int]$sw.Elapsed.TotalMilliseconds)ms)"
+            return
+        }
+        if ((Get-Date) -ge $deadline) {
+            $names = ($pending | ForEach-Object { $_.Name }) -join ', '
+            if (-not $names) { $names = '(query failing)' }
+            Write-BuildMessage -Type Warning -Message "Timed out after ${TimeoutSeconds}s waiting for app sync: $names. Proceeding."
+            return
+        }
+        Start-Sleep -Milliseconds 500
+    }
+}
+
+# =============================================================================
 # Build Timing History
 # =============================================================================
 
@@ -2955,6 +3028,7 @@ Export-ModuleMember -Function @(
     'Get-BCAgentContainerName'
     'Test-BCAgentContainerHealthy'
     'Ensure-BCAgentContainer'
+    'Wait-BCAppsSynced'
     'Import-BCContainerHelper'
 
     # Agent Container Registry

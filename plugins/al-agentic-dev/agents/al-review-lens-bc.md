@@ -37,6 +37,12 @@ When this lens's goal names BC best-practice or simplicity, hunt hand-rolled cod
 
 Two carve-outs keep this from over-firing. **Production only** — never flag test thoroughness; Unit-first TDD and the `/al-mutate` gate are not over-build. **Not negligence** — never flag trust-boundary validation, posting/ledger correctness, or permission checks as "extra." A deliberate shortcut that names its ceiling and upgrade path in a one-line comment is a kept decision, not a finding.
 
+## Platform gotchas the topic store misses (match by hand)
+
+The `bc-code-intelligence` store is incomplete; a few high-cost BC correctness traps are not in it (nor in MS Learn / alguidelines / BCQuality) and must be matched directly:
+
+- **`xRec` change-detection in a code-reachable `OnValidate`.** `if Rec.X <> xRec.X` (or a `GuiAllowed`-gated variant) used to gate a cascade/recompute is silently wrong when the validate can fire from code (engine recalc, web service, background, a programmatic `Validate`) — `xRec` is the prior value only from the UI; from code it is empty or `= Rec`. The fix is a persisted-row `Get` compare. See `${CLAUDE_PLUGIN_ROOT}/references/testability.md` → "compare the persisted row, never `xRec`".
+
 ## Dispatch
 
 Run the `find_bc_knowledge` → drop-noise → `get_bc_topic` dispatch per `${CLAUDE_PLUGIN_ROOT}/references/bc-code-intelligence-dispatch.md` in full — including the noise drop-list and the AL false-positive guards. Match each surviving topic's `anti_pattern_indicators` against the diff yourself; an indicator the code does not exhibit is not a finding. The MCP recommends leads, not bugs.

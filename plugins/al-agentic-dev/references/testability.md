@@ -152,6 +152,17 @@ Does the dependency the test can't run involve...
   └─ only a record's own data fields? → no seam — AL Runner runs the real record
 ```
 
+**Change detection over an own field: compare the persisted row, never `xRec`.** A field `OnValidate` that gates on "did this value actually change" must not read `xRec` when the validate can fire from code. `xRec` holds the prior value only from the **UI**; from code — engine recalc, web service, background session, a programmatic `Validate(Field, Value)` — it is empty or `= Rec` (MS Learn: `xRec` *"might share … underlying state with `Rec`"*; [Hougaard](https://www.hougaard.com/are-you-still-using-xrec-in-al-and-business-central/): *"empty … from non-UI contexts"*). So `if Rec.X <> xRec.X` is correct on the page and silently wrong off it — and the `if GuiAllowed` patch is, in Hougaard's words, *"fragile, not portable, and difficult to test."* Re-`Get` the persisted row instead — inside `OnValidate`, before `Modify`, the database still holds the old value:
+
+```al
+PriorRec.SetLoadFields("X");          // SetLoadFields satisfies PC0030 on the Get
+if PriorRec.Get(Rec."Primary Key") then
+    if PriorRec."X" = Rec."X" then
+        exit;                          // no real change → do not cascade / recompute
+```
+
+Identical from UI, code, API, and background, and unit-provable — AL Runner does not wire `xRec` for a code-path field `OnValidate` either, so it reproduces the platform exactly. Neither MS Learn, alguidelines, nor BCQuality documents this; alguidelines' No. Series pattern even ships the `xRec` change-guard as canonical, so reviews must catch it by hand (see the BC review lens).
+
 ## Five kinds of test double
 
 Meszaros taxonomy. Use the simplest kind that makes the test pass.

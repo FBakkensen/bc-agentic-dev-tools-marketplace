@@ -296,17 +296,40 @@ Start-Step 'publish'
 Invoke-ALPublish -AppDir $config.AppDir -Force:$Force
 Stop-Step 'publish'
 
-# Step 8: Publish and test each test app, collecting results
+# Step 8: Publish every test app, wait for the sync to settle, then run tests.
+# A dev-endpoint ForceSync publish returns before the server-side schema sync
+# commits; opening a test session against settling metadata — or publishing
+# under an already-open session — invalidates the session's page metadata
+# ("Sorry, we just updated this page") and truncates the run, which can surface
+# as a partial pass. Publishing all apps before any test session opens, and
+# waiting for SyncState to reach Synced, removes that race without a service-tier
+# restart (the container stays warm).
+
+# Step 8a: Publish all test apps
 foreach ($testAppDir in $config.TestApps) {
     $dirName = Split-Path $testAppDir -Leaf
-
-    # Publish test app
     Start-Step "publish-test-$dirName"
     $testForcePublish = $Force -or $mainAppNeedsPublish
     Invoke-ALPublish -AppDir $testAppDir -Force:$testForcePublish
     Stop-Step "publish-test-$dirName"
+}
 
-    # Run tests
+# Step 8b: Sync-completion barrier — wait until the main app and every test app
+# report Synced before the first test session opens.
+Start-Step 'wait-apps-synced'
+$publishedAppNames = @()
+$mainAppJsonForSync = Get-AppJsonObject $config.AppDir
+if ($mainAppJsonForSync) { $publishedAppNames += $mainAppJsonForSync.name }
+foreach ($testAppDir in $config.TestApps) {
+    $testAppJsonForSync = Get-AppJsonObject $testAppDir
+    if ($testAppJsonForSync) { $publishedAppNames += $testAppJsonForSync.name }
+}
+Wait-BCAppsSynced -ContainerName $config.ContainerName -AppNames $publishedAppNames -Tenant $config.Tenant
+Stop-Step 'wait-apps-synced'
+
+# Step 8c: Run tests for each test app, now against committed metadata
+foreach ($testAppDir in $config.TestApps) {
+    $dirName = Split-Path $testAppDir -Leaf
     Start-Step "test-$dirName"
     $outputDir = Join-Path $baseResultsPath $dirName
     $result = Invoke-ALTest -TestDir $testAppDir -OutputDir $outputDir

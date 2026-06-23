@@ -19,12 +19,12 @@ Two entry modes: the normal **task-pick** above, and **fix-mode**, driven by `/a
 - `specs/<branch>/` holds the `tasks/` folder + `architecture.md`. Missing → `/al-design`.
 - Target task `kind: technical`. `kind: verify` → **Stop**; route via `/al-steer` or `/al-code-review` based on verification state. `kind: provision` → `/al-provision`; `kind: breaking-change` → `/al-validate-breaking-changes` (ops tasks, run-and-flip, never reach `ready-for-implementation`).
 - Target task `status: ready-for-implementation` with populated `Test Specification`. Plain `ready` → **Stop**, `/al-refine T-NNN`. `ready-for-implementation` with empty or missing `Test Specification` → **Stop**, `/al-steer`; status and proof disagree. `blocked` → `/al-steer`. `done` → downstream evidence exists; do not reopen here — **except in fix-mode**, where `/al-code-review` reopens the finding's originating `done` task on purpose.
-- Before code (not at refactor), read [`test-specification.md`](../../references/test-specification.md), [`test-strategy.md`](../../references/test-strategy.md), [`tdd.md`](../../references/tdd.md), [`test-layout.md`](../../references/test-layout.md), [`testability.md`](../../references/testability.md), [`voice-contract.md`](../../references/voice-contract.md), [`thrift-rules.md`](../../references/thrift-rules.md), and [`bc-code-intelligence-dispatch.md`](../../references/bc-code-intelligence-dispatch.md). Production names and signatures arrive minted in the task's `New and Modified Objects`; construct lookups stay this skill's own.
+- Before code (not at refactor), read [`test-specification.md`](../../references/test-specification.md) and [`voice-contract.md`](../../references/voice-contract.md). Production names and signatures arrive minted in the task's `New and Modified Objects`; the `al-red-green` agent reads implementation references (`tdd.md`, `test-layout.md`, `testability.md`, `thrift-rules.md`, `bc-code-intelligence-dispatch.md`) on each spawn.
 
 ## What this session answers
 
 - **Seam.** Read `architecture.md` R → P → W boundary, module map, brownfield touchpoints. Name seam in BC vocab: procedure to extract, event to subscribe, interface to implement, or page/action to wire.
-- **AL surface.** Build against the task's `New and Modified Objects` signatures — production surface only; test codeunits and procedures are this skill's to mint. In-object drift (procedure rename, parameter change, visibility flip, helper procedure, field addition on a named object): absorb, reconcile the section to actuals before `done`, note in `Contract notes`.
+- **AL surface.** Build against the task's `New and Modified Objects` signatures — production surface only; test codeunits and procedures are minted by the `al-red-green` agent per case. In-object drift (procedure rename, parameter change, visibility flip, helper procedure, field addition on a named object): absorb, reconcile the section to actuals before `done`, note in `Contract notes`.
 - **AAA order.** `Unit` cases first, then `Integration`, in coverage-ID order. One case red → green before the next.
 - **End.** `status:` `ready-for-implementation` → `done`; final full `/al-build` green. User/API-facing slice-done opens the slice verify task to `ready` for `/al-refine`. Backend-only slice-done announces `/al-code-review` per-slice. Feature-done announces `/al-code-review` per-feature.
 
@@ -38,37 +38,23 @@ RED → GREEN → gate, one case, then next. Bulk-RED locks test surface before 
 
 Default order:
 
-1. `Unit` cases red/green via `/al-build -UnitTestOnly` when `unitTestApp` is configured.
-2. `Integration` cases red/green via full `/al-build`.
+1. `Unit` cases red/green, one per spawn of `al-agentic-dev:al-red-green`.
+2. `Integration` cases red/green, one per spawn.
 3. Full task refactor.
 4. Full gate.
 5. Task-end mutation for non-trivial work.
 
-Exception: when a Unit seam should exist but current code is tangled, write an Integration characterization test first to anchor behaviour, then extract the Unit seam and add the Unit case. Reconcile scope changes in the task file.
+For each case, spawn `al-agentic-dev:al-red-green` with: the single AAA case (Arrange/Act/Assert text from the `Test Specification`), the task's `New and Modified Objects` block, and the task file path. Read the outcome note before proceeding:
 
-### Evidence before RED, names and constructs
+- Green → run the full suite gate (a red anywhere, including a sibling task's test, blocks the `done` flip), then proceed to the next case.
+- Push-up signal → handle the push-up commitment gate (see Gate every push-up section below).
+- New decision flagged → route to `/al-steer`.
 
-Before first RED of any AAA case, meet the evidence bar in [voice-contract.md](../../references/voice-contract.md) for every BC-specific name in its Arrange / Act / Assert and every BC construct class on the implementation path. Constructs → fetched topic per [bc-code-intelligence-dispatch.md](../../references/bc-code-intelligence-dispatch.md) or quoted Learn passage, declared `Researched:`. Legacy code is precedent, not authority — a construct copied from the workspace still earns its fetch, because that is how a repo's `SetLoadFields`-after-filters debt replicates.
-
-### Test the Process seam, not incidental implementation
-
-Tests target the behaviour boundary named by the task. `Unit` cases target the P layer directly; your own table R/W runs for real under AL Runner — only a genuine MS-logic collaborator gets a seam, so write against real tables first and let the auto-stub report drive seams (don't pre-extract interfaces or temp-records for your own record logic; reclassify intentional BC coupling to `Integration`, never a prop). `Integration` cases cross BC runtime/database/page/event seams. Assertions read business outcomes (status, errors, posting outcomes, ledger entries, document flow, emitted event, visible page state), not table shape or call order unless a Unit spy is the behaviour boundary.
-
-See [testability.md](../../references/testability.md) for three-phase decoupling + seam catalogue and [tdd.md](../../references/tdd.md) for five phases + no-touch invariants.
-
-### Build the least that makes GREEN
-
-At GREEN, write the least production AL the case needs — reach for the platform (field + flowfield, table relation, enum, permission-set entry) before hand-rolling, and add no abstraction a second caller has not yet earned. The discipline and its carve-outs (production only, never test thoroughness; never thin trust-boundary validation or posting correctness) live in [thrift-rules.md](../../references/thrift-rules.md). Over-build that survives to the diff is the simplicity lens's catch at `/al-refactor` and `/al-code-review`.
-
-### Gates every RED and every GREEN
-
-The closeout gate is the whole suite, not this task's cases — a red anywhere, including a sibling task's test, blocks the `done` flip (trigger #4, sibling now wrong), never a clean close.
-
-AL Runner ERROR / exit 2 routes cheapest-first: review test (adjust unsupported call) → refactor production behind seam so unsupported call moves behind stub → reclassify as `Integration` and update the task file. Reclassification last because it grows container surface. Before treating an ERROR as a runner-capability gap, re-confirm the compile-error class — an AL0305 missing-dependency cascade reads as an AL0327 runner gap, and reclassifying on the misread grows container surface for a phantom. Run `al-runner --guide` when unsupported feature is unclear.
+Exception: when a Unit seam should exist but current code is tangled, instruct the `al-red-green` spawn to write an Integration characterization test first, then spawn again to extract the Unit seam and add the Unit case. Reconcile scope changes in the task file.
 
 ### Gate every push-up above the blessed scope
 
-Writing a test above the scope `/al-refine` blessed is a **push-up** that needs commitment, not a silent reclassify (see [`test-strategy.md`](../../references/test-strategy.md)). Two paths reach it: the reclassify rung above (a planned-`Unit` case that hits an AL-Runner wall) and a *new* `Integration` case emerging mid-TDD (trigger #5). Either way, before the non-`Unit` test is written, **stop** — emit the commitment as a Stop ([`voice-contract.md`](../../references/voice-contract.md)): the case, why `Unit` cannot hold it, and the seam from [`testability.md`](../../references/testability.md) that would versus accepting `Integration`. Commitment is build-the-seam (push down via `/al-refactor`) or accept-the-slower-test; on accept, record the justification in `Contract notes` and continue.
+Writing a test above the scope `/al-refine` blessed is a **push-up** that needs commitment, not a silent reclassify (see [`test-strategy.md`](../../references/test-strategy.md)). The push-up signal arrives in the `al-red-green` outcome note: either a planned `Unit` case hit an AL-Runner wall (the agent stopped and signaled) or a *new* `Integration` case emerged mid-TDD (trigger #5). Before the non-`Unit` test is written, **stop** — emit the commitment as a Stop ([`voice-contract.md`](../../references/voice-contract.md)): the case, why `Unit` cannot hold it, and the seam from [`testability.md`](../../references/testability.md) that would versus accepting `Integration`. Commitment is build-the-seam (push down via `/al-refactor`) or accept-the-slower-test; on accept, record the justification in `Contract notes` and spawn `al-red-green` with the accepted `Integration` case.
 
 This is the pipeline's one hard gate, elevated above the act-inline floor (`/al-steer`'s provable-mutation rule) because a silent slow test is a durable cost, not reversible. **Unattended**, where no human answers, the stop degrades by context so the push-up never lands silently — an unblessed push-up is replan-class when no one can commit. **Autopilot** (autonomous task-pick): flip `status: blocked` and route to `/al-steer`. **Fix-mode**: do *not* route to `/al-steer` — fix-mode is mute (see Fix-mode), so report the uncommittable push-up back to the calling loop as `cannot fix — escalate`; it lands in `/al-code-review`'s **needs-a-decision** set-aside class, and the loop routes it at run end. A push-up already blessed by `/al-refine`'s report flows without a stop; the gate fires only on deviation above plan.
 
@@ -81,7 +67,7 @@ Before `done`, update the task file so it reflects actual proof:
 - `Scope:` is final; any scope change is edited back in.
 - `New and Modified Objects` matches the actual diff: objects, fields, signatures, visibility, R → P → W letters.
 - Implementation discoveries land in `Contract notes` as new bullets, one fact per landing line.
-- `Researched:` citations from this task land as `Contract notes` bullets (the evidence-bar trace, [voice-contract.md](../../references/voice-contract.md)) — skipped research stays visible to `/al-code-review`.
+- `Researched:` citations and in-object drift from each `al-red-green` outcome note land as `Contract notes` bullets (the evidence-bar trace, [voice-contract.md](../../references/voice-contract.md)) — skipped research stays visible to `/al-code-review`.
 - Closeout follows the [test-specification.md](../../references/test-specification.md) shape: pyramid bullets plus the mutation verdict table with labeled `Survivor:` / `Why kept:` lines.
 
 ### One `/al-refactor` pass on full task diff
@@ -141,7 +127,7 @@ The slice verify task is one such same-slice dependent: at user/API-facing slice
 `/al-code-review`'s loop hands a single judged, must-fix finding (Finding / Where / Source / Recommended next) plus its **originating task** — the task whose code the finding flags, traced by the `T-NNN` commit prefix. Fix-mode is the same discipline aimed at one finding instead of a task's `Test Specification`:
 
 - **Reopen the originating task** (`done` → `ready-for-implementation` in working memory; the durable flip is the reconcile + re-close at the end). The task's existing `Test Specification`, `New and Modified Objects`, and `Contract notes` are the context.
-- **Land the fix red-first.** A coverage-gap finding (the bug got through because no case covered it) adds the missing AAA case to the existing spec and drives it RED → GREEN — the test is the durable proof that stops the next review re-flagging it. A finding on existing covered behaviour adjusts the case that should have caught it. Same Unit-first order, same gates, same evidence bar.
+- **Land the fix red-first.** A coverage-gap finding adds the missing AAA case to the existing spec; a finding on existing covered behaviour adjusts the case that should have caught it. Spawn `al-agentic-dev:al-red-green` with the case and the originating task file path — same as task-pick. The agent handles evidence bar, RED/GREEN, and push-up detection.
 - **Refactor inline only — no full-diff pass.** Inline renames and obvious dedupe land inside GREEN as usual, but a single-finding fix does not earn the mandatory full-task-diff `/al-refactor` (the four-lens pass exists to catch cross-case naming drift and duplication that surface only after a *task's worth* of cases land — a one-finding fix has neither). Skipping it keeps fix-mode cheap inside a loop that may run it many times.
 - **Mutate** the changed sites at fix end, same trigger and cycle. `/al-mutate` sources its task context, changed files, and business decision points from the reopened originating task and the fix diff — the finding is the decision point under test. Mutation stays mandatory; it is the proof the fix's test actually catches the bug.
 - **Reconcile** the originating task before re-closing: `New and Modified Objects` and `Researched:` bullets must match the post-fix diff, so `/al-code-review`'s lens 1 reads truth on the next round. Commit under the originating `T-NNN` prefix.
@@ -164,4 +150,4 @@ Highest-traffic skill, so the red/green grind stays out of the feed — only dur
 | **Runs after**     | task-pick: `/al-refine` (filled `Test Specification` in the task file and flipped task to `ready-for-implementation`). fix-mode: `/al-code-review`'s loop, with one must-fix finding + its originating task |
 | **Hands off to**   | task-pick: next `ready-for-implementation` technical task; `/al-refine` on the slice verify task at user/API-facing slice-done; `/al-code-review` per-slice for backend-only slice-done; `/al-code-review` per-feature at feature-done. fix-mode: returns to the calling loop, mute (no gate announcement, no dependents opened) |
 | **Replan venue**   | `/al-steer` |
-| **Sidebands**      | `al-research` agent (evidence-bar escalation: source conflict, design-artifact fact), `/al-debug-logging` (execution path unclear), `/grill-me` (judgement needs user), `bc-standard-reference` agent (BaseApp questions) |
+| **Sidebands**      | `al-red-green` agent (RED→GREEN per case; spawns `al-research` for evidence-bar escalation), `/al-debug-logging` (execution path unclear), `/grill-me` (judgement needs user), `bc-standard-reference` agent (BaseApp questions) |
