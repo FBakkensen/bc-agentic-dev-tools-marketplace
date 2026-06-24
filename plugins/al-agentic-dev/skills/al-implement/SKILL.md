@@ -104,9 +104,9 @@ Everything else inside the task body follows the task shape. See [notes-discipli
 
 `done` means: the full suite is green and the task spec is reconciled to the diff. (Reshape and mutation are the user's next steps; `/al-code-review` notes a missing mutation verdict if the user skipped `/al-mutate`.) Commit the work before handing off so the tree is clean for the user's `/al-refactor` / `/al-mutate`.
 
-The `done` flip is a state write this skill owns inline (a filesystem handoff, not a cross-skill call). At the flip, open any **same-slice** task whose `depends_on:` is now fully `done` and carries no replan flag, `blocked` → `ready`; name each opened `T-NNN` in the gate report. A task `blocked` on an unsatisfied edge or a replan flag stays `blocked` — that needs a decision, `/al-steer`'s. Opening the **next** slice is not this flip's call: it waits on the per-slice gate chain (`/al-code-review`, then `/al-user-verification` for a user-facing slice).
+The `done` flip is a state write this skill owns inline (a filesystem handoff, not a cross-skill call). At the flip, open any **same-slice technical** task whose `depends_on:` is now fully `done` and carries no replan flag, `blocked` → `ready`; name each opened `T-NNN` in the gate report. A task `blocked` on an unsatisfied edge or a replan flag stays `blocked` — that needs a decision, `/al-steer`'s. Opening the **next** slice is not this flip's call: it waits on the per-slice gate chain (`/al-code-review` at slice-done, then for a user-facing slice the verify track through `/al-user-verification`).
 
-The slice verify task is one such same-slice dependent: at user/API-facing slice-done it opens `blocked` → `ready` once every in-slice technical dependency is `done`, which opens `/al-refine` to write the fresh `Verification Plan`.
+The slice verify task is the exception — `/al-implement` does **not** open it. At user/API-facing slice-done the review gate runs first: announce `Next: /al-code-review` per-slice. A clean review is what opens the verify task `blocked` → `ready` and routes to `/al-refine` (the verify track sits behind the review gate). So slice-done here only announces `/al-code-review`; do not open the verify task and do not run `/al-refine` on it.
 
 ### Gate report at done
 
@@ -118,7 +118,7 @@ End by naming the concrete next move, read off current state:
 
 - **Mid-task non-`done` exits** carry their own `Next:` above (push-up unattended → `/al-steer`, missing spec → `/al-refine`, replan → `/al-steer`).
 - **Task `done`, work was non-trivial:** `Next: /al-refactor` (reshape the full task diff while green), then `/al-mutate` (validate test rigor at task end). These are strongly directed — `/al-code-review` notes a missing mutation verdict — but the user owns whether and when to run them.
-- **Task `done`, trivial work:** name the slice gate directly. More `ready-for-implementation` tasks in the slice → `Next: /al-implement` (next task). User/API-facing slice-done (verify task opened to `ready`) → `Next: /al-refine T-NNN` on the verify task. Backend-only slice-done → `Next: /al-code-review` per-slice. Feature-done → `Next: /al-code-review` per-feature.
+- **Task `done`, trivial work:** name the slice gate directly. More `ready-for-implementation` tasks in the slice → `Next: /al-implement` (next task). Slice-done (the slice's last technical task) → `Next: /al-code-review` per-slice, both slice types — the review gate runs before the verify task is opened. Feature-done → `Next: /al-code-review` per-feature.
 
 If state can't be read, fall back to the typical next step: `/al-refactor` then `/al-mutate`, then `/al-code-review`.
 
@@ -135,7 +135,7 @@ Highest-traffic skill, so the red/green grind stays out of the feed — only dur
 | | |
 |---|---|
 | **Runs after**     | `/al-refine` (filled `Test Specification` in the task file and flipped task to `ready-for-implementation`) |
-| **Hands off to**   | `/al-refactor` then `/al-mutate` on non-trivial task-done; next `ready-for-implementation` technical task; `/al-refine` on the slice verify task at user/API-facing slice-done; `/al-code-review` per-slice for backend-only slice-done; `/al-code-review` per-feature at feature-done |
+| **Hands off to**   | `/al-refactor` then `/al-mutate` on non-trivial task-done; next `ready-for-implementation` technical task; `/al-code-review` per-slice at slice-done (both slice types); `/al-code-review` per-feature at feature-done |
 | **Calls directly** | `/al-research` (evidence-bar escalation), `/al-build` (compile/test), `/al-second-opinion` (cross-family read, non-trivial work) — the only three skills it invokes |
 | **Spawns**         | per-case subagent from [`subagents/al-red-green.md`](../../references/subagents/al-red-green.md) (RED→GREEN per AAA case) |
 | **Replan venue**   | `/al-steer` |

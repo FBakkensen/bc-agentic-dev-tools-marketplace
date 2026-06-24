@@ -22,7 +22,7 @@ Branch by `kind:` in the task file's frontmatter:
 - Branch matches `^\d{3}-`. If not: **Stop**. Run `/al-event-model` (or `/al-design` for backend-only).
 - Spec folder holds `architecture.md`. Missing → **Stop**, run `/al-design`.
 - User/API-facing features: `event-model.md` also present.
-- Target task is named and has `status: ready` (context exists for `/al-refine` only). One nuance: `blocked` with all `depends_on:` `done` and no replan flag in the body → the upstream close just didn't flip it; open it `ready` here and proceed, no `/al-steer` bounce. `blocked` on an unsatisfied edge or a replan flag → `/al-steer`. A `done` task carries downstream evidence; reopen only through `/al-steer`.
+- Target task is named and has `status: ready` (context exists for `/al-refine` only). One nuance, **`kind: technical` only**: a technical task `blocked` with all `depends_on:` `done` and no replan flag in the body → the upstream close just didn't flip it; open it `ready` here and proceed, no `/al-steer` bounce. A **`kind: verify`** task gets no self-open — it reaches `ready` only when `/al-code-review` opens it on a clean per-slice review (carrying `review: clean`). A `blocked` verify task with all technical deps `done` and no `review: clean` is **slice-done owing its first code review** → **Stop**, `Next: /al-code-review T-NNN`; do not self-open and write the plan, or the review gate is skipped. `blocked` on an unsatisfied edge or a replan flag → `/al-steer`. A `done` task carries downstream evidence; reopen only through `/al-steer`.
 - Verify task (`kind: verify`) but no `event-model.md` → contract violation, **Stop**, route to `/al-steer`. Verify tasks only exist for user/API-facing features.
 - Read [`test-specification.md`](../../references/test-specification.md), [`test-strategy.md`](../../references/test-strategy.md), [`test-layout.md`](../../references/test-layout.md) (the Unit-vs-Integration scope call is the placement rule there — a case whose codepath needs real BaseApp behaviour cannot be scoped `Unit`), [`voice-contract.md`](../../references/voice-contract.md), and [`markdown-spec-discipline.md`](../../references/markdown-spec-discipline.md) before writing.
 
@@ -119,10 +119,10 @@ No `in-progress` state.
 Read off the flipped task:
 
 - **Technical task → `ready-for-implementation`:** `Next: /al-implement T-NNN` — drive the `Test Specification` red→green.
-- **Verify task → `ready-for-verification`:** `Next: /al-code-review` per-slice (it gates before the walk); a clean review then routes to `/al-page-script` or `/al-user-verification`.
+- **Verify task → `ready-for-verification`:** the verify task arrived carrying `review: clean` (`/al-code-review` ran at slice-done and opened it); the `status:`-only flip preserves it. `Next:` state-conditional on the slice's recordings — `/al-page-script T-NNN` (a `Record: yes` Journey Example's recording missing) or `/al-user-verification T-NNN` (all present, or no `Record: yes` example). The review already ran — do not route back through `/al-code-review`.
 - **Stayed/flipped `blocked`:** `Next: /al-research` (BC fact), `/al-grill-adr` (domain term), or `/al-steer` (replan) per why it would not ground.
 
-If state can't be read, fall back to `/al-implement` for a technical task, `/al-code-review` for a verify task.
+If state can't be read, fall back to `/al-implement` for a technical task; for a verify task (which reached `/al-refine` only because `/al-code-review` already ran) → `/al-user-verification`, or `/al-steer` when unsure — never back through `/al-code-review`.
 
 ## Feed
 
@@ -137,7 +137,7 @@ Three moments narrate to the branch feed. At each, hand `/al-feed` a brief — w
 | | |
 |---|---|
 | **Runs after**     | `/al-scope` or dependency restoration opened one named task to `status: ready` |
-| **Hands off to**   | `/al-implement` for `ready-for-implementation` technical tasks; `/al-code-review` then `/al-page-script` or `/al-user-verification` for `ready-for-verification` verify tasks |
+| **Hands off to**   | `/al-implement` for `ready-for-implementation` technical tasks; for `ready-for-verification` verify tasks, state-conditional on the slice's recordings — `/al-page-script` (a `Record: yes` recording missing) else `/al-user-verification` (`/al-code-review` already ran at slice-done; the verify task arrives carrying `review: clean`) |
 | **Calls directly** | `/al-research` (BC facts), `/al-second-opinion` (non-trivial `Test Specification` / `Verification Plan`) — the only skills it invokes |
 | **Replan venue**   | `/al-steer` |
 | **Sidebands**      | `/al-grill-adr` (fuzzy domain term), `/grill-me` (fuzzy intent) |

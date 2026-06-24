@@ -30,7 +30,7 @@ The sign-off accounts for the `Record: yes` scenarios explicitly: they are confi
 
 - Branch matches `^\d{3}-`. If not: **Stop**. Verify task only exists inside an in-flight feature.
 - `specs/<branch>/tasks/` holds a `kind: verify` task with `status: ready-for-verification` and a populated `Verification Plan`. Plain `ready` → **Stop**, `/al-refine T-NNN`. `ready-for-verification` with an empty plan → **Stop**, `/al-steer`; status and proof disagree. `blocked` → `/al-steer`. `done` → downstream evidence exists; do not reopen here.
-- `review: clean` present in the verify task's frontmatter — the durable clean per-slice `/al-code-review` evidence (`ready-for-verification` reads identically before and after review). Missing → **Stop**, re-enter via `/al-code-review T-NNN`.
+- `review: clean` present in the verify task's frontmatter — the durable clean per-slice `/al-code-review` evidence, stamped at slice-done (the status byte alone reads identically before and after review). Missing → **Stop**, re-enter via `/al-code-review T-NNN`.
 - `event-model.md` present alongside; verify tasks only exist for user/API-facing features. Verify task without `event-model.md` → contract violation, **Stop**, route to `/al-steer`.
 - Read [`test-specification.md`](../../references/test-specification.md) and [`test-strategy.md`](../../references/test-strategy.md) before guiding; this skill consumes the `Verification Plan` grammar (incl. the `Record:` flag) and layer rules.
 - Every `Record: yes` Journey Example has its recording at `pagescripts/recordings/<NNN>-<slug>__<slice>__NN.yml`. A missing recording for a `Record: yes` example → **Stop**, `Next: /al-page-script T-NNN`. The pre-flight batch runs the slice's recordings plus every prior slice's before the user is invited in. (A plan with only `Record: no` / `Contract` / `Exploration` and no recordings is valid — skip the batch, go straight to spawn #2.)
@@ -154,7 +154,7 @@ The wary developer is the oracle here, so the feed narrates the commitments and 
 
 | | |
 |---|---|
-| **Runs after**     | `/al-page-script` recorded every `Record: yes` Journey Example, and `/al-code-review` per-slice stamped `review: clean` on the verify task at `ready-for-verification` |
+| **Runs after**     | `/al-page-script` recorded every `Record: yes` Journey Example, and `/al-code-review` per-slice stamped `review: clean` at slice-done (preserved through refine) |
 | **Hands off to**   | next slice's technical tasks opened to `ready` for `/al-refine`; or — if this was the last slice — the `kind: breaking-change` task opened `blocked` → `ready`, then `/al-validate-breaking-changes` (then `/al-code-review` per-feature). `/al-steer` on failure (after `status: blocked`). Usability findings → candidate tasks in the slice. |
 | **Uses**           | `new-agent-container.ps1` (three spawns per cycle), `pagescript-replay.ps1` (batch mode for spawn #1's pre-flight), `publish-apps.ps1` (spawn #1, #2), Web Client deep links + `al-build.json` credentials, `/al-second-opinion` (coverage review before the gate), [`../../references/test-specification.md`](../../references/test-specification.md) (`Verification Plan` grammar + `Record:` flag), [`../../references/test-strategy.md`](../../references/test-strategy.md) (layer + checking-vs-testing frame) |
 | **Replan venue**   | `/al-steer` — trigger #4 (pre-flight prior-slice red), trigger #8 (pre-flight current-slice red or functional-walk fail) |

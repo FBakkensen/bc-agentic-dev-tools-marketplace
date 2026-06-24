@@ -87,7 +87,7 @@ The task file gets the `Closeout` mutation verdict shape from [test-specificatio
 
 End by naming the concrete next move, read off the verdict:
 
-- **Clean verdict** (no survivors, or every survivor a documented equivalence) → name the slice gate: more `ready-for-implementation` tasks in the slice → `Next: /al-implement` (next task); a user/API-facing slice whose verify task just opened to `ready` → `Next: /al-refine T-NNN` on the verify task (it must reach `ready-for-verification` before `/al-code-review`); a backend-only slice-done → `Next: /al-code-review`.
+- **Clean verdict** (no survivors, or every survivor a documented equivalence) → name the slice gate: more `ready-for-implementation` tasks in the slice → `Next: /al-implement` (next task); slice-done (the slice's last technical task `done`, either slice type) → `Next: /al-code-review` per-slice — the review gate runs before the verify task is opened.
 - **Reached real-gap survivor** → `Next: /al-implement` to resume TDD and write the killer test, then rerun the survivor site.
 - **Unreached-line / missing-coverage survivor** → `Next: /al-refine` (add coverage). **Blocked** (infra-repeat, replan-class) → `Next: /al-steer`.
 

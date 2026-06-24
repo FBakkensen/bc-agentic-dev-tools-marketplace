@@ -35,14 +35,12 @@ Name entries that need a decision: severity, ID, symptom in codebase's terms (ob
   - **Failed** (dependency `done`, task ran and could not pass): provision → environment not ready (compiler/symbols, container, `gh` auth, unreachable baseline release); breaking-change → a break detected or prerequisite failed. Clear the blocker, re-run the owning skill. A breaking-change `blocked` with deps `done` but never opened → stale gate-open, flip it `ready`.
   - Never open ops tasks to `ready-for-*`.
 
-- **Verify task** (`kind: verify`): `ready` → `/al-refine T-NNN`. `done` → downstream E2E/Contract/Exploration evidence exists. `blocked` → name the failure inline and route per its trigger. `ready-for-verification` routing:
-  - No `review: clean` → `/al-code-review T-NNN`.
+- **Verify task** (`kind: verify`): `ready` → `/al-refine T-NNN` (a `ready` verify task is one `/al-code-review` opened on a clean review — it carries `review: clean`). `done` → downstream E2E/Contract/Exploration evidence exists. `blocked` reads, **checked in order**: a replan/failure flag in the body (e.g. a failed walk, trigger #8) → name the failure inline and route per its trigger — a failed *walk* is not cleared by re-running *code* review; else in-slice technical deps still pending → waiting, say so, not a problem; else every in-slice technical task `done` with no `review: clean` → slice-done owing its **first** per-slice code review, `/al-code-review T-NNN`. `ready-for-verification` routing:
+  - No `review: clean` → a **re-review** is owed (`/al-steer` stripped the marker in place when new technical work opened; the `Verification Plan` stands). Split by the in-slice technical state: an in-slice fix task still open → waiting on `T-NNN`, not a problem; every in-slice technical task `done` again → `/al-code-review T-NNN`. (Routing to `/al-code-review` while a fix task is open would Stop-bounce on its slice-not-review-ready precondition.)
   - `review: clean` + `Record: yes` Journey Examples whose recordings are missing → `/al-page-script T-NNN`.
   - `review: clean` + all `Record: yes` recordings present (or no `Record: yes` example) → `/al-user-verification T-NNN`.
 
-- **Slice-done, no fresh verify proof** (every technical task `done`, verify task `blocked` only because deps were pending): stale gate-open. Route back to `/al-implement` closeout, or open to `ready` for `/al-refine` only after explicit user ack.
-
-- **Slice-done, no clean code-review** (technical tasks `done`, verify task `ready-for-verification` without `review: clean`, or backend-only last task `done` with next slice still `blocked`): `/al-code-review` per-slice gate.
+- **Slice-done, owes per-slice code-review** (every in-slice technical task `done` AND the slice's verify task lacks `review: clean` — whether `blocked` (first review, no plan yet) or `ready-for-verification` (re-review, plan intact, marker stripped in place); or a backend-only last task `done` with the next slice still `blocked`): `/al-code-review` per-slice gate. The verify track sits behind this gate — a clean review opens the verify task; do not open it to `ready` for `/al-refine` ahead of the review.
 
 - **Feature-done** (every `T-NNN` `done`, no merge yet): `/al-code-review` per-feature gate.
 
@@ -73,7 +71,7 @@ Trigger invalidates the plan for the task → flip `status:` to `blocked` in fro
 
 A trigger resting on a tool diagnosis (compile-error class, AL Runner gap, heuristic "structural blocker") is re-confirmed once before the `blocked` flip — a first-pass diagnosis is frequently a cascade artifact (an AL0305 missing-dependency reads as an AL0327 runner gap), and a block on a phantom is false state the next session has to unwind. A trigger resting on a recorded fact (`depends_on:`, Goal text, an observed verification mismatch) is acted on as-is.
 
-Opening or inserting a technical task in a slice strips `review: clean` from that slice's verify task in the same edit pass — new slice code invalidates the per-slice review, and the push-down path (page-script red → fix task here) moves no status byte on the verify task, so the strip is the only signal routing the slice back through `/al-code-review` after the fix lands. Lifecycle in [`markdown-spec-discipline.md`](../../references/markdown-spec-discipline.md).
+Opening or inserting a technical task in a slice strips `review: clean` from that slice's verify task in the same edit pass — and if that verify task is still `ready` (opened by a clean review but not yet refined), the same edit flips it back to `blocked`, since the slice re-opened before refinement (so a `ready` verify task always carries `review: clean`). New slice code invalidates the per-slice review; on a `ready-for-verification` verify task the push-down path (page-script red → fix task here) moves no status byte, so the strip is the signal routing the slice back through `/al-code-review` after the fix lands. Lifecycle in [`markdown-spec-discipline.md`](../../references/markdown-spec-discipline.md).
 
 ## Mutations come from the trigger, not a menu
 
