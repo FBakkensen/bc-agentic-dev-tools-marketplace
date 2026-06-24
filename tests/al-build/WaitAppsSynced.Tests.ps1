@@ -8,14 +8,22 @@
 BeforeAll {
     $script:CommonModule = Resolve-Path (Join-Path $PSScriptRoot '..' '..' 'plugins' 'al-agentic-dev' 'skills' 'al-build' 'scripts' 'common.psm1')
     Import-Module $script:CommonModule -Force
-    # Inject a stub for the external BcContainerHelper dependency into the module
-    # scope so Mock can target it; the real command is unavailable off a BC host.
-    InModuleScope common {
-        if (-not (Get-Command Get-BcContainerAppInfo -ErrorAction SilentlyContinue)) {
-            function Get-BcContainerAppInfo {
-                param([string]$containerName, [string]$tenant, [switch]$tenantSpecificProperties)
-            }
+    # BcContainerHelper isn't installed off a BC host, so Get-BcContainerAppInfo
+    # doesn't exist for Mock to target. When it's absent, inject a global stub —
+    # visible from the module scope where the It blocks mock and call it. (A bare
+    # `function` inside InModuleScope lands in a transient scope and vanishes
+    # before the It blocks run, which is why CI saw CommandNotFoundException.)
+    if (-not (Get-Command Get-BcContainerAppInfo -ErrorAction SilentlyContinue)) {
+        $script:StubbedGetBcContainerAppInfo = $true
+        function global:Get-BcContainerAppInfo {
+            param([string]$containerName, [string]$tenant, [switch]$tenantSpecificProperties)
         }
+    }
+}
+
+AfterAll {
+    if ($script:StubbedGetBcContainerAppInfo) {
+        Remove-Item function:global:Get-BcContainerAppInfo -ErrorAction SilentlyContinue
     }
 }
 
