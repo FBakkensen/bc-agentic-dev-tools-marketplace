@@ -188,6 +188,11 @@ Situation → action:
 
 **Anti-pattern: edit container manually.** No `docker exec`, no `Invoke-ScriptInBcContainer` to patch state, no hand-installing apps. Container is disposable; reproducibility lives in scripts.
 
+## Next step
+
+- **Green:** `Next:` resume the calling skill — usually `/al-implement` (continue the red→green cycle).
+- **Red:** fix the failing test or production code, then re-run `/al-build`. Test failure with an unclear cause → `/al-debug-logging` first.
+
 ## Composition
 
 - `/al-implement` — calls this after every RED, GREEN, `/al-refactor`, before flipping the task `status:` to `done`.

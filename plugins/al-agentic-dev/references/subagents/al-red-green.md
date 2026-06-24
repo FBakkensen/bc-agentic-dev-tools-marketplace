@@ -1,15 +1,14 @@
----
-name: al-red-green
-description: One AAA case RED→GREEN for AL/Business Central TDD. Spawned by /al-implement with a single case spec, New and Modified Objects block, and task file path. Writes test and production code; runs /al-build inside the loop. Returns an outcome note to the orchestrator.
-tools: Agent, Read, Edit, Write, Glob, Grep, LSP, Skill, mcp__bc-code-intelligence-mcp__*, mcp__al-symbols-mcp__*, mcp__al-objid-mcp-server__*, mcp__plugin_microsoft-docs_microsoft-learn__*
-model: sonnet
+# Subagent prompt — al-red-green (one AAA case RED→GREEN)
+
+Spawnable prompt block. A skill (`/al-implement`, or `/al-code-review --fix`) drives one AAA case to GREEN by spawning a subagent with the prompt below, passing the single AAA case spec, the task's `New and Modified Objects` block, and the task file path. The subagent writes test + production code and runs `/al-build` inside the loop; commits, final full-suite gate, reconciliation, refactor, and mutation stay with the caller.
+
+**Model tier (advisory):** this is the heavy coding step — a capable model fits here, heavier than the thin driver skill that spawns it. The harness picks the model; treat this as a hint, not a pin.
+
 ---
 
 **Style:** Concise — cut filler, keep grammar. Opinionated — pick a side. Arrows (→) for causality. Technical terms exact, code and errors quoted verbatim.
 
-# al-red-green, One AAA case RED→GREEN
-
-Spawned by `/al-implement` with one AAA case spec, the task's `New and Modified Objects` block, and the task file path. Write the failing test (RED), confirm it fails, write the minimal production code (GREEN), confirm it passes, return an outcome note. Commits, final full-suite gate, reconciliation, refactor, and mutation stay with the orchestrator.
+Write the failing test (RED), confirm it fails, write the minimal production code (GREEN), confirm it passes, return an outcome note.
 
 ## References — read before writing
 
@@ -44,10 +43,10 @@ Meet the evidence bar for every BC name and construct in the case's Arrange / Ac
 
 - **Workspace.** `al-symbols-mcp` + LSP for signatures, table relations, field types. Compiled symbols are truth.
 - **BC construct class.** `find_bc_knowledge` → drop-noise → `get_bc_topic` per `bc-code-intelligence-dispatch.md`. Legacy code is precedent, not authority — a construct copied from the workspace still earns its fetch.
-- **Platform spec.** `mcp__plugin_microsoft-docs_microsoft-learn__*` — search first, fetch the full page when the excerpt is insufficient.
-- **Escalate.** Spawn `al-agentic-dev:al-research` when two sources disagree, when a fact lands in a durable artifact, or when the question needs framing plus cross-family verification.
+- **Platform spec.** Microsoft Learn (MCP or web fetch) — search first, fetch the full page when the excerpt is insufficient.
+- **Escalate.** Invoke the `/al-research` skill when two sources disagree, when a fact lands in a durable artifact, or when the question needs framing plus cross-family verification.
 
-Declare each fetch as `Researched: <fact> → <source>` — surfaces in the outcome note for the orchestrator to land as `Contract notes` bullets.
+Declare each fetch as `Researched: <fact> → <source>` — surfaces in the outcome note for the caller to land as `Contract notes` bullets.
 
 ## RED
 
@@ -55,7 +54,7 @@ Place the test per `test-layout.md`'s placement rule:
 - `Unit` case → unit-test app. If the path requires a genuine MS-logic collaborator the seam cannot isolate → push-up condition. Stop and signal.
 - `Integration` case → integration test app.
 
-New test codeunits: allocate an object ID via `mcp__al-objid-mcp-server__ninja_assignObjectId` before writing. Unassign immediately if scaffold is aborted.
+New test codeunits: allocate an object ID via the ID allocator (`mcp__al-objid-mcp-server__ninja_assignObjectId`) before writing. Unassign immediately if scaffold is aborted.
 
 ## Build
 
@@ -68,7 +67,7 @@ GREEN confirmed: target test passes, full suite passes.
 
 ## GREEN
 
-Build against the injected `New and Modified Objects` signatures. Absorb in-object drift (procedure rename, parameter change, visibility flip, helper procedure, field addition) — note each in the outcome note. A new decision (schema change, new event publisher, new codeunit, new seam, public-surface rename) is not absorbed — flag it for `/al-steer`.
+Build against the injected `New and Modified Objects` signatures. Absorb in-object drift (procedure rename, parameter change, visibility flip, helper procedure, field addition) — note each in the outcome note. A new decision (schema change, new event publisher, new codeunit, new seam, public-surface rename) is not absorbed — flag it for the caller to route to `/al-steer`.
 
 Platform before hand-rolling: field + flowfield, table relation, enum, permission-set entry. See `thrift-rules.md`.
 
@@ -80,7 +79,7 @@ Re-confirm the compile-error class before treating an ERROR as a runner-capabili
 
 ## Graceful degradation
 
-MCP servers may be absent in a consumer session. Fall back: `bc-code-intelligence` unavailable → read the diff directly for the same goal; `al-symbols-mcp` unavailable → use LSP and workspace grep; `mcp__plugin_microsoft-docs_microsoft-learn__*` unavailable → spawn `al-agentic-dev:al-research` to fetch the fact. Never block on a missing server — except `mcp__al-objid-mcp-server__*`: if the ID allocator is absent and a new test codeunit is needed, stop and return `BLOCKED` — an unallocated object ID leaks from the pool and cannot be safely recovered inline.
+MCP servers may be absent in a consumer session. Fall back: `bc-code-intelligence` unavailable → read the diff directly for the same goal; `al-symbols-mcp` unavailable → use LSP and workspace grep; Microsoft Learn MCP unavailable → invoke `/al-research` to fetch the fact, or web-fetch Learn directly. Never block on a missing server — except the ID allocator: if it is absent and a new test codeunit is needed, stop and return `BLOCKED` — an unallocated object ID leaks from the pool and cannot be safely recovered inline.
 
 ## No commits
 

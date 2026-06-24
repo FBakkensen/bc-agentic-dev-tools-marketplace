@@ -48,3 +48,9 @@ The gate's two verdicts narrate to the branch feed, nothing in between. At each,
 - **surprise** · exit `3`, task flips `blocked`, route to `/al-steer` → a change would break a promise a shipped version made, so the gate stops for the human's intent call.
 
 A `4` (`Contract`) or other prerequisite/environment non-zero yields no verdict — no card; fix the prereq and re-run.
+
+## Next step
+
+- **`done` (exit `0`):** the feature's last gate is clear. `Next:` merge.
+- **Break detected (exit `3`), task `blocked`:** `Next: /al-steer` for the human's intent call.
+- **`4`/other prereq failure, task `blocked`:** fix the prereq (`/al-provision` for an empty cache), re-run `/al-validate-breaking-changes`.

@@ -52,6 +52,10 @@ DO NOT use `${CLAUDE_SKILL_DIR}` in the call — PowerShell parses it as an empt
 
 `scripts/feed-append.ps1` (over `scripts/feed.psm1`) owns append, escaping, and render mechanics. Do not inline its logic into a caller — that scatters the voice this skill centralizes.
 
+## Next step
+
+Terminal side-band. `Next:` return to the calling skill, which continues where it left off.
+
 ## Composition
 
-Returns nothing for chat — a side-write of one card; the caller continues. The skill holding the phase context fires the card: a self-describing verdict (a read-only agent's `verdict=` line) is carded verbatim; a context-free verdict (`/al-build`) the caller narrates with the context it holds. A read-only agent never writes the feed itself — `/al-feed` is a write, outside its envelope.
+Returns nothing for chat — a side-write of one card; the caller continues. The skill holding the phase context fires the card: a self-describing verdict (an inline check's or review subagent's finding) is carded verbatim; a context-free verdict (`/al-build`) the caller narrates with the context it holds. A read-only subagent never writes the feed itself — `/al-feed` is a write, outside its envelope, so the spawning skill fires the card from the returned finding.

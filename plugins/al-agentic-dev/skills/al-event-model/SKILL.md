@@ -23,14 +23,14 @@ No implementation structure (modules, codeunits, table fields, event subscribers
 
 ## What goes into event-model.md
 
-- **Role**: BC Role Center name (Order Processor, Accountant, Warehouse Worker, Sales Manager) or external API consumer / publisher. Verify standard names via `al-research` agent; renamed Role Centers ship fiction downstream.
+- **Role**: BC Role Center name (Order Processor, Accountant, Warehouse Worker, Sales Manager) or external API consumer / publisher. Verify standard names via `/al-research`; renamed Role Centers ship fiction downstream.
 - **Action**: user-meaningful verb + object (*Release Sales Order*, *Approve Override*). Match BC's standard verb set where it overlaps BaseApp (Insert / Modify / Delete / Post / Validate / Release / Reopen / Apply / Reverse).
-- **Business Event**: past-tense fact in business language (*Sales Order Released*, *Credit Limit Breached*, *Override Approved*). Verify against BaseApp via `al-research` agent before naming.
+- **Business Event**: past-tense fact in business language (*Sales Order Released*, *Credit Limit Breached*, *Override Approved*). Verify against BaseApp via `/al-research` before naming.
 - **View**: surface + its location (*Sales Order page → Status flips to Released*, *Pending Overrides cue increments*, *API response carries the Override decision*). Surface type settles here, AL control name settles in `/al-design`.
 - **Status**: when Business Event flips a field on aggregate's record, name field + new value (*Sales Header Status → Override Pending*).
 - **BaseApp portions**: if journey starts or passes through BaseApp, include those steps under canonical BaseApp names. Seam between BaseApp and our extension is named by canonical names themselves.
 
-Unanswerable → not ready for `/al-design`. Resolve via `al-research` agent, `/al-grill-adr`, or `/grill-me`.
+Unanswerable → not ready for `/al-design`. Resolve via `/al-research`, `/al-grill-adr`, or `/grill-me`.
 
 ## User-facing voice only
 
@@ -50,7 +50,7 @@ Draft two timelines diverging on one structural decision, present both with reco
 
 ## Citation chain in chat, before write
 
-Evidence bar per [voice-contract.md](../../references/voice-contract.md). `event-model.md` is a durable design artifact: workspace evidence covers what the dependency graph resolves; Role Centers, BaseApp BusinessEvents, and Status enums the workspace cannot answer route through `al-research` agent, mandatory.
+Evidence bar per [voice-contract.md](../../references/voice-contract.md). `event-model.md` is a durable design artifact: workspace evidence covers what the dependency graph resolves; Role Centers, BaseApp BusinessEvents, and Status enums the workspace cannot answer route through `/al-research`, mandatory.
 
 ## Branch + folder + write
 
@@ -60,19 +60,17 @@ Then write `event-model.md`, telegraphic (drop articles, padding, hedges; fragme
 
 ## Document verification
 
-After writing `event-model.md`, spawn the `al-agentic-dev:al-doc-verify` agent before the Gate report, with a brief naming:
+After writing `event-model.md`, run the document-integrity check yourself, inline (no subagent), before the Gate report — verify the artifact against [`doc-integrity.md`](../../references/doc-integrity.md): the `event-model.md` profile (Role / Action / Business Event / View / Status structure) and sibling consistency in the spec folder.
 
-```text
-producer: al-event-model
-artifact_paths: specs/<NNN>-<slug>/event-model.md
-intended_handoff: al-design
-```
-
-`verdict=fail` blocks the Gate report and `/al-design` handoff; fix the structural/boundary issue or route to `/al-steer`. `verdict=warn` does not block; include the warning in the Gate report. This gate checks document integrity only, not whether the journey is the best product decision.
+A **fail** (structural or boundary blocker) blocks the Gate report and `/al-design` handoff; fix it or route to `/al-steer`. A **warn** does not block; include it in the Gate report. This gate checks document integrity only, not whether the journey is the best product decision.
 
 ## Gate event
 
 Once when `event-model.md` lands. Gate report describes the journey in BC vocabulary (Role, Action, Business Event, View, Status), names the application problem it addresses, names the user's call to greenlight `/al-design`.
+
+## Next step
+
+`event-model.md` landed clean and the branch + spec folder exist. `Next: /al-design` — it consumes the journey into `architecture.md`. A downstream fact invalidated the timeline, or a name won't ground → `Next: /al-research` (BC fact) or `/al-steer` (replan).
 
 ## Feed
 
@@ -81,7 +79,7 @@ Two moments narrate the journey to the branch feed; interior craft (name-verific
 - **decision** — the hybrid-settlement fork resolves: two timelines diverged on one structural choice and the user picked. Depth: the confessed leaf guesses and why this was *the* structural fork.
 - **landing** — `event-model.md` lands clean, folding in the branch + spec-folder birth. Depth: the minted branch/slug and the journey timeline.
 
-On `al-doc-verify` `verdict=fail`, fire a card naming the plain-language defect that blocked the docs; a clean pass folds into the `landing` card.
+On a document-integrity **fail**, fire a card naming the plain-language defect that blocked the docs; a clean pass folds into the `landing` card.
 
 At each moment hand `/al-feed` a brief — what happened, why it matters to someone who hasn't read the artifact, and the kind.
 
@@ -91,7 +89,8 @@ At each moment hand `/al-feed` a brief — what happened, why it matters to some
 |---|---|
 | **Runs after**     | `/al-grill-adr` (CONTEXT + domain ADRs settled) |
 | **Hands off to**   | `/al-design` (consumes `event-model.md`) |
+| **Calls directly** | `/al-research` (BaseApp Role / Action / Event / View / Status names), `/al-second-opinion` (non-trivial timelines: multi-Role, branching, brownfield, integration) — the only skills it invokes |
 | **Replan venue**   | `/al-steer` (downstream fact invalidates timeline) |
-| **Sidebands**      | `al-research` agent (BaseApp Role / Action / Event / View / Status names), `bc-standard-reference` agent (pure BaseApp behaviour), `/grill-me` (confess-your-guesses pass), `/al-second-opinion` (non-trivial timelines: multi-Role, branching, brownfield, integration) |
+| **Sidebands**      | `bc-standard-reference` (pure BaseApp behaviour), `/grill-me` (confess-your-guesses pass) |
 
-**Advisor checkpoint.** Call `advisor()` before the first write of `event-model.md`. Drift caught here costs minutes; caught at `/al-design`, a feature.
+**Advisor checkpoint.** Before the first write of `event-model.md`, do a final shape check (`/al-second-opinion` for non-trivial timelines: multi-Role, branching, brownfield, integration). Drift caught here costs minutes; caught at `/al-design`, a feature.

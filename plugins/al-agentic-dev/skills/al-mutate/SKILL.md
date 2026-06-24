@@ -1,6 +1,6 @@
 ---
 name: al-mutate
-description: "Validate AL/Business Central test rigor by mutation: inject one mutation at a time, run the script-backed build gate, classify, revert, report killed/surviving/equivalent mutants. Use mandatorily inside `/al-implement` for non-trivial tasks, or standalone on legacy code before `/al-refactor`."
+description: "Validate AL/Business Central test rigor by mutation: inject one mutation at a time, run the script-backed build gate, classify, revert, report killed/surviving/equivalent mutants. The rigor step the user runs after `/al-refactor` on non-trivial tasks, or standalone on legacy code before `/al-refactor`."
 ---
 
 **Style:** Concise — cut filler, keep grammar. Opinionated — pick a side. Arrows (→) for causality. Technical terms exact, code and errors quoted verbatim.
@@ -43,7 +43,7 @@ Any precondition fails → **Stop**, surface the gap.
 
 **Runner contract is unclassified.** AL Runner `ERROR` / exit 2 during a mutant → `not_classified_runner_contract`, not killed, not survived, not equivalent. Full gate is not fallback when full gate also runs AL Runner first. Record exact runner output, broad revert, prove clean tree, continue. Host judges evidence sufficiency after the pass.
 
-**Survivors continue the plan.** A survivor fails the current mutation pass, not the task. Keep executing approved mutants after revert proof. Inside `/al-implement`, the same host session resumes TDD after the worker returns: write killer test, prove RED/GREEN, run `/al-build`, then rerun the survivor site by default. Full plan rerun only when the new test or fix changes shared decision logic.
+**Survivors continue the plan.** A survivor fails the current mutation pass, not the task. Keep executing approved mutants after revert proof. A reached real-gap survivor needs a killer test — that is TDD work the user resumes via `/al-implement` (write killer test, prove RED/GREEN, run `/al-build`, rerun the survivor site); name it as the next step, do not run it here. Full plan rerun only when the new test or fix changes shared decision logic.
 
 ## Delegation
 
@@ -51,7 +51,7 @@ Use one delegated worker when host supports subagents. Host owns plan generation
 
 After the worker returns its mutation report, close the completed worker thread before the host resumes judgement, killer-test work, or closeout.
 
-Model: `Agent` with `sonnet`.
+A capable coding model fits the worker.
 
 ### Worker rules
 
@@ -81,7 +81,17 @@ Write durable session report at `.output/mutation-report/<YYYYMMDD-HHMMSS>.md`. 
 
 The task file gets the `Closeout` mutation verdict shape from [test-specification.md](../../references/test-specification.md): borderless two-column table (baseline SHA, report path, mutant count with a rationale lede, killed, survivors, final full-gate result) plus labeled `Survivor:` / `Why kept:` lines per survivor. One fact per landing line; no prose wall, no full mutation table in the task file.
 
-`/al-mutate` does not flip status. See [markdown-spec-discipline.md](../../references/markdown-spec-discipline.md) and [voice-contract.md](../../references/voice-contract.md). Standalone mode emits Gate report once at pass close, naming rigor proved (or not) for user-facing behaviour under test, soft spots that remain by design, and user's call; inside `/al-implement`, findings fold into the task Gate report.
+`/al-mutate` does not flip status. See [markdown-spec-discipline.md](../../references/markdown-spec-discipline.md) and [voice-contract.md](../../references/voice-contract.md). Emit the Gate report once at pass close, naming rigor proved (or not) for user-facing behaviour under test, soft spots that remain by design, and the user's call; the task-file `Closeout` mutation verdict lands alongside it.
+
+## Next step
+
+End by naming the concrete next move, read off the verdict:
+
+- **Clean verdict** (no survivors, or every survivor a documented equivalence) → name the slice gate: more `ready-for-implementation` tasks in the slice → `Next: /al-implement` (next task); a user/API-facing slice whose verify task just opened to `ready` → `Next: /al-refine T-NNN` on the verify task (it must reach `ready-for-verification` before `/al-code-review`); a backend-only slice-done → `Next: /al-code-review`.
+- **Reached real-gap survivor** → `Next: /al-implement` to resume TDD and write the killer test, then rerun the survivor site.
+- **Unreached-line / missing-coverage survivor** → `Next: /al-refine` (add coverage). **Blocked** (infra-repeat, replan-class) → `Next: /al-steer`.
+
+If state can't be read, fall back to `/al-code-review`.
 
 ## Feed
 
@@ -95,7 +105,8 @@ Three moments narrate to the branch feed; per-mutant churn stays in the `.output
 
 | | |
 |---|---|
-| **Runs after**     | `/al-refactor` (inside `/al-implement` loop), OR standalone on legacy code before `/al-refactor` |
-| **Hands off to**   | `/al-implement` for reached real-gap survivors inside the task loop; `/al-refine` only for unreached-line or missing-coverage cases; back to caller standalone |
+| **Runs after**     | `/al-refactor` (the rigor step the user runs after reshape), OR standalone on legacy code before `/al-refactor` |
+| **Hands off to**   | `/al-code-review` on a clean verdict (slice/feature gate); `/al-implement` for a reached real-gap survivor (resume TDD for the killer test) or for the next `ready-for-implementation` task; `/al-refine` only for unreached-line or missing-coverage cases |
+| **Calls directly** | `/al-second-opinion` (cross-check non-trivial mutation plans before execution) |
 | **Replan venue**   | `/al-steer` |
-| **Sidebands**      | `al-research` agent (BaseApp behaviour for survivor classification), `/grill-me` (classification call needs the user) |
+| **Sidebands**      | `/al-research` (BaseApp behaviour for survivor classification), `/grill-me` (classification call needs the user) |

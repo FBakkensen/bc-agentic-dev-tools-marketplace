@@ -52,7 +52,7 @@ BC training data is stale fiction; your confidence about a name, signature, or p
 - **Satisfiers.** Any verbatim-quoted fetch with one-line citation counts.
   - Names: `bc-code-intelligence` topic, Microsoft Learn, or `bc-standard-reference` agent.
   - Constructs: topic or Learn passage only — BaseApp source shows an instance, not the rule.
-  - `al-research` agent is mandatory when sources disagree or a fetched fact lands in a durable design artifact (`event-model.md`, `architecture.md`, `CONTEXT.md`, ADRs).
+  - `/al-research` is mandatory when sources disagree or a fetched fact lands in a durable design artifact (`event-model.md`, `architecture.md`, `CONTEXT.md`, ADRs).
 
 - **Trace.** Declare in chat as `Researched: <fact> → <source path / URL / topic id>`. Task-scoped citations also land as `Contract notes` bullets at task reconcile — the one inline-citation carve-out, making skipped research visible to `/al-code-review` and the next session. Everything else in artifacts stays names-only.
 
@@ -78,9 +78,9 @@ Artifact carries the forward-facing fact in declarative voice. Workflow log belo
 
 - Do NOT prefix lines with the agent that decided (`/al-implement decision:`).
 - Do NOT narrate TDD steps as prose ("bullet 1 went red on stub, green on body fill").
-- Do NOT cite second-opinion or `advisor()` reconciliation.
+- Do NOT cite second-opinion or advisor-checkpoint reconciliation.
 
-Place an `advisor()` checkpoint inline at the moment the gate fires, not as a top-of-file blockquote.
+Place an advisor checkpoint inline at the moment the gate fires, not as a top-of-file blockquote.
 
 ## Chat shape skeletons
 

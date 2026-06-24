@@ -1,6 +1,6 @@
 ---
 name: al-refactor
-description: Reshape AL/Business Central production and test code while tests stay green, via four parallel lens sub-agents then serial apply with `/al-build` between. Use after green inside `/al-implement` (full task diff, once per task) or standalone on legacy code.
+description: Reshape AL/Business Central production and test code while tests stay green, via four parallel lens subagents then serial apply with `/al-build` between. Use after `/al-implement` takes a task to green (full task diff, once per task) or standalone on legacy code.
 ---
 
 **Style:** Concise — cut filler, keep grammar. Opinionated — pick a side. Arrows (→) for causality. Technical terms exact, code and errors quoted verbatim.
@@ -12,8 +12,8 @@ Reshape AL so modules that earn their keep deepen and the ones that don't dissol
 ## Preconditions
 
 - Build green. Refactor against red build is debug → belongs in `/al-implement`.
-- Called from `/al-implement` after green on current task, OR standalone on legacy code.
-- Standalone: branch matches `^\d{3}-` with `specs/<branch>/tasks/`, OR pure legacy reshape with no calling task. Calling task `blocked` → run `/al-steer`.
+- Run after `/al-implement` takes the current task to green (the user's next step at task-done), OR standalone on legacy code.
+- Branch matches `^\d{3}-` with `specs/<branch>/tasks/`, OR pure legacy reshape with no owning task. Owning task `blocked` → run `/al-steer`.
 - Legacy-code mode (no covering tests): write baseline tests first. See [legacy-refactor-plan.md](references/legacy-refactor-plan.md).
 
 ## What you answer before reshape
@@ -25,13 +25,13 @@ Reshape AL so modules that earn their keep deepen and the ones that don't dissol
 - **Does reshape surface new behaviour or hidden requirement?** Yes → route the discovery; do not absorb.
 - **Which BC names verified this session?** Every BC-specific name a rename pulls from outside the codebase meets the evidence bar in [voice-contract.md](../../references/voice-contract.md). See *Lens 4, naming* below.
 
-Unanswerable from the diff → area not ready. Resolve via `al-research` agent, `/al-grill-adr`, or `/al-steer`.
+Unanswerable from the diff → area not ready. Resolve via `/al-research`, `/al-grill-adr`, or `/al-steer`.
 
 Architectural vocabulary (Module, Interface, Implementation, Seam, Adapter, Depth, Leverage, Locality) in [LANGUAGE.md](../../references/LANGUAGE.md). Use exactly.
 
 ## Lenses
 
-Spawn 4 lens sub-agents in parallel on the task diff — each as the `al-agentic-dev:al-review-lens` agent, except lens 2 (BC best-practice) which spawns `al-agentic-dev:al-review-lens-bc` for its bc-code-intelligence reach. Each returns reshape opportunities; the main session merges into one ordered apply queue. The spawn prompt carries only the per-lens goal below plus the task diff; the read-only envelope, model pin, BC vocabulary, and findings shape live in the agent body and ship to consumer repos.
+Spawn 4 lens subagents in parallel on the task diff — each with the prompt in [`subagents/al-review-lens.md`](../../references/subagents/al-review-lens.md), except lens 2 (BC best-practice) which uses [`subagents/al-review-lens-bc.md`](../../references/subagents/al-review-lens-bc.md) for its bc-code-intelligence reach (a small/fast model suffices — see the tier note in those files). Each returns reshape opportunities; the main session merges into one ordered apply queue. The spawn prompt carries only the per-lens goal below plus the task diff; the read-only posture, BC vocabulary, and findings shape live in the prompt block.
 
 When the diff touches test code, the spawn prompt also names [test-layout.md](../../references/test-layout.md): its authoring contract is exactly what tidy passes break silently — consolidating "duplicate" integration-test library procedures violates duplicate-before-share, hoisting handlers off a test codeunit breaks the `[HandlerFunctions]` string binding, relocating a double breaks the per-app independence rule. Moving a test across the unit/integration boundary is never a lens call — that is replan, route `/al-steer`.
 
@@ -86,7 +86,7 @@ Scope: objects, procedures, parameters, variables, record vars, table fields, pa
 
 Rename safety: editing a test procedure name requires task-spec reconciliation — update AAA header, `Procedure:`, and `Covered By` in the same change when the task is active. Intent shift → update via `/al-refine`. `[HandlerFunctions('...')]` strings are invisible to symbol tools; grep before any test-procedure rename per [tdd.md](../../references/tdd.md).
 
-Citation chain: a rename pulling a BC name or verb from outside the codebase meets the evidence bar in [voice-contract.md](../../references/voice-contract.md) before it lands — workspace hit or quoted fetch; conflicts escalate to `al-research` agent. This is exactly where a confidently-wrong verb corrupts every downstream artifact.
+Citation chain: a rename pulling a BC name or verb from outside the codebase meets the evidence bar in [voice-contract.md](../../references/voice-contract.md) before it lands — workspace hit or quoted fetch; conflicts escalate to `/al-research`. This is exactly where a confidently-wrong verb corrupts every downstream artifact.
 
 ## Cross-cutting
 
@@ -96,7 +96,15 @@ Citation chain: a rename pulling a BC name or verb from outside the codebase mee
 
 **No new behaviour.** Diff leaves observable behaviour identical. New behaviour belongs to `/al-implement` (new task) or `/al-refine` (re-plan).
 
-Standalone mode emits the Gate report once at module / pattern / seam altitude (not procedure level), naming the application invariant preserved and the user's call; inside `/al-implement`, findings fold into the task Gate report. `/al-refactor` does not edit `architecture.md` and writes no Notes by default; a task file under `tasks/` is touched only when an operational outcome demands it, per the surgical-edit contract in [markdown-spec-discipline.md](../../references/markdown-spec-discipline.md). See [voice-contract.md](../../references/voice-contract.md).
+Emits the Gate report once at module / pattern / seam altitude (not procedure level), naming the application invariant preserved and the next step. `/al-refactor` does not edit `architecture.md` and writes no Notes by default; a task file under `tasks/` is touched only when an operational outcome demands it, per the surgical-edit contract in [markdown-spec-discipline.md](../../references/markdown-spec-discipline.md). See [voice-contract.md](../../references/voice-contract.md).
+
+## Next step
+
+- **Reshape complete, inside the slice cycle:** `Next: /al-mutate` — validate the tests catch the decision logic the reshape just moved through.
+- **Standalone legacy reshape, no owning task:** `Next: /al-mutate` if the area carries decision logic worth pinning, else back to the user; surface any architectural gap as `Next: /al-design` or `/al-steer`.
+- **Stopped on an architectural gap / new behaviour:** `Next: /al-steer`.
+
+If state can't be read, fall back: `/al-mutate` after a behaviour-bearing reshape, `/al-steer` if anything bigger than tidy-up surfaced.
 
 ## Feed
 
@@ -113,7 +121,9 @@ Reshape promises shape improves and behaviour does not — a wary dev wants proo
 
 | | |
 |---|---|
-| **Runs after**     | `/al-implement` green on current task, OR standalone on legacy code |
-| **Hands off to**   | `/al-mutate` (inside `/al-implement` loop), or back to caller standalone |
+| **Runs after**     | `/al-implement` took the current task to green, OR standalone on legacy code |
+| **Hands off to**   | `/al-mutate` (the next rigor step), or back to the user standalone |
+| **Calls directly** | `/al-research` (BC facts), `/al-build` (green between applies), `/al-second-opinion` (non-trivial apply queue) — the only skills it invokes |
+| **Spawns**         | 4 review-lens subagents from [`subagents/al-review-lens.md`](../../references/subagents/al-review-lens.md) / [`al-review-lens-bc.md`](../../references/subagents/al-review-lens-bc.md) |
 | **Replan venue**   | `/al-steer` |
-| **Sidebands**      | `al-research` agent (BC facts), `bc-standard-reference` agent (BaseApp patterns), `/al-code-review` (non-structural concerns surface as out-of-scope notes), `/al-design` (standalone-on-legacy surfacing real architecture), `/grill-me` (non-obvious trade-off needs the user) |
+| **Sidebands**      | bc-standard-reference (BaseApp patterns), `/al-code-review` (non-structural concerns surface as out-of-scope notes), `/al-design` (standalone-on-legacy surfacing real architecture), `/grill-me` (non-obvious trade-off needs the user) |
