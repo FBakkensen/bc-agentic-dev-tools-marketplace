@@ -93,7 +93,17 @@ A replay red is a question: *is the recording wrong, or is the system?* The reco
 
 Once when the slice's recordings land committed. Verify task `status:` stays `ready-for-verification` and keeps `review: clean` — the commit adds recordings, no production AL, so the per-slice review still vouches for the slice diff. Gate report names the slice (slug + `event-model.md` step), the count of scenarios recorded, what user surface each exercises (Page action), and next handoff `/al-user-verification T-NNN`. Stop shape on a routing failure (production bug or unscriptable red → status unchanged, route `/al-steer`) follows [voice-contract.md](../../references/voice-contract.md): one stop line naming scenario / step / observed-vs-expected, state table (verify task id, scenarios recorded, scenario blocked on), next action.
 
-**Advisor checkpoint.** Call `advisor()` on the recordings as they will be committed — the batch-pre-flight-green set, not a mid-fight draft a re-record superseded. Each recording joins every future slice's pre-flight; a fragile or wrongly-asserting one multiplies false-red across the feature.
+**Advisor checkpoint.** Do a final check on the recordings as they will be committed — the batch-pre-flight-green set, not a mid-fight draft a re-record superseded. Each recording joins every future slice's pre-flight; a fragile or wrongly-asserting one multiplies false-red across the feature.
+
+## Next step
+
+End by naming the concrete next move, read off current state:
+
+- **Batch pre-flight green, recordings committed** → `Next: /al-user-verification T-NNN` (the verify task stays `ready-for-verification` with `review: clean`).
+- **Production-bug or oracle-blind/unscriptable red** → status unchanged, `Next: /al-steer T-NNN` (routing per *Failure classification*).
+- **Bad recording** → re-record in-loop (no handoff); resume at the failing scenario.
+
+If state can't be read, fall back to `/al-user-verification T-NNN`.
 
 ## Feed
 
@@ -113,7 +123,7 @@ Four moments narrate to the branch feed; the per-scenario record-download-replay
 | **Hands off to**   | `/al-user-verification` on green (every `Record: yes` scenario recorded + batch pre-flight green). `/al-steer` on a production-bug or unscriptable red, status unchanged (routing per *Failure classification*). |
 | **Uses**           | `new-agent-container.ps1` (fresh spawn before each replay; one container at a time), `publish-apps.ps1`, `pagescript-replay.ps1` (`-File` per-scenario, batch pre-commit), BC's Page Scripting recorder driven by the user, Web Client deep links + `al-build.json` credentials (the user's entry), [`references/recorder-gestures.md`](references/recorder-gestures.md) (recording coaching), [`references/bc-replay-yaml-format.md`](references/bc-replay-yaml-format.md) (read a red / scope a surgical edit), [`../../references/test-specification.md`](../../references/test-specification.md) (`Verification Plan` grammar + `Record:` flag), [`../../references/test-strategy.md`](../../references/test-strategy.md) (layer + push-down frame) |
 | **Replan venue**   | `/al-steer` — production-bug and unscriptable reds route here with status unchanged (it opens the integration fix task or reopens the verify task to `ready` for `/al-refine`); push-down then lands the fix in `/al-implement` |
-| **Sidebands**      | `al-research` agent (BC surface behaviour an example asserts), `/grill-me` (intent on an example step the user must adjudicate) |
+| **Sidebands**      | `/al-research` (BC surface behaviour an example asserts), `/grill-me` (intent on an example step the user must adjudicate) |
 
 ## Running a recording
 

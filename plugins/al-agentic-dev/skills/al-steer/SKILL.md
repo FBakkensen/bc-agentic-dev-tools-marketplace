@@ -20,7 +20,7 @@ User invokes in natural language ("where are we?", "split T-009 into three tasks
 
 ## Power model
 
-Read anything in workspace. Write the `tasks/` folder structurally — add, split, delete, reorder, re-prefix task files — only after explicit user ack; silent restructuring loses the audit trail. Re-prefix by inserting into a gap (`025` between `020` and `030`); when a gap fills, rename the minimum local run (the `T-MMM` id inside each file is untouched, so no anchor breaks). Complete the whole rename run before any `al-doc-verify` agent call or downstream handoff — a half-finished run leaves two files sharing a prefix, which `al-doc-verify` flags as duplicate-prefix. Write `.out-of-scope/<concept>.md` when substantive rejection earns durable memory. Nothing else.
+Read anything in workspace. Write the `tasks/` folder structurally — add, split, delete, reorder, re-prefix task files — only after explicit user ack; silent restructuring loses the audit trail. Re-prefix by inserting into a gap (`025` between `020` and `030`); when a gap fills, rename the minimum local run (the `T-MMM` id inside each file is untouched, so no anchor breaks). Complete the whole rename run before the document-integrity check or any downstream handoff — a half-finished run leaves two files sharing a prefix, which the duplicate-prefix check flags. Write `.out-of-scope/<concept>.md` when substantive rejection earns durable memory. Nothing else.
 
 ## Read first, then name
 
@@ -81,17 +81,9 @@ Name candidate mutations matching what the trigger surfaced — splitting, inser
 
 ## Document verification
 
-When restructuring the `tasks/` folder by explicit user ack (add, split, delete, re-prefix), spawn the `al-agentic-dev:al-doc-verify` agent after the write, before naming downstream handoff, with a brief:
+When restructuring the `tasks/` folder by explicit user ack (add, split, delete, re-prefix), run the document-integrity check yourself, inline (no subagent), after the write and before naming the downstream handoff — verify the folder against [`doc-integrity.md`](../../references/doc-integrity.md): the `tasks/` profile, with the duplicate-prefix and dangling-edge checks load-bearing after a re-prefix.
 
-```text
-producer: al-steer
-artifact_paths: specs/<NNN>-<slug>/tasks/
-task_id: <T-NNN>
-slice: <slice>
-intended_handoff: <next-skill>
-```
-
-Skip this gate for simple `status:` flips, closeout notes, or inline replan flags. `verdict=fail` blocks the handoff; fix the structural/boundary issue or leave the task `blocked`. `verdict=warn` does not block; surface it in the steering note.
+Skip this gate for simple `status:` flips, closeout notes, or inline replan flags. A **fail** (structural or boundary blocker) blocks the handoff; fix it or leave the task `blocked`. A **warn** does not block; surface it in the steering note.
 
 ## False halt closes the loop
 
@@ -101,12 +93,16 @@ Grilling vetoes the trigger → restore the prior `status:` value in frontmatter
 
 Grilling vetoes a recurring scope item with a substantive reason (project scope, technical constraint, strategic decision, referenced ADR — not a deferral) → record at `.out-of-scope/<concept>.md`, so the next session can't re-litigate the rejection. Scan `.out-of-scope/*.md` during replan and grilling; on match, surface the prior rejection in the user's words. Template `${CLAUDE_SKILL_DIR}/references/out-of-scope.template.md` materialises on first need; a match appends a *Prior requests* entry rather than spawning a second file.
 
+## Next step
+
+Naming the next step *is* this skill's deliverable: the steering note ends with the concrete move read off current board state — `Next: /<skill> T-NNN` for the resolved block, or the deliberate `blocked` hold with what must settle first. `/al-steer` never auto-invokes the skill it names; the user takes the step.
+
 ## Feed
 
 Card only the plan-changing moments below; routine board reads and handoff naming get nothing. At each, hand `/al-feed` a brief (what happened, why it matters, the kind); it composes and appends the card.
 
 - **surprise** — a replan trigger acted on as a halt: task flipped `blocked`, trigger ID + reason recorded. Brief names which of the eight triggers, the codebase symptom in object terms, and that a tool-diagnosis trigger was re-confirmed before the flip.
-- **decision** — the `tasks/` folder structurally rewritten after explicit user ack (split / insert / delete / reorder). Brief names the trigger, the exact mutation, the `review: clean` strip, the `al-doc-verify` agent gate.
+- **decision** — the `tasks/` folder structurally rewritten after explicit user ack (split / insert / delete / reorder). Brief names the trigger, the exact mutation, the `review: clean` strip, the document-integrity gate.
 - **verdict** — grilling vetoes a trigger: prior `status:` restored, false halt closed. Brief names what the halt suspected, why it was overturned, that the reasoning was recorded.
 - **decision** — a recurring scope request vetoed and recorded at `.out-of-scope/`. Brief names the substantive reason, written so the next session can't re-litigate it.
 

@@ -9,6 +9,8 @@ description: Independent read-only advisory review via cross-family CLI dispatch
 
 Ask a different model family to read the artifact and name what is missing. Same-model self-review confirms its own blind spots; cross-family is the point. Script `scripts/Invoke-AlSecondOpinion.ps1` shells to the GitHub Copilot CLI (`@github/copilot`), pinned to a GPT model, for that read. Copilot is a CLI tool dependency here — not a host runtime, not a publish target.
 
+This is one of the three skills (with `/al-research` and `/al-build`) a skill may invoke **autonomously** mid-step, no user round-trip. That autonomy is load-bearing for the cheap-model goal: a smaller model running a pipeline skill leans on an independent cross-family read to catch what same-family self-review misses, so the call cannot wait on a handoff.
+
 Caller (`/al-implement`, `/al-refine`, `/al-refactor`, `/al-user-verification`, `/al-code-review`) owns the artifact and reconciles bullets that come back; this skill owns the call. For `/al-user-verification` the artifact is the walk verdict — per example, the exact question as posed and the user's verbatim observation (or captured client output for Contract examples); the review checks coverage and routing, not the observation itself. For `/al-code-review` the artifact is the round's must-fix survivor list, and the caller treats a refutation as a **veto on autonomous action** — the refuted finding drops out of the fix queue and escalates rather than being auto-fixed on cross-family doubt.
 
 ## Preconditions
@@ -79,6 +81,10 @@ Second opinion skipped: skill did not invoke pwsh tool
 ```
 
 Every other skip variant (node unavailable, copilot CLI unavailable, timeout, pwsh exception, non-zero exit, empty response) is emitted by the script. Caller does not invent them.
+
+## Next step
+
+Advisory only — the verdict (gap bullets or a skip line) goes back verbatim. `Next:` return to the skill that requested it (commonly `/al-refine`, `/al-implement`, `/al-mutate`, `/al-user-verification`, `/al-code-review`), which reconciles each bullet per-line and continues.
 
 ## Composition
 

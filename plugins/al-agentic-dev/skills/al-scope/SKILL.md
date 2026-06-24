@@ -82,25 +82,23 @@ Verify-task descriptions name the slice's user-facing outcome in `event-model.md
 
 ## Document verification
 
-After writing the `tasks/` folder, spawn the `al-agentic-dev:al-doc-verify` agent before the Gate report, with a brief naming:
+After writing the `tasks/` folder, run the document-integrity check yourself, inline (no subagent), before the Gate report — verify the folder against [`doc-integrity.md`](../../references/doc-integrity.md): the `tasks/` profile (per-task-file frontmatter integrity, duplicate id/prefix, dangling edges, order-vs-edges, verify under-coverage, ops-slug pairing).
 
-```text
-producer: al-scope
-artifact_paths: specs/<NNN>-<slug>/tasks/
-intended_handoff: al-refine
-```
-
-`verdict=fail` blocks the Gate report and `/al-refine` handoff; fix the structural/boundary issue or route to `/al-steer`. `verdict=warn` does not block; include the warning in the Gate report. This gate checks document integrity only, not whether the task decomposition is optimal.
+A **fail** (structural or boundary blocker) blocks the Gate report and `/al-refine` handoff; fix it or route to `/al-steer`. A **warn** does not block; include it in the Gate report. This gate checks document integrity only, not whether the task decomposition is optimal.
 
 ## Gate event
 
 Once when task decomposition lands in the `tasks/` folder. Gate report names slice families decomposed (one per `event-model.md` step for user-facing, one per `architecture.md` slice for backend-only), verify-task count (or *none, backend-only*), dependency shape (linear or branching), states feature Goal in user terms, names user's call to greenlight `/al-refine` on first task of first slice.
 
+## Next step
+
+The `tasks/` folder is decomposed and integrity-checked. `Next: /al-refine T-NNN` on the first task of the first slice — the `kind: provision` task if `/al-scope` bracketed one (`Next: /al-provision`). A gap `architecture.md` could not answer halted the write → `Next: /al-steer`.
+
 ## Feed
 
 Two moments narrate to the branch feed; everything else — folder-shape mechanics, per-task frontmatter, edge wiring — stays silent. At each, hand `/al-feed` a brief of what happened and why it matters to a wary dev who has not read `architecture.md`; `/al-feed` composes the punchline and layers and appends the card.
 
-- **landing** — decomposition lands in the `tasks/` folder and a clean `al-doc-verify` verdict clears the `/al-refine` handoff. Brief: the design is now a concrete to-do list — NN chunks, each user-facing one ending in a check the user signs off, ready to start. Layers carry the slice families, the user-verification-gate count, linear vs branching shape, and the Goal restated in user terms.
+- **landing** — decomposition lands in the `tasks/` folder and a clean document-integrity verdict clears the `/al-refine` handoff. Brief: the design is now a concrete to-do list — NN chunks, each user-facing one ending in a check the user signs off, ready to start. Layers carry the slice families, the user-verification-gate count, linear vs branching shape, and the Goal restated in user terms.
 - **surprise** — the replan/stop guard fires: a gap `architecture.md` cannot answer halts the write and routes to `/al-steer`. Brief: hit a hole it could not fill honestly, so it stopped and handed it back instead of guessing. Layers name what was missing.
 
 ## Composition
@@ -110,4 +108,4 @@ Two moments narrate to the branch feed; everything else — folder-shape mechani
 | **Runs after**     | `/al-design` (architecture.md), `/al-event-model` for user/API-facing (event-model.md source for slice slugs and Goal) |
 | **Hands off to**   | `/al-refine` (one task at a time, technical or verify) |
 | **Replan venue**   | `/al-steer` (gap surfaced during decomposition) |
-| **Sidebands**      | `al-research` agent (non-trivial BC areas), `bc-standard-reference` agent (BaseApp grounding) |
+| **Sidebands**      | `/al-research` (non-trivial BC areas), `bc-standard-reference` (BaseApp grounding) |

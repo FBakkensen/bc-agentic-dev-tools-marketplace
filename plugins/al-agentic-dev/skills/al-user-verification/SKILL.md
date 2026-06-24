@@ -130,6 +130,16 @@ Once when the verify task flips to `done`. Gate report names the slice (slug + `
 
 Gate report on failure (flipping to `blocked`) is the Stop shape from [voice-contract.md](../../references/voice-contract.md): one stop line naming scenario / check / observed-vs-expected, state table (verify task id, scenarios completed, scenario blocked on), next action (route to `/al-steer`).
 
+## Next step
+
+End by naming the concrete next move, read off current state. The status flips and same-feature `blocked` → `ready` opens below are state writes this skill owns inline — naming the next step is separate, and never auto-invokes it.
+
+- **Verify pass, next slice opened** (its technical tasks flipped `ready`) → `Next: /al-refine T-NNN` on the next slice's first task.
+- **Verify pass, last slice** (breaking-change task flipped `blocked` → `ready`) → `Next: /al-validate-breaking-changes`, then `/al-code-review` per-feature.
+- **Functional fail or pre-flight red** (verify task `blocked`, `review: clean` stripped) → `Next: /al-steer T-NNN`.
+
+If state can't be read, fall back to `/al-refine` on the next slice (or `/al-steer` after a fail).
+
 ## Feed
 
 The wary developer is the oracle here, so the feed narrates the commitments and outcomes they care about — never the one-instruction walk. At each moment below, hand `/al-feed` a brief (what happened, why it matters to someone who didn't watch the walk, the kind); `/al-feed` composes the card and appends it.
@@ -148,6 +158,6 @@ The wary developer is the oracle here, so the feed narrates the commitments and 
 | **Hands off to**   | next slice's technical tasks opened to `ready` for `/al-refine`; or — if this was the last slice — the `kind: breaking-change` task opened `blocked` → `ready`, then `/al-validate-breaking-changes` (then `/al-code-review` per-feature). `/al-steer` on failure (after `status: blocked`). Usability findings → candidate tasks in the slice. |
 | **Uses**           | `new-agent-container.ps1` (three spawns per cycle), `pagescript-replay.ps1` (batch mode for spawn #1's pre-flight), `publish-apps.ps1` (spawn #1, #2), Web Client deep links + `al-build.json` credentials, `/al-second-opinion` (coverage review before the gate), [`../../references/test-specification.md`](../../references/test-specification.md) (`Verification Plan` grammar + `Record:` flag), [`../../references/test-strategy.md`](../../references/test-strategy.md) (layer + checking-vs-testing frame) |
 | **Replan venue**   | `/al-steer` — trigger #4 (pre-flight prior-slice red), trigger #8 (pre-flight current-slice red or functional-walk fail) |
-| **Sidebands**      | `/grill-me` (adjudicate an ambiguous usability finding, or whether an observation matches the expected outcome), `al-research` agent (BC surface behaviour to verify against documentation) |
+| **Sidebands**      | `/grill-me` (adjudicate an ambiguous usability finding, or whether an observation matches the expected outcome), `/al-research` (BC surface behaviour to verify against documentation) |
 
-**Advisor checkpoint.** Call `advisor()` before flipping the verify task to `done` — the same-session complement to the `/al-second-opinion` cross-family coverage gate. The flip greenlights the next slice; if the verdict doesn't cover every walked observable check with a user-reported value and every `Record: yes` scenario with a replay result, or any pass rests on a led or inferred value, the gate is theatre.
+**Advisor checkpoint.** Do a final coverage check before flipping the verify task to `done` — the same-session complement to the `/al-second-opinion` cross-family coverage gate. The flip greenlights the next slice; if the verdict doesn't cover every walked observable check with a user-reported value and every `Record: yes` scenario with a replay result, or any pass rests on a led or inferred value, the gate is theatre.

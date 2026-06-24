@@ -38,6 +38,12 @@ Map the exit code, then surgical-Edit the `status:` frontmatter line of the prov
 
 `blocked` → environment is not ready. Route to `/al-steer`. Never flip `done` without a clean exit — a green flip with a stale environment poisons every downstream compile.
 
+## Next step
+
+- **`done`, first slice opened.** The feature's first real slice is now buildable. `Next: /al-refine T-NNN` on the first slice's first technical task.
+- **`done`, no slices yet** (provision ran before any feature shape): `Next: /al-event-model` (user/API-facing) or `/al-design` (backend-only).
+- **`blocked`:** `Next: /al-steer`.
+
 ## Feed
 
 Two hand-wired moments narrate to the branch feed. At each, hand `/al-feed` a brief — what just happened, why it matters to a wary dev, the kind — and `/al-feed` composes the punchline and layers and appends the card. Compose by name; never inline its mechanics.

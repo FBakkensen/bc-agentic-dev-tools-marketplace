@@ -45,6 +45,10 @@ end;
 
 **Hand-off state is zero `DEBUG-*` in tree** — `rg "DEBUG-" --type al` returns nothing. A probe intentionally retained carries a comment with issue/scope so the next pass sees it is deliberate.
 
+## Next step
+
+Probes are gone; the runtime answered the question. `Next:` return to the skill that needed the insight — usually `/al-implement` (resume the red→green case the path uncertainty stalled) or `/al-refine` (the spec assumption is now settled). Probes silent / question still open → `Next: /al-steer`.
+
 ## Feed
 
 One moment narrates — the loop leaves no durable artifact, so the feed carries the one fact it surfaced.
