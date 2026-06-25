@@ -105,15 +105,6 @@ End by naming the concrete next move, read off current state:
 
 If state can't be read, fall back to `/al-user-verification T-NNN`.
 
-## Feed
-
-Four moments narrate to the branch feed; the per-scenario record-download-replay grind stays silent. At each, hand `/al-feed` a brief — what happened, why a wary dev should care, the kind — and `/al-feed` composes the punchline + layers and appends the card. Compose by name; never inline its append.
-
-- **verdict** · a recorded scenario seals green on a fresh container → the user's click-through replays clean from nothing, so it is a real re-runnable regression guard; note scenario/surface and the equality/visibility-limited oracle.
-- **surprise** · a red read as a real system bug, the recording *not* patched to fake the green → name the failing step, why this layer can't pin it, the route.
-- **verdict** · the cross-file pre-flight batch greens with the new recordings joined → every prior recording still plays together.
-- **landing** · the recordings land committed and hand to `/al-user-verification` → the slice now has saved replayable walkthroughs for the behaviour no AL test could reach.
-
 ## Composition
 
 | | |

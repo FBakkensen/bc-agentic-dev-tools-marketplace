@@ -62,4 +62,4 @@ A findings note: verbatim quotes, one-line citations, no editorialising. Citatio
 
 ## Next step
 
-Hand the findings note back to whatever needed the fact. **Invoked by another skill** → return the note; the caller lands any `Contract notes` bullet and fires any feed card. **Run standalone** → `Next:` the skill that owns the artifact the fact feeds — `/al-design` or `/al-event-model` for a design fact, `/al-refine` or `/al-implement` for an implementation fact, `/al-grill-adr` for a CONTEXT/ADR fact. If a conflict was surfaced and the choice is architectural, `Next: /al-steer`.
+Hand the findings note back to whatever needed the fact. **Invoked by another skill** → return the note; the caller lands any `Contract notes` bullet. **Run standalone** → `Next:` the skill that owns the artifact the fact feeds — `/al-design` or `/al-event-model` for a design fact, `/al-refine` or `/al-implement` for an implementation fact, `/al-grill-adr` for a CONTEXT/ADR fact. If a conflict was surfaced and the choice is architectural, `Next: /al-steer`.

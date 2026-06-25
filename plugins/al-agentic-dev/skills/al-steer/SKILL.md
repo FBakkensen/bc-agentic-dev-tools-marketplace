@@ -95,15 +95,6 @@ Grilling vetoes a recurring scope item with a substantive reason (project scope,
 
 Naming the next step *is* this skill's deliverable: the steering note ends with the concrete move read off current board state — `Next: /<skill> T-NNN` for the resolved block, or the deliberate `blocked` hold with what must settle first. `/al-steer` never auto-invokes the skill it names; the user takes the step.
 
-## Feed
-
-Card only the plan-changing moments below; routine board reads and handoff naming get nothing. At each, hand `/al-feed` a brief (what happened, why it matters, the kind); it composes and appends the card.
-
-- **surprise** — a replan trigger acted on as a halt: task flipped `blocked`, trigger ID + reason recorded. Brief names which of the eight triggers, the codebase symptom in object terms, and that a tool-diagnosis trigger was re-confirmed before the flip.
-- **decision** — the `tasks/` folder structurally rewritten after explicit user ack (split / insert / delete / reorder). Brief names the trigger, the exact mutation, the `review: clean` strip, the document-integrity gate.
-- **verdict** — grilling vetoes a trigger: prior `status:` restored, false halt closed. Brief names what the halt suspected, why it was overturned, that the reasoning was recorded.
-- **decision** — a recurring scope request vetoed and recorded at `.out-of-scope/`. Brief names the substantive reason, written so the next session can't re-litigate it.
-
 ## Composition
 
 | | |

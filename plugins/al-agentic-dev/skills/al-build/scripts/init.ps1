@@ -119,13 +119,6 @@ if (Test-Path -LiteralPath $gitignorePath) {
     $gitignoreUpdated = $true
 }
 
-# Ensure the branch-feed projection is ignored: feed.jsonl is the committed
-# source of truth, feed.html is a regenerated view (see /al-feed).
-if ((Get-Content -LiteralPath $gitignorePath -Raw) -notmatch '(?m)^specs/\*/feed\.html\s*$') {
-    Add-Content -LiteralPath $gitignorePath -Value "`n# Branch-feed projection (regenerated from feed.jsonl)`nspecs/*/feed.html"
-    $gitignoreUpdated = $true
-}
-
 # Output results
 Write-Host "Created: $projectConfigPath" -ForegroundColor Green
 

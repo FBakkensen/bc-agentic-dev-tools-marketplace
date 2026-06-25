@@ -48,15 +48,6 @@ A **fail** (structural or boundary blocker) blocks handoff; fix it or route to `
 
 Idea grilled, `CONTEXT.md` (and any ADR) written and integrity-checked. `Next: /al-event-model` for a user/API-facing feature, or `/al-design` (backend-only) — whichever the feature's surface calls for. Term still unsettled or a behavioural conflict unresolved → `Next: /al-research` (BC fact) or `/al-steer` (decision).
 
-## Feed
-
-Two moments are worth narrating to a wary developer; the rest is interview play-by-play and stays silent.
-
-- **decision** — a constraint clears the four-of-four ADR bar and the user accepts it. Name the business rule locked in, why it earned recording, which alternative was rejected.
-- **surprise** — the code disagrees with the user's stated behaviour. Name the mismatch, the term or scenario that exposed it, the two readings, and that the user picks the resolution.
-
-At each, hand `/al-feed` a brief and the kind; it composes and appends the card.
-
 ## Composition
 
 | | |

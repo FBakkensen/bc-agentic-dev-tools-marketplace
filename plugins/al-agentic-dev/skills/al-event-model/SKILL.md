@@ -72,17 +72,6 @@ Once when `event-model.md` lands. Gate report describes the journey in BC vocabu
 
 `event-model.md` landed clean and the branch + spec folder exist. `Next: /al-design` — it consumes the journey into `architecture.md`. A downstream fact invalidated the timeline, or a name won't ground → `Next: /al-research` (BC fact) or `/al-steer` (replan).
 
-## Feed
-
-Two moments narrate the journey to the branch feed; interior craft (name-verification, telegraphic writing, the citation chain) stays in markdown and never cards.
-
-- **decision** — the hybrid-settlement fork resolves: two timelines diverged on one structural choice and the user picked. Depth: the confessed leaf guesses and why this was *the* structural fork.
-- **landing** — `event-model.md` lands clean, folding in the branch + spec-folder birth. Depth: the minted branch/slug and the journey timeline.
-
-On a document-integrity **fail**, fire a card naming the plain-language defect that blocked the docs; a clean pass folds into the `landing` card.
-
-At each moment hand `/al-feed` a brief — what happened, why it matters to someone who hasn't read the artifact, and the kind.
-
 ## Composition
 
 | | |

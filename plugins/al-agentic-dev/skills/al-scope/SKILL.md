@@ -94,13 +94,6 @@ Once when task decomposition lands in the `tasks/` folder. Gate report names sli
 
 The `tasks/` folder is decomposed and integrity-checked. `Next: /al-refine T-NNN` on the first task of the first slice — the `kind: provision` task if `/al-scope` bracketed one (`Next: /al-provision`). A gap `architecture.md` could not answer halted the write → `Next: /al-steer`.
 
-## Feed
-
-Two moments narrate to the branch feed; everything else — folder-shape mechanics, per-task frontmatter, edge wiring — stays silent. At each, hand `/al-feed` a brief of what happened and why it matters to a wary dev who has not read `architecture.md`; `/al-feed` composes the punchline and layers and appends the card.
-
-- **landing** — decomposition lands in the `tasks/` folder and a clean document-integrity verdict clears the `/al-refine` handoff. Brief: the design is now a concrete to-do list — NN chunks, each user-facing one ending in a check the user signs off, ready to start. Layers carry the slice families, the user-verification-gate count, linear vs branching shape, and the Goal restated in user terms.
-- **surprise** — the replan/stop guard fires: a gap `architecture.md` cannot answer halts the write and routes to `/al-steer`. Brief: hit a hole it could not fill honestly, so it stopped and handed it back instead of guessing. Layers name what was missing.
-
 ## Composition
 
 | | |

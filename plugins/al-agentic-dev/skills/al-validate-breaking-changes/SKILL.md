@@ -40,15 +40,6 @@ A confirmed break is an **intent decision** the human makes at merge — *intend
 
 A `4` (`Contract`) or other non-zero prerequisite failure → `blocked`, fix the prereq (re-run `/al-provision` for an empty cache), re-run.
 
-## Feed
-
-The gate's two verdicts narrate to the branch feed, nothing in between. At each, hand `/al-feed` a brief; it composes the card.
-
-- **landing** · exit `0`, task flips `done` → the released app was checked and nothing customers rely on broke — clear to ship. The feature's last gate.
-- **surprise** · exit `3`, task flips `blocked`, route to `/al-steer` → a change would break a promise a shipped version made, so the gate stops for the human's intent call.
-
-A `4` (`Contract`) or other prerequisite/environment non-zero yields no verdict — no card; fix the prereq and re-run.
-
 ## Next step
 
 - **`done` (exit `0`):** the feature's last gate is clear. `Next:` merge.

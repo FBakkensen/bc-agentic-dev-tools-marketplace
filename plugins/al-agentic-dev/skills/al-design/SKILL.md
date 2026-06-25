@@ -97,14 +97,6 @@ Once when `architecture.md` lands. Gate report names chosen BC pattern + R → P
 
 `architecture.md` landed clean. `Next: /al-scope` — it decomposes the architecture into the slice-grouped `tasks/` folder. A BaseApp behaviour or pattern fitness won't ground → `Next: /al-research`; a domain rule is unsettled → `/al-grill-adr`; the decomposition needs a new decision → `/al-steer`.
 
-## Feed
-
-Three moments narrate to the branch feed; the architecture reshaping itself (deletion test, two-adapter rule, R → P → W split) is interior craft, not a feed beat. At each, hand `/al-feed` a brief — what just happened, why it matters to someone who hasn't read `architecture.md`, the kind — and `/al-feed` composes the card and appends it. The inline document-integrity check returns a verdict, not a card: on a **fail**, fire a card naming the plain-language defect that blocked the docs; a clean pass folds into the `landing` card.
-
-- **decision** · design-twice bake-off reconciled, one blueprint picked (non-trivial calls only): the one-line why-it-won.
-- **decision** · an architecture trade-off recorded (all four criteria hold): mechanism picked, alternative rejected, reason.
-- **landing** · `architecture.md` lands with the Gate report: chosen BC pattern, R → P → W boundary, problem solved, greenlight to `/al-scope`.
-
 ## Composition
 
 | | |

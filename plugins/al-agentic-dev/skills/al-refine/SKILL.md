@@ -124,14 +124,6 @@ Read off the flipped task:
 
 If state can't be read, fall back to `/al-implement` for a technical task; for a verify task (which reached `/al-refine` only because `/al-code-review` already ran) → `/al-user-verification`, or `/al-steer` when unsure — never back through `/al-code-review`.
 
-## Feed
-
-Three moments narrate to the branch feed. At each, hand `/al-feed` a brief — what happened, why it matters to someone who hasn't read the proof, the kind — and `/al-feed` composes the punchline and layers and appends the card. Fire only on these; the per-question grounding and inline grilling stay silent.
-
-- **decision** — proof structure committed: `Expected Behaviors` vs `Decision Matrix`, `New:` vs `Modified:` objects settled, and the push-up set surfaced.
-- **surprise** — unanswerable exit: a needed answer won't ground (or the inline document-integrity check returns a **fail**), so the task stays/flips `blocked` and routes out rather than ship fuzzy proof.
-- **landing** — the status flip `ready → ready-for-implementation` / `ready-for-verification`.
-
 ## Composition
 
 | | |

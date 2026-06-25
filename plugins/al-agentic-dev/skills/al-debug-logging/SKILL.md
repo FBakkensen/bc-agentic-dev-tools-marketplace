@@ -49,14 +49,6 @@ end;
 
 Probes are gone; the runtime answered the question. `Next:` return to the skill that needed the insight — usually `/al-implement` (resume the red→green case the path uncertainty stalled) or `/al-refine` (the spec assumption is now settled). Probes silent / question still open → `Next: /al-steer`.
 
-## Feed
-
-One moment narrates — the loop leaves no durable artifact, so the feed carries the one fact it surfaced.
-
-- **surprise** · Inspect — telemetry settles which path actually ran, or probes come back silent. Captures: source couldn't prove it, the runtime did — e.g. the fallback branch fired, not the standard path. Layers: the hypothesis, the one logged fact, assumption confirmed or overturned.
-
-At that moment hand `/al-feed` a brief — what the probe asked, what the runtime answered, kind `surprise` — and `/al-feed` composes the punchline + layers and appends the card. No other step cards; the probe placement, runs, and cleanup stay mechanical.
-
 ## Composition
 
 - `/al-build` — runs test harness, produces `.output/TestResults/*/telemetry.jsonl`.

@@ -16,7 +16,7 @@ Each `→` is a handoff the finishing skill names and **you** take; no step laun
 
 | Lane | Skills |
 |---|---|
-| **Side-band** (invoked from any main-pipeline skill or standalone) | `/al-research` (BC fact escalation) and `/al-second-opinion` (cross-family advisory) — two of the three skills another skill may call directly (with `/al-build`); plus `/al-steer`, `/al-feed` |
+| **Side-band** (invoked from any main-pipeline skill or standalone) | `/al-research` (BC fact escalation) and `/al-second-opinion` (cross-family advisory) — two of the three skills another skill may call directly (with `/al-build`); plus `/al-steer` |
 | **Infrastructure** | `/al-build` (compile, publish, run tests — the other skill another skill may call), `/al-debug-logging` (transient `FeatureTelemetry.LogUsage` probes) |
 | **Ops** (bracket the feature; run an `/al-build` script + flip task status) | `/al-provision` (`T-001`, refresh the build environment), `/al-validate-breaking-changes` (last, validate against the released baseline) |
 | **Shaping** (after `/al-implement` on a task, or standalone on legacy) | `/al-refactor`, `/al-mutate` |
@@ -46,7 +46,6 @@ State handoff is the filesystem, never in-memory: every skill can be invoked col
 | `/al-user-verification` | Guides you through the verify task one scenario at a time, in chat, punchline first — runs containers, the recording pre-flight, and Contract checks; you walk the non-recorded Journey Examples in your browser and report what you see (ask-before-reveal). Functional outcomes gate, usability observations → findings/tasks. Gates the next slice. | Verify task is `ready-for-verification` carrying `review: clean` — `/al-code-review` ran clean at slice-done, then `/al-refine` wrote a fresh `Verification Plan`. |
 | `/al-code-review` | Gate at slice-done and feature-done. Report-only by default: spawn review lenses, judge, cross-family-vet, then report the must-fix queue (→ `/al-implement`), nits, and the gate decision. `--fix` lands the must-fix findings in-loop (red-green subagent) and re-reviews once. | Auto-announced as the next step by `/al-implement` at slice-done (both slice types) and feature-done. |
 | `/al-second-opinion` | Cross-family read-only advisory review (shells to GitHub Copilot CLI, pinned to a GPT model). | Before reconciling non-trivial `Test Specification`, `Verification Plan`, mutation lists, refactor checklists, or verification verdicts. |
-| `/al-feed` | Branch-feed writer. Composes one plain-language card (punchline + optional layers) and appends it to the branch's `feed.jsonl`, regenerating `feed.html`. | Handed a brief by a narrating skill at a hand-wired card-firing moment (never the three silent skills). |
 | `/al-steer` | Coach and navigator. Reads state, names next step, never edits code. Owns `.out-of-scope/`. Canonical replan venue. | "Where are we?", "what's next?", trigger fired in another skill. |
 | `/al-build` | Compile, publish, run tests; writes results to `.output/TestResults/<dirName>/`. | After modifying AL code or tests. Required gate before commit. |
 | `/al-debug-logging` | Temporary `DEBUG-*` `FeatureTelemetry.LogUsage` probes; read `telemetry.jsonl`; remove probes. Final state: zero `DEBUG-*` in tree. | Runtime behaviour diverges from source and tests can't reveal which path ran. |

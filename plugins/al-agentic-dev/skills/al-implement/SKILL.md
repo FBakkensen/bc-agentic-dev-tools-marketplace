@@ -122,14 +122,6 @@ End by naming the concrete next move, read off current state:
 
 If state can't be read, fall back to the typical next step: `/al-refactor` then `/al-mutate`, then `/al-code-review`.
 
-## Feed
-
-Highest-traffic skill, so the red/green grind stays out of the feed — only durable-state and settled-question moments earn a card. Hand `/al-feed` a brief by name (never inline the append); it composes punchline + layers and appends.
-
-- **verdict** — first AAA case completes red→green this session. Captures the behaviour/coverage-ID, Unit-before-Integration, failed-first as regression proof.
-- **surprise** — an AL Runner ERROR / exit-2 off the planned path, a push-up gate stopping for commitment (or degrading to `blocked` unattended), or a replan trigger fires. Captures which wall, absorbed vs handed to `/al-steer`. Only on a real trigger.
-- **landing** — the `ready-for-implementation → done` flip after final green and Gate report. Captures the Gate report (Did/Was/Fits/Next), next task(s) opened, slice-done handoff.
-
 ## Composition
 
 | | |

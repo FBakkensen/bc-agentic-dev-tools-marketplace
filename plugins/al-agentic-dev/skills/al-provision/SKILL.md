@@ -44,13 +44,6 @@ Map the exit code, then surgical-Edit the `status:` frontmatter line of the prov
 - **`done`, no slices yet** (provision ran before any feature shape): `Next: /al-event-model` (user/API-facing) or `/al-design` (backend-only).
 - **`blocked`:** `Next: /al-steer`.
 
-## Feed
-
-Two hand-wired moments narrate to the branch feed. At each, hand `/al-feed` a brief — what just happened, why it matters to a wary dev, the kind — and `/al-feed` composes the punchline and layers and appends the card. Compose by name; never inline its mechanics.
-
-- **verdict** · when `provision.ps1`'s exit is mapped and `T-001` flips — fires on both `done` and `blocked`. Captures whether the build environment is ready to work in: what it refreshed (compiler / symbols / baseline), or the concrete blocker and its route to `/al-steer`.
-- **landing** · clean path only, after `T-001` lands `done` and the first slice's technical tasks flip `blocked` → `ready`. Captures that setup is finished and the first slice is now buildable — which/how many tasks opened.
-
 ## Composition
 
 | | |

@@ -106,17 +106,6 @@ Emits the Gate report once at module / pattern / seam altitude (not procedure le
 
 If state can't be read, fall back: `/al-mutate` after a behaviour-bearing reshape, `/al-steer` if anything bigger than tidy-up surfaced.
 
-## Feed
-
-Reshape promises shape improves and behaviour does not — a wary dev wants proof the second half held. At each moment below, hand `/al-feed` a brief (what happened, why it matters to someone who hasn't read the diff, the kind); it composes the card. Per-build apply steps stay out of the feed — only these land.
-
-- **landing** — legacy mode, baseline tests written and passing before any reshape. Captures: old code had no guard, so behaviour-today tests went in first; any change from here trips an alarm.
-- **decision** — the 4 lenses merge into the ordered apply queue. Captures: what gets reshaped and in what order (renames and seams first), with the lens behind each item.
-- **verdict** — a load-bearing structural reshape lands green at behaviour parity — seam with two adapters, module deleted or inlined, R → P → W split, or a lying name corrected across call sites and handler strings. Captures: a real structural change went in, build still green, behaviour unchanged; old→new and the evidence as layers.
-- **surprise** — an apply step turns the build red and the agent reverts that step. Captures: one reshape broke the build, backed out cleanly, the rest kept; never sat broken.
-- **surprise** — reshape surfaces an architectural gap or new behaviour; the agent **Stops**, stays green, routes to `/al-steer`. Captures: hit something bigger than tidy-up, stopped rather than quietly change behaviour.
-- **verdict** — closing Gate report, reshape complete with the full diff green at parity. Captures: reshaping done, code behaves exactly as before in a cleaner shape; invariant preserved, handoff to `/al-mutate`.
-
 ## Composition
 
 | | |

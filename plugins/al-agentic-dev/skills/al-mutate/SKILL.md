@@ -93,14 +93,6 @@ End by naming the concrete next move, read off the verdict:
 
 If state can't be read, fall back to `/al-code-review`.
 
-## Feed
-
-Three moments narrate to the branch feed; per-mutant churn stays in the `.output` report. At each, hand `/al-feed` a brief — what happened, why it matters to a wary dev, the kind — and `/al-feed` composes the punchline + layers and appends the card. Compose by name; do not inline its mechanics.
-
-- **decision** — when the mutation plan is fixed (included/skipped sites, one operator each) and `/al-second-opinion` reconciled. Captures *where the agent will try to break the code and what it is leaving alone* — per-site operator and skip rationale.
-- **surprise** — per survivor, when a mutant lands survived or equivalent. Captures *the code was broken on purpose and the tests stayed green — a gap they did not catch* — site + operator, real-gap vs stated equivalence, the killer-test direction.
-- **verdict** — at pass close, after final full gate green and clean-tree proof. Captures *tests caught N of M planted faults, K real gaps remain, code safely back to green* — full counts, evidence gaps, baseline SHA and report path.
-
 ## Composition
 
 | | |

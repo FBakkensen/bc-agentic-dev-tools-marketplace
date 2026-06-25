@@ -37,7 +37,7 @@ Verify pass → verify task `done`, next slice tasks `ready`, loop continues. Fe
 
 ## Skills
 
-User-facing catalogue (20 skills, role + when-to-invoke) lives in [`references/overview.md`](references/overview.md). Edit it in lockstep when adding, removing, renaming, or repurposing a skill. `al-research` is a skill (one of the two another skill may call); the read-only workers that were once skills/agents are now subagent prompt blocks under `references/subagents/` (red-green, the two review lenses), and `al-doc-verify` is folded into the inline document-integrity check (`references/doc-integrity.md`). None of these are listed in the skill catalogue except `/al-research`.
+User-facing catalogue (19 skills, role + when-to-invoke) lives in [`references/overview.md`](references/overview.md). Edit it in lockstep when adding, removing, renaming, or repurposing a skill. `al-research` is a skill (one of the two another skill may call); the read-only workers that were once skills/agents are now subagent prompt blocks under `references/subagents/` (red-green, the two review lenses), and `al-doc-verify` is folded into the inline document-integrity check (`references/doc-integrity.md`). None of these are listed in the skill catalogue except `/al-research`.
 
 Skills compose by name. When you change a skill, scan the others for cross-references and update in lockstep. Cross-skill orchestration depth (gate flip mechanics, replan triggers, slice-cycle suppression rules) lives in the owning skill's `SKILL.md` and in the dev-time slice-cycle paragraph above; the user-facing overview stays tour-shape.
 
@@ -71,7 +71,7 @@ Two tiers, on purpose.
 
 | File | Tier | Notes |
 |---|---|---|
-| `overview.md` | plugin-level | user-facing tour: pipeline diagram, 20-skill catalogue (role + when-to-invoke), subagent prompt-block table, persistence layers paragraph, cold-start guidance, pointer to `/al-steer` for state-aware nav; emitted verbatim by `/al-agentic-dev-overview`; edit in lockstep with any skill addition / removal / rename |
+| `overview.md` | plugin-level | user-facing tour: pipeline diagram, 19-skill catalogue (role + when-to-invoke), subagent prompt-block table, persistence layers paragraph, cold-start guidance, pointer to `/al-steer` for state-aware nav; emitted verbatim by `/al-agentic-dev-overview`; edit in lockstep with any skill addition / removal / rename |
 | `voice-contract.md` | plugin-level | non-voice rules: BC vocab, names-as-citation, evidence bar (citation chain: names → workspace, constructs → fetched topic, `/al-research` escalation, `Contract notes` trace), lists-of-findings, tables-of-facts, chat carve-out, no-workflow-chatter, 5 chat shape skeletons (Opener / Gate report / Answer / Stop / Push-up report); style itself lives at top of each SKILL.md as a one-line Style declaration; read by every skill that writes prose or AL names |
 | `doc-integrity.md` | plugin-level | the inline document-integrity check (was the `al-doc-verify` agent): artifact profiles + `tasks/`-folder structural checks; run inline by the writing skills (`/al-grill-adr`, `/al-event-model`, `/al-design`, `/al-scope`, `/al-refine`, `/al-steer`) before the gate report |
 | `subagents/` (folder) | plugin-level | spawnable subagent prompt blocks (was the `agents/` folder): `al-red-green.md` (one AAA case RED→GREEN), `al-review-lens.md` + `al-review-lens-bc.md` (one focused review pass); spawned in harness-neutral language by `/al-implement`, `/al-code-review`, `/al-refactor`; self-contained (ship to consumer repos), advisory model tier |
@@ -109,7 +109,6 @@ Notable script-backed skills:
 
 - **`skills/al-mutate/SKILL.md`**, mutate-build-revert cycle, mutation kinds, survivor classification, BC safety.
 - **`skills/al-second-opinion/SKILL.md`** is the contract; **`skills/al-second-opinion/scripts/Invoke-AlSecondOpinion.ps1`** is the execution. It always shells to the GitHub Copilot CLI (`@github/copilot`) **pinned to a GPT model** — `node <npm-root>/@github/copilot/npm-loader.js --model gpt-5.5 --reasoning-effort low --allow-all-tools --deny-tool=write --deny-tool=shell --deny-tool=url --no-ask-user --disable-builtin-mcps --no-custom-instructions --no-color --output-format json`, prompt piped via stdin — for an independent, different-model-family read. **Copilot is a CLI tool dependency here — not a host runtime, not a publish target.** Copilot *can* run Claude models, so the `--model gpt-5.5` pin is load-bearing: it **is** the cross-family independence guarantee. Do not let it run a `claude-*` model or `--model auto`; do not widen the envelope. Read-only is assembled (no single sandbox flag exists in copilot): `--deny-tool` blocks write/shell/url (reads survive — native `view`/grep are separate tools, so the reviewer still verifies against the codebase), and `COPILOT_HOME=<temp>` isolates from the user's `~/.copilot` MCP fleet (otherwise write-capable MCP tools leak into the review). The script invokes `npm-loader.js` through `node` directly to bypass the VS Code-bundled bootstrapper shim (Windows-PowerShell-with-profile + interactive `Read-Host` prompts that would hang). 600s timeout via `Start-Job` / `Wait-Job`. Skip line names the copilot CLI. SKILL.md documents the envelope flags so the security posture stays visible without reading the script. **Windows-only**; `Start-Job` / `Wait-Job` targets pwsh on Windows; portability is a future concern.
-- **`skills/al-feed/`** (the branch-feed writer) is pure pwsh 7 + cross-platform .NET (`[System.IO.File]`, `[System.Text.UTF8Encoding]`; no `Start-Job`/`Wait-Job`, no Windows-only API), so the engine runs wherever pwsh 7 is on PATH. The CI Pester job is `windows-latest` only, so that cross-platform property is currently unverified by CI.
 
 ## Layout
 
@@ -118,7 +117,7 @@ hooks/                           # Plugin's sole hook: SessionStart re-injection
 ├── hooks.json                   # SessionStart (startup|resume|compact) → emit-thrift-rules.js
 └── emit-thrift-rules.js         # node: re-reads references/thrift-rules.md, writes to stdout; missing node exits 0 (degrades, never blocks)
 references/                      # Plugin-level shared, read by ≥2 skills, or cited by shared templates
-├── overview.md                  # User-facing tour: pipeline + 20-skill catalogue + subagent table + persistence + cold-start; emitted by /al-agentic-dev-overview
+├── overview.md                  # User-facing tour: pipeline + 19-skill catalogue + subagent table + persistence + cold-start; emitted by /al-agentic-dev-overview
 ├── voice-contract.md            # Non-voice rules + evidence bar + 5 chat shape skeletons; voice declared inline at top of each SKILL.md
 ├── doc-integrity.md             # Inline document-integrity check (was the al-doc-verify agent); run by the writing skills before the gate report
 ├── thrift-rules.md              # Token-thrift canon (chat lede-first + production-AL build-the-least); single home, re-emitted by the SessionStart hook
@@ -161,11 +160,6 @@ skills/
 │       └── bc-event-subscriber-pattern.md
 ├── al-design/SKILL.md
 ├── al-event-model/SKILL.md
-├── al-feed/                     # Branch-feed writer (Model B): composes a card → appends feed.jsonl → regenerates feed.html
-│   ├── SKILL.md
-│   ├── scripts/                 # feed.psm1 (pure render/escape, unit-tested), feed-append.ps1 (CLI wrapper)
-│   └── references/
-│       └── feed.template.html   # Operator Dark template, server-rendered cards
 ├── al-grill-adr/SKILL.md
 ├── al-implement/SKILL.md
 ├── al-mutate/SKILL.md

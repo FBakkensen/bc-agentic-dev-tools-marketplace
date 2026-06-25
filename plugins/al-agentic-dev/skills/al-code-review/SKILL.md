@@ -116,14 +116,6 @@ Read off the gate outcome:
 
 If state can't be read, fall back: report-only → `/al-implement` on the named findings; clean → `/al-steer` to confirm the next gate.
 
-## Feed
-
-Three moments narrate to the branch feed. At each, hand `/al-feed` a brief — what happened in BC terms, why it matters to a dev who hasn't read the diff, the kind — and `/al-feed` composes. Routine lens churn, the judge pass, and per-lens spawns never card.
-
-- **surprise** · a precondition fails and the gate Stops before review (red `/al-build` baseline, slice not slice-done — a technical task still open, polluted tree). Captures which precondition tripped, what has to happen first.
-- **verdict** · the review pass resolves with its fix-queue / nit counts (and, under `--fix`, what landed). Captures what the review found and the gate decision; any errored lens so the dev knows it was partial.
-- **landing** · the gate stamps clean and the next chunk opens, or the run escalates to `/al-steer`, or a per-feature finding re-opens verification. Captures the slice passing and the next work unlocked, or review sending something back.
-
 ## Composition
 
 | | |
