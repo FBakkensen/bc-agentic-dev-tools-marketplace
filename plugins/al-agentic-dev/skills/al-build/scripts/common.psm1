@@ -309,18 +309,90 @@ function Get-SymbolCacheRoot {
     return Join-Path -Path $userHome -ChildPath '.bc-symbol-cache'
 }
 
+function Get-AppRuntimeMajor {
+    <#
+    .SYNOPSIS
+        Read the major version of an app.json 'runtime' property.
+    .DESCRIPTION
+        Returns the integer major of the runtime version (e.g. '17.0' -> 17), or
+        $null when the directory has no app.json or the manifest omits 'runtime'.
+        An app with no runtime contributes nothing to the channel decision and is
+        pinned to the stable channel by the caller. A 'runtime' present but not
+        parseable as a version is a misconfiguration and throws — silently guessing
+        a channel from a typo'd runtime is exactly the wrong-compiler outcome the
+        channel logic exists to prevent.
+    .PARAMETER AppDir
+        Directory expected to contain app.json. A missing directory or app.json
+        returns $null (the app is absent, not misconfigured).
+    #>
+    param([string]$AppDir)
+
+    if (-not $AppDir) { return $null }
+    $appJsonPath = Join-Path -Path $AppDir -ChildPath 'app.json'
+    if (-not (Test-Path -LiteralPath $appJsonPath)) { return $null }
+
+    $appJson = Read-JsonFile -Path $appJsonPath
+    if (-not (Test-JsonProperty $appJson 'runtime')) { return $null }
+
+    $runtime = [string]$appJson.runtime
+    if ([string]::IsNullOrWhiteSpace($runtime)) { return $null }
+
+    $majorToken = ($runtime.Trim() -split '\.')[0]
+    $major = 0
+    if (-not [int]::TryParse($majorToken, [ref]$major)) {
+        throw "app.json at '$appJsonPath' has an unparseable runtime '$runtime'. Expected a version like '17.0'."
+    }
+    return $major
+}
+
+function Resolve-CompilerChannel {
+    <#
+    .SYNOPSIS
+        Decide which compiler channel (stable / prerelease) compiles a build.
+    .DESCRIPTION
+        Pure decision. The required runtime major is the highest 'runtime' across
+        all apps in the build. Stable covers everything up to its own major; a
+        runtime newer than the latest stable forces the prerelease channel. A
+        runtime newer than even the latest prerelease cannot be satisfied and
+        throws — fail loud rather than silently compile against a too-old compiler.
+        RequiredMajor 0 (no app pins a runtime) resolves to stable.
+    .PARAMETER RequiredMajor
+        Max runtime major across the build's apps.
+    .PARAMETER StableMajor
+        Major of the installed stable compiler.
+    .PARAMETER PrereleaseMajor
+        Major of the installed prerelease compiler (0 when none installed).
+    #>
+    param(
+        [int]$RequiredMajor,
+        [int]$StableMajor,
+        [int]$PrereleaseMajor
+    )
+
+    if ($PrereleaseMajor -gt 0 -and $RequiredMajor -gt $PrereleaseMajor) {
+        throw "No installed AL compiler supports runtime major $RequiredMajor (latest stable $StableMajor, latest prerelease $PrereleaseMajor). Lower the app.json runtime or wait for a newer compiler release."
+    }
+    if ($RequiredMajor -gt $StableMajor) { return 'prerelease' }
+    return 'stable'
+}
+
 function Get-LatestCompilerInfo {
     <#
     .SYNOPSIS
-        Get AL compiler information from latest-only sentinel (no runtime-specific versions)
+        Resolve the AL compiler for the build's required runtime from the sentinel.
     .DESCRIPTION
-        Uses the new "latest compiler only" principle - single compiler version for all projects.
-        No runtime-specific caching, no version selection.
+        Reads the two-channel sentinel written by Install-ALCompiler and selects
+        the stable or prerelease compiler per the required runtime major (see
+        Resolve-CompilerChannel). Offline — no NuGet call on the build hot path.
+        Fails loud when the sentinel is missing, predates side-by-side channels, or
+        the selected channel's compiler is absent on disk (re-run provision.ps1).
+    .PARAMETER RequiredRuntimeMajor
+        Max runtime major across the build's apps. 0 (no runtime pinned) -> stable.
     .OUTPUTS
-        PSCustomObject with AlcPath, Version, SentinelPath, IsLocalTool
+        PSCustomObject with Channel, Version, AlcPath, CommandPath, CompilerDir, SentinelPath
     #>
     [CmdletBinding()]
-    param()
+    param([int]$RequiredRuntimeMajor = 0)
 
     $toolCacheRoot = Get-ToolCacheRoot
     $alCacheDir = Join-Path -Path $toolCacheRoot -ChildPath 'al'
@@ -336,24 +408,39 @@ function Get-LatestCompilerInfo {
         throw "Failed to parse compiler sentinel at ${sentinelPath}: $($_.Exception.Message)"
     }
 
-    $compilerVersion = if ($sentinel.PSObject.Properties.Match('compilerVersion').Count -gt 0) { [string]$sentinel.compilerVersion } else { $null }
-    $toolPath = [string]$sentinel.toolPath
-
-    if (-not $toolPath) {
-        throw "Compiler sentinel at $sentinelPath is missing 'toolPath' property."
+    if ($sentinel.PSObject.Properties.Match('channels').Count -eq 0) {
+        throw "Compiler sentinel at $sentinelPath predates side-by-side channels. Run 'provision.ps1' to reinstall."
     }
 
-    if (-not (Test-Path -LiteralPath $toolPath)) {
-        throw "AL compiler executable not found at: $toolPath. Run 'provision.ps1' to reinstall."
+    $stableMajor = [int]$sentinel.stableMajor
+    $prereleaseMajor = if (($sentinel.PSObject.Properties.Match('prereleaseMajor').Count -gt 0) -and ($null -ne $sentinel.prereleaseMajor)) { [int]$sentinel.prereleaseMajor } else { 0 }
+
+    $channel = Resolve-CompilerChannel -RequiredMajor $RequiredRuntimeMajor -StableMajor $stableMajor -PrereleaseMajor $prereleaseMajor
+
+    $chan = $sentinel.channels.$channel
+    if (-not $chan) {
+        throw "Compiler channel '$channel' is not provisioned (sentinel at $sentinelPath). Run 'provision.ps1'."
     }
 
-    $toolItem = Get-Item -LiteralPath $toolPath
+    $commandPath = [string]$chan.commandPath
+    $alcPath = [string]$chan.alcPath
+
+    if (-not $commandPath -or -not (Test-Path -LiteralPath $commandPath)) {
+        throw "AL compiler command for channel '$channel' not found at: $commandPath. Run 'provision.ps1' to reinstall."
+    }
+    if (-not $alcPath -or -not (Test-Path -LiteralPath $alcPath)) {
+        throw "AL compiler (alc) for channel '$channel' not found at: $alcPath. Run 'provision.ps1' to reinstall."
+    }
+
+    $alcItem = Get-Item -LiteralPath $alcPath
 
     return [pscustomobject]@{
-        AlcPath      = $toolItem.FullName
-        Version      = $compilerVersion
+        Channel      = $channel
+        Version      = [string]$chan.version
+        AlcPath      = $alcItem.FullName
+        CommandPath  = (Get-Item -LiteralPath $commandPath).FullName
+        CompilerDir  = $alcItem.DirectoryName
         SentinelPath = $sentinelPath
-        IsLocalTool  = ($sentinel.installationType -eq 'local-tool')
     }
 }
 
@@ -3001,6 +3088,8 @@ Export-ModuleMember -Function @(
     'Get-ToolCacheRoot'
     'Get-SymbolCacheRoot'
     'Get-LatestCompilerInfo'
+    'Get-AppRuntimeMajor'
+    'Resolve-CompilerChannel'
     'Get-SymbolCacheInfo'
 
     # Standardized Output (recommended for all scripts)

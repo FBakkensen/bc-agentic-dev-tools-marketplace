@@ -2,16 +2,19 @@
 
 <#
 .SYNOPSIS
-    One-time setup: install AL compiler and download symbol packages.
+    Per-feature setup: install both AL compiler channels and download symbol packages.
 
 .DESCRIPTION
     Runs provisioning for main app and all configured test apps:
-    - Ensures the AL compiler is installed
+    - Installs both AL compiler channels (stable + prerelease) side-by-side under the
+      tool cache, refreshed to latest every run. The global 'al' dotnet tool is the
+      user's own and is left untouched; the build picks a channel per app.json runtime.
     - Downloads symbol packages for app/
     - Downloads symbol packages for each test app
 
 .PARAMETER UpdateCompiler
-    Force update of the global AL compiler tool. By default an existing compiler is reused.
+    Force a clean reinstall of both compiler channels. By default each channel is
+    refreshed to latest in place every run.
 
 .EXAMPLE
     pwsh -File provision.ps1

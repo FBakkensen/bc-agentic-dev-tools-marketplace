@@ -195,11 +195,15 @@ $dirtyDirs = @($config.TestApps)
 if ($config.UnitTestApp) { $dirtyDirs += $config.UnitTestApp }
 $dirtyCounts = Get-DirtyFileCounts -AppDir $config.AppDir -TestDirs $dirtyDirs
 
+# Repo-wide compiler channel: the highest app.json runtime across all apps picks
+# stable vs prerelease once, so every app compiles on the same compiler.
+$requiredRuntimeMajor = Get-RequiredRuntimeMajor -Config $config
+
 try {
 
 # Step 1: Build main app
 Start-Step 'build'
-Invoke-ALBuild -AppDir $config.AppDir -WarnAsError:(ConvertTo-Boolean $config.WarnAsError)
+Invoke-ALBuild -AppDir $config.AppDir -WarnAsError:(ConvertTo-Boolean $config.WarnAsError) -RequiredRuntimeMajor $requiredRuntimeMajor
 Stop-Step 'build'
 
 # If no test apps and not unit-test-only, compile only and exit
@@ -225,7 +229,7 @@ foreach ($target in (Get-CompileTargets -Config $config -UnitTestOnly:$UnitTestO
     Stop-Step "provision-symbols-$dirName"
 
     Start-Step "build-$($target.Role)-$dirName"
-    Invoke-ALBuild -AppDir $target.AppDir -WarnAsError:(ConvertTo-Boolean $config.WarnAsError)
+    Invoke-ALBuild -AppDir $target.AppDir -WarnAsError:(ConvertTo-Boolean $config.WarnAsError) -RequiredRuntimeMajor $requiredRuntimeMajor
     Stop-Step "build-$($target.Role)-$dirName"
 }
 

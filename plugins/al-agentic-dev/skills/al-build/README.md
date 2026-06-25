@@ -37,7 +37,7 @@ pwsh scripts/test.ps1
 |---|---|
 | `test.ps1` | **Canonical gate.** Build, publish, run tests. |
 | `init.ps1` | Drop `al-build.json` in repo root. |
-| `provision.ps1` | Per-feature freshness refresh (compiler + analyzers + symbols, plus the breaking-change baseline when enabled). Reuses an installed compiler unless `-UpdateCompiler` is passed; refreshes ALCops analyzers on every run. |
+| `provision.ps1` | Per-feature freshness refresh (compiler + analyzers + symbols, plus the breaking-change baseline when enabled). Installs both the stable and prerelease AL compiler side-by-side under the tool cache (the global `al` tool is left untouched) and refreshes both to latest every run; `-UpdateCompiler` forces a clean reinstall. The build picks stable vs prerelease per app.json `runtime`. Refreshes ALCops analyzers into each channel on every run. |
 | `clean.ps1` | Remove build artifacts. |
 | `new-bc-container.ps1` | Create golden BC container. |
 | `commit-bc-container.ps1` | Commit container to snapshot image. |

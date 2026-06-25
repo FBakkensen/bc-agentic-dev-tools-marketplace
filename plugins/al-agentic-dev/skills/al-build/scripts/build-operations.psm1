@@ -273,16 +273,146 @@ function Get-ToolPackageId {
     return 'microsoft.dynamics.businesscentral.development.tools'
 }
 
+function Get-ToolCommandPath {
+    <#
+    .SYNOPSIS
+        Resolve the 'al' command shim inside a --tool-path install root.
+    .DESCRIPTION
+        A --tool-path install drops the command shim (al.exe on Windows, al on
+        unix) at the root, alongside the .store tree. This is the executable the
+        build invokes by full path — never the global 'al' on PATH.
+    #>
+    param([Parameter(Mandatory)][string]$ToolPathRoot)
+
+    foreach ($name in @('al.exe', 'al')) {
+        $candidate = Join-Path $ToolPathRoot $name
+        if (Test-Path -LiteralPath $candidate) { return (Get-Item -LiteralPath $candidate).FullName }
+    }
+    return $null
+}
+
+function Install-ALCompilerChannel {
+    <#
+    .SYNOPSIS
+        Install or refresh one AL compiler channel as a private --tool-path install.
+    .DESCRIPTION
+        Installs the compiler into its own tool-path root (never the global slot,
+        which is the user's own). Refreshes to latest on every provision: updates an
+        existing install, installs when absent. -Update forces a clean reinstall
+        (uninstall + install). -Prerelease selects the prerelease NuGet channel.
+        Returns the resolved version, major, tool-path root, command (al) path, and
+        alc path.
+    .PARAMETER PackageId
+        Compiler NuGet package id.
+    .PARAMETER ToolPathRoot
+        Directory for this channel's --tool-path install.
+    .PARAMETER Prerelease
+        Install from the prerelease channel (dotnet's --prerelease).
+    .PARAMETER Update
+        Force a clean reinstall instead of an in-place update.
+    #>
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory)][string]$PackageId,
+        [Parameter(Mandatory)][string]$ToolPathRoot,
+        [switch]$Prerelease,
+        [switch]$Update
+    )
+
+    $channelLabel = if ($Prerelease) { 'prerelease' } else { 'stable' }
+    Ensure-Directory -Path $ToolPathRoot
+
+    $existing = Get-InstalledCompilerVersion -PackageId $PackageId -ToolPath $ToolPathRoot
+    $commonArgs = @('--tool-path', $ToolPathRoot)
+    if ($Prerelease) { $commonArgs += '--prerelease' }
+
+    if ($existing -and $Update) {
+        Write-BuildMessage -Type Step -Message "Reinstalling $channelLabel AL compiler (clean)..."
+        & dotnet tool uninstall --tool-path $ToolPathRoot $PackageId 2>&1 | Out-Null
+        $action = 'install'
+        $out = & dotnet tool install @commonArgs $PackageId 2>&1
+    } elseif ($existing) {
+        Write-BuildMessage -Type Step -Message "Updating $channelLabel AL compiler to latest..."
+        $action = 'update'
+        $out = & dotnet tool update @commonArgs $PackageId 2>&1
+    } else {
+        Write-BuildMessage -Type Step -Message "Installing $channelLabel AL compiler..."
+        $action = 'install'
+        $out = & dotnet tool install @commonArgs $PackageId 2>&1
+    }
+    if ($LASTEXITCODE -ne 0) {
+        throw "dotnet tool $action ($channelLabel) failed with exit code $LASTEXITCODE. Output: $($out -join [Environment]::NewLine)"
+    }
+
+    $version = Get-InstalledCompilerVersion -PackageId $PackageId -ToolPath $ToolPathRoot
+    if (-not $version) {
+        throw "$channelLabel AL compiler version not found after provisioning at $ToolPathRoot."
+    }
+    $alcPath = Get-LatestCompilerPath -PackageId $PackageId -ToolRoot $ToolPathRoot
+    if (-not $alcPath) {
+        throw "$channelLabel compiler executable (alc) not found under $ToolPathRoot after provisioning."
+    }
+    $commandPath = Get-ToolCommandPath -ToolPathRoot $ToolPathRoot
+    if (-not $commandPath) {
+        throw "$channelLabel compiler command (al) not found under $ToolPathRoot after provisioning."
+    }
+
+    $majorToken = ($version -split '\.')[0]
+    $major = 0
+    [void][int]::TryParse($majorToken, [ref]$major)
+
+    Write-BuildMessage -Type Success -Message "$channelLabel AL compiler: $version (major $major)"
+    return [pscustomobject]@{
+        Channel     = $channelLabel
+        Version     = $version
+        Major       = $major
+        Root        = $ToolPathRoot
+        CommandPath = $commandPath
+        AlcPath     = $alcPath
+    }
+}
+
+function Get-RequiredRuntimeMajor {
+    <#
+    .SYNOPSIS
+        Highest app.json runtime major across all of a build's apps.
+    .DESCRIPTION
+        Scans the main app, every test app, and the unit-test app; returns the max
+        'runtime' major, or 0 when no app pins a runtime. One compiler compiles them
+        all, so it must satisfy the most demanding app — an app at a runtime newer
+        than the latest stable pulls the whole build onto the prerelease channel.
+    #>
+    param([Parameter(Mandatory)]$Config)
+
+    $dirs = New-Object System.Collections.Generic.List[string]
+    if ($Config.AppDir) { $dirs.Add([string]$Config.AppDir) }
+    foreach ($t in @($Config.TestApps)) { if ($t) { $dirs.Add([string]$t) } }
+    if ($Config.UnitTestApp) { $dirs.Add([string]$Config.UnitTestApp) }
+
+    $max = 0
+    foreach ($d in $dirs) {
+        $m = Get-AppRuntimeMajor -AppDir $d
+        if ($null -ne $m -and $m -gt $max) { $max = $m }
+    }
+    return $max
+}
+
 function Install-ALCompiler {
     <#
     .SYNOPSIS
-        Ensure the AL compiler is available
+        Provision al-build's two private side-by-side AL compilers.
     .DESCRIPTION
-        Reuses an existing AL compiler by default. Installs the compiler when missing,
-        or updates it only when explicitly requested.
-        Also downloads and installs the ALCops analyzers.
+        Installs both the latest stable and the latest prerelease compiler into
+        their own --tool-path roots under the tool cache, refreshing both to latest
+        on every provision. The global dotnet tool is the user's own (LSP/MCP daily
+        driver) and is deliberately NEVER installed, updated, or invoked here — the
+        build picks stable vs prerelease per app.json runtime and invokes the chosen
+        compiler by full path. ALCops is installed into each channel's Analyzers
+        folder so lint coverage is identical whichever channel a build selects.
+        A two-channel sentinel records the resolved versions, majors, and paths for
+        the offline build-time channel decision (Get-LatestCompilerInfo).
     .PARAMETER Update
-        Force update of an existing global compiler tool.
+        Force a clean reinstall of both channels instead of an in-place update.
     #>
     [CmdletBinding()]
     param(
@@ -291,7 +421,6 @@ function Install-ALCompiler {
 
     Write-BuildHeader 'AL Compiler Provisioning'
 
-    # Validate dotnet availability
     if (-not (Get-Command dotnet -ErrorAction SilentlyContinue)) {
         throw 'dotnet CLI not found. Install .NET SDK from https://dotnet.microsoft.com/download'
     }
@@ -299,67 +428,45 @@ function Install-ALCompiler {
     $packageId = Get-ToolPackageId
     Write-BuildMessage -Type Detail -Message "Package: $packageId"
 
-    $version = Get-InstalledCompilerVersion -PackageId $packageId
-    $alcPath = $null
-    if ($version) {
-        $alcPath = Get-LatestCompilerPath -PackageId $packageId
-    }
-
-    if ($version -and $alcPath -and -not $Update) {
-        Write-BuildMessage -Type Success -Message "AL compiler already installed: $version"
-        Write-BuildMessage -Type Detail -Message "Path: $alcPath"
-    } elseif ($version -and $Update) {
-        Write-BuildMessage -Type Step -Message "Updating AL compiler from NuGet..."
-        $updateArgs = @('tool', 'update', '--global', $packageId, '--prerelease')
-        $updateOutput = & dotnet @updateArgs 2>&1
-
-        if ($LASTEXITCODE -ne 0) {
-            throw "dotnet tool update failed with exit code $LASTEXITCODE. Output: $($updateOutput -join [Environment]::NewLine)"
-        }
-
-        $version = Get-InstalledCompilerVersion -PackageId $packageId
-        $alcPath = Get-LatestCompilerPath -PackageId $packageId
-        Write-BuildMessage -Type Success -Message "AL compiler updated: $version"
-    } elseif (-not $version) {
-        Write-BuildMessage -Type Step -Message "Installing AL compiler from NuGet..."
-        $installArgs = @('tool', 'install', '--global', $packageId, '--prerelease')
-        $installOutput = & dotnet @installArgs 2>&1
-
-        if ($LASTEXITCODE -ne 0) {
-            throw "dotnet tool install failed with exit code $LASTEXITCODE. Output: $($installOutput -join [Environment]::NewLine)"
-        }
-
-        $version = Get-InstalledCompilerVersion -PackageId $packageId
-        $alcPath = Get-LatestCompilerPath -PackageId $packageId
-        Write-BuildMessage -Type Success -Message "AL compiler installed: $version"
-    }
-
-    if (-not $version) {
-        throw "AL compiler version not found after provisioning"
-    }
-    if (-not $alcPath) {
-        throw "Compiler executable not found after provisioning. Run `provision.ps1 -UpdateCompiler` to repair the global tool installation."
-    }
-
-    # Save sentinel file
     $toolCacheRoot = Get-ToolCacheRoot
     $alCacheDir = Join-Path $toolCacheRoot 'al'
     Ensure-Directory -Path $alCacheDir
 
-    $sentinel = @{
-        compilerVersion  = $version
-        toolPath         = $alcPath
-        installationType = 'global-tool'
-        installedAt      = (Get-Date).ToString('o')
+    $stableRoot = Join-Path $alCacheDir 'stable'
+    $prereleaseRoot = Join-Path $alCacheDir 'prerelease'
+
+    $stable = Install-ALCompilerChannel -PackageId $packageId -ToolPathRoot $stableRoot -Update:$Update
+    $prerelease = Install-ALCompilerChannel -PackageId $packageId -ToolPathRoot $prereleaseRoot -Prerelease -Update:$Update
+
+    # ALCops into each channel's Analyzers folder; built-in cops ship inside each compiler.
+    Install-ALCops -CompilerDir (Split-Path -Parent $stable.AlcPath)
+    Install-ALCops -CompilerDir (Split-Path -Parent $prerelease.AlcPath)
+
+    $sentinel = [ordered]@{
+        schemaVersion   = 2
+        installedAt     = (Get-Date).ToString('o')
+        stableMajor     = $stable.Major
+        prereleaseMajor = $prerelease.Major
+        channels        = [ordered]@{
+            stable     = [ordered]@{
+                root        = $stable.Root
+                commandPath = $stable.CommandPath
+                alcPath     = $stable.AlcPath
+                version     = $stable.Version
+            }
+            prerelease = [ordered]@{
+                root        = $prerelease.Root
+                commandPath = $prerelease.CommandPath
+                alcPath     = $prerelease.AlcPath
+                version     = $prerelease.Version
+            }
+        }
     }
     $sentinelPath = Join-Path $alCacheDir 'sentinel.json'
-    $sentinel | ConvertTo-Json | Set-Content -LiteralPath $sentinelPath -Encoding UTF8
+    $sentinel | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath $sentinelPath -Encoding UTF8
 
     Write-BuildMessage -Type Detail -Message "Sentinel saved: $sentinelPath"
-
-    # Install ALCops analyzers
-    Install-ALCops -CompilerDir (Split-Path -Parent $alcPath)
-
+    Write-BuildMessage -Type Success -Message "Stable $($stable.Version) (major $($stable.Major)) + prerelease $($prerelease.Version) (major $($prerelease.Major))"
     Write-BuildMessage -Type Success -Message "Compiler provisioning complete"
 }
 
@@ -427,11 +534,18 @@ function Get-InstalledCompilerVersion {
     <#
     .SYNOPSIS
         Get currently installed AL compiler version from dotnet tools
+    .PARAMETER PackageId
+        NuGet package id to look up.
+    .PARAMETER ToolPath
+        When set, query a --tool-path install at this directory instead of the
+        global tool store. al-build's compilers are tool-path installs (the global
+        slot is the user's own, untouched), so the build path always passes this.
     #>
-    param([string]$PackageId)
+    param([string]$PackageId, [string]$ToolPath)
 
     try {
-        $output = & dotnet tool list --global 2>&1 | Out-String
+        $listArgs = if ($ToolPath) { @('tool', 'list', '--tool-path', $ToolPath) } else { @('tool', 'list', '--global') }
+        $output = & dotnet @listArgs 2>&1 | Out-String
         if ($LASTEXITCODE -ne 0) { return $null }
 
         $packageIdLower = $PackageId.ToLowerInvariant()
@@ -480,7 +594,9 @@ function Select-CompilerCandidate {
         tools/net10.0). Prefer candidates whose target framework has an installed
         .NET runtime, then the highest target framework, then the newest file.
         Deterministic, so the analyzers installed next to the compiler at provision
-        time keep matching the compiler directory picked at build time.
+        time keep matching the compiler directory picked at build time. Runs per
+        channel — each side-by-side install (stable / prerelease) has its own .store
+        tree, so this picks within one channel's tool-path root, not across them.
     .PARAMETER Candidates
         Objects with FullName and LastWriteTime (FileInfo or equivalent).
     .PARAMETER InstalledRuntimeMajors
@@ -517,14 +633,27 @@ function Select-CompilerCandidate {
 function Get-LatestCompilerPath {
     <#
     .SYNOPSIS
-        Find the AL compiler executable in global dotnet tools
+        Find the AL compiler executable (alc) in a dotnet tool store
+    .PARAMETER PackageId
+        Compiler NuGet package id.
+    .PARAMETER ToolRoot
+        Root of a --tool-path install (contains the '.store' tree). When omitted,
+        the global ~/.dotnet/tools store is searched. al-build provisions its
+        compilers under --tool-path roots, so the install/build paths pass this.
     #>
-    param([string]$PackageId)
+    param(
+        [string]$PackageId,
+        [string]$ToolRoot
+    )
 
-    $userHome = $env:HOME
-    if (-not $userHome -and $env:USERPROFILE) { $userHome = $env:USERPROFILE }
-    $globalToolsRoot = Join-Path $userHome '.dotnet' 'tools'
-    $storeRoot = Join-Path $globalToolsRoot '.store'
+    if ($ToolRoot) {
+        $storeRoot = Join-Path $ToolRoot '.store'
+    } else {
+        $userHome = $env:HOME
+        if (-not $userHome -and $env:USERPROFILE) { $userHome = $env:USERPROFILE }
+        $globalToolsRoot = Join-Path $userHome '.dotnet' 'tools'
+        $storeRoot = Join-Path $globalToolsRoot '.store'
+    }
 
     if (-not (Test-Path -LiteralPath $storeRoot)) { return $null }
 
@@ -534,7 +663,7 @@ function Get-LatestCompilerPath {
     if (-not (Test-Path -LiteralPath $packageRoot)) { return $null }
 
     $toolExecutableNames = @('alc.exe', 'alc')
-    $items = Get-ChildItem -Path $packageRoot -Recurse -File -Depth 6 -ErrorAction SilentlyContinue |
+    $items = Get-ChildItem -Path $packageRoot -Recurse -File -Depth 8 -ErrorAction SilentlyContinue |
         Where-Object { $toolExecutableNames -contains $_.Name }
 
     $candidate = Select-CompilerCandidate -Candidates @($items) -InstalledRuntimeMajors (Get-InstalledRuntimeMajors)
@@ -782,13 +911,19 @@ function Invoke-ALBuild {
         Directory containing app.json and AL source files
     .PARAMETER WarnAsError
         Treat warnings as errors (default: true)
+    .PARAMETER RequiredRuntimeMajor
+        Max app.json runtime major across the build, driving the stable-vs-prerelease
+        compiler channel. Omit (-1) to self-compute from al-build.json; the gate
+        (test.ps1) computes it once and passes it to every compile for consistency.
     #>
     [CmdletBinding()]
     param(
         [Parameter(Mandatory)]
         [string]$AppDir,
 
-        [switch]$WarnAsError = $true
+        [switch]$WarnAsError = $true,
+
+        [int]$RequiredRuntimeMajor = -1
     )
 
     Write-BuildHeader "AL Project Compilation"
@@ -800,11 +935,18 @@ function Invoke-ALBuild {
 
     Write-BuildMessage -Type Step -Message "Building: $($appJson.name) v$($appJson.version)"
 
-    # Get compiler info (needed for version and analyzer paths)
-    $compilerInfo = Get-LatestCompilerInfo
-    $compilerRoot = Split-Path -Parent $compilerInfo.AlcPath
+    # Resolve the build's required runtime once; self-compute for callers that don't
+    # pass it (the channel is repo-wide, so every app compiles on the same compiler).
+    if ($RequiredRuntimeMajor -lt 0) {
+        $RequiredRuntimeMajor = Get-RequiredRuntimeMajor -Config (Get-BuildConfig)
+    }
 
-    Write-BuildMessage -Type Detail -Message "Compiler: $($compilerInfo.Version)"
+    # Pick the stable/prerelease compiler for the required runtime and invoke it by
+    # full path — never the global 'al' (the user's own LSP/MCP tool).
+    $compilerInfo = Get-LatestCompilerInfo -RequiredRuntimeMajor $RequiredRuntimeMajor
+    $compilerRoot = $compilerInfo.CompilerDir
+
+    Write-BuildMessage -Type Detail -Message "Compiler: $($compilerInfo.Version) [$($compilerInfo.Channel)]"
 
     # Get symbol cache
     $symbolCacheInfo = Get-SymbolCacheInfo -AppJson $appJson
@@ -826,7 +968,7 @@ function Invoke-ALBuild {
         Remove-Item $outputFullPath -Force
     }
 
-    # Build compiler arguments (using 'al compile' wrapper from dotnet global tool)
+    # Build compiler arguments (the 'al compile' wrapper from the selected tool-path install)
     $alcArgs = @(
         'compile'
         '/project:' + $AppDir
@@ -855,8 +997,8 @@ function Invoke-ALBuild {
 
     Write-BuildMessage -Type Step -Message "Compiling..."
 
-    # Execute compiler via 'al' dotnet global tool
-    & al @alcArgs
+    # Execute the selected channel's compiler by full path (not the global 'al').
+    & $compilerInfo.CommandPath @alcArgs
 
     if ($LASTEXITCODE -ne 0) {
         throw "AL compilation failed with exit code $LASTEXITCODE"
@@ -1522,6 +1664,9 @@ Export-ModuleMember -Function @(
     # Compiler
     'Get-ToolPackageId'
     'Install-ALCompiler'
+    'Install-ALCompilerChannel'
+    'Get-ToolCommandPath'
+    'Get-RequiredRuntimeMajor'
     'Get-InstalledCompilerVersion'
     'Get-LatestCompilerPath'
     'Select-CompilerCandidate'
