@@ -2,6 +2,8 @@
 
 Build/test gate for AL/Business Central. Compile, publish to a local Docker container, run tests, write results to `.output/TestResults/<dirName>/`.
 
+*Dev-time only — this file never ships. The shipped surface is `SKILL.md` and `scripts/`; see the root `CLAUDE.md` "Shipped artefacts vs dev-time files".*
+
 ## Layout
 
 ```

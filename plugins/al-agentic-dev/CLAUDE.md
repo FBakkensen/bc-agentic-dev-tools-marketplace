@@ -2,6 +2,8 @@
 
 Composable skills for AL/Business Central agentic development.
 
+*Dev-time only — this file never ships. The shipped surface is the plugin's `SKILL.md`s, `hooks/`, `references/`, and `scripts/`; see the root `CLAUDE.md` "Shipped artefacts vs dev-time files".*
+
 ## Persistence layers
 
 Two layers, on purpose.

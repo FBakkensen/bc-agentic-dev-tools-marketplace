@@ -2,6 +2,8 @@
 
 Locate canonical Business Central Standard behaviour (BaseApp, System Application, APIV2) — events, codeunits, tables, pages, tests.
 
+*Dev-time only — this file never ships. The shipped surface is `agents/` and `references/`; see the root `CLAUDE.md` "Shipped artefacts vs dev-time files".*
+
 ## Layout
 
 Agent-only plugin — the worker is a declarative agent, no skill.

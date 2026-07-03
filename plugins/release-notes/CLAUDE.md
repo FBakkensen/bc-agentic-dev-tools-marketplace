@@ -2,6 +2,8 @@
 
 Generate release notes from per-PR analysis of merged work since the last release.
 
+*Dev-time only — this file never ships. The shipped surface is `SKILL.md`, `scripts/`, and `references/`; see the root `CLAUDE.md` "Shipped artefacts vs dev-time files".*
+
 ## Layout
 
 ```
