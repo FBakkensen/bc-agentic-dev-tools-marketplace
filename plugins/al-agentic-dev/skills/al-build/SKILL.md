@@ -55,7 +55,7 @@ Compiles all apps — main, every `testApps` entry, and the unit-test app — th
 
 Take `resultFile` paths from `summary.json` run records — don't glob; a stale file from an earlier gate may sit beside a fresh one.
 
-Test failures → dispatch `/al-debug-logging`. Don't grep build log for clues telemetry already answers.
+Test failure with an unclear cause → name `/al-debug-logging` as the next step; a clear assertion or compile failure needs no telemetry. Don't grep the build log for clues telemetry already answers.
 
 ## Delegation
 
@@ -63,7 +63,7 @@ Always delegate `/al-build` to one general subagent. Build output is verbose; ke
 
 After the worker returns the gate report, close the completed subagent thread before interpreting or reporting the result.
 
-Model: `Agent` with `model=haiku`.
+Spawn one general read-only subagent for the gate; a small/fast model tier suffices (advisory).
 
 ### Worker rules
 

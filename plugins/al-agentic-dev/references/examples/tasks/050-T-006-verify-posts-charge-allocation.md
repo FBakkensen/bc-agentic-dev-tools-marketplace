@@ -27,7 +27,7 @@ Observable Checks:
 
 ### V2 BlocksMismatchedAllocationFromSalesOrderPage
 Scope: E2E
-Record: yes
+Record: no
 Role: Order Processor
 Action:
 - Open Sales Order Card for a Sales Order with item charge quantity 10 and allocations 6 + 6.
@@ -48,6 +48,6 @@ Prompts:
 - Does the flow return the user to a useful correction point?
 
 Closeout:
-- E2E walked (`Record: no`): `V1` posted invoice + `Released` status confirmed live by the user
-- E2E recorded (`Record: yes`): `V2` → `pagescripts/recordings/007-sales-charge-validation__post-validates-allocation__02.yml` replay green (inline mismatch breakdown is web-client-only — no AL test layer reaches it)
+- E2E walked (`Record: no`): `V1` posted invoice + `Released` status, and `V2` mismatch blocked with the inline breakdown, confirmed live by the user
+- Regression pinned below E2E (generation-time push-down, no recording minted): `V2`'s checks are held by sibling Integration tests — `BlocksPostingWithMismatchedAllocation` (error raised, no posted invoice) and `ShowsAllocationMismatchBreakdown` (both Sales Lines listed, overflow marked)
 - Exploration: `X1` recorded no blocking usability findings

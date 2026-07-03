@@ -9,11 +9,11 @@ description: Execute the `kind: breaking-change` task in the `tasks/` folder for
 
 Execute one `kind: breaking-change` task: run the AppSource-style validation (per-country install/upgrade via `Run-AlValidation`) against the cached baseline release, flip its status. It catches "did this feature break a previously-released public API" before merge — the broader sim the compile-time AppSourceCop pass cannot do. `/al-build` stays workflow-blind, so this workflow-aware skill owns running its `validate-breaking-changes.ps1` and recording the verdict.
 
-`kind: breaking-change` is the feature's last task, `depends_on:` the final terminal task (last `verify`, or last technical for backend-only) → it opens to `ready` only when all feature work is `done`.
+`kind: breaking-change` is the feature's last task, `depends_on:` the final terminal task (last `verify`, or last technical for backend-only) → the per-feature `/al-code-review` opens it `ready` on a clean pass, so it validates the post-review bytes.
 
 ## Precondition
 
-A `kind: breaking-change` task at `status: ready`. If still `blocked`, the feature is not done; route to `/al-steer`. No `/al-refine` — runs a script, flips status. If invoked on any other kind, **Stop**.
+A `kind: breaking-change` task at `status: ready`. If still `blocked`, the feature is not done or the per-feature `/al-code-review` has not yet passed clean; route to `/al-steer`. No `/al-refine` — runs a script, flips status. If invoked on any other kind, **Stop**.
 
 ## Run
 
