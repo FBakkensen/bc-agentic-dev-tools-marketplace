@@ -2,9 +2,9 @@ Marketplace of AI-assisted AL/Business Central development plugins for Claude Co
 
 Plugins live under `plugins/`:
 
-- `al-agentic-dev/` — feature-level agentic flow (event-model, design, scope, refine, implement, user-verification, refactor, mutate, code-review) plus the build/test gate, telemetry probes, and second-opinion skills
+- `al-agentic-dev/` — feature-level agentic flow (steer, grill-adr, event-model, design, scope, refine, research, implement, page-script, user-verification, refactor, mutate, code-review, second-opinion) plus the build/test gate (build, provision, validate-breaking-changes) and telemetry probes (debug-logging)
 - `al-language-server/` — AL language server for the Claude Code LSP tool (ships `.lsp.json`)
-- `bc-standard-reference/` — BaseApp / System Application lookup
+- `bc-standard-reference/` — BaseApp / System Application lookup via a dedicated subagent
 - `grill-me/` — interview and stress-test plans
 - `release-notes/` — PR-driven release note generation
 
@@ -14,23 +14,30 @@ Top-level layout:
 .claude-plugin/marketplace.json   # Claude marketplace manifest — every plugin listed here
 plugins/<name>/                   # One folder per plugin
 scripts/                          # PowerShell 7.2+ validation scripts (CI gates)
-.github/workflows/                # ci.yml, claude.yml, claude-code-review.yml
+tests/                            # Pester tests for plugin scripts (e.g. al-build)
+.github/workflows/                # ci.yml, claude.yml
 ```
 
-Every plugin has the same shape:
+Every plugin has `.claude-plugin/plugin.json` (Claude manifest — name matches the folder name) and usually a dev-time `CLAUDE.md`. All other components sit at the plugin root and are optional per the Claude Code plugin spec:
 
 ```
 plugins/<plugin-name>/
-├── .claude-plugin/plugin.json    # Claude manifest (name, version, description)
+├── .claude-plugin/plugin.json    # Claude manifest (name, version, description) — required
 ├── CLAUDE.md                     # Plugin-specific context — voice and conventions live here
-├── skills/                       # One or more skills
+├── skills/                       # Skills
 │   └── <skill-name>/
 │       ├── SKILL.md              # User-facing skill body
 │       ├── scripts/              # PowerShell 7.2+ (optional)
 │       └── references/           # Supporting docs (optional)
+├── agents/                       # Subagent definitions (<name>.md)
+├── hooks/                        # Hook config + scripts
+├── references/                   # Plugin-level docs shared across skills/agents
+└── .lsp.json                     # Language-server config for the LSP tool
 ```
 
-Plugin name in `plugin.json` matches the folder name. Single-skill plugins put their skill at `skills/<plugin-name>/`; multi-skill plugins (like `al-agentic-dev`) put each skill at its own `skills/<skill-name>/`.
+Actual shapes: `grill-me` and `release-notes` are skills-only; `al-agentic-dev` adds `hooks/` and plugin-level `references/`; `bc-standard-reference` is `agents/` + `references/` with no skills; `al-language-server` is `.lsp.json` only (no skills, no CLAUDE.md).
+
+Single-skill plugins put their skill at `skills/<plugin-name>/`; multi-skill plugins (like `al-agentic-dev`) put each skill at its own `skills/<skill-name>/`.
 
 ## CLAUDE.md scope (this repo)
 
@@ -50,7 +57,7 @@ pwsh scripts/Validate-PowerShell.ps1      # All .ps1 files have valid syntax
 pwsh scripts/Validate-PluginStructure.ps1 # Marketplace and per-plugin manifests exist
 ```
 
-CI (`.github/workflows/ci.yml`) runs all three on push/PR to `main`.
+CI (`.github/workflows/ci.yml`) runs all three plus the Pester tests in `tests/` on push/PR to `main`.
 
 Adding or renaming a plugin:
 
