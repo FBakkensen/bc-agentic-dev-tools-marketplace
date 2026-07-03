@@ -38,11 +38,9 @@ Every `CLAUDE.md` in this repo — root and per-plugin — is **dev-time only**.
 
 ## Git workflow on this repo
 
-**Commit straight to `main`.** Do NOT create a feature branch. Do NOT open a PR. When the user says "commit and push", run `git add` + `git commit` + `git push origin main`. Skip `git checkout -b`. Skip `gh pr create`.
+**`main` is PR-only.** Never commit on `main`. For every change: fetch and branch off a fresh `origin/main` (`git checkout -b <topic>`), commit there, push the branch, open a PR with `gh pr create`, merge via the PR once CI is green (squash preferred), then delete the branch.
 
-**Why:** the marketplace is maintained solo. Feature branches add overhead with zero review benefit. This overrides the global CLAUDE.md rule "if on the default branch, branch first" — that rule applies to repos with PR review flows, not this one.
-
-**Exception:** the user explicitly asks for a branch or PR ("can you open a PR for this", "branch this off main", etc.). In that case follow the request; default is straight-to-main.
+Enforcement: a `pre-commit` hook in `.githooks/` blocks local commits on `main`, and a GitHub ruleset on the remote requires a PR with passing CI. New clones must run `git config core.hooksPath .githooks` once to activate the hook.
 
 Run before pushing:
 
