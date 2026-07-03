@@ -15,7 +15,7 @@ Top-level layout:
 plugins/<name>/                   # One folder per plugin
 scripts/                          # PowerShell 7.2+ validation scripts (CI gates)
 tests/                            # Pester tests for plugin scripts (e.g. al-build)
-.github/workflows/                # ci.yml, claude.yml, claude-code-review.yml
+.github/workflows/                # ci.yml, claude.yml
 ```
 
 Every plugin has `.claude-plugin/plugin.json` (Claude manifest — name matches the folder name) and usually a dev-time `CLAUDE.md`. All other components sit at the plugin root and are optional per the Claude Code plugin spec:
