@@ -55,7 +55,3 @@ When an ADR is superseded, the new ADR carries normally. The superseded ADR gain
 ```
 
 The callout is the supersession marker. No Status block, no Date, no frontmatter.
-
-## Numbering
-
-Scan `docs/adr/` for the highest existing number and increment by one. Zero-pad to four digits (`0007`, not `7`).

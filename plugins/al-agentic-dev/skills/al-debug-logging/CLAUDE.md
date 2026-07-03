@@ -15,7 +15,7 @@ skills/al-debug-logging/
 ## Editing rules
 
 - **Same-publisher constraint is load-bearing.** The emitting extension and the Telemetry Logger subscriber must share a publisher in `app.json`. Any change to probe placement guidance must preserve this and the silent-probes hard-stop in `SKILL.md` step 4.
-- **`DEBUG-` prefix is non-negotiable.** Every example uses it; cleanup is `rg "DEBUG-" --type al`. Never introduce examples that drop it.
+- **`DEBUG-` prefix is non-negotiable.** Every example uses it; cleanup is `rg "DEBUG-" -g "*.al"`. Never introduce examples that drop it.
 - **`FeatureTelemetry.LogUsage`, not `Session.LogMessage`.** Examples and prose stay on `FeatureTelemetry`.
 - **`telemetry.jsonl` capture path.** Currently produced only by `/al-build`'s test runner in per-app subfolders (`.output/TestResults/*/telemetry.jsonl`). If a new harness lands, update `SKILL.md`'s Inspect step and `telemetry-workflow.md`.
 - **Hand-off state is zero `DEBUG-*` in tree.** Probes are temporary. Reinforce, don't soften.

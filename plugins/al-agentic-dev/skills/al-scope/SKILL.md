@@ -1,6 +1,6 @@
 ---
 name: al-scope
-description: Decompose `architecture.md` into a slice-grouped task list in the `tasks/` folder for AL/Business Central, with one verification task per slice when `event-model.md` is present. Use after `/al-design`, before `/al-refine` on the first task.
+description: Decompose `architecture.md` into a slice-grouped task list in the `tasks/` folder for AL/Business Central, with one verification task per slice when `event-model.md` is present. Use after `/al-design`, before `/al-provision` on the bracketed `T-001` task.
 ---
 
 **Style:** Concise — cut filler, keep grammar. Opinionated — pick a side. Arrows (→) for causality. Technical terms exact, code and errors quoted verbatim.
@@ -76,7 +76,7 @@ No `[ ]`/`[x]` heading marker: `status:` in frontmatter is the only state and th
 
 ## Description
 
-Lede first: BC site (object, procedure, field) + invariant the task preserves or contract it ships. Cite ADRs inline as `<a href="../../docs/adr/NNNN-slug.md">ADR-NNNN</a>`. Shape per [voice-contract.md](../../references/voice-contract.md): tight `<p>` for one or two facts; one fact per landing line for more. `/al-refine` may rewrite description after walking codebase.
+Lede first: BC site (object, procedure, field) + invariant the task preserves or contract it ships. Cite ADRs inline as `[ADR-NNNN](../../../docs/adr/NNNN-slug.md)`. Shape per [voice-contract.md](../../references/voice-contract.md): tight paragraph for one or two facts; one fact per landing line for more. `/al-refine` may rewrite description after walking codebase.
 
 Verify-task descriptions name the slice's user-facing outcome in `event-model.md` vocabulary (Role, Action, Business Event, View, Status), not AL mechanics. *"Order Processor releases a Sales Order with a valid item charge allocation; the Sales Order Status flips to Released and the Pending Overrides cue does not increment."* AL names live in the technical tasks the verify task depends on.
 
@@ -88,17 +88,17 @@ A **fail** (structural or boundary blocker) blocks the Gate report and `/al-refi
 
 ## Gate event
 
-Once when task decomposition lands in the `tasks/` folder. Gate report names slice families decomposed (one per `event-model.md` step for user-facing, one per `architecture.md` slice for backend-only), verify-task count (or *none, backend-only*), dependency shape (linear or branching), states feature Goal in user terms, names user's call to greenlight `/al-refine` on first task of first slice.
+Once when task decomposition lands in the `tasks/` folder. Gate report names slice families decomposed (one per `event-model.md` step for user-facing, one per `architecture.md` slice for backend-only), verify-task count (or *none, backend-only*), dependency shape (linear or branching), states feature Goal in user terms, names user's call to greenlight `/al-provision T-001` (the only `ready` task after scope; `/al-refine` follows once it opens the first slice).
 
 ## Next step
 
-The `tasks/` folder is decomposed and integrity-checked. `Next: /al-refine T-NNN` on the first task of the first slice — the `kind: provision` task if `/al-scope` bracketed one (`Next: /al-provision`). A gap `architecture.md` could not answer halted the write → `Next: /al-steer`.
+The `tasks/` folder is decomposed and integrity-checked. `Next: /al-provision T-001` (the only `ready` task after scope); it opens the first slice, then `/al-refine T-NNN` on that slice's first technical task. A gap `architecture.md` could not answer halted the write → `Next: /al-steer`.
 
 ## Composition
 
 | | |
 |---|---|
 | **Runs after**     | `/al-design` (architecture.md), `/al-event-model` for user/API-facing (event-model.md source for slice slugs and Goal) |
-| **Hands off to**   | `/al-refine` (one task at a time, technical or verify) |
+| **Hands off to**   | `/al-provision` (`T-001`), then `/al-refine` once the first slice opens (one task at a time, technical or verify) |
 | **Replan venue**   | `/al-steer` (gap surfaced during decomposition) |
 | **Sidebands**      | `/al-research` (non-trivial BC areas), `bc-standard-reference` (BaseApp grounding) |

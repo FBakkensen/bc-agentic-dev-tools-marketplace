@@ -11,7 +11,7 @@ Drop `DEBUG-*` `FeatureTelemetry.LogUsage` probes, exercise AL path, read `telem
 
 ## Precondition
 
-`rg "DEBUG-" --type al` returns nothing in the working tree. Existing `DEBUG-*` calls → leftover scaffolding. `Stop.` Finish or remove the prior investigation first.
+`rg "DEBUG-" -g "*.al"` returns nothing in the working tree. Existing `DEBUG-*` calls → leftover scaffolding. `Stop.` Finish or remove the prior investigation first.
 
 ## Flow
 
@@ -43,7 +43,7 @@ end;
 | Too much noise | Remove confirmed-wrong branches. Add `DEBUG-ENTRY` to scope. |
 | Code lives in BaseApp / third-party / unmodifiable extension | Temporary event subscriber probe → see `references/bc-event-subscriber-pattern.md`. |
 
-**Hand-off state is zero `DEBUG-*` in tree** — `rg "DEBUG-" --type al` returns nothing. A probe intentionally retained carries a comment with issue/scope so the next pass sees it is deliberate.
+**Hand-off state is zero `DEBUG-*` in tree** — `rg "DEBUG-" -g "*.al"` returns nothing. A probe intentionally retained carries a comment with issue/scope so the next pass sees it is deliberate.
 
 ## Next step
 
