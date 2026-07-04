@@ -34,7 +34,7 @@ specs/035-foo/tasks/
   - `T-MMM` — monotonic, never reused, never renumbered. The stable locator. The gap lives on the prefix, never on the id, so ids stay dense even as order shifts.
   - `<slug>` — kebab-case, for human scanning.
 
-There is **no index file**. The filesystem is the ordered manifest (`ls` = run order); the live status board, the dependency graph, and "next actionable task" are all computed on demand by grepping across the folder. `/al-steer` renders the board.
+There is **no index file**. The filesystem is the ordered manifest (`ls` = run order); the live status board, the dependency graph, and "next actionable task" are all computed on demand by grepping across the folder. `/al-steer` renders the board in chat. The persistent human-facing view is the dashboard ([dashboard.md](./dashboard.md)) — a rebuilt-whole HTML projection of this same frontmatter, owning no state and no order, so it is not an index file either.
 
 ## The surgical-edit floor
 
@@ -68,6 +68,8 @@ Frontmatter fields, single source of truth for state and graph:
 | `depends_on: [T-NNN, …]` | hard dependency edges — cannot land without those | `/al-refine`, `/al-implement` (gate readiness), `/al-steer` (graph for replan), cross-slice gate | `/al-scope`; `/al-steer` on replan |
 | `refactors: [T-NNN, …]` | reshapes shipped code under invariant | `/al-code-review`, `/al-steer` | `/al-scope`; `/al-steer` |
 | `fixes: [T-NNN, …]` | corrects a defect or wrong contract | `/al-code-review`, `/al-steer` | `/al-scope`; `/al-steer` |
+| `blocked-on: <one line>` *(scalar string, present iff `status: blocked`)* | why the task is blocked — the one line the developer reads to know what the block waits on (a missing decision, a failed gate, an unsettled dependency) | the dashboard render ([dashboard.md](./dashboard.md)), `/al-steer` (replan entry point) | whichever skill sets `status: blocked` — `/al-scope` on tasks emitted `blocked` (a verify task behind its gate), any skill flipping to `blocked` later, **in the same Edit**; the skill flipping away from `blocked` deletes it in the same Edit. One scalar line, overwritten on a re-block, never a list. Depth (the full replan flag, trigger ID, evidence) stays body prose — this field is the headline, not the record |
+| `deviations:` *(optional YAML list of one-line strings)* | unknowns the working skill absorbed inline without asking — each entry one line: what was assumed and what it touched | the dashboard render (badges), `/al-code-review` (reviews the assumptions with the diff), `/al-steer` (pattern read across tasks) | the skill that absorbs the unknown (`/al-implement` foremost), appended at absorb time; entries are never edited or removed — a deviation later judged wrong is replan work, not a list cleanup |
 | `review: clean` *(optional, `kind: verify` only)* | durable clean per-slice `/al-code-review` evidence, stamped at slice-done when code-review opens the verify task; the status value alone cannot carry it across the refine + record + walk steps that follow | `/al-refine` (rides untouched through the flip), `/al-page-script` + `/al-user-verification` (precondition), `/al-steer` (state read) | `/al-code-review` only, on a clean per-slice review of a user/API-facing slice |
 
 Empty edge lists may be written as `[]` or omitted; a present list holds bare `T-NNN` ids (the id is the citation — no file paths, no line numbers). Any human-facing *rationale* for an edge stays as body prose; the *edge itself* is a frontmatter field.
@@ -86,6 +88,12 @@ There is no visible `[ ]`/`[x]` heading marker — `status:` in frontmatter is t
 
 `event-model.md` and `architecture.md` carry **no** surgical-edit contract. `/al-design` and `/al-event-model` reshape them whole on re-run.
 
+## The audience split
+
+Task files are **agent-facing**: every line earns its place by a downstream skill reading it — the frontmatter contract above, the proof sections `test-specification.md` defines, the replan flags and scaffolding notes the next agent on the branch needs. Nothing in a task file is written *for the developer*: the human-facing surface is the dashboard ([dashboard.md](./dashboard.md)) plus chat. Content with no reader on either side — progress narration, restated plans, completed-checklist ceremony — is written nowhere, not relocated. When a fact matters to both audiences, the frontmatter carries the headline (`status:`, `blocked-on:`, `deviations:`) and the body carries the agent-depth; the dashboard renders only the headline.
+
+**Any frontmatter write re-renders the dashboard** — same working step, rebuild whole, per [dashboard.md](./dashboard.md).
+
 ## Surgical-edit discipline
 
 `/al-implement` and `/al-steer` flip `status:` via the Edit tool, anchored on the `status:` frontmatter line of the task's file.
@@ -101,7 +109,7 @@ One Edit, one field. The read-before-edit catches a stale assumption (if you thi
 
 **Verify-task flip with field strip** (`/al-user-verification` from `ready-for-verification` to `blocked` on T-010, stripping `review: clean`): two Edits in the same write — flip `status:` and delete the `review: clean` line — or regenerate the frontmatter block whole. The field is stripped on any flip to `blocked` or `done`; it survives only the `/al-refine` flip `ready` → `ready-for-verification` (refine moves no production code). A stale `review: clean` on a re-opened or signed-off task would vouch for a diff it never saw, so the strip is not optional.
 
-`examples/tasks/` stays free of `review: clean` on purpose: the field is transient runtime state written mid-cycle by `/al-code-review`, not scope-time shape `/al-scope` generates.
+`examples/tasks/` stays free of `review: clean` and `deviations:` on purpose: both are transient runtime state written mid-cycle, not scope-time shape `/al-scope` generates. `blocked-on:` *does* appear in the examples on tasks emitted `blocked` — it is written at whatever moment `status: blocked` is set, including scope time.
 
 **Other writes regenerate, not surgical-edit.** When `/al-refine` fills the `Test Specification` or `Verification Plan`, `/al-mutate` writes a verdict, or `/al-implement` records a NOTE-style block in the task body, the writing skill regenerates that portion of the file whole.
 
