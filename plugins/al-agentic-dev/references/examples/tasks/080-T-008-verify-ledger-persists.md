@@ -1,6 +1,7 @@
 ---
 task: T-008
 status: blocked
+blocked-on: slice technical tasks T-005, T-007 not yet done; verify opens behind the per-slice review gate
 slice: audit-trail
 kind: verify
 depends_on: [T-005, T-007]
