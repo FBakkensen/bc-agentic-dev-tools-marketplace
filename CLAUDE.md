@@ -2,7 +2,7 @@ Marketplace of AI-assisted AL/Business Central development plugins for Claude Co
 
 Plugins live under `plugins/`:
 
-- `al-agentic-dev/` — feature-level agentic flow (steer, grill-adr, event-model, design, scope, refine, research, implement, page-script, user-verification, refactor, mutate, code-review, second-opinion) plus the build/test gate (build, provision, validate-breaking-changes) and telemetry probes (debug-logging)
+- `al-agentic-dev/` — feature-level agentic flow (steer, grill-adr, event-model, design, scope, refine, research, implement, page-script, user-verification, refactor, mutate, code-review, second-opinion, quiz) plus the build/test gate (build, provision, validate-breaking-changes) and telemetry probes (debug-logging)
 - `al-language-server/` — AL language server for the Claude Code LSP tool (ships `.lsp.json`)
 - `bc-standard-reference/` — BaseApp / System Application lookup via a dedicated subagent
 - `grill-me/` — interview and stress-test plans

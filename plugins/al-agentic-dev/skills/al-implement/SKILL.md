@@ -74,7 +74,7 @@ New objects get IDs via available allocator. Shipped fields never rename in plac
 
 ### Replan halts planning, not code
 
-Eight triggers run as a gate before `done`. Trigger invalidates plan → flip `status: blocked`, `Next: /al-steer`. Trigger is new info the plan absorbs → note in task body and continue. Record trigger ID + one-line reason; the check is silent unless a trigger fires. A trigger read off a tool diagnosis (compile-error class, runner gap) is re-confirmed once before the `blocked` flip; one read off a recorded fact (`depends_on:`, Goal text) is acted on as-is.
+Eight triggers run as a gate before `done`. The tier test is what the unknown touches: local and reversible (naming, internal structure, test shape) → absorb; it contradicts a settled artifact (`architecture.md`, `event-model.md`, this task's `Test Specification` contract, an ADR) → the map itself is wrong, stop. Trigger invalidates plan → flip `status: blocked` and write the one-line `blocked-on:` headline in the same Edit, `Next: /al-steer`. Trigger is new info the plan absorbs → append a one-line entry to the task's `deviations:` frontmatter (what was assumed, what it touches) and continue; agent-depth goes to the body, but the assumption itself is never buried there — the dashboard renders `deviations:`, so absorbed unknowns stay visible to the developer instead of surfacing only at the gate. Record trigger ID + one-line reason; the check is silent unless a trigger fires. A trigger read off a tool diagnosis (compile-error class, runner gap) is re-confirmed once before the `blocked` flip; one read off a recorded fact (`depends_on:`, Goal text) is acted on as-is.
 
 | # | Trigger | Detect |
 |---|---|---|
@@ -87,7 +87,7 @@ Eight triggers run as a gate before `done`. Trigger invalidates plan → flip `s
 | 7 | Goal drift | What's landing no longer matches feature Goal |
 | 8 | Verification failed | User-facing verify example does not match observed behaviour; surfaced from verify task |
 
-A change that only applies a decision already made absorbs inline: missing scaffolding, permission set entry, object ID, caption, local BC-vocab rename, or reusing a seam pattern a sibling task established — apply, note, rerun `/al-build`, continue. A new decision routes through `/al-steer`: schema changes, new event publishers, new codeunits, a genuinely new seam, test-outcome changes, or a production object the assertions require (trigger #2). A public-surface rename is not trivia — it is an AppSource decision, route it.
+A change that only applies a decision already made absorbs inline: missing scaffolding, permission set entry, object ID, caption, local BC-vocab rename, or reusing a seam pattern a sibling task established — apply, log it as a `deviations:` line when it rests on an assumption the user never blessed, rerun `/al-build`, continue. A new decision routes through `/al-steer`: schema changes, new event publishers, new codeunits, a genuinely new seam, test-outcome changes, or a production object the assertions require (trigger #2). A public-surface rename is not trivia — it is an AppSource decision, route it.
 
 Before flipping to `done`, do a final correctness read of the implementation against the reconciled task spec — production logic, AAA coverage, the `New and Modified Objects` surface. For non-trivial work, `/al-second-opinion` is available for an independent cross-family read before the durable status change.
 

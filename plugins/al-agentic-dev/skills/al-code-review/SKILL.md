@@ -111,7 +111,7 @@ Read off the gate outcome:
 - **Rigor note present (a `done` task missing a mutation verdict):** `Next: /al-mutate T-NNN` to prove test rigor — advisory, runs alongside the clean stamp rather than blocking it.
 - **Clean, user/API-facing slice:** first review (verify task was `blocked`) → `Next: /al-refine T-NNN` (the verify task is now opened to `ready`); re-review (verify task already `ready-for-verification`) → `Next: /al-page-script T-NNN` (a `Record: yes` recording missing) or `/al-user-verification T-NNN` (all present or none needed).
 - **Clean, backend-only slice:** `Next: /al-refine` on the first opened next-slice task; or `/al-validate-breaking-changes` if the feature's last slice.
-- **Clean, per-feature:** `Next:` merge.
+- **Clean, per-feature:** `Next:` merge. Alongside: recommend `/al-quiz` on the feature diff — the merge is also the developer's last cheap moment to confirm their own mental model of what shipped.
 - **Escalations present:** `Next: /al-steer` for the decision-class findings.
 
 If state can't be read, fall back: report-only → `/al-implement` on the named findings; clean → `/al-steer` to confirm the next gate.
