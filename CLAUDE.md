@@ -39,9 +39,14 @@ Actual shapes: `grill-me` and `release-notes` are skills-only; `al-agentic-dev` 
 
 Single-skill plugins put their skill at `skills/<plugin-name>/`; multi-skill plugins (like `al-agentic-dev`) put each skill at its own `skills/<skill-name>/`.
 
-## CLAUDE.md scope (this repo)
+## Shipped artefacts vs dev-time files
 
-Every `CLAUDE.md` in this repo — root and per-plugin — is **dev-time only**. They load when you're working in the marketplace repo (this session). Installed users never see them. Any rule the assistant needs at runtime in an end-user's session must live in `SKILL.md` or a `references/*.md` the SKILL explicitly reads — not in any `CLAUDE.md`.
+This repo builds a **shipped product**. Two kinds of files live here, and the line between them is load-bearing:
+
+- **Shipped** — installed into end-user sessions via the marketplace: `.claude-plugin/marketplace.json`, every plugin's `.claude-plugin/plugin.json`, and all plugin components — `SKILL.md`, `agents/*.md`, `hooks/`, `references/*.md`, `scripts/`, `.lsp.json`. This *is* the product. Its audience is an AL/BC developer working in *their own* repo, who never sees this marketplace. Write it project-agnostic, in the user-facing voice, assuming none of the dev-time context below.
+- **Not shipped — dev-time only** — every `CLAUDE.md` (root and per-plugin) and any `README.md`. These load only when you're working *in this marketplace repo* (this session). Installed users never see them. They carry authoring conventions, editing rules, and coupling contracts for *maintaining* the shipped files — never runtime behaviour.
+
+The trap runs both ways. Editing a `SKILL.md`, an agent, or a reference is editing the product an end user runs — not a note to yourself. Any rule the assistant needs at runtime in an end-user's session must live in a shipped file (`SKILL.md`, or a `references/*.md` the SKILL explicitly reads), never in a `CLAUDE.md`. Conversely, authoring and editing guidance for maintainers belongs in `CLAUDE.md`, never leaked into a shipped file.
 
 ## Git workflow on this repo
 

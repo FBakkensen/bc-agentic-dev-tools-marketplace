@@ -2,6 +2,8 @@
 
 Temporary `DEBUG-*` `FeatureTelemetry.LogUsage` probes for inspecting AL runtime behaviour via `.output/TestResults/*/telemetry.jsonl`. Scaffolding, not production telemetry.
 
+*Dev-time only — this file never ships. The shipped surface is `SKILL.md` and `references/`; see the root `CLAUDE.md` "Shipped artefacts vs dev-time files".*
+
 ## Layout
 
 ```
