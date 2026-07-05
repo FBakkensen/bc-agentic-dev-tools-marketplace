@@ -25,6 +25,8 @@ Two carve-outs keep this from over-firing. **Production only** — never flag te
 
 ## Findings shape
 
+Findings must name file, object, and the observed fact; no verdict words without the check that produced them.
+
 Return each finding as a labeled block, lede first:
 
 - **Finding:** what is wrong, one line.

@@ -87,6 +87,8 @@ Do not alter git state. A dirty tree corrupts `/al-mutate`'s mutation classifica
 
 ## Outcome note
 
+Findings must name file, object, and the observed fact; no verdict words without the check that produced them.
+
 Verdict on line 1 — one of `GREEN`, `PUSH-UP`, `BLOCKED` — then:
 
 - Test procedure name(s) and which test app/codeunit they landed in.

@@ -61,9 +61,9 @@ Test failure with an unclear cause → name `/al-debug-logging` as the next step
 
 Always delegate `/al-build` to one general subagent. Build output is verbose; keep it out of the main session.
 
-After the worker returns the gate report, close the completed subagent thread before interpreting or reporting the result.
+After the worker returns the gate report, close the completed subagent thread before interpreting or reporting the result. Report the outcome as the mid-task Gate one-liner per [voice-contract.md](../../references/voice-contract.md) — never paste the worker's block raw.
 
-Spawn one general read-only subagent for the gate; a small/fast model tier suffices (advisory).
+Spawn one general read-only subagent for the gate; a small/fast model tier suffices (advisory). The spawn prompt includes verbatim: findings must name file, object, and the observed fact; no verdict words without the check that produced them.
 
 ### Worker rules
 

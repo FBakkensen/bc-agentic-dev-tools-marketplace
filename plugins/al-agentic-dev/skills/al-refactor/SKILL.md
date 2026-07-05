@@ -31,7 +31,7 @@ Architectural vocabulary (Module, Interface, Implementation, Seam, Adapter, Dept
 
 ## Lenses
 
-Spawn 4 lens subagents in parallel on the task diff — each with the prompt in [`subagents/al-review-lens.md`](../../references/subagents/al-review-lens.md), except lens 2 (BC best-practice) which uses [`subagents/al-review-lens-bc.md`](../../references/subagents/al-review-lens-bc.md) for its bc-code-intelligence reach (a small/fast model suffices — see the tier note in those files). Each returns reshape opportunities; the main session merges into one ordered apply queue. The spawn prompt carries only the per-lens goal below plus the task diff; the read-only posture, BC vocabulary, and findings shape live in the prompt block.
+Spawn 4 lens subagents in parallel on the task diff — each with the prompt in [`subagents/al-review-lens.md`](../../references/subagents/al-review-lens.md), except lens 2 (BC best-practice) which uses [`subagents/al-review-lens-bc.md`](../../references/subagents/al-review-lens-bc.md) for its bc-code-intelligence reach (a small/fast model suffices — see the tier note in those files). Each returns reshape opportunities; the main session merges into one ordered apply queue, running pre-send check 3 ([voice-contract.md](../../references/voice-contract.md) Relaying subagent findings) on each before it reaches the user — a finding naming no object or observation goes back to its lens. The spawn prompt carries only the per-lens goal below plus the task diff; the read-only posture, BC vocabulary, and findings shape live in the prompt block.
 
 When the diff touches test code, the spawn prompt also names [test-layout.md](../../references/test-layout.md): its authoring contract is exactly what tidy passes break silently — consolidating "duplicate" integration-test library procedures violates duplicate-before-share, hoisting handlers off a test codeunit breaks the `[HandlerFunctions]` string binding, relocating a double breaks the per-app independence rule. Moving a test across the unit/integration boundary is never a lens call — that is replan, route `/al-steer`.
 
@@ -96,7 +96,7 @@ Citation chain: a rename pulling a BC name or verb from outside the codebase mee
 
 **No new behaviour.** Diff leaves observable behaviour identical. New behaviour belongs to `/al-implement` (new task) or `/al-refine` (re-plan).
 
-Emits the Gate report once at module / pattern / seam altitude (not procedure level), naming the application invariant preserved and the next step. `/al-refactor` does not edit `architecture.md` and writes no Notes by default; a task file under `tasks/` is touched only when an operational outcome demands it, per the surgical-edit contract in [markdown-spec-discipline.md](../../references/markdown-spec-discipline.md). See [voice-contract.md](../../references/voice-contract.md).
+Emits the Gate report once at module / pattern / seam altitude (not procedure level), rendered box-first and passed through the pre-send checks, naming the application invariant preserved and the next step. `/al-refactor` does not edit `architecture.md` and writes no Notes by default; a task file under `tasks/` is touched only when an operational outcome demands it, per the surgical-edit contract in [markdown-spec-discipline.md](../../references/markdown-spec-discipline.md). See [voice-contract.md](../../references/voice-contract.md).
 
 ## Next step
 

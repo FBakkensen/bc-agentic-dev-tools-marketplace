@@ -44,7 +44,7 @@ Name entries that need a decision: severity, ID, symptom in codebase's terms (ob
 
 - **Feature-done** (every `T-NNN` `done`, no merge yet): `/al-code-review` per-feature gate.
 
-Name the gate by name so the user picks the right skill. See [voice-contract.md](../../references/voice-contract.md) for prose voice.
+Name the gate by name so the user picks the right skill. Each entry passes pre-send check 3 — cause → effect in named objects, not a category; the steering note renders box-first, and a decision fork goes to the user as one question with lettered options ([voice-contract.md](../../references/voice-contract.md)).
 
 ## Route to next skill, do not perform it
 

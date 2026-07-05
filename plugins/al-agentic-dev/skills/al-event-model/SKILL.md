@@ -46,7 +46,7 @@ Include BaseApp steps in canonical names, no `(existing)` / `(new)` tags; a read
 
 ## Hybrid settlement, parallel-twice plus confess-your-guesses
 
-Draft two timelines diverging on one structural decision, present both with recommendation; after user picks, name every leaf the agent invented (*"I picked Role Center notification for the View, email is an alternative, which?"*) and confirm each. Pure interrogation burns user time; pure candidate-comparison lets leaf guesses survive — hybrid keeps each posture in its lane.
+Draft two timelines diverging on one structural decision, present both with recommendation; after user picks, name every leaf the agent invented (*"I picked Role Center notification for the View, email is an alternative, which?"*) and confirm each. One decision per question, lettered options, recommendation first ([voice-contract.md](../../references/voice-contract.md)) — for the timeline pick and each leaf confirm alike. Pure interrogation burns user time; pure candidate-comparison lets leaf guesses survive — hybrid keeps each posture in its lane.
 
 ## Citation chain in chat, before write
 
@@ -66,7 +66,7 @@ A **fail** (structural or boundary blocker) blocks the Gate report and `/al-desi
 
 ## Gate event
 
-Once when `event-model.md` lands. Gate report describes the journey in BC vocabulary (Role, Action, Business Event, View, Status), names the application problem it addresses, names the user's call to greenlight `/al-design`.
+Once when `event-model.md` lands. Gate report — rendered box-first, passed through the pre-send checks ([voice-contract.md](../../references/voice-contract.md)) — describes the journey in BC vocabulary (Role, Action, Business Event, View, Status), names the application problem it addresses, names the user's call to greenlight `/al-design`.
 
 ## Next step
 

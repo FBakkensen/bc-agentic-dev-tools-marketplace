@@ -58,7 +58,7 @@ When two authoritative sources disagree (Microsoft Learn says one signature, wor
 
 ## Output
 
-A findings note: verbatim quotes, one-line citations, no editorialising. Citations live in the note, never inline into durable artifacts — the caller decides what survives and lands task-scoped citations as `Contract notes` bullets per the evidence bar. When two sources agree, name both (`Microsoft Learn <page> + al-symbols-mcp <object>.<procedure> agree on <signature>`); when they disagree, return both quotes and name the conflict.
+A findings note: verbatim quotes, one-line citations, no editorialising. Citations live in the note, never inline into durable artifacts — the caller decides what survives and lands task-scoped citations as `Contract notes` bullets per the evidence bar. When two sources agree, name both (`Microsoft Learn <page> + al-symbols-mcp <object>.<procedure> agree on <signature>`); when they disagree, return both quotes and name the conflict. Any count of evidence ("both sources", "all three families") lists the items — pre-send check 4, [voice-contract.md](../../references/voice-contract.md).
 
 ## Next step
 

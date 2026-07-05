@@ -19,7 +19,7 @@ Drop `DEBUG-*` `FeatureTelemetry.LogUsage` probes, exercise AL path, read `telem
 2. **Probe.** One or two `FeatureTelemetry.LogUsage` calls. Prefix every event ID `DEBUG-`. Place inside the chosen branch, not around the decision. Binary branch → two peer probes, one per branch.
 3. **Run.** Exercise the AL path: page action, posted document, web service call, install/upgrade codeunit, job queue task, event subscriber, or test via `/al-build`. Harness is whatever fires the code.
 4. **Inspect.** `rg "DEBUG-" .output/TestResults/*/telemetry.jsonl` (the `/al-build` harness path; other harnesses capture elsewhere). Probes silent → `Stop.`; for capture path and the same-publisher cause, see `references/telemetry-workflow.md`.
-5. **Refine or remove.** Answered → delete probes. Not → move or add a peer probe at the next decision point.
+5. **Refine or remove.** Answered → delete probes. Not → move or add a peer probe at the next decision point. Report the answer in named objects — probe ID, emitted value, the code path it proves ran (pre-send check 3, [voice-contract.md](../../references/voice-contract.md)).
 
 ## Canonical probe
 

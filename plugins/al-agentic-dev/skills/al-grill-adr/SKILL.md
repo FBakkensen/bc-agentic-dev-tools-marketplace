@@ -7,7 +7,7 @@ description: Domain-aware grilling for AL/Business Central. Sharpens BC vocabula
 
 # /al-grill-adr, Domain-aware grilling for AL/Business Central
 
-Interview the user about domain intent, one question at a time, reading the codebase when it can answer. Sharpen `CONTEXT.md` until BC vocabulary is unambiguous; offer domain ADRs when a constraint is hard to reverse and worth preserving.
+Interview the user about domain intent, one question at a time, reading the codebase when it can answer. A question that offers a choice carries lettered options, recommendation first ([voice-contract.md](../../references/voice-contract.md) One decision per question). Sharpen `CONTEXT.md` until BC vocabulary is unambiguous; offer domain ADRs when a constraint is hard to reverse and worth preserving.
 
 ## Artifact boundary
 

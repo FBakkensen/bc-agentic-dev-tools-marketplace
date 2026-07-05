@@ -6,7 +6,7 @@ Style rule lives at the top of each SKILL.md as a one-line inline declaration. T
 
 Applies everywhere — chat output and artifacts — unless a specific skeleton below dictates otherwise.
 
-Token thrift — lede-first as the default, payload-preserving cuts (quote the one decisive error line, no log dumps, no tool-call narration), keep grammar — lives in [thrift-rules.md](thrift-rules.md). It sharpens the Answer and Gate skeletons below; it is not restated here.
+Token thrift — lede-first as the default, payload-preserving cuts (quote the one decisive error line, no log dumps, no tool-call narration), keep grammar — lives in [thrift-rules.md](thrift-rules.md). It fills the verdict box and the skeletons below with tight wording; the box is the shape, thrift is the wording inside it.
 
 **Bold header** on every section.
 
@@ -16,6 +16,41 @@ Verdict, conclusion, or status on line 1. Context and detail after.
 
 - Bullets for lists.
 - Not prose dressed as a list.
+
+## Boxes first
+
+A reader scans boxes and skips prose walls — a skipped reply is accepted unread. So every substantive chat reply (gate event, findings, analysis, task close) opens with a **borderless two-column verdict box** the reader can stop after. The named skeletons below are this box's specialisations; a substantive reply that matches no named skeleton uses the generic rows:
+
+| | |
+|---|---|
+| **Outcome** | what happened, one line |
+| **Changed** | objects / files touched, one line |
+| **Before you accept** | the single most important check, phrased as an action ("post a Sales Order with a blank `Location Code`, look at the Item Ledger Entry"), never a category ("verify the tests"); nothing left to check → say why ("build gate ran green") |
+
+Trivial replies — one-liners, quick lookups, the mid-task gate line, the Answer skeleton — skip the box; a box around one sentence is noise.
+
+**Prose cap.** After the box: no paragraph over 3 sentences, no reply over ~15 lines of prose. Overflow goes into a file linked from the box, or waits for the user to ask for more.
+
+**Visual over verbal.** Anything structural — flow, before/after, architecture, options — gets a markdown table or a Unicode box/tree diagram, not a paragraph. A 4-line diagram beats a 10-line description.
+
+## One decision per question
+
+Need the user's input → one question per message, lettered options, the recommended option first and marked. Never a paragraph ending in an open "thoughts?".
+
+Carve-out: the ask-before-reveal questions in `/al-user-verification` and `/al-quiz` are witness elicitation, not decisions — options that reveal the expected value would lead the witness. That contract is untouched.
+
+## Pre-send checks (no exam-speak)
+
+Exam-speak is prose graded on plausibility instead of facts — it reads right and carries nothing a reader can act on or refute. Run these checks on every draft before sending; they apply doubled to relayed subagent findings.
+
+1. **Per sentence: name the observation that would prove it wrong.** None exists → delete the sentence, or get the missing fact first (read the object, run the gate) and write that instead.
+2. **Per quality word and verdict ("harmless", "clean", "confirmed", "sound"): the same paragraph carries the named object and the fact that makes the word true.** Absent → the word is a note-to-self that a fact is missing; go get it.
+   - ✗ "the stale filter is harmless by construction"
+   - ✓ "the stale filter is harmless: its only reader was `GetOpenEntries`, which now keys on `Posting Date` instead"
+3. **Per bug/fix statement: it must survive the handoff test — a dev who wasn't in this session can act on it.** A bug states cause → effect in named objects ("`PostDocument` exits at the early `IsHandled` return without assigning `"Document No."`, so `InsertLedgerEntry` writes ''"), not a category ("an edge case in the posting path"). A fix states what changes where to what, not its intended quality ("make it more robust").
+4. **Per count of evidence ("all 4 lenses", "both sources agree"): list the items.** Can't list them → you don't have them → say what was actually checked.
+5. **Per coined term and back-reference: define at first use, restate instead of pointing.** "My lean: (b)" → "My lean: (b) — reuse the `IEnvironment` seam". A term minted this session gets its one-line definition or gets cut.
+6. **Delete self-grades.** "Thorough", "systematic", "comprehensive", "Perfect!" describe the author, not the work. Show scope by naming what was covered: not "a comprehensive review" but "all 6 codeunits the diff touches plus the two test apps".
 
 ## BC vocabulary
 
@@ -66,7 +101,7 @@ Read only the first line of each landing point in your draft. If that vertical s
 
 ## Lists of findings
 
-Multi-item findings: label every line (`Finding:` / `Where:` / `Action:`), lede first.
+Multi-item findings: label every line (`Finding:` / `Where:` / `Action:`), lede first. Each finding passes pre-send check 3 — cause → effect in named objects, actionable without this session.
 
 ## Tables of facts
 
@@ -82,9 +117,17 @@ Artifact carries the forward-facing fact in declarative voice. Workflow log belo
 
 Place an advisor checkpoint inline at the moment the gate fires, not as a top-of-file blockquote.
 
+## Relaying subagent findings
+
+The session owns the quality of what lands in chat, not the subagent — verify every subagent result before using it.
+
+- Every spawn prompt includes this line verbatim: **findings must name file, object, and the observed fact; no verdict words without the check that produced them.** The shipped prompt blocks under `subagents/` carry it themselves; ad-hoc spawns (gate workers, mutation workers, general delegations) get it in the spawn prompt.
+- Before relaying a subagent finding, run pre-send check 3 on it: names no object or observation → send the agent back for the mechanism, or read the file yourself.
+- Relay through the verdict box or the owning skeleton — never forward a subagent's prose raw.
+
 ## Chat shape skeletons
 
-Style fills the shape; the skeleton stays. Five skeletons, named defaults.
+Style fills the shape; the skeleton stays. Five skeletons, named defaults. A substantive skeleton renders **box-first**: its rows land as a borderless two-column table the reader can stop after (Boxes first, above).
 
 ### Opener (session start)
 
@@ -96,26 +139,26 @@ Two tiers. The event type determines the tier.
 
 **Mid-task gate** — any gate event that does not flip task status:
 
-One line. `**GREEN** <what changed> → <next step>.` or `**RED** <what failed> → <next step>.`
+One line, no box. `**GREEN** <what changed> → <next step>.` or `**RED** <what failed> → <next step>.`
 
 **Task-close gate** — status flips to `done` or `blocked`:
 
-Four lines.
+Rendered as the verdict box — a borderless two-column table with exactly these four rows:
 
-| Line | Carries |
+| Row | Carries |
 |---|---|
 | **Did:** | what user-facing behaviour the change enables (Action, Field, API Status, Role Center cue) |
 | **Was:** | the problem it solves, one-line scenario the user recognises |
 | **Fits:** | how the change fits the app at BC-shape altitude (module, BC pattern, seam, names like `Sales-Post Impl`) |
-| **Next:** | what is on the user, or nothing if the agent moves on |
+| **Next:** | the action the user takes, phrased as an action — or nothing if the agent moves on |
 
 Mechanics (procedure names, line numbers, mutant IDs, build counts) belong in the commit and the task file.
 
-**Verify-task variant** (`/al-user-verification` closing a slice, `kind: verify`): same four lines, shifted altitude. **Did** = what the user confirmed. **Was** = user-facing problem the slice solved. **Fits** = journey in `event-model.md` vocabulary (Role / Action / Business Event / View / Status, no AL names). **Next** = handoff.
+**Verify-task variant** (`/al-user-verification` closing a slice, `kind: verify`): same four rows, shifted altitude. **Did** = what the user confirmed. **Was** = user-facing problem the slice solved. **Fits** = journey in `event-model.md` vocabulary (Role / Action / Business Event / View / Status, no AL names). **Next** = handoff.
 
 ### Answer (user question)
 
-Answer on line 1. 3 sentences max at the question's altitude.
+Answer on line 1, no box. 3 sentences max at the question's altitude.
 
 - No status recap, no background section, no "why it matters."
 - Flag open questions explicitly — don't silently drop them.
@@ -125,7 +168,7 @@ Answer on line 1. 3 sentences max at the question's altitude.
 
 **Pre-flight:** one line — `**Stop.** <reason in BC vocab>. <next action>.`
 
-**Mid-flow:** Stop reason + State 2-col table + Next action. Absorb-and-continue variant uses "Continuing" instead of "Next".
+**Mid-flow:** box-first — stop reason on line 1, then the State rows and the Next action as one borderless two-column table. Absorb-and-continue variant uses "Continuing" instead of "Next".
 
 ### Push-up report (test scoped above its floor)
 

@@ -25,7 +25,7 @@ Calibrate depth to scope: a slice earns a handful of questions, a feature more; 
 
 ## Verdict
 
-End with the punchline: model sound, or where it is off — the specific decisions the user misheld, each with its one-line correction. A miss is information, not failure; a *cluster* of misses on one area is a signal the user may want `/al-code-review` on that area or a walk through its task files. Nothing is recorded; the contact was the point.
+End with the punchline: model sound, or where it is off — the specific decisions the user misheld, each with its one-line correction anchored in named objects (pre-send check 3, [voice-contract.md](../../references/voice-contract.md)). Quiz questions are witness elicitation, exempt from the lettered-options decision rule — options must never reveal the answer. A miss is information, not failure; a *cluster* of misses on one area is a signal the user may want `/al-code-review` on that area or a walk through its task files. Nothing is recorded; the contact was the point.
 
 ## Composition
 

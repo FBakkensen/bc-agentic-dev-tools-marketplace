@@ -4,7 +4,7 @@ Token thrift across chat and production AL. One home: read by every prose-writin
 
 ## Chat: say it once, lede first
 
-Verdict on line 1, then the why. The reader decides from the first line of each landing point; never make them read to the bottom to learn the outcome. This is the default, not a mode — it sharpens the Answer and Gate skeletons in [voice-contract.md](voice-contract.md), it does not replace them.
+Verdict on line 1, then the why. The reader decides from the first line of each landing point; never make them read to the bottom to learn the outcome. This is the default, not a mode — it fills the verdict box and the Answer and Gate skeletons in [voice-contract.md](voice-contract.md) with tight wording, it does not replace them; the box is the shape, thrift is the wording inside it.
 
 Cut the bloat, keep the grammar. Articles and connectives stay — a dropped conjunction misreads in an ordered AL instruction ("post the order, then validate the ledger entry"). What goes:
 

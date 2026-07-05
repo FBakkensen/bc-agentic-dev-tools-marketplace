@@ -66,7 +66,7 @@ Unanswerable → cannot write `Verification Plan` yet. Flip or keep `status: blo
 
 ## Surface push-ups, commit nothing
 
-A test scoped above the deepest layer that could check the behaviour is a **push-up** (see [`test-strategy.md`](../../references/test-strategy.md)): every `Integration` case, every `Record: yes` E2E, every `Contract` example. For each, record a `Contract notes` line — why the layer below cannot hold it + the named seam from [`testability.md`](../../references/testability.md) that would reach it, or the wall — and emit the **Push-up report** ([`voice-contract.md`](../../references/voice-contract.md)) as its own chat section. `/al-refine` only *proposes*: nothing is written but the task file, so this surfaces the tax without gating — the handoff stop is the user's review point, and `/al-implement` is where a push-up is actually committed. `Record: no` E2E (already pushed down) and `Exploration` (no checkable floor) are not push-ups and carry no justification.
+A test scoped above the deepest layer that could check the behaviour is a **push-up** (see [`test-strategy.md`](../../references/test-strategy.md)): every `Integration` case, every `Record: yes` E2E, every `Contract` example. For each, record a `Contract notes` line — why the layer below cannot hold it + the named seam from [`testability.md`](../../references/testability.md) that would reach it, or the wall — and emit the **Push-up report** ([`voice-contract.md`](../../references/voice-contract.md)) as its own chat section — each line passes pre-send check 3: why the layer below cannot hold it, in named objects, actionable without this session. `/al-refine` only *proposes*: nothing is written but the task file, so this surfaces the tax without gating — the handoff stop is the user's review point, and `/al-implement` is where a push-up is actually committed. `Record: no` E2E (already pushed down) and `Exploration` (no checkable floor) are not push-ups and carry no justification.
 
 ## Ground exact names
 
@@ -116,7 +116,7 @@ No `in-progress` state.
 
 ## Next step
 
-Read off the flipped task:
+Read off the flipped task — the handoff passes the pre-send checks in [voice-contract.md](../../references/voice-contract.md):
 
 - **Technical task → `ready-for-implementation`:** `Next: /al-implement T-NNN` — drive the `Test Specification` red→green.
 - **Verify task → `ready-for-verification`:** the verify task arrived carrying `review: clean` (`/al-code-review` ran at slice-done and opened it); the `status:`-only flip preserves it. `Next:` state-conditional on the slice's recordings — `/al-page-script T-NNN` (a `Record: yes` Journey Example's recording missing) or `/al-user-verification T-NNN` (all present, or no `Record: yes` example). The review already ran — do not route back through `/al-code-review`.
