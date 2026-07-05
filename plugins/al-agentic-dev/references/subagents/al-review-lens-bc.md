@@ -50,6 +50,8 @@ Run the `find_bc_knowledge` → drop-noise → `get_bc_topic` dispatch per `${CL
 
 ## Findings shape
 
+Findings must name file, object, and the observed fact; no verdict words without the check that produced them.
+
 Return each finding as a labeled block, lede first:
 
 - **Finding:** what is wrong, one line.

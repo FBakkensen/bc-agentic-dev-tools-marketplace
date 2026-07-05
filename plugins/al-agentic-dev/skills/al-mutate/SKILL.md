@@ -47,7 +47,7 @@ Any precondition fails → **Stop**, surface the gap.
 
 ## Delegation
 
-Use one delegated worker when host supports subagents. Host owns plan generation, plan approval, survivor/equivalence judgement, task-block verdicts, and any killer tests. Worker owns the mutate-build-recovery-revert cycle and `.output` report. Delegation unavailable → run inline with the same boundaries.
+Use one delegated worker when host supports subagents. Host owns plan generation, plan approval, survivor/equivalence judgement, task-block verdicts, and any killer tests. Worker owns the mutate-build-recovery-revert cycle and `.output` report. Delegation unavailable → run inline with the same boundaries. The spawn prompt includes verbatim: findings must name file, object, and the observed fact; no verdict words without the check that produced them ([voice-contract.md](../../references/voice-contract.md) Relaying subagent findings).
 
 After the worker returns its mutation report, close the completed worker thread before the host resumes judgement, killer-test work, or closeout.
 
@@ -81,7 +81,7 @@ Write durable session report at `.output/mutation-report/<YYYYMMDD-HHMMSS>.md`. 
 
 The task file gets the `Closeout` mutation verdict shape from [test-specification.md](../../references/test-specification.md): borderless two-column table (baseline SHA, report path, mutant count with a rationale lede, killed, survivors, final full-gate result) plus labeled `Survivor:` / `Why kept:` lines per survivor. One fact per landing line; no prose wall, no full mutation table in the task file.
 
-`/al-mutate` does not flip status. See [markdown-spec-discipline.md](../../references/markdown-spec-discipline.md) and [voice-contract.md](../../references/voice-contract.md). Emit the Gate report once at pass close, naming rigor proved (or not) for user-facing behaviour under test, soft spots that remain by design, and the user's call; the task-file `Closeout` mutation verdict lands alongside it.
+`/al-mutate` does not flip status. See [markdown-spec-discipline.md](../../references/markdown-spec-discipline.md) and [voice-contract.md](../../references/voice-contract.md). Emit the Gate report once at pass close, rendered box-first and passed through the pre-send checks, naming rigor proved (or not) for user-facing behaviour under test, soft spots that remain by design, and the user's call; the task-file `Closeout` mutation verdict lands alongside it.
 
 ## Next step
 

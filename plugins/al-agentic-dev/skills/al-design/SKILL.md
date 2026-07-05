@@ -75,7 +75,7 @@ Non-trivial = multi-module, brownfield refactor, or novel pattern selection. Whe
 | 2 | Maximise flexibility, many use cases, easy extension. |
 | 3 | Optimise the most common caller, default case trivial. |
 
-Each pass runs its own `/al-research` and receives BC vocabulary from `CONTEXT.md` plus architectural vocabulary from [LANGUAGE.md](../../references/LANGUAGE.md) → all three name things consistently. Output per pass: module map + per-module interface, named adapters at every seam, the one trade-off line that distinguishes this design. Present all three sequentially, compare along **depth** / **locality** / **seam placement**, pick one (or hybrid) opinionatedly, run `/grill-me` when choice is user's call; `/al-second-opinion` reconciles non-trivial picks.
+Each pass runs its own `/al-research` and receives BC vocabulary from `CONTEXT.md` plus architectural vocabulary from [LANGUAGE.md](../../references/LANGUAGE.md) → all three name things consistently. Output per pass: module map + per-module interface, named adapters at every seam, the one trade-off line that distinguishes this design. Present all three sequentially, compare along **depth** / **locality** / **seam placement**, pick one (or hybrid) opinionatedly, run `/grill-me` when choice is user's call; `/al-second-opinion` reconciles non-trivial picks. When the choice goes to the user: one question, lettered options, recommendation first ([voice-contract.md](../../references/voice-contract.md) One decision per question).
 
 ## Branch + folder + write
 
@@ -91,7 +91,7 @@ A **fail** (structural or boundary blocker) blocks the Gate report and `/al-scop
 
 ## Gate event
 
-Once when `architecture.md` lands. Gate report names chosen BC pattern + R → P → W boundary as 'how this fits', states application problem the architecture solves, names user's call to greenlight `/al-scope`.
+Once when `architecture.md` lands. Gate report — rendered box-first, passed through the pre-send checks ([voice-contract.md](../../references/voice-contract.md)) — names chosen BC pattern + R → P → W boundary as 'how this fits', states application problem the architecture solves, names user's call to greenlight `/al-scope`.
 
 ## Next step
 

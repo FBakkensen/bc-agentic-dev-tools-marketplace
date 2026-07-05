@@ -88,7 +88,7 @@ A **fail** (structural or boundary blocker) blocks the Gate report and `/al-refi
 
 ## Gate event
 
-Once when task decomposition lands in the `tasks/` folder. Gate report names slice families decomposed (one per `event-model.md` step for user-facing, one per `architecture.md` slice for backend-only), verify-task count (or *none, backend-only*), dependency shape (linear or branching), states feature Goal in user terms, names user's call to greenlight `/al-provision T-001` (the only `ready` task after scope; `/al-refine` follows once it opens the first slice).
+Once when task decomposition lands in the `tasks/` folder. Gate report — rendered box-first, passed through the pre-send checks ([voice-contract.md](../../references/voice-contract.md)) — names slice families decomposed (one per `event-model.md` step for user-facing, one per `architecture.md` slice for backend-only), verify-task count (or *none, backend-only*), dependency shape (linear or branching), states feature Goal in user terms, names user's call to greenlight `/al-provision T-001` (the only `ready` task after scope; `/al-refine` follows once it opens the first slice).
 
 ## Next step
 

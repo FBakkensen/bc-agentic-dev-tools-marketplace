@@ -25,7 +25,7 @@ Any precondition fails → **Stop**, surface the gap. Do not review against an u
 
 ## Scope and diff
 
-Two modes, deduced from current state, recent `status:` flips, working tree, and what the user said: **per-slice** (every technical task in one `slice:` is `done`; a user/API-facing slice's verify task still lacks `review: clean`, or a backend-only next slice's technical tasks are still `blocked`) or **per-feature** (full feature diff before merge). When inference is uncertain (mid-stream WIP commits, mixed state), ask with concrete options: "diff for slice `<slug>`?" / "full branch vs `main`?" / "uncommitted working tree?" / "SHA range you name?"
+Two modes, deduced from current state, recent `status:` flips, working tree, and what the user said: **per-slice** (every technical task in one `slice:` is `done`; a user/API-facing slice's verify task still lacks `review: clean`, or a backend-only next slice's technical tasks are still `blocked`) or **per-feature** (full feature diff before merge). When inference is uncertain (mid-stream WIP commits, mixed state), ask one question with lettered concrete options ([voice-contract.md](../../references/voice-contract.md) One decision per question): "diff for slice `<slug>`?" / "full branch vs `main`?" / "uncommitted working tree?" / "SHA range you name?"
 
 Per-slice scope: union of diffs for every `T-NNN` carrying the slice's `slice:` value, from each task's first commit through its `done` flip, **plus any `--fix` commits this run lands**. Backend-only slices use the same per-slice mode; they differ only in the clean-review outcome (next slice's technical task set opens).
 
@@ -35,7 +35,7 @@ Pipeline commits carry `T-NNN <verb>: <message>` prefixes that associate commits
 
 Run the lenses, then resolve findings. The same pass runs in both modes; only what happens *after* differs (report vs fix).
 
-1. **Find** — spawn the lenses below in parallel, one subagent per lens, each with its focused goal plus the diff/scope. File-read lenses use the prompt in [`subagents/al-review-lens.md`](../../references/subagents/al-review-lens.md); the BC-specific lens (3) uses [`subagents/al-review-lens-bc.md`](../../references/subagents/al-review-lens-bc.md) for its bc-code-intelligence reach (a small/fast model suffices — see the tier note in those files). The spawn prompt carries only the per-lens goal plus the diff/scope; vocabulary and findings shape live in the prompt block. Lens 1's spawn additionally carries the evidence bar's **Constructs** bullet verbatim.
+1. **Find** — spawn the lenses below in parallel, one subagent per lens, each with its focused goal plus the diff/scope. File-read lenses use the prompt in [`subagents/al-review-lens.md`](../../references/subagents/al-review-lens.md); the BC-specific lens (3) uses [`subagents/al-review-lens-bc.md`](../../references/subagents/al-review-lens-bc.md) for its bc-code-intelligence reach (a small/fast model suffices — see the tier note in those files). The spawn prompt carries only the per-lens goal plus the diff/scope; vocabulary, findings shape, and the file/object/observed-fact bar live in the prompt block. Lens 1's spawn additionally carries the evidence bar's **Constructs** bullet verbatim.
 2. **Dedup** — merge the overlap (lenses surface the same issue more than once) into a unique, ranked list.
 3. **Judge** — per unique finding, adversarially test it (skeptics prompted to *refute*, spawned in parallel or judged inline); default to false-positive when it can't be substantiated. The judge is what stands where the human grill used to, so it must be at least as skeptical. Per finding it resolves: real or not; **must-fix or nit** (must-fix is correctness, contract/AppSource lock-in, behaviour, scope violation, or skipped evidence; a borderline finding defaults to **nit**); and **fixable-in-loop or needs-a-decision** (a replan-class finding — new seam, decomposition wrong, new behaviour — has no red-first test that pins a decision nobody made, so `--fix` cannot land it).
 4. **Cross-family pass** — `/al-second-opinion` (GPT-pinned, one call on the must-fix survivor list) refutes the set. The only non-Claude eye, so it runs before anything is reported as must-fix or fixed: a finding it refutes drops to **escalate** (don't act on cross-family doubt); a real finding it raises that the judges missed re-enters judging.
@@ -90,7 +90,7 @@ A clean review (no must-fix — in `--fix`, after the single re-review) stamps t
 
 ## What lands on screen
 
-Chat stays chrome-only during the pass; lens churn and the judge stay out of context. Shapes per Tables-of-facts and Lists-of-findings in [`voice-contract.md`](../../references/voice-contract.md):
+Chat stays chrome-only during the pass; lens churn and the judge stay out of context. Opener and Closer render box-first; shapes per Tables-of-facts and Lists-of-findings in [`voice-contract.md`](../../references/voice-contract.md). Every relayed finding passes pre-send check 3 (cause → effect in named objects) — a finding that names no object or observation goes back to its lens, never on screen raw.
 
 | | |
 |---|---|
