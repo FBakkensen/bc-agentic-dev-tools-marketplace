@@ -11,7 +11,7 @@ Turn sharpened idea into feature-level architecture, then write `architecture.md
 
 ## Artifact boundary
 
-Writes only `architecture.md`.
+Writes only `architecture.md`, plus appended entries in `.not-yet-specified.md` (the deferred-question ledger `/al-steer` grooms).
 
 May define production architecture, AL object responsibilities, module boundaries, seams, events, R → P → W flow, testability constraints, and seam expectations.
 
@@ -34,7 +34,7 @@ Never write task-level proof. `/al-scope` owns the `tasks/` folder; `/al-refine`
 - **Testability constraints**: name where architecture should expose isolated decision logic behind the P layer and where behaviour necessarily crosses BC runtime, database, page/TestPage, event wiring, table triggers, telemetry shape, install / upgrade, permissions, or public surface. Do not write task-level proof, AAA cases, or assertions.
 - **Evidence before write**: every BC-specific name in `architecture.md` meets the evidence bar in [voice-contract.md](../../references/voice-contract.md). It is a durable design artifact, so beyond names already in the dependency graph — pattern fitness, BaseApp behaviour, event contracts — routes through `/al-research`, mandatory, not a single-source fetch. Names from `/al-event-model` upstream count only when `grep` against `event-model.md` returns them this session.
 
-Unanswerable → not ready for `/al-scope`. Resolve via `/al-research` (BC behaviour), `/al-grill-adr` (domain rule), or `/al-steer` (replan).
+Unanswerable → not ready for `/al-scope`. Resolve via `/al-research` (BC behaviour), `/al-grill-adr` (domain rule), or `/al-steer` (replan). A question that is in scope but not sharp enough to block on — named, matters, no way to phrase it as a decision yet — is neither resolved nor dropped: append it as one line to `.not-yet-specified.md` at repo root (the deferred-question ledger `/al-steer` grooms), so it graduates into a decision later instead of resurfacing as an implementation guess.
 
 ## Deletion test, every candidate module
 

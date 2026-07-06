@@ -1,6 +1,6 @@
 # Voice contract
 
-Style rule lives at the top of each SKILL.md as a one-line inline declaration. This file carries the non-style disciplines: lexical, citation, shape, and artifact-vs-chat scoping. Disciplines below apply to durable artifacts (`event-model.md`, `architecture.md`, the per-task files under `tasks/`, ADRs, `CONTEXT.md`, `.out-of-scope/`) and to chat output.
+Style rule lives at the top of each SKILL.md as a one-line inline declaration. This file carries the non-style disciplines: lexical, citation, shape, and artifact-vs-chat scoping. Disciplines below apply to durable artifacts (`event-model.md`, `architecture.md`, the per-task files under `tasks/`, ADRs, `CONTEXT.md`, `.out-of-scope/`, `.not-yet-specified.md`) and to chat output.
 
 ## Format
 
@@ -70,6 +70,10 @@ Name the specific object and procedure: "extract `PostSalesOrder` from codeunit 
 ## Names are the citation
 
 Use the test codeunit, procedure, table, field, event publisher by name. `ABCCopyDocSubscribers.OnAfterInsertToSalesLine` is the address; future readers grep, no inline `(see: file.al:120)` annotations.
+
+## Tasks appear by name in chat
+
+A bare `T-NNN` in chat is illegible — the reader either opens the dashboard to decode it or skims past it, and a skimmed line is accepted unread. So in everything the human reads, a task's title or slug accompanies its id at first mention: `copy-doc-dimension-inheritance (T-014)`, or `Next: /al-implement T-014 — copy-doc-dimension-inheritance`. The id rides along (it is the invocation argument and the grep handle), it never stands alone. Agent-channel surfaces — frontmatter, `depends_on:` lists, filenames, commit trailers — keep bare ids; this rule governs chat and the dashboard only.
 
 ## Evidence bar (citation chain)
 
