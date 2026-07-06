@@ -1,6 +1,6 @@
 # Voice contract
 
-Style rule lives at the top of each SKILL.md as a one-line inline declaration. This file carries the non-style disciplines: lexical, citation, shape, and artifact-vs-chat scoping. Disciplines below apply to durable artifacts (`event-model.md`, `architecture.md`, the per-task files under `tasks/`, ADRs, `CONTEXT.md`, `.out-of-scope/`, `.not-yet-specified.md`) and to chat output.
+Style rule lives at the top of each SKILL.md as a one-line inline declaration. This file carries the non-style disciplines: lexical, citation, shape, and artifact-vs-chat scoping. Disciplines below apply to durable artifacts (`event-model.md`, `architecture.md`, the per-task files under `tasks/`, ADRs, `CONTEXT.md`, `.out-of-scope/`, `.not-yet-specified/`) and to chat output.
 
 ## Format
 
