@@ -73,7 +73,7 @@ Use the test codeunit, procedure, table, field, event publisher by name. `ABCCop
 
 ## Tasks appear by name in chat
 
-A bare `T-NNN` in chat is illegible — the reader either opens the dashboard to decode it or skims past it, and a skimmed line is accepted unread. So in everything the human reads, a task's title or slug accompanies its id at first mention: `copy-doc-dimension-inheritance (T-014)`, or `Next: /al-implement T-014 — copy-doc-dimension-inheritance`. The id rides along (it is the invocation argument and the grep handle), it never stands alone. Agent-channel surfaces — frontmatter, `depends_on:` lists, filenames, commit trailers — keep bare ids; this rule governs chat and the dashboard only.
+A bare `T-NNN` in chat is illegible — the reader either opens the dashboard to decode it or skims past it, and a skimmed line is accepted unread. So in everything the human reads, a task's title or slug accompanies its id at first mention: `copy-doc-dimension-inheritance (T-014)`, or `Next: /al-implement T-014 — copy-doc-dimension-inheritance`. The id rides along (it is the invocation argument and the grep handle); it never stands alone. Agent-channel surfaces — frontmatter, `depends_on:` lists, filenames, commit trailers — keep bare ids; this rule governs chat and the dashboard only.
 
 ## Evidence bar (citation chain)
 
