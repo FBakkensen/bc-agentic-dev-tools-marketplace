@@ -1,13 +1,13 @@
 ---
 name: al-steer
-description: Coach and navigator for AL/Business Central agentic dev. Reads the tasks/ folder, the goal, the codebase, and recent commits, names what is next or blocked or drifting, owns .out-of-scope/, and is the canonical replan venue.
+description: Coach and navigator for AL/Business Central agentic dev. Reads the tasks/ folder, the goal, the codebase, and recent commits, names what is next or blocked or drifting, owns .out-of-scope/ and .not-yet-specified/, and is the canonical replan venue.
 ---
 
 **Style:** Concise — cut filler, keep grammar. Opinionated — pick a side. Arrows (→) for causality. Technical terms exact, code and errors quoted verbatim.
 
 # /al-steer, Coach / navigator
 
-Read the `tasks/` folder, `architecture.md`, `event-model.md` when present, the goal, codebase, recent commits, `.out-of-scope/`. Name what's next, blocked, drifting. Name next handoff; never force one. Canonical replan venue. Owner of `.out-of-scope/`.
+Read the `tasks/` folder, `architecture.md`, `event-model.md` when present, the goal, codebase, recent commits, `.out-of-scope/`, `.not-yet-specified/`. Name what's next, blocked, drifting. Name next handoff; never force one. Canonical replan venue. Owner of `.out-of-scope/` and `.not-yet-specified/`.
 
 The status board is computed, not stored: `grep -r '^status:' specs/<branch>/tasks/` gives every task's state; the `NNN-` filename prefix is run order, `depends_on:` lists are the graph. No index file. When a replan here changes any task frontmatter — status flips, `blocked-on:` writes, re-prefixing — rebuild the feature dashboard once at the end ([dashboard.md](../../references/dashboard.md)): a replan is exactly when the developer's standing view most needs to be current.
 
@@ -20,11 +20,11 @@ User invokes in natural language ("where are we?", "split T-009 into three tasks
 
 ## Power model
 
-Read anything in workspace. Write the `tasks/` folder structurally — add, split, delete, reorder, re-prefix task files — only after explicit user ack; silent restructuring loses the audit trail. Re-prefix by inserting into a gap (`025` between `020` and `030`); when a gap fills, rename the minimum local run (the `T-MMM` id inside each file is untouched, so no anchor breaks). Complete the whole rename run before the document-integrity check or any downstream handoff — a half-finished run leaves two files sharing a prefix, which the duplicate-prefix check flags. Write `.out-of-scope/<concept>.md` when substantive rejection earns durable memory. Nothing else.
+Read anything in workspace. Write the `tasks/` folder structurally — add, split, delete, reorder, re-prefix task files — only after explicit user ack; silent restructuring loses the audit trail. Re-prefix by inserting into a gap (`025` between `020` and `030`); when a gap fills, rename the minimum local run (the `T-MMM` id inside each file is untouched, so no anchor breaks). Complete the whole rename run before the document-integrity check or any downstream handoff — a half-finished run leaves two files sharing a prefix, which the duplicate-prefix check flags. Write `.out-of-scope/<concept>.md` when substantive rejection earns durable memory, and `.not-yet-specified/` when grooming the deferred-question ledger. Nothing else.
 
 ## Read first, then name
 
-Read the `tasks/` folder, scan `architecture.md`, `event-model.md` when present, recent commits, `.out-of-scope/` before naming anything. Surface what the state says; coaching from stale memory is the failure mode that drove the user here.
+Read the `tasks/` folder, scan `architecture.md`, `event-model.md` when present, recent commits, `.out-of-scope/`, `.not-yet-specified/` before naming anything. Surface what the state says; coaching from stale memory is the failure mode that drove the user here.
 
 Name entries that need a decision: severity, ID, symptom in codebase's terms (object names, table fields, codeunit calls), one line per entry. Distinguish kinds:
 
@@ -91,6 +91,10 @@ Grilling vetoes the trigger → restore the prior `status:` value in frontmatter
 
 Grilling vetoes a recurring scope item with a substantive reason (project scope, technical constraint, strategic decision, referenced ADR — not a deferral) → record at `.out-of-scope/<concept>.md`, so the next session can't re-litigate the rejection. Scan `.out-of-scope/*.md` during replan and grilling; on match, surface the prior rejection in the user's words. Template `${CLAUDE_SKILL_DIR}/references/out-of-scope.template.md` materialises on first need; a match appends a *Prior requests* entry rather than spawning a second file.
 
+## Owns `.not-yet-specified/`
+
+The mirror ledger: `.out-of-scope/` holds what was *ruled out*, `.not-yet-specified/` (repo root, one file per question) holds what is in scope but *not yet ruled* — questions `/al-grill-adr` and `/al-design` named, the user said matter, and nobody can phrase as a decision yet. Every question file must eventually graduate; silently absorbing one is how a deferred question becomes an implementation guess. Scan the folder during replan and grilling. When a landed decision has made a question sharp enough to answer, route it — `/al-grill-adr` (domain rule), `/al-research` (BC fact), or decide it here — and delete its file in the same pass; the answer lands in the artifact that owns it. When the user instead rules the question out of scope, move its file to `.out-of-scope/<concept>.md`, rewritten from question to substantive rejection. The ledger holds questions only, never answers.
+
 ## Next step
 
 Naming the next step *is* this skill's deliverable: the steering note ends with the concrete move read off current board state — `Next: /<skill> T-NNN` for the resolved block, or the deliberate `blocked` hold with what must settle first. `/al-steer` never auto-invokes the skill it names; the user takes the step.
@@ -100,4 +104,4 @@ Naming the next step *is* this skill's deliverable: the steering note ends with 
 | | |
 |---|---|
 | **Invoked from**     | any SKILL on replan trigger, or by user for "where are we" |
-| **Routes to**        | `/al-design`, `/al-refine`, `/al-implement`, `/al-code-review`, `/al-page-script`, `/al-user-verification`, `.out-of-scope/` — conditions per the kind-routing bullets above |
+| **Routes to**        | `/al-design`, `/al-refine`, `/al-implement`, `/al-code-review`, `/al-page-script`, `/al-user-verification`, `.out-of-scope/`, `.not-yet-specified/` — conditions per the kind-routing bullets above |

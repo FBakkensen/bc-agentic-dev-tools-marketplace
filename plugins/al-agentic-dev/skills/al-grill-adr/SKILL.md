@@ -11,9 +11,11 @@ Interview the user about domain intent, one question at a time, reading the code
 
 ## Artifact boundary
 
-Writes only `CONTEXT.md` and accepted domain ADRs under `docs/adr/`.
+Writes only `CONTEXT.md`, accepted domain ADRs under `docs/adr/`, and new question files under `.not-yet-specified/` (the deferred-question ledger `/al-steer` grooms).
 
 May read implementation, app, test, and code artifacts to expose domain conflicts. Never edit them. Never write `event-model.md`, `architecture.md`, or the `tasks/` folder.
+
+The pull to start building is not a license — it is the done-signal for the thread: when the next natural move feels like writing AL or sketching objects, the domain question is resolved, so finish the ADR or `CONTEXT.md` entry it earned and move to the next question or the handoff. Implementation mid-grill abandons the artifact this skill exists to produce.
 
 Journey pressure hands off to `/al-event-model`; architecture, object responsibility, task, proof, or implementation pressure to `/al-design` or the downstream owning skill.
 
@@ -28,7 +30,7 @@ Answer before walking away:
 
 - **Which BC term here is ambiguous, overloaded, or conflicts with `CONTEXT.md`?** Resolve to a canonical name. Standard Microsoft terms are baseline; record only what this project narrows, extends, or names that Microsoft doesn't. Update `CONTEXT.md` inline as terms resolve; don't couple to implementation details.
 - **What concrete BC scenario forces a boundary between two concepts to be precise?** Partial posting, reversal, dimension inheritance, multi-company, AppSource constraint — the user finds their own precision when a scenario forces yes-or-no.
-- **What is the user not asking because they don't know to ask it?** Grilling interrogates stated intent; a blindspot pass names the unknown-unknowns around it — the adjacent BC behaviour, historical constraint, or standard pattern the user shows no sign of having considered. Name each one and let the user decide whether it matters; an unclaimed blindspot is where the implementation guesses later.
+- **What is the user not asking because they don't know to ask it?** Grilling interrogates stated intent; a blindspot pass names the unknown-unknowns around it — the adjacent BC behaviour, historical constraint, or standard pattern the user shows no sign of having considered. Name each one and let the user decide whether it matters; an unclaimed blindspot is where the implementation guesses later. A blindspot the user says *matters but can't be decided yet* is not dropped and not forced — write it as `.not-yet-specified/<question>.md` at repo root (the question and what it waits on; shape is your call) so it survives the session instead of resurfacing as a guess at `/al-implement`.
 - **Where does the user's stated behaviour disagree with the code?** Read the code when it can answer; ask the user only what code cannot tell (intent, future direction, why a constraint exists). Name the conflict; resolution is the user's call.
 - **Does any domain constraint cross the four-of-four ADR bar?** Offer an ADR inline only when **all four** hold: hard to reverse (shipped data, partner integrations, behavioural contracts); surprising without context; real trade-off with genuine alternatives; domain (a rule about *what the business does*, not *how the code is shaped*). Three of four does not earn one — inflation rots the index. When a question feels architectural, grill the domain constraint behind it. Template: `${CLAUDE_SKILL_DIR}/../../references/adr.template.md`; resolve `NNNN` per `${CLAUDE_SKILL_DIR}/../../references/cross-branch-numbering.md`.
 - **Which BC names are verified this session?** Every BC-specific term landing in `CONTEXT.md` or a domain ADR meets the evidence bar in [voice-contract.md](../../references/voice-contract.md). See *Citation chain in chat* below.

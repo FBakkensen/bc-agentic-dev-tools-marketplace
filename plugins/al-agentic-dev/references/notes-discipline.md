@@ -6,7 +6,7 @@ Format-agnostic. Markdown mechanics (`task:`, `status:`, `slice:`, `kind:` in pe
 
 ## Two destinations, picked by lifetime
 
-- **Survives past `done`** → durable artifact outside the task file: `CONTEXT.md`, domain ADR, `.out-of-scope/`, commit message, PR description, or side-band reference. The per-task file is branch-scoped; dies when feature merges.
+- **Survives past `done`** → durable artifact outside the task file: `CONTEXT.md`, domain ADR, `.out-of-scope/`, `.not-yet-specified/`, commit message, PR description, or side-band reference. The per-task file is branch-scoped; dies when feature merges.
 - **Dies with branch** → may live inside the per-task file (frontmatter + H1 title + body). Status flips, in-flight scaffolding, replan flags, mutation verdicts, deferred-decision notes the next agent on this branch needs.
 
 Cannot tell which side a piece belongs on → ask trigger test: *will this line be useful past `done`?* Yes → durable. No → inside the task file or commit-only.
@@ -29,6 +29,7 @@ Cannot tell which side a piece belongs on → ask trigger test: *will this line 
 | Architectural decision with cross-task impact inside the feature | architecture trade-off callout | `/al-design` |
 | BC vocabulary, business rule, cross-feature truth | domain ADR or `CONTEXT.md` (via `/al-grill-adr`) | `/al-grill-adr` |
 | Recurring scope rejection with substantive reason | `.out-of-scope/<concept>.md` | `/al-steer` |
+| In-scope question that matters but can't be phrased as a decision yet | `.not-yet-specified/<question>.md` at repo root; graduates to a decision (file deleted) or moves to `.out-of-scope/`, never silently absorbed | `/al-grill-adr`, `/al-design` (write); `/al-steer` (groom); `/al-refine` (scan before speccing) |
 | Process IDs (issue / PR numbers, "the current fix") | commit message or PR description | writing skill at commit time |
 | Environment lessons (`-Force` is mandatory here, container needs republishing) | `scripts/` or local `CLAUDE.md` | project, not this plugin |
 | Lessons learned, post-mortems, "Note for next time" | PR description (if cross-cutting) or retrospective doc | writing skill at PR time |
