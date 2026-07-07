@@ -44,7 +44,7 @@ Technical tasks run lower-layer proof first:
 2. `Integration` AAA cases red -> green -> gate.
 3. Refactor full task diff once.
 4. Full gate.
-5. Mutation at task end for non-trivial work.
+5. Mutation at task end for whatever arrived without a red.
 
 Within each scope, follow ascending coverage ID order in `Test Specification`: `B1`, `B2`, `B3`, ... or `R1`, `R2`, `R3`, ...
 
@@ -68,7 +68,7 @@ Fixture-data literals (the right-hand side of `TemplateID := '...'` and peers) c
 
 ## Mutation operators
 
-Apply when prod or tests moved in the cycle: prod move catches under-tested new logic; test move catches new assertions that don't actually pin prod behaviour. The operators below apply at qualifying sites only: branching, comparisons, boolean ops, guards, arithmetic. Plain delegation, property-only, and metadata edits carry no test-rigor signal at the site level.
+A red is a killed mutant — deleting the code is the strongest mutation, and TDD runs it first. Apply operators where code or assertions moved without one: a test edited after green lost its red the same way refactor-added prod logic never had one. The operators below apply at qualifying sites only: branching, comparisons, boolean ops, guards, arithmetic. Plain delegation, property-only, and metadata edits carry no test-rigor signal at the site level.
 
 | Operator | Before | After |
 |---|---|---|
@@ -87,7 +87,7 @@ The `Validate()` skip is BC-specific: it bypasses trigger firing, a behavioural 
 
 One operator per qualifying site; pick the operator most likely to expose underassertion. A second operator at the same site is justified only when a survivor might be equivalent and the second distinguishes equivalence from gap. Skip obvious equivalences (`x >= 1` vs. `x > 0` for integers). Confirm at least one test exercises the target line before mutating; an unreached line routes to `/al-refine` (add coverage) or `/al-refactor` (delete the dead branch), not to a killer test.
 
-Pre-flight self-report: *"Candidates: K sites qualifying under the filters (J code-side, L test-side). Planning K mutations singleton, with potential equivalence-exception revisits."*
+Pre-flight self-report: *"Candidates: K sites that arrived without a red (L skipped, reasons recorded). Planning K mutations singleton, with potential equivalence-exception revisits."*
 
 ### Revert cycle
 

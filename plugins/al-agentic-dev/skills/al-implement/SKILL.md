@@ -26,7 +26,7 @@ This skill calls only `/al-research` (evidence-bar escalation), `/al-build` (com
 - **Seam.** Read `architecture.md` R → P → W boundary, module map, brownfield touchpoints. Name seam in BC vocab: procedure to extract, event to subscribe, interface to implement, or page/action to wire.
 - **AL surface.** Build against the task's `New and Modified Objects` signatures — production surface only; test codeunits and procedures are minted by the per-case subagent. In-object drift (procedure rename, parameter change, visibility flip, helper procedure, field addition on a named object): absorb, reconcile the section to actuals before `done`, note in `Contract notes`.
 - **AAA order.** `Unit` cases first, then `Integration`, in coverage-ID order. One case red → green before the next.
-- **End.** `status:` `ready-for-implementation` → `done` at full green + reconcile. Then hand off: `/al-refactor` (reshape) and `/al-mutate` (rigor) for non-trivial work; then the slice gate.
+- **End.** `status:` `ready-for-implementation` → `done` at full green + reconcile. Then hand off: `/al-refactor` (reshape) for non-trivial work, `/al-mutate` (rigor) for whatever arrived without a red; then the slice gate.
 
 Unanswerable → task not ready. Resolve via `/al-research`, `/al-refine`, or `/al-steer`.
 
@@ -117,7 +117,7 @@ The `done` flip is a gate event: emit the four-row Gate report (Did / Was / Fits
 End by naming the concrete next move, read off current state:
 
 - **Mid-task non-`done` exits** carry their own `Next:` above (push-up unattended → `/al-steer`, missing spec → `/al-refine`, replan → `/al-steer`).
-- **Task `done`, work was non-trivial:** `Next: /al-refactor` (reshape the full task diff while green), then `/al-mutate` (validate test rigor at task end). These are strongly directed — `/al-code-review` notes a missing mutation verdict — but the user owns whether and when to run them.
+- **Task `done`, work was non-trivial:** `Next: /al-refactor` (reshape the full task diff while green), then `/al-mutate` for whatever arrived without a red — legacy edits, `deviations:` entries, branches the reshape adds. A fully red-driven task leaves a near-empty mutation plan; say that instead of directing the pass. These are strongly directed — `/al-code-review` notes a missing mutation verdict — but the user owns whether and when to run them.
 - **Task `done`, trivial work:** name the slice gate directly. More `ready-for-implementation` tasks in the slice → `Next: /al-implement` (next task). Slice-done (the slice's last technical task) → `Next: /al-code-review` per-slice, both slice types — the review gate runs before the verify task is opened. Feature-done → `Next: /al-code-review` per-feature.
 
 If state can't be read, fall back to the typical next step: `/al-refactor` then `/al-mutate`, then `/al-code-review`.
@@ -127,7 +127,7 @@ If state can't be read, fall back to the typical next step: `/al-refactor` then 
 | | |
 |---|---|
 | **Runs after**     | `/al-refine` (filled `Test Specification` in the task file and flipped task to `ready-for-implementation`) |
-| **Hands off to**   | `/al-refactor` then `/al-mutate` on non-trivial task-done; next `ready-for-implementation` technical task; `/al-code-review` per-slice at slice-done (both slice types); `/al-code-review` per-feature at feature-done |
+| **Hands off to**   | `/al-refactor` on non-trivial task-done, then `/al-mutate` for logic that arrived without a red; next `ready-for-implementation` technical task; `/al-code-review` per-slice at slice-done (both slice types); `/al-code-review` per-feature at feature-done |
 | **Calls directly** | `/al-research` (evidence-bar escalation), `/al-build` (compile/test), `/al-second-opinion` (cross-family read, non-trivial work) — the only three skills it invokes |
 | **Spawns**         | per-case subagent from [`subagents/al-red-green.md`](../../references/subagents/al-red-green.md) (RED→GREEN per AAA case) |
 | **Replan venue**   | `/al-steer` |

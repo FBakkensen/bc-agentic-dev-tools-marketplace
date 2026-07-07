@@ -1,6 +1,6 @@
 ---
 name: al-mutate
-description: "Validate AL/Business Central test rigor by mutation: inject one mutation at a time, run the script-backed build gate, classify, revert, report killed/surviving/equivalent mutants. The rigor step the user runs after `/al-refactor` on non-trivial tasks, or standalone on legacy code before `/al-refactor`."
+description: "Validate AL/Business Central test rigor by mutation: inject one mutation at a time, run the script-backed build gate, classify, revert, report killed/surviving/equivalent mutants. The rigor step the user runs after `/al-refactor` on whatever arrived without a red, or standalone on legacy code before `/al-refactor`."
 ---
 
 **Style:** Concise — cut filler, keep grammar. Opinionated — pick a side. Arrows (→) for causality. Technical terms exact, code and errors quoted verbatim.
@@ -27,11 +27,13 @@ Any precondition fails → **Stop**, surface the gap.
 
 **One mutation, one build, one revert.** Apply one mutation. Run `pwsh "<plugin>/skills/al-build/scripts/test.ps1"` directly with the selected gate. Classify. Revert with `git checkout -- .`. Verify tree matches `HEAD` before next mutation. Batched mutations conflate signal; un-reverted mutations poison production and corrupt every subsequent classification. The verify step catches a silent failed revert.
 
-**Survivors are the artifact.** Green pass with no survivors and no equivalences → either perfect tests or no decision logic worth mutating; the latter belongs in the plan, not the result.
+**Survivors are the artifact.** Green pass with no survivors and no equivalences → either perfect tests or no unproven logic worth mutating; the latter belongs in the plan, not the result.
 
 **Equivalence needs a specific reason.** "The swapped branch sets the same field to the same value because both paths re-read from the source record before assignment" is an equivalence reason; "looks equivalent" is not. The recorded reason protects future readers from chasing the un-killable mutant.
 
-**Mutate where bugs hide.** Two filters identify worthwhile sites. *Code-side*: high detection cost (irreversible writes, ledger entries, balance mutations, status flips other code keys off) or branch density (multi-arm `case`, guard chains, boundary comparisons in money math). *Test-side*: covering test's arrange phase reads as a *story* (sequenced BC process) rather than a *fixture*. Trivial code (pure delegation, accessors, single-line init) does not host hidden bugs; first caller catches regressions regardless of assertion strength. Trivial-vs-non-trivial call is per site through these qualifiers, not by object type.
+**A red is a killed mutant.** The strongest mutation is deleting the code — and TDD ran it first: the test failed while the production code did not yet exist. Mutation testing asks the same question after the fact. Ask it only where it was never asked: code that arrived without a red — legacy paths, tests written after their code, branches a refactor introduced, work absorbed without its own red (`deviations:` is the breadcrumb). Never answer it by reading the tests and finding the assertions rigorous; that judgment is the one mutation exists to replace.
+
+**The red guards a behaviour, not lines.** Reshape moves code; the test that once failed against the rule still fails wherever the rule lives now. Only what the reshape added never failed anything. When you can't tell how code arrived, it arrived without a red — and the tie breaks harder toward mutating the more a fault costs to catch: irreversible writes, ledger entries, status flips other code keys off. Trivial code (pure delegation, accessors, single-line init) does not host hidden bugs; the first caller catches regressions regardless of assertion strength. Each skip is a recorded claim — "this behaviour has failed a test" — for the report and the cross-check to attack.
 
 **One operator per qualifying site.** Pick operator most likely to expose underassertion at *that* site: boundary flip in money math, guard inversion in validation chain, statement removal in posting subscriber, `Validate()` bypass when field trigger carries contract. Operator catalogue and selection heuristics in [tdd.md](../../references/tdd.md). No fallback operators. No worker-invented alternate mutation.
 

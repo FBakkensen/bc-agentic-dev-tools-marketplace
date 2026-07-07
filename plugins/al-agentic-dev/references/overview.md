@@ -12,7 +12,7 @@ Composable skills for AL/Business Central agentic development. One feature flows
                    skips this step)
 ```
 
-Each `→` is a handoff the finishing skill names and **you** take; no step launches the next. Per technical task the inner cycle is `/al-implement` (red→green, stops at green) → `/al-refactor` (reshape while green) → `/al-mutate` (validate test rigor) → the slice gate. `/al-refactor` and `/al-mutate` are strongly directed for non-trivial work but you decide whether and when to run them.
+Each `→` is a handoff the finishing skill names and **you** take; no step launches the next. Per technical task the inner cycle is `/al-implement` (red→green, stops at green) → `/al-refactor` (reshape while green) → `/al-mutate` (validate test rigor) → the slice gate. `/al-refactor` is strongly directed for non-trivial work, `/al-mutate` for whatever arrived without a red — but you decide whether and when to run them.
 
 | Lane | Skills |
 |---|---|
@@ -42,7 +42,7 @@ State handoff is the filesystem, never in-memory: every skill can be invoked col
 | `/al-refine` | One task → `Test Specification` or `Verification Plan`. | Before working a specific task. |
 | `/al-implement` | TDD per technical task: Unit cases → Integration cases, red→green. Stops at green and hands off to `/al-refactor` then `/al-mutate`. | After `/al-refine` produces a `Test Specification`. |
 | `/al-refactor` | Improve shape while green. No new behaviour. 4 review-lens subagents identify, the session applies. | After `/al-implement` takes a task to green, or standalone on legacy code. |
-| `/al-mutate` | Validate test rigor by injecting mutations one at a time. | The rigor step after `/al-refactor` for non-trivial work, or standalone on legacy before `/al-refactor`. |
+| `/al-mutate` | Validate test rigor by injecting mutations one at a time. | The rigor step after `/al-refactor` for whatever arrived without a red, or standalone on legacy before `/al-refactor`. |
 | `/al-user-verification` | Guides you through the verify task one scenario at a time, in chat, punchline first — runs containers, the recording pre-flight, and Contract checks; you walk the non-recorded Journey Examples in your browser and report what you see (ask-before-reveal). Functional outcomes gate, usability observations → findings/tasks. Gates the next slice. | Verify task is `ready-for-verification` carrying `review: clean` — `/al-code-review` ran clean at slice-done, then `/al-refine` wrote a fresh `Verification Plan`. |
 | `/al-code-review` | Gate at slice-done and feature-done. Report-only by default: spawn review lenses, judge, cross-family-vet, then report the must-fix queue (→ `/al-implement`), nits, and the gate decision. `--fix` lands the must-fix findings in-loop (red-green subagent) and re-reviews once. | Auto-announced as the next step by `/al-implement` at slice-done (both slice types) and feature-done. |
 | `/al-second-opinion` | Cross-family read-only advisory review (shells to GitHub Copilot CLI, pinned to a GPT model). | Before reconciling non-trivial `Test Specification`, `Verification Plan`, mutation lists, refactor checklists, or verification verdicts. |
