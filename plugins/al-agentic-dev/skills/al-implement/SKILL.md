@@ -42,7 +42,7 @@ Default order:
 2. `Integration` cases red/green, one per spawned subagent.
 3. Full gate.
 
-For each case, **spawn a subagent with the prompt in [`subagents/al-red-green.md`](../../references/subagents/al-red-green.md)** (a capable coding model fits — see that file's tier note), passing: the single AAA case (Arrange/Act/Assert text from the `Test Specification`), the task's `New and Modified Objects` block, and the task file path. Read the subagent's outcome note before proceeding — and before relaying anything from it, run pre-send check 3 ([voice-contract.md](../../references/voice-contract.md) Relaying subagent findings): a note naming no object or observation goes back to the spawn; relay through the Gate/Stop shape, never raw. Then route on the verdict:
+For each case, **spawn a subagent with the prompt in [`subagents/al-red-green.md`](../../references/subagents/al-red-green.md)** on `sonnet`, escalating a tier only if the case can't reach green (see that file's Model line), passing: the single AAA case (Arrange/Act/Assert text from the `Test Specification`), the task's `New and Modified Objects` block, and the task file path. Read the subagent's outcome note before proceeding — and before relaying anything from it, run pre-send check 3 ([voice-contract.md](../../references/voice-contract.md) Relaying subagent findings): a note naming no object or observation goes back to the spawn; relay through the Gate/Stop shape, never raw. Then route on the verdict:
 
 - `GREEN` → run the full suite gate (a red anywhere, including a sibling task's test, blocks the `done` flip), then proceed to the next case.
 - `PUSH-UP` → handle the push-up commitment gate (see below).

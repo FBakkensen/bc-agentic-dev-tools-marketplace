@@ -2,7 +2,7 @@
 
 Spawnable prompt block. `/al-code-review` and `/al-refactor` fan out review lenses by spawning one subagent per lens with the prompt below plus a single focused goal and the diff/scope. File-read only, no MCP. For the bc-code-intelligence variant use `al-review-lens-bc.md`.
 
-**Model tier (advisory):** a focused read-only pass — a small/fast model suffices for most lenses. The harness picks the model; this is a hint.
+**Model:** spawn on `sonnet` — a focused single-goal pass. The decomposition into many narrow lenses plus the cross-family veto substitutes for one smart reviewer (the review carve-out in [`../model-selection.md`](../model-selection.md)), so the lens stays cheap on purpose.
 
 ---
 

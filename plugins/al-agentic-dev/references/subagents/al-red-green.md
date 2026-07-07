@@ -2,7 +2,7 @@
 
 Spawnable prompt block. A skill (`/al-implement`, or `/al-code-review --fix`) drives one AAA case to GREEN by spawning a subagent with the prompt below, passing the single AAA case spec, the task's `New and Modified Objects` block, and the task file path. The subagent writes test + production code and runs `/al-build` inside the loop; commits, final full-suite gate, reconciliation, refactor, and mutation stay with the caller.
 
-**Model tier (advisory):** this is the heavy coding step — a capable model fits here, heavier than the thin driver skill that spawns it. The harness picks the model; treat this as a hint, not a pin.
+**Model:** spawn on `sonnet` — this is clear-spec implementation (a single AAA case with its `New and Modified Objects` block). Escalate one tier (`opus`/`fable`) only if the case can't reach green. See [`../model-selection.md`](../model-selection.md).
 
 ---
 

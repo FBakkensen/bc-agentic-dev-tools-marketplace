@@ -57,7 +57,7 @@ Use one delegated worker when host supports subagents. Host owns plan generation
 
 After the worker returns its mutation report, close the completed worker thread before the host resumes judgement, killer-test work, or closeout.
 
-A capable coding model fits the worker.
+Spawn the worker on `sonnet` — a mechanical mutate-build-revert cycle (see [model-selection.md](../../references/model-selection.md)).
 
 ### Worker rules
 
