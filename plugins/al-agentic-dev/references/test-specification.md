@@ -292,15 +292,18 @@ Mutation verdict:
 | Baseline | `2d02629f` |
 | Report | `.output/mutation-report/20260605-214958.md` |
 | Mutants | 5 — release guard chain, blocked-state boundary, status flip |
-| Killed | 4 (3 by named tests, 1 compile-time) |
+| Killed | 4 (all by named tests) |
 | Survivors | 1 |
+| Stillborn | 1 → re-planned to a compiling operator, then killed |
 | Final gate | full green |
 
 Survivor: `SetRecFilter()` removal in `OpenReleasedOrder`.
 Why kept: outside the pinned contract — the event model pins that the order's card opens, not its rowset; a killer test would pin presentation. Net: the slice verify journey probes card scoping.
+Stillborn: early-`exit` in `ApplyReleaseGuard` made the guard body unreachable — a compile error, no test ran.
+Re-planned: guard-condition flip at the same site, then killed by `BlocksReleasePolicyWhenRuleEnabled`.
 ```
 
-The mutation verdict is a borderless two-column field/value table; each survivor gets labeled `Survivor:` / `Why kept:` lines stating the gap → killer-test direction, the equivalence reason, or the accepted gap and the net that catches it. One fact per line; a survivor rationale is a finding, not a paragraph. Tasks where mutation ran with zero survivors collapse the labeled lines and keep the table.
+The mutation verdict is a borderless two-column field/value table; each survivor gets labeled `Survivor:` / `Why kept:` lines stating the gap → killer-test direction, the equivalence reason, or the accepted gap and the net that catches it. Each stillborn gets labeled `Stillborn:` / `Re-planned:` lines naming the site, why it failed to compile, and the compiling operator it was re-planned to — no test ran, so a stillborn is never a kill. One fact per line; a survivor rationale is a finding, not a paragraph. Tasks where mutation ran with zero survivors and zero stillborns collapse the labeled lines and keep the table.
 
 Verify closeout:
 
