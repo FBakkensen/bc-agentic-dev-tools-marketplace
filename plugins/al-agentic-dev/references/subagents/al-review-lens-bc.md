@@ -2,7 +2,7 @@
 
 Spawnable prompt block. The BC-specific variant of `al-review-lens.md`: same fan-out, plus bc-code-intelligence MCP reach. `/al-code-review` and `/al-refactor` spawn one subagent with the prompt below for the BC best-practice lens, passing a single focused goal and the diff/scope. For the pure file-read, no-MCP lenses use `al-review-lens.md`.
 
-**Model tier (advisory):** a focused read-only pass with MCP dispatch — a small/fast model suffices. The harness picks the model; this is a hint.
+**Model:** spawn on `sonnet` — a focused single-goal pass with MCP dispatch. Cheap on purpose: the decomposition plus the cross-family veto substitutes for one smart reviewer (the review carve-out in [`../model-selection.md`](../model-selection.md)).
 
 ---
 

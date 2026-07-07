@@ -54,11 +54,11 @@ State handoff is the filesystem, never in-memory: every skill can be invoked col
 
 ## Subagents
 
-Skills spawn lightweight workers from shared prompt blocks under `references/subagents/`. They are not `/commands` and not custom-agent definitions — a skill tells the harness to spawn a subagent with the named prompt, so the plugin stays portable across harnesses. The model tier is advisory (named in each block); the harness chooses.
+Skills spawn lightweight workers from shared prompt blocks under `references/subagents/`. They are not `/commands` and not custom-agent definitions — a skill spawns a subagent with the named prompt. Each block names the Claude model to spawn on, per [`model-selection.md`](model-selection.md).
 
 | Prompt block | Role | Spawned by |
 |---|---|---|
-| `subagents/al-red-green.md` | One AAA case RED→GREEN: write the failing test, confirm RED, write minimal production code, confirm GREEN, return an outcome note. A capable coding model fits. | `/al-implement` (per case), `/al-code-review --fix` (per must-fix finding) |
+| `subagents/al-red-green.md` | One AAA case RED→GREEN: write the failing test, confirm RED, write minimal production code, confirm GREEN, return an outcome note. Spawn on `sonnet`; escalate only if a case can't reach green. | `/al-implement` (per case), `/al-code-review --fix` (per must-fix finding) |
 | `subagents/al-review-lens.md` | One focused read-only AL/BC review pass, file-read only. Returns labeled findings; the main session dedupes and adversarially judges. | `/al-code-review` (lenses), `/al-refactor` (lenses) |
 | `subagents/al-review-lens-bc.md` | The BC-specific review lens with bc-code-intelligence MCP reach. | `/al-code-review`, `/al-refactor` |
 
