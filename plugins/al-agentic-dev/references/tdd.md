@@ -32,9 +32,9 @@ Violations: writing a full feature then back-filling tests; writing all tests be
 | **Red** | Test fails on an **assertion**, not a runtime error, not a compile error. Existing suite still passes. |
 | **Green** | Minimal production change makes the target test pass. Full suite still green. |
 | **Refactor** | Implementation tidied; any `DEBUG-*` markers removed; full suite green. |
-| **Mutate** | Targeted mutations caught by ≥ 1 failing assertion; reverted; green confirmed. |
+| **Mutate** | Targeted mutations compile, run, and are caught by ≥ 1 failing assertion; reverted; green confirmed. A compile-caught mutant is stillborn, not a kill. |
 
-A compile error is not a Red; fix compile errors first, then get to an assertion failure. Refactor exit gate: a full grep for `DEBUG-` returns nothing before committing.
+A compile error is not a Red; fix compile errors first, then get to an assertion failure. The same holds under mutation: a compile error is not a kill — a mutant the compiler rejects never ran. Refactor exit gate: a full grep for `DEBUG-` returns nothing before committing.
 
 ## Task execution order
 
@@ -70,6 +70,8 @@ Fixture-data literals (the right-hand side of `TemplateID := '...'` and peers) c
 
 A red is a killed mutant — deleting the code is the strongest mutation, and TDD runs it first. Apply operators where code or assertions moved without one: a test edited after green lost its red the same way refactor-added prod logic never had one. The operators below apply at qualifying sites only: branching, comparisons, boolean ops, guards, arithmetic. Plain delegation, property-only, and metadata edits carry no test-rigor signal at the site level.
 
+A mutation that removes behaviour must still compile — the compiler catching a fault is not a test catching it. A compile-breaking mutant is `invalid_stillborn`, not a kill; reconsider the operator. This mirrors Scaffold-before-Red: a red is forced onto an assertion by first making the code compile, and a kill is forced onto a test the same way.
+
 | Operator | Before | After |
 |---|---|---|
 | Flip boolean condition | `if IsBlocked then` | `if not IsBlocked then` |
@@ -82,6 +84,8 @@ A red is a killed mutant — deleting the code is the strongest mutation, and TD
 | Skip Validate() | `Rec.Validate("Amount", Value);` | `Rec.Amount := Value;` |
 
 The `Validate()` skip is BC-specific: it bypasses trigger firing, a behavioural change distinct from plain field assignment.
+
+Two operators risk a stillborn in AL. **Comment out assignment** can leave an unused or unwritten local — a compile error under `warningsAsErrors`; prefer replacing the RHS value where the variable is later read, so the wrong value flows and a test must catch it. **Early-return insertion** makes the code after `exit` unreachable, which AL flags as a compile error; prefer a guard flip that reaches the same skip behaviourally. Verify the mutant compiles before trusting any classification — a non-compiling mutant is stillborn, re-plan a compiling operator.
 
 ### Selection heuristics
 
